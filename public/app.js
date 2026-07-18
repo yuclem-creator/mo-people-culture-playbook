@@ -90,269 +90,26 @@ const SYM = {
   policy: icon('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 15h5"/>'),
   guide:  icon('<circle cx="12" cy="12" r="8.5"/><path d="M15.2 8.8l-1.9 4.5-4.5 1.9 1.9-4.5 4.5-1.9z"/>'),
   kit:    icon('<rect x="4" y="7.5" width="16" height="12" rx="1.5"/><path d="M9 7.5V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8v1.7"/><path d="M4 12.5h16"/>'),
-  xref:   icon('<path d="M6.5 3.5h11A1.5 1.5 0 0 1 19 5v16H8a1.5 1.5 0 0 1-1.5-1.5v-16z"/><path d="M6.5 17.5H19"/><path d="M10 8h6"/>')
+  xref:   icon('<path d="M6.5 3.5h11A1.5 1.5 0 0 1 19 5v16H8a1.5 1.5 0 0 1-1.5-1.5v-16z"/><path d="M6.5 17.5H19"/><path d="M10 8h6"/>'),
+  // link / external-resource glyph
+  link:   icon('<path d="M9.5 14.5l5-5"/><path d="M8 11l-2.2 2.2a3.1 3.1 0 0 0 4.4 4.4L12 16"/><path d="M16 13l2.2-2.2a3.1 3.1 0 0 0-4.4-4.4L12 8"/>'),
+  // chevron for accordion toggles
+  chevron: icon('<path d="M6 9l6 6 6-6"/>')
 };
 
 /* =================================================================
    CHAPTER 3 — SUB-CHAPTER POLICY CONTENT (verbatim from source)
    ================================================================= */
-const LIFECYCLE_CONTENT = {
-  'sub-A': {
-    philosophy: 'Ethical Conduct and Fair Employment set the foundation for how we lead, hire, and treat every Colleague.',
-    sections: [
-      { num: '1', title: 'Ethical Conduct & Integrity', items: [
-        { s:'policy', name:'Code of Conduct & Ethics' },
-        { s:'policy', name:'Social Media & Digital Responsibility Policy' },
-        { s:'policy', name:'Open Door Policy' },
-        { s:'policy', name:'Anti-Harassment & Bullying Policy' },
-        { s:'policy', name:'Whistleblowing Policy' },
-        { s:'guide',  name:'Whistleblowing Speak-Up Guide' },
-        { s:'policy', name:'Colleague Relationship Policy' },
-        { s:'policy', name:'Business Entertainment Policy' }
-      ]},
-      { num: '2', title: 'Fair Employment & Equal Opportunity', items: [
-        { s:'policy', name:'Employment Policy' }
-      ]}
-    ]
-  },
-  'sub-B': {
-    philosophy: 'We attract people whose values, craft and curiosity match Mandarin Oriental\u2019s standard of excellence. Every hire is a promise to guests, to Colleagues, and to the culture.',
-    sections: [
-      { num: '1', title: 'Talent Acquisition Strategy & Governance', items: [
-        { s:'guide',  name:'Talent Acquisition Governance Framework Guidelines' },
-        { s:'policy', name:'Recruitment, Selection & Hiring Requisition & Approvals Policy' },
-        { s:'kit',    name:'Job Requisition Management — Evergreen JR and Job Posting' },
-        { s:'kit',    name:'Candidate Job Application Process (Recruiting Stages)' },
-        { s:'kit',    name:'Bulk or Mass Action and Candidate Communications' },
-        { s:'kit',    name:'Referrals & Internal Candidates' },
-        { s:'guide',  name:'Recruitment Data & Analytics' }
-      ]},
-      { num: '2', title: 'Employer Brand & Candidate Experience', items: [
-        { s:'guide',  name:'Colleague Value Proposition Guidelines' },
-        { s:'guide',  name:'Colleague Brand Identity & Guidelines' },
-        { s:'kit',    name:'Colleague Brand Layouts' },
-        { s:'kit',    name:'Colleague Images' },
-        { s:'guide',  name:'LinkedIn Recruitment Guidelines' },
-        { s:'kit',    name:'InMail templates for Recruiters' },
-        { s:'guide',  name:'LinkedIn Executive Guide' },
-        { s:'guide',  name:'Candidate Experience Guidelines' },
-        { s:'kit',    name:'Candidate Emails from Recruitment Processes' },
-        { s:'guide',  name:'Local Employer Brand Awards Guidelines' }
-      ]},
-      { num: '3', title: 'Job Advertisements', items: [
-        { s:'kit', name:'Job Description Template' },
-        { s:'kit', name:'Job Advertisement Templates' }
-      ]},
-      { num: '4', title: 'Sourcing Channels', items: [
-        { s:'guide',  name:'Proactive Recruitment Guidelines' },
-        { s:'guide',  name:'Talent Bank Screening Interview Guidelines' },
-        { s:'policy', name:'Colleague Transfer Policy' },
-        { s:'kit',    name:'Colleague Transfer Flow Chart' },
-        { s:'policy', name:'Rehiring Colleagues Policy' },
-        { s:'policy', name:'Colleague Referral Policy' },
-        { s:'policy', name:'Employment of Relatives Policy' },
-        { s:'guide',  name:'Local University Engagement Strategy' },
-        { s:'kit',    name:'University Engagement Slide Deck, Collateral, and Marketing materials' },
-        { s:'guide',  name:'Recruitment Agency Engagement Guidelines' },
-        { s:'kit',    name:'Recruitment Agency Ethical Conduct & Compliance Form' }
-      ]},
-      { num: '5', title: 'Selection & Assessment', items: [
-        { s:'policy', name:'Talogy Assessment Guidelines' },
-        { s:'guide',  name:'Refresher training sessions — Talogy' },
-        { s:'policy', name:'Reference / Background Check Policy' }
-      ]},
-      { num: '6', title: 'Offer Management & Pre-Boarding', items: [] }
-    ]
-  },
-  'sub-C': {
-    philosophy: 'The first weeks shape a Colleague\u2019s relationship with Mandarin Oriental for years. Onboarding is a promise to welcome, orient, and support with intention.',
-    sections: [
-      { num: '1', title: 'Onboarding & Integration', items: [
-        { s:'policy', name:'Onboarding ("MOve In") Policy' },
-        { s:'guide',  name:'Induction & Orientation Guidelines' },
-        { s:'kit',    name:'Induction Samples' },
-        { s:'guide',  name:'Designing the Colleague Handbook' },
-        { s:'kit',    name:'Colleague Handbook Samples' },
-        { s:'guide',  name:'Introduction to MOve-In' },
-        { s:'guide',  name:'Management MOve-In Explanation for L&D' }
-      ]},
-      { num: '2', title: 'Probation & Early Performance', items: [
-        { s:'policy', name:'Probationary Period Policy' }
-      ]}
-    ]
-  },
-  'sub-D': {
-    philosophy: 'The quiet, exacting systems behind People & Culture — workforce planning, records, technology, payroll and analytics — must run with the same precision as the service we deliver.',
-    sections: [
-      { num: '1', title: 'Strategic Workforce Planning', items: [
-        { s:'guide',  name:'Manpower Planning Guidelines' },
-        { s:'guide',  name:'Workforce Budgeting & Forecasting' },
-        { s:'kit',    name:'Workforce Planning Templates & Dashboard' },
-        { s:'guide',  name:'Workforce Plan Review Cycle' },
-        { s:'guide',  name:'Job Classification Structure' },
-        { s:'kit',    name:'Hotel Position Matrix' },
-        { s:'guide',  name:'Compensation Benchmarking and Salary Survey Guidelines' },
-        { s:'policy', name:'Headcount Requisition Policy' },
-        { s:'policy', name:'CEA / Task Force Policy' },
-        { s:'kit',    name:'CEA / Task Force Kit' },
-        { s:'policy', name:'Cluster & Area Roles Policy' }
-      ]},
-      { num: '2', title: 'Employment Administration & Records', items: [
-        { s:'policy', name:'Employment Contracts' },
-        { s:'policy', name:'Colleague File Policy' },
-        { s:'xref',   name:'Colleague Status Changes (Finance-owned — cross-reference)' },
-        { s:'policy', name:'Colleague Action Form Policy' },
-        { s:'kit',    name:'Colleague Action Form Template' },
-        { s:'guide',  name:'Right-to-Work & Identity Verification Guidelines' }
-      ]},
-      { num: '3', title: 'P&C Documentation & Systems', items: [
-        { s:'policy', name:'HR Information Systems (HRIS) Policy' },
-        { s:'xref',   name:'Data Privacy & Confidentiality Policy (Cross-ref to IT Data Privacy Manual 2025)' }
-      ]},
-      { num: '4', title: 'Technology & Data Use', items: [
-        { s:'xref',   name:'IT Systems & Data Policy' },
-        { s:'policy', name:'Artificial Intelligence (AI) Policy' }
-      ]},
-      { num: '5', title: 'Payroll & Benefits Operations', items: [
-        { s:'xref',   name:'Timekeeping & Payroll Accounting Policy' },
-        { s:'policy', name:'Payroll Accuracy & Data Reconciliation Policy' },
-        { s:'policy', name:'Absenteeism, Punctuality & Hours of Work Policy' },
-        { s:'guide',  name:'Compensation Administration Guidelines' },
-        { s:'policy', name:'Hotel Benefits Administration Policy' },
-        { s:'policy', name:'Cash Shortage & Overage Policy' },
-        { s:'policy', name:'Hotel Business Travel Policy' },
-        { s:'policy', name:'Alcohol Consumption Policy' },
-        { s:'policy', name:'Breakage Policy' }
-      ]},
-      { num: '6', title: 'Reporting & Analytics', items: [] }
-    ]
-  },
-  'sub-E': {
-    philosophy: 'Care begins with our Colleagues. Engagement, recognition, wellbeing, and voice are how we live that belief every day.',
-    sections: [
-      { num: '1', title: 'Engagement, Connection & Community', items: [
-        { s:'policy', name:'Colleague Communication & Activities Policy' },
-        { s:'policy', name:'Inclusion, Equity & Diversity' },
-        { s:'policy', name:'Volunteering Policy' },
-        { s:'kit',    name:'Volunteering Leave Application Form' },
-        { s:'policy', name:'Fan Pins & Fan Name Tags' },
-        { s:'guide',  name:'Employee Engagement & Pulse Survey Guidelines' },
-        { s:'guide',  name:'Heart-of-House Guide' }
-      ]},
-      { num: '2', title: 'Recognition & Appreciation', items: [
-        { s:'guide', name:'Colleague Recognition & Appreciation Guidelines' },
-        { s:'guide', name:'Dedicated Service Award' }
-      ]},
-      { num: '3', title: 'Health, Safety & Wellbeing', items: [
-        { s:'guide',  name:'Employee Assistance Program (EAP)' },
-        { s:'xref',   name:'Mental Health First Aid Certification' },
-        { s:'xref',   name:'Mental Health First Aid Certification — About the Role' },
-        { s:'xref',   name:'Mental Health First Aid Colleague List' },
-        { s:'guide',  name:'Personal Grooming Standards' },
-        { s:'policy', name:'Operational Risk Management' }
-      ]},
-      { num: '4', title: 'Colleague Voice', items: [
-        { s:'policy', name:'Colleague Grievances Policy' },
-        { s:'policy', name:'Progressive Disciplinary Procedures Policy' }
-      ]}
-    ]
-  },
-  'sub-F': {
-    philosophy: 'How we pay, reward, and support movement across the Group reflects our respect for the craft of every Colleague.',
-    sections: [
-      { num: '1', title: 'Compensation', items: [
-        { s:'policy', name:'Compensation Framework and Governance Policy' },
-        { s:'policy', name:'Base Pay Policy' },
-        { s:'policy', name:'Year End Salary Budget Approval (corporate)' },
-        { s:'xref',   name:'Year End Salary Budget Approval (appendix for corporate)' },
-        { s:'xref',   name:'Vacation Pay and Other Entitlements (Finance-owned — cross-reference)' },
-        { s:'xref',   name:'Provisions for Vacation Pay and Bonus (Finance-owned — cross-reference)' },
-        { s:'policy', name:'Incentive Compensation Plan Policy' }
-      ]},
-      { num: '2', title: 'Benefits', items: [
-        { s:'guide',  name:'Leave Policy Guidelines' },
-        { s:'guide',  name:'Health & Insurance Benefits Guidelines' },
-        { s:'guide',  name:'Meal Allowance Guidelines' },
-        { s:'guide',  name:'Colleague Dining Programme Guidelines' },
-        { s:'guide',  name:'Colleague Spa Discount Programme Guidelines' },
-        { s:'guide',  name:'Access to Health Club / Fitness Centres' },
-        { s:'policy', name:'Complimentary Colleague Room Stay Benefits Programme (MOcomp)' },
-        { s:'policy', name:'Discounted Colleague Room Stay Benefits Programme (MOrate)' },
-        { s:'xref',   name:'Employee Loans (Finance-owned — cross-reference)' },
-        { s:'xref',   name:'General Tuition Loan Policy' },
-        { s:'kit',    name:'General Tuition Loan Addendum — Sample' },
-        { s:'guide',  name:'Retirement & Pension Guidelines' }
-      ]},
-      { num: '3', title: 'Mobility', items: [
-        { s:'policy', name:'International Mobility Policy' },
-        { s:'policy', name:'Relocation Assistance Policy' },
-        { s:'xref',   name:'Colleague Transfer Policy — Compensation & Benefits' },
-        { s:'xref',   name:'Task Force, CEA fact sheet' }
-      ]}
-    ]
-  },
-  'sub-G': {
-    philosophy: 'Every Colleague deserves the chance to grow. Performance conversations, learning pathways, and career development are how we invest in that growth.',
-    sections: [
-      { num: '1', title: 'Performance Management', items: [
-        { s:'policy', name:'Compensation Framework and Governance Policy' },
-        { s:'policy', name:'Base Pay Policy' },
-        { s:'policy', name:'Year End Salary Budget Approval (corporate)' },
-        { s:'xref',   name:'Year End Salary Budget Approval (appendix for corporate)' },
-        { s:'xref',   name:'Vacation Pay and Other Entitlements (Finance-owned — cross-reference)' },
-        { s:'xref',   name:'Provisions for Vacation Pay and Bonus (Finance-owned — cross-reference)' },
-        { s:'policy', name:'Incentive Compensation Plan Policy' }
-      ]},
-      { num: '2', title: 'Learning & Capability', items: [
-        { s:'guide', name:'Learning & Development Standards' },
-        { s:'kit',   name:'L&D Standards Review Form' }
-      ]},
-      { num: '3', title: 'Career Development', items: [
-        { s:'kit',   name:'Interviewing for Success' },
-        { s:'guide', name:'Mentoring Programme' },
-        { s:'guide', name:'Rising Fan Programme' },
-        { s:'guide', name:'MOve Ahead Programme' },
-        { s:'guide', name:'MOve Up Programme' },
-        { s:'guide', name:'Presenting for Success' },
-        { s:'kit',   name:'External Development Programme Application — Sample' },
-        { s:'kit',   name:'External Development Programme Evaluation — Sample' },
-        { s:'guide', name:'e-Cornell Introduction & Guidelines' },
-        { s:'kit',   name:'e-Cornell Application Form' }
-      ]}
-    ]
-  },
-  'sub-H': {
-    philosophy: 'Every departure is also a door left open. How we say farewell — and how we stay in touch — shapes the story a Colleague tells about Mandarin Oriental long after they leave.',
-    sections: [
-      { num: '1', title: 'Separation & Transition', items: [
-        { s:'policy', name:'Offboarding Policy' }
-      ]},
-      { num: '2', title: 'Alumni & Re-Engagement', items: [
-        { s:'policy', name:'Forever Fans MO Alumni Policy' }
-      ]}
-    ]
-  }
-};
+/* =================================================================
+   CHAPTER 3 SUB-CHAPTER CONTENT + PRE-OPENING/AUDIT CONTENT
+   Data (LIFECYCLE_CONTENT, CH4_CONTENT, CH5_CONTENT) is defined in
+   playbook-content.js (auto-generated, verbatim from source),
+   loaded BEFORE this file in index.html.
+   Back-compat aliases for section arrays:
+   ================================================================= */
+const CH4_SECTIONS = CH4_CONTENT.sections;
+const CH5_SECTIONS = CH5_CONTENT.sections;
 
-// Pre-Opening / Audit / Support content
-const CH4_SECTIONS = [
-  { num: '1', title: 'P&C Pre-Opening Tools & Frameworks', items: [
-    { s:'guide',  name:'P&C Guidelines for Hotel Openings and Rebrandings' },
-    { s:'kit',    name:'Pre-Opening Checklist' },
-    { s:'kit',    name:'Pre-Opening Budget template' },
-    { s:'kit',    name:'Pre-Opening Payroll template' },
-    { s:'kit',    name:'Hotel Position Matrix' },
-    { s:'guide',  name:'Finance Collaboration & P&C Requirements' }
-  ]}
-];
-const CH5_SECTIONS = [
-  { num: '1', title: 'P&C Audit', items: [
-    { s:'kit',    name:'P&C Operations Risk Self-Assessment Checklist' }
-  ]},
-  { num: '2', title: 'People Operations Governance', items: [
-    { s:'guide',  name:'P&C Governance, Roles, and Escalation Framework' }
-  ]}
-];
 
 /* =================================================================
    RENDERING
@@ -362,31 +119,165 @@ function symLabel(s) {
   return { policy: 'Global Policy', guide: 'Guidelines', kit: 'Template · Toolkit', xref: 'Cross-Reference' }[s] || '';
 }
 
-function policyListHTML(items) {
-  if (!items || !items.length) return '<div class="policy-item" style="grid-template-columns: 1fr; color: var(--ink-fade); font-family: Avenir Next LT Pro, sans-serif; font-style: italic; text-align: center; padding: 24px 0;">Guidance in preparation.</div>';
-  return `<div class="policy-list">
-    ${items.map(it => `
-      <div class="policy-item">
+// HTML-escape for text nodes / attributes (content is verbatim from source)
+function esc(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// unique id counter for accordion controls
+let _accId = 0;
+
+// A single expandable subheading (resource) row.
+// Collapsed: symbol + name + kind + chevron.
+// Expanded: reveals the blurb description and the hyperlinked resource.
+function policyItemHTML(it) {
+  const id = 'acc-' + (++_accId);
+  const hasDetail = !!(it.blurb || it.url);
+  const kind = symLabel(it.s);
+  // Resource line: hyperlink if url present, else plain styled name.
+  const resourceLine = it.url
+    ? `<a class="resource-link" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">
+         <span class="resource-link-icon">${SYM.link}</span>
+         <span class="resource-link-text">${esc(it.name)}</span>
+       </a>`
+    : `<div class="resource-link resource-link--none">
+         <span class="resource-link-icon">${SYM.link}</span>
+         <span class="resource-link-text">${esc(it.name)}</span>
+         <span class="resource-link-note">Resource available internally</span>
+       </div>`;
+
+  if (!hasDetail) {
+    // No blurb and no url — render as a static (non-expandable) row.
+    return `
+      <div class="policy-item static">
         <div class="policy-symbol">${SYM[it.s]}</div>
-        <div>
-          <div class="policy-name">${it.name}</div>
+        <div class="policy-name">${esc(it.name)}</div>
+        <div class="policy-kind">${kind}</div>
+      </div>`;
+  }
+
+  return `
+    <div class="policy-item accordion" data-open="false">
+      <button class="policy-item-toggle" aria-expanded="false" aria-controls="${id}">
+        <span class="policy-symbol">${SYM[it.s]}</span>
+        <span class="policy-name">${esc(it.name)}</span>
+        <span class="policy-kind">${kind}</span>
+        <span class="policy-chevron" aria-hidden="true">${SYM.chevron}</span>
+      </button>
+      <div class="policy-item-panel" id="${id}" role="region" hidden>
+        <div class="policy-item-panel-inner">
+          ${it.blurb ? `<p class="policy-item-blurb">${esc(it.blurb)}</p>` : ''}
+          <div class="policy-item-resource">
+            <span class="resource-eyebrow">Resource</span>
+            ${resourceLine}
+          </div>
         </div>
-        <div class="policy-kind">${symLabel(it.s)}</div>
       </div>
-    `).join('')}
+    </div>`;
+}
+
+function policyListHTML(items) {
+  if (!items || !items.length) return '';
+  return `<div class="policy-list">
+    ${items.map(policyItemHTML).join('')}
   </div>`;
 }
 
+// Section (numbered Heading) — optional intro blurb, resource accordions, optional transition.
 function sectionHTML(sec) {
+  const blurb = (sec.blurb && sec.blurb.length)
+    ? `<div class="policy-section-blurb">${sec.blurb.map(p => `<p>${esc(p)}</p>`).join('')}</div>`
+    : '';
+  const transition = sec.transition
+    ? `<p class="policy-section-transition">${esc(sec.transition)}</p>`
+    : '';
+  const numHTML = sec.num ? `<span class="num">${esc(sec.num)}.</span>` : '';
   return `
     <div class="policy-section">
       <div class="policy-section-header">
-        <span class="num">${sec.num}.</span>
-        <h3>${sec.title}</h3>
+        ${numHTML}
+        <h3>${esc(sec.title)}</h3>
       </div>
+      ${blurb}
       ${policyListHTML(sec.items)}
+      ${transition}
     </div>
   `;
+}
+
+// Sub-chapter intro block: tagline + intro paragraphs (with bullet detection).
+function subIntroHTML(c) {
+  if (!c) return '';
+  const parts = [];
+  if (c.tagline) parts.push(`<p class="sub-tagline">${esc(c.tagline)}</p>`);
+  if (c.intro && c.intro.length) {
+    // Render "People & Culture's role is to ensure:" style lead-ins as paragraphs;
+    // short imperative lines that follow such a lead become a bullet list.
+    let html = '';
+    let bulletBuf = [];
+    const flush = () => {
+      if (bulletBuf.length) {
+        html += `<ul class="sub-intro-list">${bulletBuf.map(b => `<li>${esc(b)}</li>`).join('')}</ul>`;
+        bulletBuf = [];
+      }
+    };
+    let collecting = false;
+    c.intro.forEach(p => {
+      const isLead = /:\s*$/.test(p);
+      if (isLead) {
+        flush();
+        collecting = true;
+        html += `<p class="sub-intro-lead">${esc(p)}</p>`;
+      } else if (collecting && p.length < 130) {
+        bulletBuf.push(p);
+      } else {
+        flush();
+        collecting = false;
+        html += `<p>${esc(p)}</p>`;
+      }
+    });
+    flush();
+    parts.push(`<div class="sub-intro">${html}</div>`);
+  }
+  return parts.join('');
+}
+
+// Philosophy block for a sub-chapter (uses source "Our X Philosophy" heading + paras).
+function philosophyHTML(c, fallbackLede) {
+  const title = (c && c.philosophy && c.philosophy.title) ? c.philosophy.title : 'Our Philosophy';
+  let bodyHTML;
+  if (c && c.philosophy && c.philosophy.paras && c.philosophy.paras.length) {
+    // Detect the "People & Culture's role is to ensure:" lead + bullets pattern.
+    let html = '';
+    let bulletBuf = [];
+    const flush = () => {
+      if (bulletBuf.length) {
+        html += `<ul class="sub-intro-list">${bulletBuf.map(b => `<li>${esc(b)}</li>`).join('')}</ul>`;
+        bulletBuf = [];
+      }
+    };
+    let collecting = false;
+    c.philosophy.paras.forEach(p => {
+      const isLead = /:\s*$/.test(p);
+      if (isLead) { flush(); collecting = true; html += `<p class="sub-intro-lead">${esc(p)}</p>`; }
+      else if (collecting && p.length < 130) { bulletBuf.push(p); }
+      else { flush(); collecting = false; html += `<p>${esc(p)}</p>`; }
+    });
+    flush();
+    bodyHTML = html;
+  } else {
+    bodyHTML = `<p>${esc(fallbackLede || '')}</p>`;
+  }
+  return `
+    <div class="philosophy-block">
+      <div class="eyebrow">${esc(title)}</div>
+      <div class="rule"></div>
+      ${bodyHTML}
+    </div>`;
 }
 
 // ---- COVER ----------------------------------------------------------
@@ -890,25 +781,23 @@ function polar(cx, cy, r, deg) {
 
 function renderSubChapter(sub) {
   const c = LIFECYCLE_CONTENT[sub.id];
+  const heroLede = (c && c.tagline) ? c.tagline : sub.lede;
   return `
     <div class="sub-chapter" id="${sub.id}" style="scroll-margin-top: 90px;">
       <div class="sub-hero" style="margin-top: 24px;">
-        <img class="sub-hero-img" src="img/${sub.img}" alt="${sub.label}" />
+        <img class="sub-hero-img" src="img/${sub.img}" alt="${esc(sub.label)}" />
         <div class="sub-hero-caption">
           <div class="letter">${sub.letter}</div>
           <div class="title-block">
             <div class="eyebrow"><span class="eyebrow-icon">${ICONS[sub.id]}</span>Colleague Lifecycle · Stage ${sub.letter}</div>
-            <h2>${sub.label}</h2>
-            <div class="sub-lede">${sub.lede}</div>
+            <h2>${esc(sub.label)}</h2>
+            <div class="sub-lede">${esc(heroLede)}</div>
           </div>
         </div>
       </div>
       <div class="spread tight">
-        <div class="philosophy-block">
-          <div class="eyebrow">Our Philosophy</div>
-          <div class="rule"></div>
-          <p>${c ? c.philosophy : sub.lede}</p>
-        </div>
+        ${c && c.intro && c.intro.length ? subIntroHTML({ intro: c.intro }) : ''}
+        ${c && c.philosophy && c.philosophy.paras && c.philosophy.paras.length ? philosophyHTML(c, sub.lede) : (c && c.intro && c.intro.length ? '' : philosophyHTML(c, sub.lede))}
         ${c ? c.sections.map(sectionHTML).join('') : ''}
       </div>
     </div>
@@ -934,12 +823,9 @@ function renderCh4() {
         </div>
       </div>
       <div class="spread">
-        <div class="philosophy-block">
-          <div class="eyebrow">Our Pre-Opening Philosophy</div>
-          <div class="rule"></div>
-          <p>A hotel opens once. Every hire, contract, and system put in place during the pre-opening period sets the standard for the years that follow. People &amp; Culture is present from the earliest planning stages to ensure the house that opens on day one already feels like Mandarin Oriental.</p>
-        </div>
-        ${CH4_SECTIONS.map(sectionHTML).join('')}
+        ${CH4_CONTENT.intro && CH4_CONTENT.intro.length ? subIntroHTML({ intro: CH4_CONTENT.intro }) : ''}
+        ${philosophyHTML(CH4_CONTENT, 'A hotel opens once. Every hire, contract, and system put in place during the pre-opening period sets the standard for the years that follow.')}
+        ${CH4_CONTENT.sections.map(sectionHTML).join('')}
       </div>
       ${chapterNavHTML('ch-3', 'ch-5')}
     </section>
@@ -965,7 +851,8 @@ function renderCh5() {
         </div>
       </div>
       <div class="spread">
-        ${CH5_SECTIONS.map(sectionHTML).join('')}
+        ${CH5_CONTENT.intro && CH5_CONTENT.intro.length ? subIntroHTML({ intro: CH5_CONTENT.intro }) : ''}
+        ${CH5_CONTENT.sections.map(sectionHTML).join('')}
       </div>
       ${chapterNavHTML('ch-4', 'ch-6')}
     </section>
@@ -1148,17 +1035,17 @@ function buildSearchIndex() {
       sec.items.forEach(it => idx.push({
         chapter: 'ch-3', sub: s.id, title: it.name,
         crumb: `${s.letter}. ${s.label} · ${sec.title}`,
-        text: it.name + ' ' + symLabel(it.s)
+        text: it.name + ' ' + symLabel(it.s) + ' ' + (it.blurb || '')
       }));
     });
   });
   CH4_SECTIONS.forEach(sec => {
     idx.push({ chapter: 'ch-4', sub: null, title: sec.title, crumb: 'Pre-Opening', text: sec.title });
-    sec.items.forEach(it => idx.push({ chapter: 'ch-4', sub: null, title: it.name, crumb: `Pre-Opening · ${sec.title}`, text: it.name }));
+    sec.items.forEach(it => idx.push({ chapter: 'ch-4', sub: null, title: it.name, crumb: `Pre-Opening · ${sec.title}`, text: it.name + ' ' + (it.blurb || '') }));
   });
   CH5_SECTIONS.forEach(sec => {
     idx.push({ chapter: 'ch-5', sub: null, title: sec.title, crumb: 'P&C Audit', text: sec.title });
-    sec.items.forEach(it => idx.push({ chapter: 'ch-5', sub: null, title: it.name, crumb: `P&C Audit · ${sec.title}`, text: it.name }));
+    sec.items.forEach(it => idx.push({ chapter: 'ch-5', sub: null, title: it.name, crumb: `P&C Audit · ${sec.title}`, text: it.name + ' ' + (it.blurb || '') }));
   });
   return idx;
 }
@@ -1244,6 +1131,18 @@ function initProgress() {
 // ---- Global click wiring ------------------------------------------
 function wireEvents() {
   document.addEventListener('click', e => {
+    // accordion toggle (expandable subheading)
+    const toggle = e.target.closest('.policy-item-toggle');
+    if (toggle) {
+      const item = toggle.closest('.policy-item.accordion');
+      const panel = item.querySelector('.policy-item-panel');
+      const open = item.getAttribute('data-open') === 'true';
+      item.setAttribute('data-open', open ? 'false' : 'true');
+      toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+      if (open) { panel.hidden = true; }
+      else { panel.hidden = false; }
+      return;
+    }
     // wheel slice
     const slice = e.target.closest('.wheel-slice');
     if (slice && slice.dataset.sub) { goTo('ch-3', slice.dataset.sub); return; }

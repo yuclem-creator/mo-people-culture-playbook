@@ -887,6 +887,227 @@ button { font-family: inherit; cursor: pointer; background: none; border: 0; pad
 }
 
 /* ============================================================
+   SUB-CHAPTER INTRO, PHILOSOPHY (multi-para), SECTION BLURBS
+   ============================================================ */
+/* Sub-chapter opening tagline (verbatim from source) */
+.sub-tagline {
+  font-family: 'MO Exceptional', Georgia, serif;
+  font-style: italic;
+  font-size: 1.5rem;
+  line-height: 1.45;
+  color: var(--ink);
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 40px;
+}
+/* Sub-chapter intro body paragraphs */
+.sub-intro {
+  max-width: 720px;
+  margin: 0 auto 56px;
+}
+.sub-intro p {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--ink-body);
+  margin: 0 0 1.1em;
+}
+.sub-intro-lead {
+  font-weight: 600;
+  color: var(--ink) !important;
+  margin-bottom: 0.6em !important;
+}
+.sub-intro-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.4em;
+}
+.sub-intro-list li {
+  position: relative;
+  padding: 8px 0 8px 26px;
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--ink-body);
+  border-bottom: 1px solid var(--rule);
+}
+.sub-intro-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 17px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--gold-deep);
+  transform: rotate(45deg);
+}
+
+/* Philosophy block now supports multiple paragraphs + bullets */
+.philosophy-block { text-align: center; }
+.philosophy-block p:first-of-type {
+  font-size: 1.35rem;
+}
+.philosophy-block .sub-intro-lead,
+.philosophy-block .sub-intro-list {
+  text-align: left;
+  max-width: 620px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.philosophy-block .sub-intro-lead {
+  font-style: normal !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mute) !important;
+  margin-top: 32px !important;
+}
+.philosophy-block .sub-intro-list li {
+  font-style: normal;
+  font-size: 0.95rem;
+  color: var(--ink-body);
+}
+
+/* Section (numbered heading) intro blurb + transition */
+.policy-section-blurb {
+  max-width: 720px;
+  margin: -8px 0 28px;
+}
+.policy-section-blurb p {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.75;
+  color: var(--ink-body);
+  margin: 0 0 0.9em;
+}
+.policy-section-transition {
+  font-family: 'MO Exceptional', Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--ink-mute);
+  max-width: 700px;
+  margin: 28px auto 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--gold-hair);
+  text-align: center;
+}
+
+/* ============================================================
+   EXPANDABLE SUBHEADING (ACCORDION) RESOURCE ROWS
+   ============================================================ */
+.policy-item.accordion { display: block; padding: 0; border-bottom: 1px solid var(--rule); }
+.policy-item.accordion:hover { background: transparent; }
+.policy-item-toggle {
+  display: grid;
+  grid-template-columns: 32px 1fr auto 20px;
+  gap: 20px;
+  align-items: center;
+  width: 100%;
+  padding: 15px 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+  border-radius: 2px;
+}
+.policy-item-toggle:hover { background: var(--paper-warm); }
+.policy-item-toggle:focus-visible { outline: 2px solid var(--gold-hair); outline-offset: 2px; }
+.policy-item-toggle .policy-symbol { color: var(--gold-deep); opacity: 0.85; }
+.policy-item-toggle .policy-symbol .line-icon { width: 18px; height: 18px; }
+.policy-item-toggle .policy-name {
+  font-family: 'MO Exceptional', serif;
+  font-size: 0.98rem;
+  color: var(--ink);
+  font-weight: 500;
+  line-height: 1.35;
+}
+.policy-item-toggle .policy-kind {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+.policy-chevron { color: var(--gold-deep); display: flex; align-items: center; justify-content: center; }
+.policy-chevron .line-icon { width: 16px; height: 16px; transition: transform 0.25s ease; }
+.policy-item.accordion[data-open="true"] .policy-chevron .line-icon { transform: rotate(180deg); }
+.policy-item.accordion[data-open="true"] > .policy-item-toggle { background: var(--paper-warm); }
+
+.policy-item-panel {
+  overflow: hidden;
+  animation: accGrow 0.28s ease;
+}
+@keyframes accGrow { from { opacity: 0; } to { opacity: 1; } }
+.policy-item-panel-inner {
+  padding: 4px 4px 22px 52px;
+  border-left: 2px solid var(--gold-hair);
+  margin-left: 15px;
+}
+.policy-item-blurb {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--ink-body);
+  margin: 0 0 16px;
+}
+.policy-item-resource { display: flex; flex-direction: column; gap: 8px; }
+.resource-eyebrow {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ink-fade);
+}
+.resource-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.92rem;
+  color: var(--gold-deep);
+  border-bottom: none;
+  padding: 8px 14px;
+  background: var(--paper-warm);
+  border: 1px solid var(--gold-hair);
+  border-radius: 3px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  width: fit-content;
+  max-width: 100%;
+}
+a.resource-link:hover {
+  background: var(--gold-deep);
+  border-color: var(--gold-deep);
+  color: #fff;
+}
+.resource-link-icon { display: flex; align-items: center; flex-shrink: 0; }
+.resource-link-icon .line-icon { width: 15px; height: 15px; }
+.resource-link-text { line-height: 1.35; }
+.resource-link--none {
+  color: var(--ink-mute);
+  background: transparent;
+  border-style: dashed;
+  cursor: default;
+  flex-wrap: wrap;
+}
+.resource-link-note {
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-fade);
+  margin-left: 4px;
+}
+.policy-item.static { border-bottom: 1px solid var(--rule); }
+
+@media (max-width: 640px) {
+  .policy-item-toggle { grid-template-columns: 24px 1fr 20px; gap: 12px; }
+  .policy-item-toggle .policy-kind { display: none; }
+  .policy-item-panel-inner { padding-left: 36px; margin-left: 12px; }
+}
+
+/* ============================================================
    PURPOSE / SYMBOLS / MISC
    ============================================================ */
 .purpose-list { list-style: none; padding: 0; margin: 24px 0 0; }
@@ -1276,6 +1497,7 @@ mark {
 
 </div>
 
+<script src="playbook-content.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
