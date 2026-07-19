@@ -370,7 +370,11 @@
     box.appendChild(sectionLabel('Section'));
     box.appendChild(textField('Number', sec.num || '', function (v) { sec.num = v; touch(); }));
     box.appendChild(textField('Title', sec.title || '', function (v) { sec.title = v; touch(); }));
-    if ('blurb' in sec || true) box.appendChild(textField('Lead sentence (optional)', sec.blurb || '', function (v) { sec.blurb = v; touch(); }, '', true));
+    if (Array.isArray(sec.blurb)) {
+      box.appendChild(paraArrayField('Lead paragraph(s)', sec.blurb, function (arr) { sec.blurb = arr; touch(); }));
+    } else {
+      box.appendChild(textField('Lead sentence (optional)', sec.blurb || '', function (v) { sec.blurb = v; touch(); }, '', true));
+    }
     if ('transition' in sec) box.appendChild(textField('Closing sentence (optional)', sec.transition || '', function (v) { sec.transition = v; touch(); }, '', true));
 
     if (sec.highlights) {
@@ -656,7 +660,7 @@
     });
 
     if (comp.mode === 'open-n') {
-      view.appendChild(textField('Minimum chapters (N)', String(comp.n || 1), function (v) { comp.n = Math.max(1, parseInt(v, 10) || 1); touch(); }));
+      view.appendChild(nField('Minimum chapters (N)', String(comp.n || 1), function (v) { comp.n = Math.max(1, parseInt(v, 10) || 1); touch(); refreshManifest(); }));
     }
     if (comp.mode === 'open-each-chapter') {
       view.appendChild(el('h3', { text: 'Required chapters' }));
@@ -669,6 +673,7 @@
           if (e.target.checked && i < 0) comp.requiredChapterIds.push(c.id);
           else if (!e.target.checked && i >= 0) comp.requiredChapterIds.splice(i, 1);
           touch();
+          refreshManifest();
         } });
         ul.appendChild(el('li', {}, [cb, (c.numeral ? c.numeral + '. ' : '') + c.label + '  (' + c.id + ')']));
       });
@@ -688,7 +693,23 @@
     return req.length ? req : chs;
   }
 
+  // A dedicated field builder for N so we can refresh the manifest live.
+  function nField(label, value, onInput) {
+    var input = el('input', { type: 'text', value: value, oninput: function (e) { onInput(e.target.value); } });
+    return el('div', { class: 'field' }, [el('label', {}, [label]), input]);
+  }
+  var _manifestBox = null;
+  function refreshManifest() {
+    if (!_manifestBox) return;
+    _manifestBox.innerHTML = '';
+    renderManifestRows(_manifestBox);
+  }
   function renderManifestInspector(box) {
+    _manifestBox = el('div', {});
+    renderManifestRows(_manifestBox);
+    box.appendChild(_manifestBox);
+  }
+  function renderManifestRows(box) {
     var m = PB.meta;
     var req = computeRequiredPages();
     var rows = [
@@ -700,11 +721,9 @@
       ['Completion', m.completion ? m.completion.mode : 'open-each-chapter'],
       ['Required pages', req.join(', ')]
     ];
-    var wrap = el('div', {});
     rows.forEach(function (r) {
-      wrap.appendChild(el('div', { class: 'kv' }, [el('span', { class: 'k', text: r[0] }), el('span', { class: 'v', text: r[1] })]));
+      box.appendChild(el('div', { class: 'kv' }, [el('span', { class: 'k', text: r[0] }), el('span', { class: 'v', text: r[1] })]));
     });
-    box.appendChild(wrap);
   }
 
   // =========================================================================
