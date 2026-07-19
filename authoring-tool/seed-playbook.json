@@ -1,0 +1,2138 @@
+{
+  "meta": {
+    "title": "People & Culture Playbook",
+    "wordmark": "Mandarin Oriental",
+    "edition": "Edition · July 2026",
+    "scorm": {
+      "identifier": "MO_PC_PLAYBOOK_MANIFEST",
+      "title": "MO People & Culture Playbook",
+      "masteryScore": 100
+    },
+    "completion": {
+      "mode": "open-each-chapter",
+      "requiredChapterIds": [
+        "cover",
+        "intro",
+        "ch-1",
+        "ch-2",
+        "ch-3",
+        "ch-4",
+        "ch-5",
+        "ch-6"
+      ]
+    }
+  },
+  "chapters": [
+    {
+      "id": "cover",
+      "numeral": "",
+      "label": "Cover",
+      "icon": "·"
+    },
+    {
+      "id": "intro",
+      "numeral": "",
+      "label": "A Message to Colleagues",
+      "opener": "cpo_portrait.jpg",
+      "isVideo": true
+    },
+    {
+      "id": "ch-1",
+      "numeral": "I",
+      "label": "Introduction",
+      "opener": "opener_intro.jpg"
+    },
+    {
+      "id": "ch-2",
+      "numeral": "II",
+      "label": "About Mandarin Oriental",
+      "opener": "opener_about.jpg"
+    },
+    {
+      "id": "ch-3",
+      "numeral": "III",
+      "label": "Leading Through the Colleague Lifecycle",
+      "opener": "opener_lifecycle.jpg",
+      "hasSubs": true
+    },
+    {
+      "id": "ch-4",
+      "numeral": "IV",
+      "label": "Pre-Opening Hotels",
+      "opener": "opener_preopen.jpg"
+    },
+    {
+      "id": "ch-5",
+      "numeral": "V",
+      "label": "P&C Audit",
+      "opener": "opener_audit.jpg"
+    },
+    {
+      "id": "ch-6",
+      "numeral": "VI",
+      "label": "Staying Connected & Supported",
+      "opener": "opener_support.jpg"
+    }
+  ],
+  "lifecycle": [
+    {
+      "id": "sub-A",
+      "letter": "A",
+      "label": "Leading with Integrity",
+      "img": "ch_A_integrity.jpg",
+      "lede": "Ethical Conduct and Fair Employment set the foundation for how we lead, hire, and treat every Colleague."
+    },
+    {
+      "id": "sub-B",
+      "letter": "B",
+      "label": "Attracting & Hiring",
+      "img": "ch_B_attracting.jpg",
+      "lede": "Our recruitment philosophy — from talent acquisition strategy to selection and offer management."
+    },
+    {
+      "id": "sub-C",
+      "letter": "C",
+      "label": "Onboarding",
+      "img": "ch_C_onboarding.jpg",
+      "lede": "Welcoming new Colleagues into the MO family through structured induction and early performance care."
+    },
+    {
+      "id": "sub-D",
+      "letter": "D",
+      "label": "People & Culture Operations",
+      "img": "ch_D_operations.jpg",
+      "lede": "The day-to-day systems, records, payroll, benefits, and analytics that keep P&C running."
+    },
+    {
+      "id": "sub-E",
+      "letter": "E",
+      "label": "Colleague Experience",
+      "img": "ch_E_experience.jpg",
+      "lede": "Engagement, recognition, wellbeing, and voice — the fabric of daily life at Mandarin Oriental."
+    },
+    {
+      "id": "sub-F",
+      "letter": "F",
+      "label": "Rewarding Great People",
+      "img": "ch_F_rewarding.jpg",
+      "lede": "Compensation, benefits, and mobility — how we recognise contribution and support growth."
+    },
+    {
+      "id": "sub-G",
+      "letter": "G",
+      "label": "Developing & Growing",
+      "img": "ch_G_developing.jpg",
+      "lede": "Performance management, learning, and career development — investing in every Colleague’s craft."
+    },
+    {
+      "id": "sub-H",
+      "letter": "H",
+      "label": "Leaving with Connection",
+      "img": "ch_H_leaving.jpg",
+      "lede": "Offboarding with dignity, and staying connected through the Forever Fans alumni community."
+    }
+  ],
+  "journey": [
+    {
+      "stage": "Attract",
+      "img": "journey_attract.jpg",
+      "icon": "sub-B",
+      "pos": "34% 32%",
+      "role": "People &amp; Culture shapes our recruitment philosophy — from talent acquisition strategy to selection and offer management — so the right people find their place with us."
+    },
+    {
+      "stage": "Welcome",
+      "img": "journey_welcome.jpg",
+      "icon": "sub-C",
+      "pos": "center 38%",
+      "role": "P&amp;C welcomes new Colleagues into the MO family through structured induction and early performance care."
+    },
+    {
+      "stage": "Grow",
+      "img": "journey_grow.jpg",
+      "icon": "sub-G",
+      "pos": "center 40%",
+      "role": "Through performance management, learning, and career development, P&amp;C invests in every Colleague’s craft."
+    },
+    {
+      "stage": "Care for",
+      "img": "journey_carefor.jpg",
+      "icon": "sub-E",
+      "pos": "center 38%",
+      "role": "P&amp;C nurtures engagement, recognition, wellbeing, and voice — the fabric of daily life at Mandarin Oriental."
+    },
+    {
+      "stage": "Stay connected",
+      "img": "journey_stay.jpg",
+      "icon": "sub-H",
+      "pos": "center 30%",
+      "role": "Even as Colleagues move on, P&amp;C offboards with dignity and keeps them close through the Forever Fans alumni community."
+    }
+  ],
+  "seniorMgmt": [
+    {
+      "name": "Laurent Kleitman",
+      "role": "Group Chief Executive",
+      "img": "sm_laurent.jpg"
+    },
+    {
+      "name": "Amanda Hyndman",
+      "role": "Chief Operating Officer",
+      "img": "sm_amanda.jpg"
+    },
+    {
+      "name": "ShaoWei Ong",
+      "role": "Chief People & Culture Officer",
+      "img": "sm_shaowei.jpg"
+    },
+    {
+      "name": "Matthew Bishop",
+      "role": "Chief Financial Officer",
+      "img": "sm_matthew.jpg"
+    },
+    {
+      "name": "Kieren Barry",
+      "role": "Group Counsel",
+      "img": "sm_kieren.jpg"
+    },
+    {
+      "name": "Francesco Cefalu",
+      "role": "Chief Development Officer",
+      "img": "sm_francesco.jpg"
+    },
+    {
+      "name": "Vincent Marot",
+      "role": "Chief Technical Services Officer",
+      "img": "sm_vincent.jpg"
+    },
+    {
+      "name": "Raphael Bick",
+      "role": "Chief Information Officer",
+      "img": "sm_raphael.jpg"
+    },
+    {
+      "name": "Kristin Ruble",
+      "role": "Chief Commercial Officer",
+      "img": "sm_kristin.jpg"
+    },
+    {
+      "name": "Alex Schellenberger",
+      "role": "Chief Brand & Marketing Officer",
+      "img": "sm_alex.jpg"
+    }
+  ],
+  "pcLeaders": [
+    {
+      "name": "Koray Genckul",
+      "role": "Group Vice-President · P&C Operations",
+      "img": "vp_koray.jpg"
+    },
+    {
+      "name": "Nicoleta Cucos",
+      "role": "Regional Director · Middle East",
+      "img": "vp_nicoleta.jpg"
+    },
+    {
+      "name": "Robin Vermeire",
+      "role": "Regional Director · Europe",
+      "img": "vp_robin.jpg"
+    },
+    {
+      "name": "Laura Wilson",
+      "role": "Regional Director · Asia Pacific",
+      "img": "vp_laura.jpg"
+    }
+  ],
+  "beliefs": [
+    {
+      "key": "vision",
+      "tab": "Our Vision",
+      "eyebrow": "A Meaningful Vision",
+      "statement": "Be <em>Fans</em> of the <em>Exceptional</em>, <em>Every Day</em>, <em>Everywhere</em>",
+      "items": [
+        {
+          "icon": "wellbeing",
+          "label": "Fans",
+          "text": "We are passionate beyond our duty"
+        },
+        {
+          "icon": "reward",
+          "label": "Exceptional",
+          "text": "We stand out from the usual and expected"
+        },
+        {
+          "icon": "welcome",
+          "label": "Every Day",
+          "text": "Our motivation and dedication is continuous"
+        },
+        {
+          "icon": "connect",
+          "label": "Everywhere",
+          "text": "Exceptional delivery in parts of the guest journey"
+        }
+      ]
+    },
+    {
+      "key": "mission",
+      "tab": "Our Mission",
+      "eyebrow": "A Meaningful Mission",
+      "statement": "Craft time-<em>enriching experiences</em> that transform the ordinary to the <em>exceptional</em> and guests to fans",
+      "items": [
+        {
+          "icon": "develop",
+          "label": "Enriching",
+          "text": "Enabling our guests’ self-growth and fulfillment"
+        },
+        {
+          "icon": "strategy",
+          "label": "Experiences",
+          "text": "We create loyalty through memorable stays and experiences"
+        },
+        {
+          "icon": "reward",
+          "label": "Exceptional",
+          "text": "Elevated experiences transform simple things into moments of delight"
+        }
+      ]
+    },
+    {
+      "key": "values",
+      "tab": "Our Values",
+      "eyebrow": "Our Values",
+      "statement": "The <em>Exceptional</em> · <em>Growth</em> · <em>Teamwork</em> · <em>Respect</em> · <em>Responsibility</em>",
+      "items": [
+        {
+          "icon": "reward",
+          "label": "The Exceptional",
+          "text": "We Deliver the Exceptional."
+        },
+        {
+          "icon": "develop",
+          "label": "Growth",
+          "text": "We Embrace a Growth Mindset."
+        },
+        {
+          "icon": "connect",
+          "label": "Teamwork",
+          "text": "We Succeed Together."
+        },
+        {
+          "icon": "fair",
+          "label": "Respect",
+          "text": "We Demonstrate Integrity and Respect."
+        },
+        {
+          "icon": "ethics",
+          "label": "Responsibility",
+          "text": "We Act Responsibly."
+        }
+      ]
+    }
+  ],
+  "menuDesc": {
+    "intro": "A short welcome film introducing our People & Culture Playbook.",
+    "ch-1": "Our purpose, who this Playbook is for, and how to use it.",
+    "ch-2": "Our heritage, our global presence, and the leadership that guides us.",
+    "ch-3": "The eight stages of the Colleague journey — from integrity to lasting connection.",
+    "ch-4": "How People & Culture brings a new hotel to life, from planning to opening day.",
+    "ch-5": "How we measure and uphold the standards of People & Culture across the Group.",
+    "ch-6": "The networks, tools, and communities that keep every Colleague supported."
+  },
+  "lifecycleContent": {
+    "sub-A": {
+      "tagline": "The non-negotiables that guide how we work, lead, and uphold our culture globally.",
+      "intro": [
+        "Hiring, coaching or making operational decisions must be built on ethics, integrity, respect, and safety. These guidelines shape every Colleague experience and protect the trust that defines Mandarin Oriental’s reputation.",
+        "This section outlines the Group-wide governance resources that apply across all roles, regions, and reporting lines. They protect Colleagues and the brand, ensure compliance with legislation, and define the professional standards expected of every leader and team.",
+        "People & Culture’s role is to ensure:",
+        "Every new Colleague understands these expectations from Day 1.",
+        "People Managers model and reinforce these behaviours.",
+        "Concerns, investigations, and breaches are handled promptly and fairly.",
+        "Local adaptations comply with legal requirements and reflect MO’s values.",
+        "These resources are non-negotiable. They must be communicated clearly, reviewed regularly, and upheld consistently."
+      ],
+      "sections": [
+        {
+          "num": "1",
+          "title": "Ethical Conduct & Integrity",
+          "splitAfter": 1,
+          "highlights_eyebrow": "What Integrity Protects",
+          "highlights": [
+            {
+              "icon": "ethics",
+              "label": "Professionalism",
+              "text": "the standards of professionalism, accountability, and care that every Colleague must uphold"
+            },
+            {
+              "icon": "fair",
+              "label": "Respect",
+              "text": "how we show respect for one another, our guests, and our brand"
+            },
+            {
+              "icon": "governance",
+              "label": "Daily Decisions",
+              "text": "daily decisions and interactions"
+            }
+          ],
+          "blurb": [
+            "Ethical conduct is the foundation of trust — it is how we show respect for one another, our guests, and our brand.",
+            "This section defines the standards of professionalism, accountability, and care that every Colleague must uphold in their daily decisions and interactions."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Code of Conduct & Ethics",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/A.%20Leading%20with%20Integrity/A1.%20Ethical%20Conduct%20%26%20Integrity/a.%20Code%20of%20Conduct%20Jan2026.pdf?csf=1&web=1&e=ZzDDEx",
+              "blurb": "Sets the Group standard for integrity, professionalism, and ethical behaviour across all roles."
+            },
+            {
+              "s": "policy",
+              "name": "Social Media & Digital Responsibility Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/A.%20Leading%20with%20Integrity/A1.%20Ethical%20Conduct%20%26%20Integrity/b.%20Social%20Media%20%26%20Digital%20Responsibility%20Jan2026.pdf?csf=1&web=1&e=oPyc3f",
+              "blurb": "Defines responsible and brand-aligned use of social media and digital platforms, promoting integrity, respect, and confidentiality while safeguarding MO’s reputation online"
+            },
+            {
+              "s": "policy",
+              "name": "Open Door Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/A.%20Leading%20with%20Integrity/A1.%20Ethical%20Conduct%20%26%20Integrity/c.%20Open%20Door%20Policy%20Jan2026.pdf?csf=1&web=1&e=jqIh82",
+              "blurb": "Encourages open communication between Colleagues and leaders."
+            },
+            {
+              "s": "policy",
+              "name": "Anti-Harassment & Bullying Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/A.%20Leading%20with%20Integrity/A1.%20Ethical%20Conduct%20%26%20Integrity/d.%20Anti-Harassment%20and%20Bullying%20Policy%20Jan2026.pdf?csf=1&web=1&e=dQFXeL",
+              "blurb": "Ensures a respectful, inclusive, and harassment-free workplace for every Colleague."
+            },
+            {
+              "s": "policy",
+              "name": "Whistleblowing Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/A.%20Leading%20with%20Integrity/A1.%20Ethical%20Conduct%20%26%20Integrity/e.%20Whistleblowing%20Policy%20Jan2026.pdf?csf=1&web=1&e=dJC6Bi",
+              "blurb": "Protects Colleagues who report unethical or unlawful conduct and ensures confidentiality throughout the process."
+            },
+            {
+              "s": "guide",
+              "name": "Whistleblowing Speak-Up Guide",
+              "url": "https://mohgl.sharepoint.com/:p:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/A.%20Leading%20with%20Integrity/A1.%20Ethical%20Conduct%20%26%20Integrity/f.%20New%20Speak%20Up%20Guide%20Template.pptx?d=w2e0a9d77b7774124b49a22f0c5aaeff0&csf=1&web=1&e=c2amnY",
+              "blurb": "Provides step-by-step guidance for Colleagues to safely and confidentially report concerns through MO’s Speak Up platform."
+            },
+            {
+              "s": "policy",
+              "name": "Colleague Relationship Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/A.%20Leading%20with%20Integrity/A1.%20Ethical%20Conduct%20%26%20Integrity/g.%20Colleague%20Relationship%20Policy%20Jan2026.pdf?csf=1&web=1&e=fyAQDp",
+              "blurb": "Clarifies expectations around personal relationships to prevent conflicts of interest and maintain fairness."
+            },
+            {
+              "s": "policy",
+              "name": "Business Entertainment Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/A.%20Leading%20with%20Integrity/A1.%20Ethical%20Conduct%20%26%20Integrity/h.%20Business%20Entertainment%20Policy%20Jan2026.pdf?csf=1&web=1&e=jpkzB9",
+              "blurb": "Provides guidance for responsible, transparent, and ethical business entertainment and gift-giving, aligned with the Code of Conduct and Finance reimbursement standards."
+            }
+          ],
+          "transition": "Integrity is more than individual behaviour — it’s embedded in how we design and deliver our people practices. Our next commitment is ensuring every employment decision reflects fairness, equal opportunity, and respect for the law."
+        },
+        {
+          "num": "2",
+          "title": "Fair Employment & Equal Opportunity",
+          "splitAfter": 1,
+          "highlights_eyebrow": "Our Commitment",
+          "highlights": [
+            {
+              "icon": "fair",
+              "label": "Respect & Dignity",
+              "text": "treated with respect, dignity, and equity"
+            },
+            {
+              "icon": "governance",
+              "label": "Consistent Standards",
+              "text": "consistent standards for employment practices and policy governance"
+            },
+            {
+              "icon": "connect",
+              "label": "Across Jurisdictions",
+              "text": "across all jurisdictions"
+            }
+          ],
+          "blurb": [
+            "Fair employment ensures that every Colleague — regardless of background, role, or region — is treated with respect, dignity, and equity.",
+            "This section defines how MO applies consistent standards for employment practices and policy governance across all jurisdictions."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Employment Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/A.%20Leading%20with%20Integrity/A2.%20Fair%20Employment%20%26%20Equal%20Opportunity/a%20Employment%20Policy%20Jan2026.pdf?csf=1&web=1&e=8dOh1C",
+              "blurb": "Establishes MO’s commitment to fair, transparent, and merit-based employment practices"
+            }
+          ],
+          "transition": "Upholding fairness and equality strengthens our credibility as an employer of choice. Together, these policies and resources form the ethical foundation that guides every stage of the Colleague lifecycle — from how we hire and onboard to how we care, grow, and lead."
+        }
+      ]
+    },
+    "sub-B": {
+      "tagline": "How we build out future by finding and welcoming the right talent.",
+      "philosophy": {
+        "title": "Our Recruitment Philosophy",
+        "paras": [
+          "We believe every hire shapes our culture and our guest experience. Recruiting the right people means more than filling roles — it’s about finding individuals who reflect our values, elevate our teams, and strengthen our legacy of excellence.",
+          "At Mandarin Oriental, we seek individuals who share our passion for service excellence and who take pride in delivering thoughtful, personalised experiences.",
+          "We seek Colleagues who care deeply, collaborate openly, and act with integrity. From first contact to onboarding, every step of the journey reflects the same warmth, respect, and professionalism that define Mandarin Oriental.",
+          "Our approach to attracting and hiring balances an exceptional candidate experience with fairness, rigour, and consistency. It reflects the same standards we hold inside our hotels — professionalism, attention to detail, and genuine care for people.",
+          "This section outlines the Group’s policies and resources that guide how we attract, select, and welcome talent across all MO locations.",
+          "People & Culture’s role is to ensure:",
+          "Local recruitment practices align with Group policy and brand standards.",
+          "Hiring Managers are equipped to recruit inclusively and compliantly.",
+          "Onboarding is seamless, values-based, and fully documented.",
+          "Internal mobility and alumni connections are nurtured strategically.",
+          "Turning philosophy into practice starts with clear structure and governance. Before we reach potential candidates, we must ensure our hiring decisions are anchored in fairness, transparency, and strategic alignment."
+        ]
+      },
+      "sections": [
+        {
+          "num": "1",
+          "title": "Talent Acquisition Strategy & Governance",
+          "splitAfter": 1,
+          "highlights_eyebrow": "What the Framework Sets",
+          "highlights": [
+            {
+              "icon": "strategy",
+              "label": "Planning",
+              "text": "how we plan, govern, and measure recruitment activity across the Group"
+            },
+            {
+              "icon": "governance",
+              "label": "Accountability",
+              "text": "setting expectations for approvals, accountability"
+            },
+            {
+              "icon": "data",
+              "label": "Data Integrity",
+              "text": "and data integrity"
+            }
+          ],
+          "blurb": [
+            "A clear recruitment framework ensures consistency across every property and region.",
+            "This section defines how we plan, govern, and measure recruitment activity across the Group — setting expectations for approvals, accountability, and data integrity."
+          ],
+          "items": [
+            {
+              "s": "guide",
+              "name": "Talent Acquisition Governance Framework Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B1.%20Talent%20Acquisition%20Strategy%20and%20Governance/a.%20Talent%20Acquisition%20Governance%20Jan2026.pdf?csf=1&web=1&e=OtQfc7",
+              "blurb": "Defines global governance, accountability, and compliance standards for all Talent Acquisition activities across MO."
+            },
+            {
+              "s": "policy",
+              "name": "Recruitment, Selection & Hiring Requisition & Approvals Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B1.%20Talent%20Acquisition%20Strategy%20and%20Governance/b.%20Recruitment,%20Selection,%20Hiring%20Requisition%20and%20Approvals%20Jan2026.pdf?csf=1&web=1&e=8r1e6m",
+              "blurb": "Sets MO’s global standards for fair, transparent, and values-based recruitment and selection. Outlines the approval process for new, replacement, and temporary roles."
+            },
+            {
+              "s": "kit",
+              "name": "Job Requisition Management Evergreen JR and Job Posting",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B1.%20Talent%20Acquisition%20Strategy%20and%20Governance/c.%20Job%20Requisition%20Management%20Evergreen%20JR%20and%20Job%20Posting%20-%2001082024v2.pdf?csf=1&web=1&e=kHuUFy",
+              "blurb": "Provides system guidance for creating, managing, and approving evergreen and role-specific job requisitions and postings within the People+ platform"
+            },
+            {
+              "s": "kit",
+              "name": "Candidate Job Application Process (Recruiting Stages)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B1.%20Talent%20Acquisition%20Strategy%20and%20Governance/d.%20Candidate%20Job%20Application%20Process%20(Recruiting%20Stages)%20-%2001082024v1.pdf?csf=1&web=1&e=rWmwv3",
+              "blurb": "Defines the end-to-end candidate application stages in People+, from submission through screening, assessment, and selection."
+            },
+            {
+              "s": "kit",
+              "name": "Bulk or Mass Action and Candidate Communications",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B1.%20Talent%20Acquisition%20Strategy%20and%20Governance/e.%20Bulk%20or%20Mass%20Action%20and%20Candidate%20Communications%20-%2001082024v1.pdf?csf=1&web=1&e=koLlaY",
+              "blurb": "Outlines how to execute bulk actions and standardised candidate communications in People+, ensuring timely, consistent, and compliant engagement."
+            },
+            {
+              "s": "kit",
+              "name": "Referrals & Internal Candidates",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B1.%20Talent%20Acquisition%20Strategy%20and%20Governance/f.%20Referrals%20%26%20Internal%20Candidates%20-%2001082024v1.pdf?csf=1&web=1&e=JdO7ce",
+              "blurb": "Describes system workflows for managing employee referrals and internal applications in People+, supporting fair consideration and internal mobility."
+            },
+            {
+              "s": "guide",
+              "name": "Recruitment Data & Analytics",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B1.%20Talent%20Acquisition%20Strategy%20and%20Governance/g.%20Recruitment%20Analytics%20Jan2026.pdf?csf=1&web=1&e=u2pQOK",
+              "blurb": "Defines key TA metrics (time-to-hire, diversity ratios), data ownership, and reporting cadence."
+            }
+          ],
+          "transition": "With structure in place, the next step is to bring our story to life. Our employer brand and candidate experience are how potential Colleagues first feel the Mandarin Oriental difference."
+        },
+        {
+          "num": "2",
+          "title": "Employer Brand & Candidate Experience",
+          "splitAfter": 1,
+          "highlights_eyebrow": "How We Show Up",
+          "highlights": [
+            {
+              "icon": "welcome",
+              "label": "Authentic Experience",
+              "text": "A consistent, authentic candidate experience reinforces our reputation as a world-class employer"
+            },
+            {
+              "icon": "connect",
+              "label": "Lifelong Fans",
+              "text": "turns great applicants into lifelong fans"
+            },
+            {
+              "icon": "hiring",
+              "label": "Brand Expression",
+              "text": "how we express the Mandarin Oriental brand through our tone, imagery, and communication"
+            }
+          ],
+          "blurb": [
+            "Every interaction with a candidate shapes how they perceive our culture. A consistent, authentic candidate experience reinforces our reputation as a world-class employer and turns great applicants into lifelong fans.",
+            "This section outlines how we express the Mandarin Oriental brand through our tone, imagery, and communication — from social media to interviews."
+          ],
+          "items": [
+            {
+              "s": "guide",
+              "name": "Colleague Value Proposition Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B2.%20Employer%20Brand%20and%20Candidate%20Experience/a.%20Colleague%20Value%20Proposition%20Toolkit.pdf?csf=1&web=1&e=K8dk4I",
+              "blurb": "Articulates what makes MO a unique and inspiring place to work; ensures CVP alignment across markets."
+            },
+            {
+              "s": "guide",
+              "name": "Colleague Brand Identity & Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B2.%20Employer%20Brand%20and%20Candidate%20Experience/b.%20Colleague%20Brand%20Guide%20-%20Book%2010.pdf?csf=1&web=1&e=RLyqM1",
+              "blurb": "Ensures all recruitment/P&C materials follow MO brand identity (logos, tone, layouts)."
+            },
+            {
+              "s": "kit",
+              "name": "Colleague Brand Layouts",
+              "url": "https://mohgl.sharepoint.com/:f:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B2.%20Employer%20Brand%20and%20Candidate%20Experience/c.%20Colleague%20Brand%20Guide%20-%20Designer%27s%20Guide%20Layout%20Templates?csf=1&web=1&e=vCbekz",
+              "blurb": "Ensures consistent use of MO’s Colleague brand visuals and templates across recruitment and internal communications."
+            },
+            {
+              "s": "kit",
+              "name": "Colleague Images",
+              "url": "https://mohgl.sharepoint.com/:f:/r/sites/GlobalHRPP/Shared%20Documents/General/02%20Talent%20Acquisition/CVP%20Colleague%20Images?csf=1&web=1&e=dRTxHJ",
+              "blurb": "Provides approved imagery that reflects the diversity and spirit of our Colleague community."
+            },
+            {
+              "s": "guide",
+              "name": "LinkedIn Recruitment Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B2.%20Employer%20Brand%20and%20Candidate%20Experience/d.%20LinkedIn%20Recruitment%20Guidelines.pdf?csf=1&web=1&e=JTARFk",
+              "blurb": "Defines best practice for employer branding and compliant posting on professional platforms."
+            },
+            {
+              "s": "kit",
+              "name": "InMail templates for Recruiters",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B2.%20Employer%20Brand%20and%20Candidate%20Experience/e.%20InMail%20templates%20for%20Recruiters.pdf?csf=1&web=1&e=uDbwBR",
+              "blurb": "Provides standard, brand-aligned outreach templates to support consistent, professional, and inclusive candidate engagement."
+            },
+            {
+              "s": "guide",
+              "name": "LinkedIn Executive Guide",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B2.%20Employer%20Brand%20and%20Candidate%20Experience/f.%20LinkedIn%20Executive%20Guide.pdf?csf=1&web=1&e=emxh4p",
+              "blurb": "Offers best practices to connect and engage with talent more deeply on LinkedIn."
+            },
+            {
+              "s": "guide",
+              "name": "Candidate Experience Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B2.%20Employer%20Brand%20and%20Candidate%20Experience/g.%20Candidate%20Experience%20Guidelines.pdf?csf=1&web=1&e=PTtP2X",
+              "blurb": "Sets standards for communication, responsiveness, and experience at every stage of the candidate journey."
+            },
+            {
+              "s": "kit",
+              "name": "Candidate Emails from Recruitment Processes",
+              "url": "https://mohgl.sharepoint.com/:f:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B2.%20Employer%20Brand%20and%20Candidate%20Experience/h.%20Candidate%20Emails%20from%20Recruitment%20Processes?csf=1&web=1&e=ifgK5e",
+              "blurb": "Templates to reference in engaging with candidates through the recruitment lifecycle to uphold our reputation as an employer of choice."
+            },
+            {
+              "s": "guide",
+              "name": "Local Employer Brand Awards Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B2.%20Employer%20Brand%20and%20Candidate%20Experience/i.%20Local%20Employer%20Brand%20Awards.pdf?csf=1&web=1&e=GzJgm1",
+              "blurb": "Outlines how to nominate, submit, and showcase MO for local employer awards and recognition."
+            }
+          ],
+          "transition": "A compelling brand attracts attention — but meaningful roles sustain engagement. The next section focuses on how we design jobs that are clear, fair, and future-ready."
+        },
+        {
+          "num": "3",
+          "title": "Job Advertisements",
+          "splitAfter": 1,
+          "highlights_eyebrow": "Designing Roles",
+          "highlights": [
+            {
+              "icon": "build",
+              "label": "Clarity",
+              "text": "we build clarity for Colleagues"
+            },
+            {
+              "icon": "develop",
+              "label": "Career Growth",
+              "text": "create the conditions for career growth and organisational agility"
+            },
+            {
+              "icon": "strategy",
+              "label": "Aligned to Plans",
+              "text": "linking them to workforce plans and budget cycles"
+            }
+          ],
+          "blurb": [
+            "Thoughtful job design ensures every role has purpose, structure, and room to grow. By designing roles deliberately, we build clarity for Colleagues and create the conditions for career growth and organisational agility.",
+            "This section explains how we evaluate and approve new or revised positions, linking them to workforce plans and budget cycles."
+          ],
+          "items": [
+            {
+              "s": "kit",
+              "name": "Job Description Template",
+              "url": "https://mohgl.sharepoint.com/:w:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B3.%20Job%20Advertisements/a.%20MO%20Job%20Description%20Template%20Feb2026.docx?d=we352b8ec8c5447239ad8e6b4237981e7&csf=1&web=1&e=yPTJox",
+              "blurb": "Standardised format for defining purpose, key responsibilities, competencies, and qualifications."
+            },
+            {
+              "s": "kit",
+              "name": "Job Advertisement Templates",
+              "url": "https://mohgl.sharepoint.com/:w:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B3.%20Job%20Advertisements/b.%20MO%20Job%20Advert%20Template%20Jan2026.docx?d=w6216cf30123a42989ebb1880b4b6b1bd&csf=1&web=1&e=h5xgjG",
+              "blurb": "Standardised format for clear, inclusive, and brand-aligned job advertisements."
+            }
+          ],
+          "transition": "With roles clearly defined, we can focus on where and how we find the right talent. Our sourcing strategy connects us to exceptional people who share our passion for excellence."
+        },
+        {
+          "num": "4",
+          "title": "Sourcing Channels",
+          "splitAfter": 1,
+          "highlights_eyebrow": "A Healthy Pipeline",
+          "highlights": [
+            {
+              "icon": "connect",
+              "label": "Internal Mobility",
+              "text": "internal transfers and alumni"
+            },
+            {
+              "icon": "hiring",
+              "label": "External Outreach",
+              "text": "partnerships with universities and agencies"
+            },
+            {
+              "icon": "develop",
+              "label": "Diverse Pipeline",
+              "text": "builds a healthy, diverse pipeline for the future"
+            }
+          ],
+          "blurb": [
+            "Our sourcing channels reflect both global reach and local strength. A balanced mix of internal mobility and external outreach builds a healthy, diverse pipeline for the future.",
+            "This section covers how we identify, engage, and re-engage talent — from internal transfers and alumni to partnerships with universities and agencies."
+          ],
+          "items": [
+            {
+              "s": "guide",
+              "name": "Proactive Recruitment Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/a.%20Step%20By%20Step%20Proactive%20Recruitment%20Jan2026.pdf?csf=1&web=1&e=jNKkXy",
+              "blurb": "Encourages continuous pipelining and networking to strengthen future talent readiness."
+            },
+            {
+              "s": "guide",
+              "name": "Talent Bank Screening Interview Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/b.%20Talent%20Bank%20Screening%20Guidelines%20Jan2026.pdf?csf=1&web=1&e=juLQC0",
+              "blurb": "Provides a consistent approach to first-round screening interviews."
+            },
+            {
+              "s": "policy",
+              "name": "Colleague Transfer Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/c.%20Colleague%20Transfer%20Process%20Jan2026.pdf?csf=1&web=1&e=EXqplx",
+              "blurb": "Outlines the process for internal moves to support career growth and succession planning."
+            },
+            {
+              "s": "kit",
+              "name": "Colleague Transfer Flow Chart",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/d.%20Colleague%20Transfer%20Process%20Flow%20Charts%20-%20Jan%202026.pdf?csf=1&web=1&e=7LuoEH",
+              "blurb": "Visual guide to transfer approvals, documentation, and system updates."
+            },
+            {
+              "s": "policy",
+              "name": "Rehiring Colleagues Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/e.%20Rehiring%20Colleagues%20Policy%20Jan2026.pdf?csf=1&web=1&e=RHgg0Q",
+              "blurb": "Defines eligibility, approval, and service-bridging standards for rehiring former Colleagues within MO."
+            },
+            {
+              "s": "policy",
+              "name": "Colleague Referral Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/f.%20Colleague%20Referral%20Policy%20Jan2026.pdf?csf=1&web=1&e=pKqwoo",
+              "blurb": "Formalises referral rewards, eligibility, and approvals, aligning with the Employment of Relatives Policy."
+            },
+            {
+              "s": "policy",
+              "name": "Employment of Relatives Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/g.%20Employment%20of%20Relatives%20Policy%20Jan2026.pdf?csf=1&web=1&e=DAAyhc",
+              "blurb": "Ensures transparency and fairness where personal relationships exist in recruitment or reporting lines."
+            },
+            {
+              "s": "guide",
+              "name": "Local University Engagement Strategy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/h.%20Local%20University%20Engagement%20Strategy.pdf?csf=1&web=1&e=jOWLoK",
+              "blurb": "Framework for engaging schools and universities to build early-career pipelines."
+            },
+            {
+              "s": "kit",
+              "name": "University Engagement Slide Deck, Collateral, and Marketing materials",
+              "url": "https://mohgl.sharepoint.com/:f:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/i.%20Local%20University%20Engagement%20Strategy?csf=1&web=1&e=KRt4U4",
+              "blurb": "Provides standard materials for university engagement, ensuring consistency and brand alignment across all campus events."
+            },
+            {
+              "s": "guide",
+              "name": "Recruitment Agency Engagement Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/j.%20Recruitment%20Agency%20Engagement%20Guidelines.pdf?csf=1&web=1&e=oVvrq1",
+              "blurb": "Sets criteria and approval steps for using third-party recruiters or RPO partners."
+            },
+            {
+              "s": "kit",
+              "name": "Recruitment Agency Ethical Conduct & Compliance Form",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/k.%20Recruitment%20Agency%20Ethical%20Conduct%20%26%20Compliance%20Policy.pdf?csf=1&web=1&e=VgvqYB",
+              "blurb": "Form to be signed and acknowledged by all Recruitment Agencies supplying talent to MO"
+            }
+          ],
+          "transition": "Once we’ve attracted potential talent, fairness and consistency become critical. Our selection process ensures every candidate is assessed on merit and fit, not familiarity or bias."
+        },
+        {
+          "num": "5",
+          "title": "Selection & Assessment",
+          "splitAfter": 2,
+          "highlights_eyebrow": "A Fair, Structured Process",
+          "highlights": [
+            {
+              "icon": "connect",
+              "label": "Partnership",
+              "text": "People & Culture partners closely with hiring managers to guide a structured and fair selection process"
+            },
+            {
+              "icon": "audit",
+              "label": "Responsible Hiring",
+              "text": "appropriate reference and background checks may be conducted to verify employment history, qualifications"
+            },
+            {
+              "icon": "fair",
+              "label": "Fairness",
+              "text": "all assessments are conducted lawfully, consistently, and with respect for candidate confidentiality and fairness"
+            }
+          ],
+          "blurb": [
+            "Selecting the right Colleagues is essential to sustaining Mandarin Oriental’s culture of service excellence. Our selection and assessment practices are designed to ensure that every hiring decision reflects both the operational needs of the business and the values that define our brand.",
+            "People & Culture partners closely with hiring managers to guide a structured and fair selection process. This may include behavioural interviews, role-specific assessments, and thoughtful evaluation of a candidate’s experience, potential, and alignment with Mandarin Oriental’s service philosophy.",
+            "The goal is not only to identify capability, but also to ensure that candidates demonstrate the mindset, professionalism, and care that contribute to the Colleague and guest experience across our hotels and corporate offices.",
+            "As part of Mandarin Oriental’s commitment to responsible hiring, appropriate reference and background checks may be conducted to verify employment history, qualifications, and other information relevant to the role, in accordance with local legislation and the Group’s Reference & Background Check Policy.",
+            "Throughout the process, People & Culture ensures that all assessments are conducted lawfully, consistently, and with respect for candidate confidentiality and fairness"
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Talogy Assessment Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B5.%20Selection%20and%20Assessment/a.%20Talogy%20Assessment%20Policy%20Jan2026.pdf?csf=1&web=1&e=AwjvlQ",
+              "blurb": "Establishes structured interview and testing methods for fair, consistent selection."
+            },
+            {
+              "s": "guide",
+              "name": "Refresher training sessions - Talogy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B5.%20Selection%20and%20Assessment/b.%20Refresher%20training%20sessions%20-%20Recruiting-%20Talogy.pdf?csf=1&web=1&e=zbJsVk",
+              "blurb": "Refresher content for use of Talogy in recruitment processes."
+            },
+            {
+              "s": "policy",
+              "name": "Reference / Background Check Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B5.%20Selection%20and%20Assessment/c.%20Reference%20Background%20Check%20Policy%20Jan2026.pdf?csf=1&web=1&e=UaYq7Y",
+              "blurb": "Defines verification requirements to ensure candidate integrity and compliance."
+            }
+          ],
+          "transition": "Every great recruitment story ends with a confident “yes.” The final stage of the hiring journey turns offers into warm welcomes and sets the tone for a Colleague’s first day."
+        },
+        {
+          "num": "6",
+          "title": "Offer Management & Pre-Boarding",
+          "splitAfter": 2,
+          "highlights_eyebrow": "From Offer to First Day",
+          "highlights": [
+            {
+              "icon": "contract",
+              "label": "Thoughtful Offers",
+              "text": "prepare a thoughtful and timely offer experience"
+            },
+            {
+              "icon": "fair",
+              "label": "Fair & Consistent",
+              "text": "the principles of fairness, consistency, and responsible stewardship of the Group’s resources"
+            },
+            {
+              "icon": "welcome",
+              "label": "Pre-Boarding",
+              "text": "begin building connection and engagement with the new Colleague before their first day"
+            }
+          ],
+          "blurb": [
+            "Recruitment is not simply about filling roles, but about welcoming Colleagues who will help carry forward the spirit and standards of Mandarin Oriental.",
+            "Once a candidate has been selected, the property People & Culture team partners closely with the hiring manager to prepare a thoughtful and timely offer experience. Clear communication during this stage helps set expectations and reinforces Mandarin Oriental’s culture of professionalism and care",
+            "Offers should reflect both the responsibilities of the role and the principles of fairness, consistency, and responsible stewardship of the Group’s resources. People & Culture provides guidance to hiring managers to ensure that all offers are reviewed and approved in accordance with local governance requirements before being communicated to the candidate.",
+            "Following acceptance of the offer, the pre-boarding period provides an opportunity to begin building connection and engagement with the new Colleague before their first day. This may include sharing key information about the hotel or office, preparing onboarding documentation, and coordinating with relevant teams to ensure a smooth transition into the organisation.",
+            "A thoughtful pre-boarding experience helps new Colleagues feel welcomed, prepared, and confident as they begin their journey with Mandarin Oriental."
+          ],
+          "items": []
+        }
+      ]
+    },
+    "sub-C": {
+      "tagline": "How to welcome, equip, and support Colleagues from day one.",
+      "philosophy": {
+        "title": "Our Onboarding Philosophy",
+        "paras": [
+          "The first days of a Colleague’s journey are an opportunity to introduce not only their role, but the values, culture, and service philosophy that define Mandarin Oriental.",
+          "A thoughtful, well-structured onboarding experience helps new Colleagues understand not only their role, but also how their work contributes to Mandarin Oriental’s reputation for exceptional service.",
+          "People & Culture plays a key role in designing and coordinating onboarding experiences that reflect the values and service philosophy of Mandarin Oriental. This includes ensuring that new Colleagues receive the information, guidance, and support they need to understand both the operational standards of their role and the culture that defines our organisation.",
+          "Effective onboarding extends beyond administrative orientation. It is an opportunity to introduce new Colleagues to the brand’s heritage, values, and expectations for service excellence, while helping them build early relationships with their managers and teams.",
+          "Through structured onboarding practices, People & Culture supports leaders in creating an environment where Colleagues feel welcomed, prepared, and inspired to deliver the distinctive guest experience for which Mandarin Oriental is known.",
+          "People & Culture’s role is to ensure:",
+          "Onboarding is values-based, seamless, and compliant across all regions.",
+          "New hires are fully briefed on Group policies and local expectations.",
+          "Systems access, documentation, and payroll activation are completed accurately and on time.",
+          "Managers and Colleagues feel equipped to support every new team member’s transition.",
+          "Every new hire is a promise fulfilled. The next step in their journey — onboarding — turns that promise into a lasting impression."
+        ]
+      },
+      "sections": [
+        {
+          "num": "",
+          "title": "",
+          "items": [
+            {
+              "s": "group",
+              "name": "Onboarding & Integration",
+              "desc": "A great first impression starts with care and consistency. This section outlines the standards for welcoming, orienting, and connecting new Colleagues to our culture, practices, and brand values."
+            },
+            {
+              "s": "policy",
+              "name": "Onboarding (“MOve In”) Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/C.%20Onboarding%20and%20Probationary%20Operations/C1.%20Onboarding%20and%20Integration/a.%20Onboarding%20Policy%20Jan%202026.pdf?csf=1&web=1&e=DjfCVL",
+              "blurb": "Defines the Colleague experience from offer acceptance through the first 90 days, ensuring smooth, values-based integration."
+            },
+            {
+              "s": "guide",
+              "name": "Induction & Orientation Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/C.%20Onboarding%20and%20Probationary%20Operations/C1.%20Onboarding%20and%20Integration/b.%20Induction%20%26%20Orientation%20Guidelines.pdf?csf=1&web=1&e=F5bsq2",
+              "blurb": "Outlines mandatory and optional induction components for all new hires, including brand, service culture, and policy briefings."
+            },
+            {
+              "s": "kit",
+              "name": "Induction Samples",
+              "url": "https://mohgl.sharepoint.com/:f:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/C.%20Onboarding%20and%20Probationary%20Operations/C1.%20Onboarding%20and%20Integration/b.%20Induction%20Samples?csf=1&web=1&e=Nq6Ars",
+              "blurb": "Provides sample induction agendas and materials to support consistent, values-based orientation across properties."
+            },
+            {
+              "s": "guide",
+              "name": "Designing the Colleague Handbook",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/C.%20Onboarding%20and%20Probationary%20Operations/C1.%20Onboarding%20and%20Integration/c.%20Designing%20the%20Colleague%20Handbook%20Jan2026.pdf?csf=1&web=1&e=94JWdE",
+              "blurb": "Provides new Colleagues with essential information about MO’s culture, policies, benefits, and workplace expectations; complements formal onboarding and induction."
+            },
+            {
+              "s": "kit",
+              "name": "Colleague Handbook Samples",
+              "url": "https://mohgl.sharepoint.com/:f:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/C.%20Onboarding%20and%20Probationary%20Operations/C1.%20Onboarding%20and%20Integration/c.%20Colleague%20Handbook%20samples?csf=1&web=1&e=N1GsNt",
+              "blurb": "Offers sample handbooks to guide hotels in presenting essential workplace information in a clear, accessible, and brand-aligned format."
+            },
+            {
+              "s": "guide",
+              "name": "Introduction to MOve-In",
+              "blurb": "Provides overview and guide for orientation schedules and induction presentations."
+            },
+            {
+              "s": "guide",
+              "name": "Management MOve-In Explanation for L&D",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/C.%20Onboarding%20and%20Probationary%20Operations/C1.%20Onboarding%20and%20Integration/e.%20Management%20MOve-In%20Explanation%20for%20L%26D.pdf?csf=1&web=1&e=j7wnCS",
+              "blurb": "Supports L&D Leaders in planning and leading a values-based onboarding journey for their teams."
+            }
+          ],
+          "transition": "A great first impression starts with care and consistency. This section outlines the standards for welcoming, orienting, and connecting new Colleagues to our culture, practices, and brand values. A warm welcome must be matched by sound process. Once new Colleagues arrive, operational accuracy keeps our culture of care running smoothly behind the scenes."
+        },
+        {
+          "num": "2",
+          "title": "Probation & Early Performance",
+          "splitAfter": 1,
+          "highlights_eyebrow": "During Probation",
+          "highlights": [
+            {
+              "icon": "develop",
+              "label": "Performance",
+              "text": "how we evaluate performance, behaviours, and fit during probation"
+            },
+            {
+              "icon": "connect",
+              "label": "Support",
+              "text": "ensuring support"
+            },
+            {
+              "icon": "audit",
+              "label": "Timely Feedback",
+              "text": "timely feedback for every Colleague"
+            }
+          ],
+          "blurb": [
+            "The first months of employment are critical for engagement and alignment.",
+            "This section describes how we evaluate performance, behaviours, and fit during probation, ensuring support and timely feedback for every Colleague."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Probationary Period Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/C.%20Onboarding%20and%20Probationary%20Operations/C2.%20Probation%20and%20Early%20Performance/a.%20Probation%20Review%20Policy%20Jan2026.pdf?csf=1&web=1&e=g82j9A",
+              "blurb": "Defines probation duration, review milestones, and communication requirements."
+            }
+          ],
+          "transition": "Thoughtful onboarding and meticulous operations set the foundation for long-term engagement. When Colleagues begin their journey feeling seen, supported, and prepared, they are far more likely to grow, contribute, and stay."
+        }
+      ]
+    },
+    "sub-D": {
+      "tagline": "How we create consistency, accuracy, and trust in every process.",
+      "philosophy": {
+        "title": "Our People Operations Philosophy",
+        "paras": [
+          "Operational Excellence is an expression of care.",
+          "When People & Culture processes run smoothly, Colleagues feel supported, managers feel confident, and the business performs at its best. Our goal is to build systems that are simple, transparent, and reliable — freeing our teams to focus on what truly matters: people.",
+          "This section outlines the Group standards that keep P&C operations running with accuracy and integrity. It covers employment administration, records management, payroll, reporting, and the governance processes that safeguard fairness and compliance across all MO locations.",
+          "People & Culture’s role is to ensure:",
+          "All Colleague data and transactions are accurate, timely, and confidential.",
+          "Policies and approvals are applied consistently across regions.",
+          "Local teams follow Group governance while meeting statutory obligations.",
+          "Systems and reporting enable insights that drive better people decisions.",
+          "Once new Colleagues are welcomed and settled, the next step is ensuring every people process behind the scenes runs with clarity, care, and precision."
+        ]
+      },
+      "sections": [
+        {
+          "num": "1",
+          "title": "Strategic Workforce Planning",
+          "splitAfter": 1,
+          "highlights_eyebrow": "What Planning Enables",
+          "highlights": [
+            {
+              "icon": "strategy",
+              "label": "Right Capabilities",
+              "text": "the right capabilities are in place to support both current operations and future growth"
+            },
+            {
+              "icon": "hiring",
+              "label": "Anticipate Needs",
+              "text": "anticipate hiring needs"
+            },
+            {
+              "icon": "build",
+              "label": "Responsible Structure",
+              "text": "manage organisational structure responsibly"
+            }
+          ],
+          "blurb": [
+            "Strategic Workforce Planning connects the organisation’s business strategy with its people needs.",
+            "Through thoughtful planning of headcount, structure, and workforce costs, People & Culture partners with business leaders to ensure that the right capabilities are in place to support both current operations and future growth.",
+            "Effective workforce planning helps leaders anticipate hiring needs, manage organisational structure responsibly, and align talent investments with the priorities of the business."
+          ],
+          "items": [
+            {
+              "s": "guide",
+              "name": "Manpower Planning Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D1.%20Strategic%20Workforce%20Planning/a.%20Manpower%20Planning%20Guidelines%20Jan2026.pdf?csf=1&web=1&e=t2yi5J",
+              "blurb": "Provides principles and guidance for aligning workforce planning with business strategy, budget cycles, and long-term capability needs."
+            },
+            {
+              "s": "guide",
+              "name": "Workforce Budgeting & Forecasting",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D1.%20Strategic%20Workforce%20Planning/b.%20Workforce%20Budgeting%20and%20Forecasting%20Jan2026.pdf?csf=1&web=1&e=pOE1bQ",
+              "blurb": "Defines annual/quarterly workforce planning cycles and inputs jointly owned by P&C and Finance (headcount, FTE, labour cost, scenarios)."
+            },
+            {
+              "s": "kit",
+              "name": "Workforce Planning Templates & Dashboard",
+              "blurb": "Standard templates for tracking approved headcount, vacancies, backfills, and forecasts; supports regional roll-ups."
+            },
+            {
+              "s": "guide",
+              "name": "Workforce Plan Review Cycle",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D1.%20Strategic%20Workforce%20Planning/c.%20Workforce%20Plan%20Review%20Cycle%20Jan2026.pdf?csf=1&web=1&e=XgszMa",
+              "blurb": "Sets timing for annual and mid-year reviews; links plan changes to budget submissions and hiring controls."
+            },
+            {
+              "s": "guide",
+              "name": "Job Classification Structure",
+              "blurb": "Defines how roles are grouped and evaluated across functions and levels, ensuring internal equity, clarity of career pathways, and alignment with compensation structures."
+            },
+            {
+              "s": "kit",
+              "name": "Hotel Position Matrix",
+              "blurb": "Provides standard organisational structures for MO properties and corporate offices, ensuring clarity of reporting lines, governance, and functional responsibilities."
+            },
+            {
+              "s": "guide",
+              "name": "Compensation Benchmarking and Salary Survey Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D1.%20Strategic%20Workforce%20Planning/e.%20Compensation%20Benchmarking%20and%20Salary%20Survey%20Policy%20Jan2026.pdf?csf=1&web=1&e=3iEKSr",
+              "blurb": "Governs the use of market surveys and benchmarking data to assess pay competitiveness and inform annual compensation review decisions."
+            },
+            {
+              "s": "policy",
+              "name": "Headcount Requisition Policy",
+              "blurb": "Defines approval levels, documentation, and exception handling for creating/replacing roles."
+            },
+            {
+              "s": "policy",
+              "name": "CEA / Task Force Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D1.%20Strategic%20Workforce%20Planning/g.%20CEA%20Task%20Force%20Policy%20Jan2026.pdf?csf=1&web=1&e=DgR3x5",
+              "blurb": "Defines the governance, structure, and operation of cross-functional taskforces established to deliver CEA-related strategic and operational initiatives."
+            },
+            {
+              "s": "kit",
+              "name": "CEA / Task Force Kit",
+              "url": "https://mohgl.sharepoint.com/:f:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D1.%20Strategic%20Workforce%20Planning/h.%20CEA%20Task%20Force%20Kit?csf=1&web=1&e=MaTXqF",
+              "blurb": "Provides standard contracts, templates, and checklists to support the consistent, compliant planning and execution of CEA and Task Force assignments."
+            },
+            {
+              "s": "policy",
+              "name": "Cluster & Area Roles Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D1.%20Strategic%20Workforce%20Planning/i.%20Cluster%20and%20Area%20Roles%20Policy%20Jan2026.pdf?csf=1&web=1&e=cNPhGc",
+              "blurb": "Governs creation and cost-sharing of multi-property roles; clarifies reporting lines, funding, and controls."
+            }
+          ]
+        },
+        {
+          "num": "2",
+          "title": "Employment Administration & Records",
+          "blurb": [
+            "Every Colleague record tells a story — it deserves accuracy and respect. These standards cover employment documentation, contract updates, and personnel file governance across the Group."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Employment Contracts",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D2.%20Employment%20Administration%20and%20Records/a.%20Employment%20Contracts%20Guidelines%20Jan2026.pdf?csf=1&web=1&e=mKQX6Y",
+              "blurb": "Standardises the structure and approval of employment contracts to ensure legal compliance and fairness."
+            },
+            {
+              "s": "policy",
+              "name": "Colleague File Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D2.%20Employment%20Administration%20and%20Records/b.%20Colleague%20File%20Policy%20Jan2026.pdf?csf=1&web=1&e=udLBkH",
+              "blurb": "Defines creation, storage, access, confidentiality, and retention standards for personnel files."
+            },
+            {
+              "s": "xref",
+              "name": "Colleague Status Changes (Finance-owned – cross-reference)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D2.%20Employment%20Administration%20and%20Records/c.%20Colleagues%20Status%20Changes_v2024%20(finance).pdf?csf=1&web=1&e=xrP9Xi",
+              "blurb": "Defines financial controls, approvals, and reconciliation requirements governing Colleague master file updates, headcount changes, payroll adjustments, and terminations."
+            },
+            {
+              "s": "policy",
+              "name": "Colleague Action Form Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D2.%20Employment%20Administration%20and%20Records/d.%20Colleague%20Action%20Form%20Policy%20Jan2026.pdf?csf=1&web=1&e=OeGuXI",
+              "blurb": "Records and approves changes to a Colleague’s personal or employment details; ensures timely updates to payroll and records"
+            },
+            {
+              "s": "kit",
+              "name": "Colleague Action Form Template",
+              "url": "https://mohgl.sharepoint.com/:x:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D2.%20Employment%20Administration%20and%20Records/e.%20Colleague%20Action%20Form%20Template%20Jan2026.xlsx?d=we750cb3b55874ddf9d59610f7131d820&csf=1&web=1&e=coeGr1",
+              "blurb": "Template for Hotels using manual administration"
+            },
+            {
+              "s": "guide",
+              "name": "Right-to-Work & Identity Verification Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D2.%20Employment%20Administration%20and%20Records/f.%20Right%20to%20Work%20%26%20Identify%20Verification%20Identity.pdf?csf=1&web=1&e=s6NbYz",
+              "blurb": "Sets minimum verification checks before start (e.g., work eligibility/ID) with local law alignment; clarifies recordkeeping."
+            }
+          ],
+          "transition": "With documentation foundations in place, we need data to flow cleanly through our platforms and controls."
+        },
+        {
+          "num": "3",
+          "title": "P&C Documentation & Systems",
+          "blurb": [
+            "Data integrity enables transparency, compliance, and Group-wide insight. This portfolio ensures People & Culture teams maintain accurate, secure, and timely Colleague information across HR systems, payroll, and reporting platforms."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "HR Information Systems (HRIS) Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D3.%20P%26C%20Documentation%20%26%20Systems/a.%20KPMG_Mandarin%20Oriental%20Group%20-Playbook%2020250603%20-version2.pdf?csf=1&web=1&e=PYUZEA",
+              "blurb": "Defines system access, data entry standards, and reporting responsibilities across properties."
+            },
+            {
+              "s": "xref",
+              "name": "Data Privacy & Confidentiality Policy (Cross-ref to IT Data Privacy Manual 2025)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D3.%20P%26C%20Documentation%20%26%20Systems/b.%20data-privacy-manual-january-2025-pdf.pdf?csf=1&web=1&e=htOsBX",
+              "blurb": "Aligns people data handling with Group data/privacy standards; clarifies lawful basis, minimisation, and retention."
+            }
+          ],
+          "transition": "Accurate data is the operational backbone of our P&C systems; payroll and benefits are the tangible touchpoints where our Colleagues experience its true value."
+        },
+        {
+          "num": "4",
+          "title": "Technology & Data Use",
+          "splitAfter": 1,
+          "highlights_eyebrow": "Our Responsibility",
+          "highlights": [
+            {
+              "icon": "data",
+              "label": "Manage Data",
+              "text": "how we manage data"
+            },
+            {
+              "icon": "operations",
+              "label": "Use Technology",
+              "text": "use technology"
+            },
+            {
+              "icon": "ethics",
+              "label": "Represent MO",
+              "text": "represent Mandarin Oriental online, ensuring professionalism, privacy, and ethical conduct"
+            }
+          ],
+          "blurb": [
+            "Digital systems and communication tools enable collaboration — but also carry responsibility.",
+            "This section defines how we manage data, use technology, and represent Mandarin Oriental online, ensuring professionalism, privacy, and ethical conduct."
+          ],
+          "items": [
+            {
+              "s": "xref",
+              "name": "IT Systems & Data Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D4.%20Technology%20%26%20Data/a.%20IT%20Systems%20and%20Data%20Policy%20Jan2026.pdf?csf=1&web=1&e=y49KQr",
+              "blurb": "Defines roles, access controls, and privacy responsibilities for all Colleagues"
+            },
+            {
+              "s": "policy",
+              "name": "Artificial Intelligence (AI) Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D4.%20Technology%20%26%20Data/b.%20AI%20Policy%20from%20IT.pdf?csf=1&web=1&e=Ng3gkz",
+              "blurb": "Outlines ethical and transparent use of AI tools and automation in People & Culture processes."
+            }
+          ],
+          "transition": "Governance sustains care — ensuring every policy, process, and decision stands on integrity. Through clear frameworks, ethical data use, and continuous review, we sustain our People & Culture."
+        },
+        {
+          "num": "5",
+          "title": "Payroll & Benefits Operations",
+          "blurb": [
+            "Reliable payroll and benefits processes are essential to Colleague confidence and wellbeing."
+          ],
+          "items": [
+            {
+              "s": "xref",
+              "name": "Timekeeping & Payroll Accounting Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D5.%20Payroll%20and%20Benefits/a.%20Timekeeping%20and%20Payroll%20Accounting%20from%20FIN%20Jan%202025.pdf?csf=1&web=1&e=IlfWU0",
+              "blurb": "Defines time capture, approvals, cut-offs, and reconciliations; clarifies roles of P&C, departments, and Finance."
+            },
+            {
+              "s": "policy",
+              "name": "Payroll Accuracy & Data Reconciliation Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D5.%20Payroll%20and%20Benefits/b.%20Payroll%20Accuracy%20and%20Data%20Reconciliation%20Jan2026.pdf?csf=1&web=1&e=ZeBT32",
+              "blurb": "Defines controls and reconciliation processes to ensure payroll data accuracy, timely issue resolution, and alignment between HR, payroll, and Finance records."
+            },
+            {
+              "s": "policy",
+              "name": "Absenteeism, Punctuality & Hours of Work Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D5.%20Payroll%20and%20Benefits/c.%20Absenteeism,%20Punctuality%20%26%20Hours%20of%20Work.pdf?csf=1&web=1&e=gMG2RD",
+              "blurb": "Defines attendance expectations, shift scheduling standards, punctuality requirements, and procedures for recording and addressing unplanned absences; ensures accurate payroll and operational continuity."
+            },
+            {
+              "s": "guide",
+              "name": "Compensation Administration Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D5.%20Payroll%20and%20Benefits/d.%20Compensation%20Administration%20Guidelines%20Jan2026.pdf?csf=1&web=1&e=tu4ZLo",
+              "blurb": "Applies Group compensation decisions (merit, adjustments, incentives) to payroll correctly and on time."
+            },
+            {
+              "s": "policy",
+              "name": "Hotel Benefits Administration Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D5.%20Payroll%20and%20Benefits/e.%20Hotel%20Benefits%20Administration%20Jan%202026.pdf?csf=1&web=1&e=ThtAoH",
+              "blurb": "Ensures accurate enrolment, eligibility checks, claims processing, and statutory reporting; allows local annexes."
+            },
+            {
+              "s": "policy",
+              "name": "Cash Shortage & Overage Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D5.%20Payroll%20and%20Benefits/g.%20Cash%20Shortage%20and%20Overage%20Jan2026.pdf?csf=1&web=1&e=U7ozu9",
+              "blurb": "Defines accountability and reporting standards for Colleagues handling cash, ensuring compliance with Finance policies and proper documentation of variances."
+            },
+            {
+              "s": "policy",
+              "name": "Hotel Business Travel Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D5.%20Payroll%20and%20Benefits/h.%20Hotel%20Business%20Travel%20Policy%20-%20May%202026.pdf?csf=1&web=1&e=21NE8s",
+              "blurb": "Outlines standards for business travel arrangements, expense eligibility, approvals, and reimbursement to ensure cost control and compliance."
+            },
+            {
+              "s": "policy",
+              "name": "Alcohol Consumption Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D5.%20Payroll%20and%20Benefits/i.%20Alcohol%20Consumption%20Policy%20Jan2026.pdf?csf=1&web=1&e=kLCXfL",
+              "blurb": "Outlines standards for responsible alcohol consumption to ensure safety, professionalism, and brand reputation across MO."
+            },
+            {
+              "s": "policy",
+              "name": "Breakage Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/D.%20Running%20P%26C%20Operations/D5.%20Payroll%20and%20Benefits/j.%20Breakage%20Policy%20Jan2026.pdf?csf=1&web=1&e=KkUPMf",
+              "blurb": "Outlines Colleague responsibility to protect MO property, maintain safe working conditions, and prevent loss or damage through care and accountability."
+            }
+          ]
+        },
+        {
+          "num": "6",
+          "title": "Reporting & Analytics",
+          "splitAfter": 2,
+          "highlights_eyebrow": "From Data to Decisions",
+          "highlights": [
+            {
+              "icon": "data",
+              "label": "Accurate Records",
+              "text": "workforce data is maintained with care and accuracy"
+            },
+            {
+              "icon": "audit",
+              "label": "Reliable Reporting",
+              "text": "Reliable reporting depends on the quality of the data entered into these systems"
+            },
+            {
+              "icon": "strategy",
+              "label": "Strategic Insight",
+              "text": "supporting workforce planning, operational oversight, and strategic decision-making"
+            }
+          ],
+          "blurb": [
+            "Insightful reporting transforms operational data into strategic value.",
+            "Accurate and timely workforce information enables Mandarin Oriental to understand the current state of its Colleague population, identify emerging trends, and make informed decisions that support both business performance and the Colleague experience.",
+            "People & Culture teams play an essential role in ensuring that workforce data is maintained with care and accuracy. Information relating to Colleagues, employment changes, and organisational activities should be recorded consistently and updated regularly within the Group’s People+ system, which serves as the primary source of workforce information.",
+            "Reliable reporting depends on the quality of the data entered into these systems. Maintaining up-to-date records allows the Group to generate meaningful insights at hotel, regional, and global levels, supporting workforce planning, operational oversight, and strategic decision-making.",
+            "For hotels that are not yet fully integrated into the People+ system, People & Culture teams are required to submit workforce data through the designated reporting template provided by Group People & Culture Operations. These submissions ensure that all properties are represented in consolidated regional and global reporting.",
+            "Reporting timelines, templates, and submission requirements are communicated by Group People & Culture Operations to ensure consistency across all locations."
+          ],
+          "items": []
+        }
+      ]
+    },
+    "sub-E": {
+      "tagline": "How we create a culture of wellbeing, voice, and belonging.",
+      "philosophy": {
+        "title": "Our People Care Philosophy",
+        "paras": [
+          "Our culture of care extends beyond policies and processes; it is reflected in how Colleagues support one another and collaborate across our properties.",
+          "We believe every Colleague should feel included, supported through challenges, and connected to a community that values their contribution. When Colleagues feel supported and valued, they are better able to deliver the exceptional hospitality that defines Mandarin Oriental.",
+          "This section outlines how we listen to our Colleagues, respond with fairness, and nurture a workplace where trust and engagement thrive.",
+          "People & Culture’s role is to ensure:",
+          "Concerns and feedback are heard and acted upon fairly.",
+          "Policies protect dignity, respect, and confidentiality.",
+          "Colleague engagement is measured and improved continuously.",
+          "Community, communication, and wellbeing initiatives reflect MO’s values.",
+          "Operational excellence builds confidence — but care and connection build culture. Once our systems are strong, our next responsibility is to listen, engage, and nurture the people who make them come alive.",
+          "When Colleagues feel heard, they’re ready to connect, contribute, and thrive. Engagement is where listening becomes belonging."
+        ]
+      },
+      "sections": [
+        {
+          "num": "1",
+          "title": "Engagement, Connection & Community",
+          "splitAfter": 1,
+          "highlights_eyebrow": "How We Build Community",
+          "highlights": [
+            {
+              "icon": "connect",
+              "label": "Respected & Supported",
+              "text": "Colleagues feel respected, supported, and empowered to succeed"
+            },
+            {
+              "icon": "welcome",
+              "label": "Lasting Pride",
+              "text": "cultivate lasting pride in being part of Mandarin Oriental"
+            },
+            {
+              "icon": "develop",
+              "label": "Culture",
+              "text": "how we communicate, celebrate, and collaborate across the Group"
+            }
+          ],
+          "blurb": [
+            "Engagement brings our Values to life.",
+            "Leaders at Mandarin Oriental play a vital role in shaping an environment where Colleagues feel respected, supported, and empowered to succeed. By creating spaces where Colleagues feel valued and inspired, we cultivate lasting pride in being part of Mandarin Oriental.",
+            "This section describes how we communicate, celebrate, and collaborate across the Group to strengthen our culture and sense of community."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Colleague Communication & Activities Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/1.%20Engagement%20Connection%20and%20Community/a.%20Colleague%20Communications%20and%20Activities%20Jan2026.pdf?csf=1&web=1&e=bQcbhz",
+              "blurb": "Provides standards for Colleague communication, brand-aligned events, engagement platforms, and recognition activities that build connection and pride."
+            },
+            {
+              "s": "policy",
+              "name": "Inclusion, Equity & Diversity",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/1.%20Engagement%20Connection%20and%20Community/b.%20Corporate%20Inclusion%20Equity%20and%20Diversity%20Policy%20Jan%202026.pdf?csf=1&web=1&e=Zm1PtO",
+              "blurb": "Outlines MO’s commitment to building an inclusive workplace where all Colleagues feel valued, respected, and able to contribute fully; includes expectations for equitable practices across the Colleague lifecycle."
+            },
+            {
+              "s": "policy",
+              "name": "Volunteering Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/1.%20Engagement%20Connection%20and%20Community/c.%20Volunteering%20Policy%20Jan2026.pdf?csf=1&web=1&e=JaJgX8",
+              "blurb": "Encourages Colleagues to contribute to community and environmental initiatives through approved volunteering leave, reinforcing MO’s values of care and sustainability."
+            },
+            {
+              "s": "kit",
+              "name": "Volunteering Leave Application Form",
+              "url": "https://mohgl.sharepoint.com/:w:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/1.%20Engagement%20Connection%20and%20Community/d.%20Volunteering%20Leave%20Application%20Form%202025.doc?d=w83e8539d3d0e440585fe4022e36c1a68&csf=1&web=1&e=8gAXT5",
+              "blurb": "Standard form for requesting and approving volunteering leave in line with the Group Volunteering Policy."
+            },
+            {
+              "s": "policy",
+              "name": "Fan Pins & Fan Name Tags",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/1.%20Engagement%20Connection%20and%20Community/e.%20Fan%20Pins%20and%20Name%20Tags%20policy%20Jan2026.pdf?csf=1&web=1&e=R430TU",
+              "blurb": "Defines presentation standards for wearing MO’s Fan Pin and name tags, reinforcing brand identity, professionalism, and pride."
+            },
+            {
+              "s": "guide",
+              "name": "Employee Engagement & Pulse Survey Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/1.%20Engagement%20Connection%20and%20Community/f.%20Employee%20Engagement%20and%20Pulse%20Survey%20Guidelines%20Jan2026.pdf?csf=1&web=1&e=pFvVTG",
+              "blurb": "Provides standards for measuring engagement and translating insights into action."
+            },
+            {
+              "s": "guide",
+              "name": "Heart-of-House Guide",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/1.%20Engagement%20Connection%20and%20Community/g.%20Heart-of-House%20Guide.pdf?csf=1&web=1&e=K3kVV4",
+              "blurb": "Outlines how to maintain Colleague spaces that reflect our culture of care, cleanliness, and pride."
+            }
+          ]
+        },
+        {
+          "num": "2",
+          "title": "Recognition & Appreciation",
+          "blurb": [
+            "At Mandarin Oriental, we celebrate Colleagues who bring our values to life — through exceptional service, collaboration, or everyday acts of kindness."
+          ],
+          "items": [
+            {
+              "s": "guide",
+              "name": "Colleague Recognition & Appreciation Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/2.%20Recognition%20and%20Appreciation/a.%20Colleague%20Recognition%20Programme%20Jan2026.pdf?csf=1&web=1&e=Y4D2Py",
+              "blurb": "Defines principles and processes for recognising individual and team contributions across the Group."
+            },
+            {
+              "s": "guide",
+              "name": "Dedicated Service Award",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/2.%20Recognition%20and%20Appreciation/b.%20Dedicated%20Service%20Award%20Jan2026.pdf?csf=1&web=1&e=jQjnV8",
+              "blurb": "Recognises long-serving Colleagues for their commitment and contribution, reinforcing pride, loyalty, and appreciation across the Group."
+            }
+          ]
+        },
+        {
+          "num": "3",
+          "title": "Health, Safety & Wellbeing",
+          "splitAfter": 2,
+          "highlights_eyebrow": "Our Culture of Care",
+          "highlights": [
+            {
+              "icon": "wellbeing",
+              "label": "Safeguard Health",
+              "text": "safeguard health, prevent injury, and support the overall wellbeing of every Colleague"
+            },
+            {
+              "icon": "operations",
+              "label": "Safe Practices",
+              "text": "promoting safe working practices"
+            },
+            {
+              "icon": "develop",
+              "label": "Whole-Person Wellbeing",
+              "text": "physical, emotional, and professional wellbeing"
+            }
+          ],
+          "blurb": [
+            "Caring for our Colleagues is fundamental to sustaining the warmth and attentiveness that our guests experience every day.",
+            "Safety and wellbeing are fundamental to our culture of care, not simply matters of compliance. Mandarin Oriental is committed to creating environments that safeguard health, prevent injury, and support the overall wellbeing of every Colleague.",
+            "People & Culture plays an important role in fostering workplaces where Colleagues can perform at their best. This includes promoting safe working practices, encouraging awareness of health and wellbeing resources, and supporting initiatives that contribute to physical, emotional, and professional wellbeing.",
+            "The following guidance highlights key programmes and practices that help create a safe, supportive, and respectful working environment across Mandarin Oriental."
+          ],
+          "items": [
+            {
+              "s": "kit",
+              "name": "Employee Assistance Program (EAP)"
+            },
+            {
+              "s": "xref",
+              "name": "Mental Health First Aid Certification",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/3.%20Health%20Safety%20and%20Wellbeing/a.%20Mental%20Health%20First%20Aid%20for%20Mandarin%20Oriental%20Hotel%20Group.pdf?csf=1&web=1&e=h1Gzlq",
+              "blurb": "Ensures a network of certified Mental Health First Aiders is available to provide initial support to Colleagues experiencing distress and to promote a culture of psychological safety."
+            },
+            {
+              "s": "xref",
+              "name": "Mental Health First Aid Certification – About the Role",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/3.%20Health%20Safety%20and%20Wellbeing/b.%20Being%20an%20MHFAider%C2%AE%20-%20Your%20guide%20to%20the%20role.pdf?csf=1&web=1&e=xcQE62",
+              "blurb": "Defines the responsibilities, scope, and expectations of Mental Health First Aiders in supporting Colleague wellbeing and psychological safety."
+            },
+            {
+              "s": "xref",
+              "name": "Mental Health First Aid Colleague List",
+              "url": "https://mohgl.sharepoint.com/:x:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/3.%20Health%20Safety%20and%20Wellbeing/c.%20Mental%20Health%20FAs%20Colleagues%20FOR%20HOTEL%20UPDATES.xlsx?d=w7e472315eeea48659996b9b5c039765e&csf=1&web=1&e=AJhBHE",
+              "blurb": "Maintains an up-to-date directory of certified Mental Health First Aiders across properties to ensure timely, accessible support."
+            },
+            {
+              "s": "guide",
+              "name": "Personal Grooming Standards",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/3.%20Health%20Safety%20and%20Wellbeing/e.%20Grooming%20Mandarin%20Oriental.pdf?csf=1&web=1&e=6R0ksy",
+              "blurb": "Guidelines defining hygiene and appearance standards to ensure professionalism, safety, and brand consistency."
+            },
+            {
+              "s": "policy",
+              "name": "Operational Risk Management",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/3.%20Health%20Safety%20and%20Wellbeing/f.%20FLHSS%20Programme%20Structure%20and%20Administration%20-%20Nov%202024.pdf?csf=1&web=1&e=VSSgyO",
+              "blurb": "Establishes local safety committees responsible for monitoring workplace risks, conducting inspections, and championing safe practices across the hotel."
+            }
+          ],
+          "transition_pre": [
+            "We strongly advise that each property must ensure that an Employee Assistance Program (EAP) is in place prior to opening, to provide confidential emotional, psychological, and practical support for Colleagues. Where possible, leverage existing EAP providers within the country or region to achieve a costeffective and scalable solution. Mandarin Oriental currently partners with Intellect as our designated EAP provider, covering the Corporate Office and several hotels that have opted into the programme. If your property already receives EAP or mentalwellness services through local insurance coverage, you are not required to duplicate this arrangement; however, if no such coverage exists, implementing Intellect or an equivalent local provider is strongly recommended. Further information can be sought from your Regional P&C Director and also the attached documents. Caring for people is both our heritage and our future."
+          ],
+          "transition": "When Colleagues feel safe, supported, and valued — in body, mind, and spirit — they bring their best selves to every guest, every day.",
+          "transition_body": [
+            "The next section outlines how we design and manage compensation and benefits at Mandarin Oriental, ensuring fairness, transparency, and sustainability across all regions."
+          ]
+        },
+        {
+          "num": "4",
+          "title": "Colleague Voice",
+          "splitAfter": 1,
+          "highlights_eyebrow": "Being Heard",
+          "highlights": [
+            {
+              "icon": "connect",
+              "label": "Raise Concerns",
+              "text": "Colleagues can raise concerns, seek resolution, and be heard without fear of retaliation"
+            },
+            {
+              "icon": "fair",
+              "label": "With Dignity",
+              "text": "handling workplace matters with dignity, fairness, and respect"
+            }
+          ],
+          "blurb": [
+            "Open, honest dialogue is central to a culture of trust.",
+            "This section defines how Colleagues can raise concerns, seek resolution, and be heard without fear of retaliation. It also reinforces our commitment to handling workplace matters with dignity, fairness, and respect."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Colleague Grievances Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/4.%20Colleague%20Voice/a.%20Colleague%20Grievances%20Policy%20Jan2026.pdf?csf=1&web=1&e=HaVbT3",
+              "blurb": "Outlines fair, transparent procedures for raising and resolving grievances."
+            },
+            {
+              "s": "policy",
+              "name": "Progressive Disciplinary Procedures Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/E.%20Colleague%20Experience/4.%20Colleague%20Voice/b.%20Progressive%20Disciplinary%20Policy%20Jan2026.pdf?csf=1&web=1&e=RKRUu7",
+              "blurb": "Provides a consistent framework for corrective action that promotes learning and fairness."
+            }
+          ]
+        }
+      ]
+    },
+    "sub-F": {
+      "tagline": "How we ensure fairness, competitiveness, and sustainability in how we reward our people.",
+      "philosophy": {
+        "title": "Our Compensation & Benefits Philosophy",
+        "paras": [
+          "At Mandarin Oriental, fair and transparent reward is one of the most tangible expressions of care. Our approach combines:",
+          "Fairness – internal equity and compliance with all local labour laws.",
+          "Competitiveness – external benchmarking to attract and retain exceptional talent.",
+          "Sustainability – responsible management of people costs to balance Colleague and business needs.",
+          "This section brings together the Group’s policies, guidelines, and practices that govern pay, benefits, and mobility. It defines how compensation frameworks are structured, approved, and managed to ensure Colleagues are rewarded with care, consistency, and accountability.",
+          "People & Culture’s role is to ensure:",
+          "All compensation and benefits practices comply with Group frameworks and local regulations.",
+          "Salary and benefit decisions are applied consistently, documented transparently, and reviewed annually.",
+          "General Managers and People Managers understand how to apply C&B policies and practices fairly.",
+          "People costs are managed responsibly in partnership with Finance.",
+          "Caring for our people includes caring for their financial wellbeing. Fair compensation is how we turn respect into action and commitment into trust."
+        ]
+      },
+      "sections": [
+        {
+          "num": "1",
+          "title": "Compensation",
+          "blurb": [
+            "Our compensation framework ensures Colleagues are rewarded for their contributions through consistent and equitable pay practices."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Compensation Framework and Governance Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/a.%20Compensation%20Framework%20and%20Governance%20Policy%20Jan2026.pdf?csf=1&web=1&e=a44iOV",
+              "blurb": "Defines Mandarin Oriental’s compensation philosophy, pay frameworks, governance principles, and approval structures to ensure fair, competitive, and sustainable reward practices across the Group."
+            },
+            {
+              "s": "policy",
+              "name": "Base Pay Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/b.%20Base%20Pay%20Policy%20Jan2026.pdf?csf=1&web=1&e=2xpkId",
+              "blurb": "Defines salary structures and governance for base pay across levels and geographies."
+            },
+            {
+              "s": "policy",
+              "name": "Year End Salary Budget Approval (corporate)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/d.%20(corporate)%20Year%20End%20Salary%20Budget%20Approval%20Jan2026.pdf?csf=1&web=1&e=TwPHTs",
+              "blurb": "Details annual approval process for salary budgets, linking P&C and Finance planning cycles."
+            },
+            {
+              "s": "xref",
+              "name": "Year End Salary Budget Approval (appendix for corporate)",
+              "url": "https://mohgl.sharepoint.com/:w:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/e.%20(corporate)%20Appendix%20A%20-Year%20End%20Salary%20Budget%20Approval%20Request%20Jan2026.docx?d=w8d797e505f63406689ad393cd98f2547&csf=1&web=1&e=tnZ5YS",
+              "blurb": "Provides supporting tools and reference materials for preparing and submitting annual salary budget approvals."
+            },
+            {
+              "s": "xref",
+              "name": "Vacation Pay and Other Entitlements (Finance-owned – cross-reference)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/f.%20Vacation%20Pay%20and%20Other%20Entitlements%20(FIN).pdf?csf=1&web=1&e=kFJvwk",
+              "blurb": "Outlines governance and financial controls for vacation, sick leave, maternity/paternity benefits, bonuses, time in lieu, and related entitlement provisioning and reconciliation."
+            },
+            {
+              "s": "xref",
+              "name": "Provisions for Vacation Pay and Bonus (Finance-owned – cross-reference)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/g.%20Provisions%20for%20Vacation%20Pay%20and%20Bonus%20(FIN).pdf?csf=1&web=1&e=Qp2dbE",
+              "blurb": "Establishes monthly reconciliation and financial provisioning requirements to ensure accurate accounting of vacation pay, bonuses, and other paid time off liabilities."
+            },
+            {
+              "s": "policy",
+              "name": "Incentive Compensation Plan Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/h.%20ICP%20Plan%20Policy%20Jan2026.pdf?csf=1&web=1&e=m738mH",
+              "blurb": "Defines eligibility, performance measures, governance, and payout mechanics for annual incentive compensation aligned to business and individual performance."
+            }
+          ],
+          "transition": "Compensation rewards contribution — benefits sustain wellbeing. Together, they create balance between performance and care."
+        },
+        {
+          "num": "2",
+          "title": "Benefits",
+          "blurb": [
+            "Our benefits framework complements compensation with programmes that promote health, rest, and security."
+          ],
+          "items": [
+            {
+              "s": "guide",
+              "name": "Leave Policy Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/a.%20Leave%20Policy%20Jan2026.pdf?csf=1&web=1&e=b1VZSs",
+              "blurb": "Defines annual, sick, and special leave entitlements as per local law."
+            },
+            {
+              "s": "guide",
+              "name": "Health & Insurance Benefits Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/b.%20Health%20and%20Insurance%20Benefits%20Guidelines%20Jan2026.pdf?csf=1&web=1&e=ozBX39",
+              "blurb": "Establishes minimum health and insurance coverage for eligible Colleagues."
+            },
+            {
+              "s": "guide",
+              "name": "Meal Allowance Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/c.%20Meal%20Allowance%20Guidelines%20Jan2026.pdf?csf=1&web=1&e=Y7NF6s",
+              "blurb": "Defines standards for staff dining and meal allowances to support Colleague wellbeing."
+            },
+            {
+              "s": "guide",
+              "name": "Colleague Dining Programme Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/d.%20Colleague%20Dining%20Programme%20Policy%20Jan%202026.pdf?csf=1&web=1&e=eOHaWM",
+              "blurb": "Defines eligibility, conduct expectations, and settlement rules for staff meals and dining privileges."
+            },
+            {
+              "s": "guide",
+              "name": "Colleague Spa Discount Programme Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/e.%20Colleague%20Spa%20Discount%20Programme%20Policy%20Jan%202026.pdf?csf=1&web=1&e=NlI3L4",
+              "blurb": "Defines eligibility, booking conditions, conduct expectations, and financial controls for Colleague spa discounts across Mandarin Oriental hotels."
+            },
+            {
+              "s": "guide",
+              "name": "Access to Health Club / Fitness Centres",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/f.%20Health%20Club%20Fitness%20Centre%20Jan2026.pdf?csf=1&web=1&e=iLt4he",
+              "blurb": "Defines eligibility and usage guidelines for Colleague access to hotel health clubs or fitness facilities, subject to operational requirements."
+            },
+            {
+              "s": "policy",
+              "name": "Complimentary Colleague Room Stay Benefits Programme (MOcomp)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/g.%20Complimentary%20Colleague%20Room%20Stay%20Programme%20Jan%202026.pdf?csf=1&web=1&e=hk4yPS",
+              "blurb": "Defines eligibility, entitlements, booking conditions, and conduct expectations for complimentary Colleague leisure stays across Mandarin Oriental hotels."
+            },
+            {
+              "s": "policy",
+              "name": "Discounted Colleague Room Stay Benefits Programme (MOrate)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/h.%20Discounted%20Colleague%20Room%20Stay%20Benefit%20Programme%20Jan%202026.pdf?csf=1&web=1&e=deqKf1",
+              "blurb": "Defines eligibility, booking conditions, and preferential room and service discounts available to Colleagues for personal leisure stays at Mandarin Oriental hotels worldwide."
+            },
+            {
+              "s": "xref",
+              "name": "Employee Loans (Finance-owned – cross-reference)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/i.%20Employee%20Loans%20(FIN).pdf?csf=1&web=1&e=d9Ad9g",
+              "blurb": "Defines the prohibition of Colleague loans, permitting only approved business travel advances under strict financial controls."
+            },
+            {
+              "s": "xref",
+              "name": "General Tuition Loan Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/a.%20General%20Tuition%20Loan%20Policy%20Jan%202026.pdf?csf=1&web=1&e=DdTBhJ",
+              "blurb": "Provides funding support for learning opportunities that enhance professional growth. Please reference policy with OD."
+            },
+            {
+              "s": "kit",
+              "name": "General Tuition Loan Addendum - Sample",
+              "url": "https://mohgl.sharepoint.com/:w:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/c.%20General%20Tuition%20Loan%20Addendum-Sample.doc?d=w76b347dc90f343ec89c7f5dd1bfbc359&csf=1&web=1&e=AE1HzA",
+              "blurb": "Provides a standard addendum outlining bonding, repayment, and post-study obligations for approved tuition loans."
+            },
+            {
+              "s": "guide",
+              "name": "Retirement & Pension Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/2.%20Benefits/k.%20Retirement%20and%20Pension%20Jan2026.pdf?csf=1&web=1&e=nxcMGt",
+              "blurb": "Details retirement plan design and compliance with statutory schemes across jurisdictions."
+            }
+          ],
+          "transition": "While benefits sustain wellbeing, mobility inspires growth. The next section explores how we support Colleagues in pursuing opportunities across regions."
+        },
+        {
+          "num": "3",
+          "title": "Mobility",
+          "splitAfter": 1,
+          "highlights_eyebrow": "How Mobility Works",
+          "highlights": [
+            {
+              "icon": "connect",
+              "label": "Assignments",
+              "text": "how international assignments, relocations, and short-term postings are managed"
+            },
+            {
+              "icon": "fair",
+              "label": "Consistency",
+              "text": "consistency, fairness, and clarity of benefits"
+            }
+          ],
+          "blurb": [
+            "Mobility offers Colleagues the opportunity to grow, contribute, and experience new cultures.",
+            "This section defines how international assignments, relocations, and short-term postings are managed across the Group to ensure consistency, fairness, and clarity of benefits."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "International Mobility Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/3.%20Mobility/a.%20International%20Mobility%20Policy%20Jan2026.pdf?csf=1&web=1&e=WPmUGX",
+              "blurb": "Defines governance, eligibility, benefits, and responsibilities for international assignments and cross-border mobility."
+            },
+            {
+              "s": "policy",
+              "name": "Relocation Assistance Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/3.%20Mobility/b.%20Relocation%20Assistance%20Policy%20Jan2026.pdf?csf=1&web=1&e=BdAhdo",
+              "blurb": "Defines relocation entitlements and approval process for domestic and international moves."
+            },
+            {
+              "s": "xref",
+              "name": "Colleague Transfer Policy – Compensation & Benefits",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/B.%20Attracting%20and%20Hiring%20the%20Right%20People/B4.%20Sourcing%20Channels/c.%20Colleague%20Transfer%20Process%20Jan2026.pdf?csf=1&web=1&e=4TxtQT",
+              "blurb": "Clarifies how compensation, benefits, and allowances are applied during internal transfers, ensuring fairness and consistency."
+            },
+            {
+              "s": "xref",
+              "name": "Task Force, CEA fact sheet",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/3.%20Mobility/d.%20CEA,%20TASK%20FORCE%20POLICY%20PPT%20FACT%20SHEET.pdf?csf=1&web=1&e=UPraeU",
+              "blurb": "Establishes framework for assignments under 12 months."
+            }
+          ],
+          "transition": "As Colleagues expand their horizons through new experiences, some move into senior leadership roles. The next section outlines how we reward those who lead our people and performance."
+        }
+      ]
+    },
+    "sub-G": {
+      "tagline": "How we nurture potential, strengthen capability, and grow the next generation of leaders.",
+      "philosophy": {
+        "title": "Our Learning & Growth Philosophy",
+        "paras": [
+          "Growth is at the heart of our success — for our people, our teams, and our brand.",
+          "At Mandarin Oriental, developing our Colleagues is more than building skills; it’s about inspiring potential and enabling every individual to thrive. When Colleagues grow, so does our ability to deliver exceptional experiences to our guests and communities.",
+          "We invest in learning that is purposeful, practical, and personal. Our approach blends the rigour of structured development with the spirit of continuous learning — creating pathways that honour curiosity, performance, and ambition.",
+          "This section outlines how we identify and develop talent across the Group. It brings together policies and frameworks that guide learning, performance, and leadership development to ensure Colleagues at every level are supported to grow and succeed.",
+          "People & Culture’s role is to ensure:",
+          "Development priorities align with the Group’s strategy and values.",
+          "Learning opportunities are inclusive, accessible, and future-focused.",
+          "Performance and potential are assessed fairly and consistently.",
+          "Leaders are equipped to coach, empower, and grow their teams."
+        ]
+      },
+      "sections": [
+        {
+          "num": "1",
+          "title": "Performance Management",
+          "splitAfter": 1,
+          "highlights_eyebrow": "What It Provides",
+          "highlights": [
+            {
+              "icon": "audit",
+              "label": "Goal-Setting",
+              "text": "goal-setting, meaningful feedback, and fair evaluation"
+            },
+            {
+              "icon": "develop",
+              "label": "Colleague Growth",
+              "text": "helping Colleagues grow"
+            },
+            {
+              "icon": "operations",
+              "label": "Exceptional Results",
+              "text": "ensuring our teams deliver exceptional results"
+            }
+          ],
+          "blurb": [
+            "Performance Management provides the foundation for goal-setting, meaningful feedback, and fair evaluation, helping Colleagues grow while ensuring our teams deliver exceptional results. Performance conversations are an opportunity for open dialogue between leaders and Colleagues, supporting both professional growth and operational excellence."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Compensation Framework and Governance Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/a.%20Compensation%20Framework%20and%20Governance%20Policy%20Jan2026.pdf?csf=1&web=1&e=a44iOV",
+              "blurb": "Defines Mandarin Oriental’s compensation philosophy, pay frameworks, governance principles, and approval structures to ensure fair, competitive, and sustainable reward practices across the Group."
+            },
+            {
+              "s": "policy",
+              "name": "Base Pay Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/b.%20Base%20Pay%20Policy%20Jan2026.pdf?csf=1&web=1&e=2xpkId",
+              "blurb": "Defines salary structures and governance for base pay across levels and geographies."
+            },
+            {
+              "s": "policy",
+              "name": "Year End Salary Budget Approval (corporate)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/d.%20(corporate)%20Year%20End%20Salary%20Budget%20Approval%20Jan2026.pdf?csf=1&web=1&e=TwPHTs",
+              "blurb": "Details annual approval process for salary budgets, linking P&C and Finance planning cycles."
+            },
+            {
+              "s": "xref",
+              "name": "Year End Salary Budget Approval (appendix for corporate)",
+              "url": "https://mohgl.sharepoint.com/:w:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/e.%20(corporate)%20Appendix%20A%20-Year%20End%20Salary%20Budget%20Approval%20Request%20Jan2026.docx?d=w8d797e505f63406689ad393cd98f2547&csf=1&web=1&e=tnZ5YS",
+              "blurb": "Provides supporting tools and reference materials for preparing and submitting annual salary budget approvals."
+            },
+            {
+              "s": "xref",
+              "name": "Vacation Pay and Other Entitlements (Finance-owned – cross-reference)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/f.%20Vacation%20Pay%20and%20Other%20Entitlements%20(FIN).pdf?csf=1&web=1&e=kFJvwk",
+              "blurb": "Outlines governance and financial controls for vacation, sick leave, maternity/paternity benefits, bonuses, time in lieu, and related entitlement provisioning and reconciliation."
+            },
+            {
+              "s": "xref",
+              "name": "Provisions for Vacation Pay and Bonus (Finance-owned – cross-reference)",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/g.%20Provisions%20for%20Vacation%20Pay%20and%20Bonus%20(FIN).pdf?csf=1&web=1&e=Qp2dbE",
+              "blurb": "Establishes monthly reconciliation and financial provisioning requirements to ensure accurate accounting of vacation pay, bonuses, and other paid time off liabilities."
+            },
+            {
+              "s": "policy",
+              "name": "Incentive Compensation Plan Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/F.%20Rewarding%20Great%20People/1.%20Compensation/h.%20ICP%20Plan%20Policy%20Jan2026.pdf?csf=1&web=1&e=m738mH",
+              "blurb": "Defines eligibility, performance measures, governance, and payout mechanics for annual incentive compensation aligned to business and individual performance."
+            }
+          ],
+          "transition_pre": [
+            "These resources define how we recognise contribution, support improvement, and maintain talent visibility across the Group. As we identify strengths, opportunities, and future capability needs through performance and talent reviews, our focus naturally shifts to how we build those skills."
+          ],
+          "transition": "Learning & Capability provides the structure, tools, and standards that help Colleagues grow with confidence and consistency across the Group."
+        },
+        {
+          "num": "2",
+          "title": "Learning & Capability",
+          "splitAfter": 1,
+          "highlights_eyebrow": "Building Capability",
+          "highlights": [
+            {
+              "icon": "develop",
+              "label": "Skills & Confidence",
+              "text": "equips Colleagues with the skills, knowledge, and confidence to perform at their best"
+            },
+            {
+              "icon": "build",
+              "label": "Consistent Standards",
+              "text": "how we build capability consistently and strategically across all MO properties"
+            }
+          ],
+          "blurb": [
+            "Continuous learning ensures our Colleagues remain confident, capable, and inspired to deliver the legendary service our guests expect. Learning & Development equips Colleagues with the skills, knowledge, and confidence to perform at their best.",
+            "This section brings together the tools and standards that guide how we build capability consistently and strategically across all MO properties."
+          ],
+          "items": [
+            {
+              "s": "guide",
+              "name": "Learning & Development Standards",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/G.%20Developing%20%26%20Growing%20Our%20People/2.%20Learning%20%26%20Capability/a.%20Learning%20and%20Development%20Standards_260923_Final.pdf?csf=1&web=1&e=tDv84b",
+              "blurb": "Sets Group-wide standards for planning, implementing, and evaluating OD across hotels, ensuring consistency, quality, and strategic alignment."
+            },
+            {
+              "s": "kit",
+              "name": "L&D Standards Review Form",
+              "url": "https://mohgl.sharepoint.com/:x:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/G.%20Developing%20%26%20Growing%20Our%20People/2.%20Learning%20%26%20Capability/b.%20Learning%20and%20Development%20Review%20Form%20December%202025.xlsx?d=wbc80ac689ef94e849b19f4af106bb8a3&csf=1&web=1&e=IkStTE",
+              "blurb": "Standardised tool for assessing each hotel’s adherence to MO OD standards and identifying strengths and improvement areas."
+            }
+          ],
+          "transition_body": [
+            "With strong learning foundations in place, Colleagues are better positioned to take ownership of their growth. The following section focuses on career development pathways that support progression, deeper expertise, and long-term contribution to Mandarin Oriental."
+          ]
+        },
+        {
+          "num": "3",
+          "title": "Career Development",
+          "splitAfter": 1,
+          "highlights_eyebrow": "Taking the Next Step",
+          "highlights": [
+            {
+              "icon": "develop",
+              "label": "Deeper Learning",
+              "text": "deeper learning, broader exposure, and formal qualifications"
+            },
+            {
+              "icon": "strategy",
+              "label": "Leadership Pipeline",
+              "text": "MO’s long-term leadership pipeline"
+            },
+            {
+              "icon": "connect",
+              "label": "With Support",
+              "text": "take the next step in their careers with structure and support"
+            }
+          ],
+          "blurb": [
+            "Career Development supports Colleagues in pursuing deeper learning, broader exposure, and formal qualifications that strengthen both individual growth and MO’s long-term leadership pipeline. These programmes and tools help Colleagues take the next step in their careers with structure and support."
+          ],
+          "items": [
+            {
+              "s": "kit",
+              "name": "Interviewing for Success",
+              "url": "https://central.unily.com/sites/learning-development/SitePageModern/159081/interviewing-for-success",
+              "blurb": "Develops interviewing capability for People Managers, strengthening structured assessment, fair decision-making, and values-based hiring across the Group."
+            },
+            {
+              "s": "guide",
+              "name": "Mentoring Programme",
+              "url": "https://central.unily.com/sites/learning-development/SitePageModern/159110/mentoring-training",
+              "blurb": "Enables structured mentoring relationships that support knowledge transfer, career growth, and leadership development across functions and levels."
+            },
+            {
+              "s": "guide",
+              "name": "Rising Fan Programme",
+              "blurb": "18-month early careers development programme (Rooms, F&B and Spa & Wellness) aimed at developing and nurturing highpotential talent, creating a strong pipeline of future leaders for Mandarin Oriental"
+            },
+            {
+              "s": "guide",
+              "name": "MOve Ahead Programme",
+              "url": "https://central.unily.com/sites/learning-development/SitePageModern/159089/move-ahead",
+              "blurb": "Supports early-career Colleagues in building foundational professional skills and confidence to progress within Mandarin Oriental."
+            },
+            {
+              "s": "guide",
+              "name": "MOve Up Programme",
+              "url": "https://central.unily.com/sites/learning-development/SitePageModern/159098/move-up",
+              "blurb": "Prepares emerging leaders for increased responsibility by strengthening leadership capability, self-awareness, and people management skills."
+            },
+            {
+              "s": "guide",
+              "name": "Presenting for Success",
+              "url": "https://central.unily.com/sites/learning-development/SitePageModern/159084/presenting-for-success",
+              "blurb": "Builds confident, professional presentation and communication skills to support effective influence, storytelling, and leadership presence."
+            },
+            {
+              "s": "kit",
+              "name": "External Development Programme Application - Sample",
+              "url": "https://mohgl.sharepoint.com/:w:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/G.%20Developing%20%26%20Growing%20Our%20People/3.%20Career%20Development/b.%20External%20Development%20Programme%20Application-Sample.docx?d=w10cd678cdf8541198d62a5b4b69412f4&csf=1&web=1&e=OHOUr6",
+              "blurb": "Sample application form for Colleagues seeking approval for external development programmes supported by MO."
+            },
+            {
+              "s": "kit",
+              "name": "External Development Programme Evaluation - Sample",
+              "url": "https://mohgl.sharepoint.com/:w:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/G.%20Developing%20%26%20Growing%20Our%20People/3.%20Career%20Development/d.%20External%20Development%20Programme%20Evaluation-Sample.docx?d=wd641b01fc25842ea8bd7980b68c48ff6&csf=1&web=1&e=0ylO2f",
+              "blurb": "Supports evaluation of learning outcomes and business impact following completion of approved external development programmes."
+            },
+            {
+              "s": "guide",
+              "name": "e-Cornell Introduction & Guidelines",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/G.%20Developing%20%26%20Growing%20Our%20People/3.%20Career%20Development/e.%20MOHG%20eCornell%20Introduction%20and%20Guidelines%20102025.pdf?csf=1&web=1&e=0oI5P4",
+              "blurb": "Outlines MO’s partnership with eCornell, providing flexible online learning aligned to Group competencies and OD priorities."
+            },
+            {
+              "s": "kit",
+              "name": "e-Cornell Application Form",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/G.%20Developing%20%26%20Growing%20Our%20People/3.%20Career%20Development/f.%20MOHG%20eCornell%20Application%20Form_062025.pdf?csf=1&web=1&e=2r4mIy",
+              "blurb": "Standard approval form for Colleague enrolment and funding arrangements under the eCornell Learning Programme."
+            }
+          ]
+        }
+      ]
+    },
+    "sub-H": {
+      "tagline": "How we honour contributions, handle transitions with care, and maintain lifelong connection.",
+      "philosophy": {
+        "title": "Our Separation Philosophy",
+        "paras": [
+          "Even when Colleagues move on to new chapters in their careers, they remain part of the Mandarin Oriental story.",
+          "At Mandarin Oriental, we believe every departure should reflect the same professionalism, warmth, and respect that define the Colleague Experience from day one.",
+          "This section outlines how we manage departures — voluntary, involuntary, or retirement — with fairness, consistency, and compassion. It also describes how we maintain connection with former Colleagues as valued members of our extended Mandarin Oriental community.",
+          "People & Culture’s role is to ensure:",
+          "Separations are handled respectfully and in compliance with Group and local policies.",
+          "All documentation and systems are completed accurately and on time.",
+          "Departing Colleagues are given opportunities to share feedback.",
+          "Alumni networks are nurtured to keep lifelong connections strong."
+        ]
+      },
+      "sections": [
+        {
+          "num": "1",
+          "title": "Separation & Transition",
+          "blurb": [
+            "This section provides guidance on notice periods, exit procedures, and feedback collection — ensuring that each transition is clear, compliant, and handled with empathy."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Offboarding Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/H.%20Leaving%20with%20Connection/1.%20Separation%20and%20Transition/a.%20Offboarding%20Policy%20Jan2026.pdf?csf=1&web=1&e=7ecFS7",
+              "blurb": "Outlines steps for processing resignations and terminations, ensuring return of property, system deactivation, and final payments."
+            }
+          ]
+        },
+        {
+          "num": "2",
+          "title": "Alumni & Re-Engagement",
+          "blurb": [
+            "This section defines how we sustain positive relationships with former Colleagues, recognising their ongoing role as ambassadors, advocates, and potential future hires."
+          ],
+          "items": [
+            {
+              "s": "policy",
+              "name": "Forever Fans MO Alumni Policy",
+              "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/H.%20Leaving%20with%20Connection/2.%20Alumni%20and%20Re-engagement/a.%20Forever%20Fans%20MO%20Alumni%20Policy%20Jan2026.pdf?csf=1&web=1&e=tKdyzR",
+              "blurb": "Outlines how we engage and communicate with former Colleagues through alumni platforms, events, and rehire opportunities."
+            }
+          ],
+          "transition": "When Colleagues leave feeling respected and appreciated, they carry our culture forward. Every farewell is an opportunity to reaffirm who we are — a community built on care, connection, and lasting respect."
+        }
+      ]
+    }
+  },
+  "ch4": {
+    "tagline": "How we help P&C leaders open hotels with clarity, readiness, and a culture that feels like MO from Day 1.",
+    "philosophy": {
+      "title": "Our Pre-Opening Philosophy",
+      "paras": [
+        "Opening a hotel is one of the most exciting moments in the Mandarin Oriental journey. It brings our brand to life in a new market, welcomes new Colleagues into our culture, and sets the foundation for exceptional guest and Colleague experiences.",
+        "For People & Culture, pre-opening is where we build momentum. It’s where we shape the culture, establish core people practices, and ensure leaders and Colleagues arrive confident, supported, and ready to deliver the exceptional.",
+        "This section brings together the tools, checklists, and frameworks that guide P&C leaders through every stage of opening a new property — from workforce planning to Colleague readiness and office setup. The goal is to provide clarity, structure, and consistency, while giving each property the space to adapt to its local needs.",
+        "People & Culture’s role is to ensure:",
+        "Critical paths and milestones are clearly understood and owned.",
+        "Workforce plans, hiring targets, and training needs are aligned with operational readiness.",
+        "Colleagues are welcomed into a safe, organised, and brand-aligned P&C environment.",
+        "All P&C processes, records, and systems are set up correctly before opening day."
+      ]
+    },
+    "sections": [
+      {
+        "num": "1",
+        "title": "P&C Pre-Opening Tools & Frameworks",
+        "splitAfter": 2,
+        "feature_quote": "Opening a Mandarin Oriental property requires thoughtful preparation to ensure that the culture, service standards, and Colleague experience are established from the very beginning.",
+        "highlights_eyebrow": "The Pre-Opening Path",
+        "highlights": [
+          {
+            "icon": "data",
+            "label": "Shared Platform",
+            "text": "All P&C pre-opening tasks are captured within the shared pre-opening platform."
+          },
+          {
+            "icon": "connect",
+            "label": "Early Coordination",
+            "text": "Early-stage preparations are initiated by the Regional People & Culture team before the People & Culture Director (P&CD) formally joins the project."
+          },
+          {
+            "icon": "build",
+            "label": "Dedicated Workspace",
+            "text": "A dedicated pre-opening P&C workspace should be established."
+          },
+          {
+            "icon": "welcome",
+            "label": "Leadership Arrival",
+            "text": "The early arrival of the leadership team marks an important phase in preparing the hotel for opening."
+          }
+        ],
+        "blurb": [
+          "Opening a Mandarin Oriental property requires thoughtful preparation to ensure that the culture, service standards, and Colleague experience are established from the very beginning. People & Culture plays a critical role in laying this foundation, ensuring that the right structures, tools, and processes are in place to support Colleagues and deliver the exceptional service for which Mandarin Oriental is known.",
+          "The resources in this section support People & Culture leaders in building the people foundation for a successful hotel opening. They provide structured guidance, timelines, and operational tools that help properties prepare for the arrival of the first Colleagues and ensure that key People & Culture functions are in place from day one.",
+          "All P&C pre-opening tasks are captured within the shared pre-opening platform. This platform outlines the critical path, key milestones, and timelines that properties should follow throughout the pre-opening journey. The framework helps ensure that P&C preparations are aligned with the broader hotel development timeline and that important milestones are achieved in a coordinated and disciplined manner.",
+          "In many cases, early-stage preparations are initiated by the Regional People & Culture team before the People & Culture Director (P&CD) formally joins the project. This early coordination supports a smooth transition and ensures that essential structures are already in place when the property leadership team begins to assemble.",
+          "As part of this preparation, a dedicated pre-opening P&C workspace should be established. The workspace should provide a safe and functional environment equipped with appropriate workstations, IT access, equipment, and essential office resources. Ensuring that these elements are ready upon the arrival of the P&CD enables the team to immediately begin key activities such as recruitment planning, Colleague documentation, and operational setup.",
+          "The early arrival of the leadership team — including the General Manager, P&CD, Director of Engineering, and Finance leadership — marks an important phase in preparing the hotel for opening. During this period, People & Culture teams work closely with operational leaders to build the organisational structure, recruit the first Colleagues, and begin shaping the culture that will define the property.",
+          "Throughout this process, properties should follow the established pre-opening critical path and operational guidelines to ensure that People & Culture activities remain aligned with the broader opening schedule.",
+          "For detailed guidance and timelines, refer to the official Pre-Opening Critical Path documentation."
+        ],
+        "items": [
+          {
+            "s": "guide",
+            "name": "P&C Guidelines for Hotel Openings and Rebrandings",
+            "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/I.%20Pre-opening%20Hotels/a.%20Preopenings%20guidelines%20Mar2026.pdf?csf=1&web=1&e=XZbcCS",
+            "blurb": "Provides the end-to-end People & Culture roadmap for opening or repositioning a property, including hiring strategy, Colleague experience milestones, training preparation, and organisational readiness prior to opening."
+          },
+          {
+            "s": "kit",
+            "name": "Pre-Opening Checklist",
+            "blurb": "Defines the key People & Culture activities and timelines required during the pre-opening phase, including recruitment, onboarding preparation, training coordination, Colleague documentation, and compliance requirements. The checklist helps P&C teams track progress and align activities with the overall hotel opening timeline."
+          },
+          {
+            "s": "kit",
+            "name": "Pre-Opening Budget template",
+            "url": "https://mohgl.sharepoint.com/:x:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/I.%20Pre-opening%20Hotels/d.%20PreOpening_BudgetTemplate.xlsx?d=wa7f2ebf73ed6451792e632d0e1cf535e&csf=1&web=1&e=x21tyx",
+            "blurb": "Provides a structured tool for planning and monitoring pre-opening People & Culture costs, including recruitment, onboarding, and Colleague-related labour expenses. The template supports alignment between People & Culture, Finance, and Operations to ensure resources are planned effectively during the pre-opening phase."
+          },
+          {
+            "s": "kit",
+            "name": "Pre-Opening Payroll template",
+            "blurb": "Provides a structured tool for planning and monitoring pre-opening People & Culture costs, including recruitment, onboarding, and Colleague-related labour expenses. The template supports alignment between People & Culture, Finance, and Operations to ensure resources are planned effectively during the pre-opening phase."
+          },
+          {
+            "s": "kit",
+            "name": "Hotel Position Matrix",
+            "blurb": "Outlines the organisational structure for hotels."
+          },
+          {
+            "s": "guide",
+            "name": "Finance Collaboration & P&C Requirements",
+            "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/I.%20Pre-opening%20Hotels/g.%20PreOpening%20_%20Finance%20%26%20P%26C%20collaboration.pdf?csf=1&web=1&e=ens1L6",
+            "blurb": "Guidelines to outline the People & Culture (P&C) responsibilities related to financial alignment and operational preparations during pre-opening"
+          }
+        ],
+        "transition": "The next section outlines how Mandarin Oriental safeguards Colleague information and upholds responsible and ethical digital practices across all People & Culture systems and processes."
+      }
+    ]
+  },
+  "ch5": {
+    "intro": [
+      "Consistent People & Culture practices ensure that every Mandarin Oriental property upholds the same standards of integrity, professionalism, and care.",
+      "The P&C Audit Framework helps ensure that People & Culture policies, processes, and records are applied consistently and remain compliant across all Mandarin Oriental properties.",
+      "Through regular reviews and self-assessment, the framework enables properties to monitor operational practices, identify areas for improvement, and maintain strong governance standards. These audits support both operational integrity and the consistent delivery of People & Culture services to Colleagues across the Group.",
+      "The framework combines structured self-assessment at the property level with oversight from Regional People & Culture teams, ensuring that practices remain aligned with Group expectations while also meeting local statutory requirements."
+    ],
+    "sections": [
+      {
+        "num": "",
+        "title": "",
+        "items": [
+          {
+            "s": "kit",
+            "name": "P&C Operations Risk Self-Assessment Checklist",
+            "url": "https://mohgl.sharepoint.com/:x:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/J.%20P%26C%20Audit/P%26C%20Operations%20Risk%20Self-Assessment%20Checklist.xlsx?d=w94fd5e54b1754030a87590627884d593&csf=1&web=1&e=dVUUnW",
+            "blurb": "Provides a standard audit reference covering key People & Culture operational areas, including: employment contracts and documentation payroll governance and controls Colleague records management HR system access and data security policy compliance and recordkeeping The checklist supports properties in reviewing their operational practices and preparing for internal or external audits. Each property is expected to complete an annual self-assessment using the checklist and share the results with their Regional People & Culture team."
+          },
+          {
+            "s": "kit",
+            "name": "People Operations Governance"
+          },
+          {
+            "s": "guide",
+            "name": "P&C Governance, Roles, and Escalation Framework",
+            "url": "https://mohgl.sharepoint.com/:b:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/J.%20P%26C%20Audit/People%20and%20Culture%20Governance%20Jan2026.pdf?csf=1&web=1&e=y6nhah",
+            "blurb": "Defines the governance structure, roles, responsibilities, and escalation framework across People & Culture (P&C) at Mandarin Oriental."
+          }
+        ],
+        "transition": "Strong governance helps ensure that People & Culture processes remain fair, consistent, and compliant across all locations.",
+        "transition_body": [
+          "This Playbook provides the guiding principles, standards, and reference resources that support consistent People & Culture operations. As part of the governance process, properties are expected to regularly review their practices against these standards.",
+          "Regional People & Culture leaders may also conduct additional reviews or on-site assessments where appropriate to support alignment, strengthen operational practices, and provide guidance to local teams. Through this combination of self-assessment and regional oversight, Mandarin Oriental maintains strong governance while continuing to improve the way People & Culture services are delivered to Colleagues across the organisation."
+        ]
+      }
+    ]
+  },
+  "prose": {
+    "cover.bg": "cover_colleagues.jpg",
+    "cover.wordmark": "Mandarin Oriental",
+    "cover.edition": "Edition · July 2026",
+    "cover.eyebrow": "The Interactive Playbook",
+    "cover.titleHtml": "People &amp; Culture<br/><em>Playbook</em>",
+    "cover.sub": "A living framework for every People &amp; Culture leader — from attracting talent to leaving with connection.",
+    "cover.ctaLabel": "Explore",
+    "intro.eyebrow": "A Message to Colleagues",
+    "intro.title": "Welcome to our People &amp; Culture (P&amp;C) Playbook",
+    "intro.video": "video/intro.mp4",
+    "intro.nextLabel": "Continue to Contents"
+  },
+  "assets": {}
+}

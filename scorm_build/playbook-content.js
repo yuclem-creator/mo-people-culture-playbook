@@ -18,6 +18,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "1",
         "title": "Ethical Conduct & Integrity",
+        "splitAfter": 1,
+        "highlights_eyebrow": "What Integrity Protects",
+        "highlights": [
+          { "icon": "ethics", "label": "Professionalism", "text": "the standards of professionalism, accountability, and care that every Colleague must uphold" },
+          { "icon": "fair", "label": "Respect", "text": "how we show respect for one another, our guests, and our brand" },
+          { "icon": "governance", "label": "Daily Decisions", "text": "daily decisions and interactions" }
+        ],
         "blurb": [
           "Ethical conduct is the foundation of trust — it is how we show respect for one another, our guests, and our brand.",
           "This section defines the standards of professionalism, accountability, and care that every Colleague must uphold in their daily decisions and interactions."
@@ -77,6 +84,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "2",
         "title": "Fair Employment & Equal Opportunity",
+        "splitAfter": 1,
+        "highlights_eyebrow": "Our Commitment",
+        "highlights": [
+          { "icon": "fair", "label": "Respect & Dignity", "text": "treated with respect, dignity, and equity" },
+          { "icon": "governance", "label": "Consistent Standards", "text": "consistent standards for employment practices and policy governance" },
+          { "icon": "connect", "label": "Across Jurisdictions", "text": "across all jurisdictions" }
+        ],
         "blurb": [
           "Fair employment ensures that every Colleague — regardless of background, role, or region — is treated with respect, dignity, and equity.",
           "This section defines how MO applies consistent standards for employment practices and policy governance across all jurisdictions."
@@ -115,6 +129,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "1",
         "title": "Talent Acquisition Strategy & Governance",
+        "splitAfter": 1,
+        "highlights_eyebrow": "What the Framework Sets",
+        "highlights": [
+          { "icon": "strategy", "label": "Planning", "text": "how we plan, govern, and measure recruitment activity across the Group" },
+          { "icon": "governance", "label": "Accountability", "text": "setting expectations for approvals, accountability" },
+          { "icon": "data", "label": "Data Integrity", "text": "and data integrity" }
+        ],
         "blurb": [
           "A clear recruitment framework ensures consistency across every property and region.",
           "This section defines how we plan, govern, and measure recruitment activity across the Group — setting expectations for approvals, accountability, and data integrity."
@@ -168,6 +189,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "2",
         "title": "Employer Brand & Candidate Experience",
+        "splitAfter": 1,
+        "highlights_eyebrow": "How We Show Up",
+        "highlights": [
+          { "icon": "welcome", "label": "Authentic Experience", "text": "A consistent, authentic candidate experience reinforces our reputation as a world-class employer" },
+          { "icon": "connect", "label": "Lifelong Fans", "text": "turns great applicants into lifelong fans" },
+          { "icon": "hiring", "label": "Brand Expression", "text": "how we express the Mandarin Oriental brand through our tone, imagery, and communication" }
+        ],
         "blurb": [
           "Every interaction with a candidate shapes how they perceive our culture. A consistent, authentic candidate experience reinforces our reputation as a world-class employer and turns great applicants into lifelong fans.",
           "This section outlines how we express the Mandarin Oriental brand through our tone, imagery, and communication — from social media to interviews."
@@ -239,6 +267,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "3",
         "title": "Job Advertisements",
+        "splitAfter": 1,
+        "highlights_eyebrow": "Designing Roles",
+        "highlights": [
+          { "icon": "build", "label": "Clarity", "text": "we build clarity for Colleagues" },
+          { "icon": "develop", "label": "Career Growth", "text": "create the conditions for career growth and organisational agility" },
+          { "icon": "strategy", "label": "Aligned to Plans", "text": "linking them to workforce plans and budget cycles" }
+        ],
         "blurb": [
           "Thoughtful job design ensures every role has purpose, structure, and room to grow. By designing roles deliberately, we build clarity for Colleagues and create the conditions for career growth and organisational agility.",
           "This section explains how we evaluate and approve new or revised positions, linking them to workforce plans and budget cycles."
@@ -262,6 +297,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "4",
         "title": "Sourcing Channels",
+        "splitAfter": 1,
+        "highlights_eyebrow": "A Healthy Pipeline",
+        "highlights": [
+          { "icon": "connect", "label": "Internal Mobility", "text": "internal transfers and alumni" },
+          { "icon": "hiring", "label": "External Outreach", "text": "partnerships with universities and agencies" },
+          { "icon": "develop", "label": "Diverse Pipeline", "text": "builds a healthy, diverse pipeline for the future" }
+        ],
         "blurb": [
           "Our sourcing channels reflect both global reach and local strength. A balanced mix of internal mobility and external outreach builds a healthy, diverse pipeline for the future.",
           "This section covers how we identify, engage, and re-engage talent — from internal transfers and alumni to partnerships with universities and agencies."
@@ -339,6 +381,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "5",
         "title": "Selection & Assessment",
+        "splitAfter": 2,
+        "highlights_eyebrow": "A Fair, Structured Process",
+        "highlights": [
+          { "icon": "connect", "label": "Partnership", "text": "People & Culture partners closely with hiring managers to guide a structured and fair selection process" },
+          { "icon": "audit", "label": "Responsible Hiring", "text": "appropriate reference and background checks may be conducted to verify employment history, qualifications" },
+          { "icon": "fair", "label": "Fairness", "text": "all assessments are conducted lawfully, consistently, and with respect for candidate confidentiality and fairness" }
+        ],
         "blurb": [
           "Selecting the right Colleagues is essential to sustaining Mandarin Oriental’s culture of service excellence. Our selection and assessment practices are designed to ensure that every hiring decision reflects both the operational needs of the business and the values that define our brand.",
           "People & Culture partners closely with hiring managers to guide a structured and fair selection process. This may include behavioural interviews, role-specific assessments, and thoughtful evaluation of a candidate’s experience, potential, and alignment with Mandarin Oriental’s service philosophy.",
@@ -371,6 +420,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "6",
         "title": "Offer Management & Pre-Boarding",
+        "splitAfter": 2,
+        "highlights_eyebrow": "From Offer to First Day",
+        "highlights": [
+          { "icon": "contract", "label": "Thoughtful Offers", "text": "prepare a thoughtful and timely offer experience" },
+          { "icon": "fair", "label": "Fair & Consistent", "text": "the principles of fairness, consistency, and responsible stewardship of the Group’s resources" },
+          { "icon": "welcome", "label": "Pre-Boarding", "text": "begin building connection and engagement with the new Colleague before their first day" }
+        ],
         "blurb": [
           "Recruitment is not simply about filling roles, but about welcoming Colleagues who will help carry forward the spirit and standards of Mandarin Oriental.",
           "Once a candidate has been selected, the property People & Culture team partners closely with the hiring manager to prepare a thoughtful and timely offer experience. Clear communication during this stage helps set expectations and reinforces Mandarin Oriental’s culture of professionalism and care",
@@ -406,8 +462,9 @@ const LIFECYCLE_CONTENT = {
         "title": "",
         "items": [
           {
-            "s": "kit",
-            "name": "Onboarding & Integration"
+            "s": "group",
+            "name": "Onboarding & Integration",
+            "desc": "A great first impression starts with care and consistency. This section outlines the standards for welcoming, orienting, and connecting new Colleagues to our culture, practices, and brand values."
           },
           {
             "s": "policy",
@@ -456,6 +513,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "2",
         "title": "Probation & Early Performance",
+        "splitAfter": 1,
+        "highlights_eyebrow": "During Probation",
+        "highlights": [
+          { "icon": "develop", "label": "Performance", "text": "how we evaluate performance, behaviours, and fit during probation" },
+          { "icon": "connect", "label": "Support", "text": "ensuring support" },
+          { "icon": "audit", "label": "Timely Feedback", "text": "timely feedback for every Colleague" }
+        ],
         "blurb": [
           "The first months of employment are critical for engagement and alignment.",
           "This section describes how we evaluate performance, behaviours, and fit during probation, ensuring support and timely feedback for every Colleague."
@@ -492,6 +556,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "1",
         "title": "Strategic Workforce Planning",
+        "splitAfter": 1,
+        "highlights_eyebrow": "What Planning Enables",
+        "highlights": [
+          { "icon": "strategy", "label": "Right Capabilities", "text": "the right capabilities are in place to support both current operations and future growth" },
+          { "icon": "hiring", "label": "Anticipate Needs", "text": "anticipate hiring needs" },
+          { "icon": "build", "label": "Responsible Structure", "text": "manage organisational structure responsibly" }
+        ],
         "blurb": [
           "Strategic Workforce Planning connects the organisation’s business strategy with its people needs.",
           "Through thoughtful planning of headcount, structure, and workforce costs, People & Culture partners with business leaders to ensure that the right capabilities are in place to support both current operations and future growth.",
@@ -633,6 +704,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "4",
         "title": "Technology & Data Use",
+        "splitAfter": 1,
+        "highlights_eyebrow": "Our Responsibility",
+        "highlights": [
+          { "icon": "data", "label": "Manage Data", "text": "how we manage data" },
+          { "icon": "operations", "label": "Use Technology", "text": "use technology" },
+          { "icon": "ethics", "label": "Represent MO", "text": "represent Mandarin Oriental online, ensuring professionalism, privacy, and ethical conduct" }
+        ],
         "blurb": [
           "Digital systems and communication tools enable collaboration — but also carry responsibility.",
           "This section defines how we manage data, use technology, and represent Mandarin Oriental online, ensuring professionalism, privacy, and ethical conduct."
@@ -719,6 +797,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "6",
         "title": "Reporting & Analytics",
+        "splitAfter": 2,
+        "highlights_eyebrow": "From Data to Decisions",
+        "highlights": [
+          { "icon": "data", "label": "Accurate Records", "text": "workforce data is maintained with care and accuracy" },
+          { "icon": "audit", "label": "Reliable Reporting", "text": "Reliable reporting depends on the quality of the data entered into these systems" },
+          { "icon": "strategy", "label": "Strategic Insight", "text": "supporting workforce planning, operational oversight, and strategic decision-making" }
+        ],
         "blurb": [
           "Insightful reporting transforms operational data into strategic value.",
           "Accurate and timely workforce information enables Mandarin Oriental to understand the current state of its Colleague population, identify emerging trends, and make informed decisions that support both business performance and the Colleague experience.",
@@ -752,6 +837,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "1",
         "title": "Engagement, Connection & Community",
+        "splitAfter": 1,
+        "highlights_eyebrow": "How We Build Community",
+        "highlights": [
+          { "icon": "connect", "label": "Respected & Supported", "text": "Colleagues feel respected, supported, and empowered to succeed" },
+          { "icon": "welcome", "label": "Lasting Pride", "text": "cultivate lasting pride in being part of Mandarin Oriental" },
+          { "icon": "develop", "label": "Culture", "text": "how we communicate, celebrate, and collaborate across the Group" }
+        ],
         "blurb": [
           "Engagement brings our Values to life.",
           "Leaders at Mandarin Oriental play a vital role in shaping an environment where Colleagues feel respected, supported, and empowered to succeed. By creating spaces where Colleagues feel valued and inspired, we cultivate lasting pride in being part of Mandarin Oriental.",
@@ -826,6 +918,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "3",
         "title": "Health, Safety & Wellbeing",
+        "splitAfter": 2,
+        "highlights_eyebrow": "Our Culture of Care",
+        "highlights": [
+          { "icon": "wellbeing", "label": "Safeguard Health", "text": "safeguard health, prevent injury, and support the overall wellbeing of every Colleague" },
+          { "icon": "operations", "label": "Safe Practices", "text": "promoting safe working practices" },
+          { "icon": "develop", "label": "Whole-Person Wellbeing", "text": "physical, emotional, and professional wellbeing" }
+        ],
         "blurb": [
           "Caring for our Colleagues is fundamental to sustaining the warmth and attentiveness that our guests experience every day.",
           "Safety and wellbeing are fundamental to our culture of care, not simply matters of compliance. Mandarin Oriental is committed to creating environments that safeguard health, prevent injury, and support the overall wellbeing of every Colleague.",
@@ -868,11 +967,23 @@ const LIFECYCLE_CONTENT = {
             "blurb": "Establishes local safety committees responsible for monitoring workplace risks, conducting inspections, and championing safe practices across the hotel."
           }
         ],
-        "transition": "We strongly advise that each property must ensure that an Employee Assistance Program (EAP) is in place prior to opening, to provide confidential emotional, psychological, and practical support for Colleagues. Where possible, leverage existing EAP providers within the country or region to achieve a costeffective and scalable solution. Mandarin Oriental currently partners with Intellect as our designated EAP provider, covering the Corporate Office and several hotels that have opted into the programme. If your property already receives EAP or mentalwellness services through local insurance coverage, you are not required to duplicate this arrangement; however, if no such coverage exists, implementing Intellect or an equivalent local provider is strongly recommended. Further information can be sought from your Regional P&C Director and also the attached documents. Caring for people is both our heritage and our future.  When Colleagues feel safe, supported, and valued — in body, mind, and spirit — they bring their best selves to every guest, every day. The next section outlines how we design and manage compensation and benefits at Mandarin Oriental, ensuring fairness, transparency, and sustainability across all regions."
+        "transition_pre": [
+          "We strongly advise that each property must ensure that an Employee Assistance Program (EAP) is in place prior to opening, to provide confidential emotional, psychological, and practical support for Colleagues. Where possible, leverage existing EAP providers within the country or region to achieve a costeffective and scalable solution. Mandarin Oriental currently partners with Intellect as our designated EAP provider, covering the Corporate Office and several hotels that have opted into the programme. If your property already receives EAP or mentalwellness services through local insurance coverage, you are not required to duplicate this arrangement; however, if no such coverage exists, implementing Intellect or an equivalent local provider is strongly recommended. Further information can be sought from your Regional P&C Director and also the attached documents. Caring for people is both our heritage and our future."
+        ],
+        "transition": "When Colleagues feel safe, supported, and valued — in body, mind, and spirit — they bring their best selves to every guest, every day.",
+        "transition_body": [
+          "The next section outlines how we design and manage compensation and benefits at Mandarin Oriental, ensuring fairness, transparency, and sustainability across all regions."
+        ]
       },
       {
         "num": "4",
         "title": "Colleague Voice",
+        "splitAfter": 1,
+        "highlights_eyebrow": "Being Heard",
+        "highlights": [
+          { "icon": "connect", "label": "Raise Concerns", "text": "Colleagues can raise concerns, seek resolution, and be heard without fear of retaliation" },
+          { "icon": "fair", "label": "With Dignity", "text": "handling workplace matters with dignity, fairness, and respect" }
+        ],
         "blurb": [
           "Open, honest dialogue is central to a culture of trust.",
           "This section defines how Colleagues can raise concerns, seek resolution, and be heard without fear of retaliation. It also reinforces our commitment to handling workplace matters with dignity, fairness, and respect."
@@ -1050,6 +1161,12 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "3",
         "title": "Mobility",
+        "splitAfter": 1,
+        "highlights_eyebrow": "How Mobility Works",
+        "highlights": [
+          { "icon": "connect", "label": "Assignments", "text": "how international assignments, relocations, and short-term postings are managed" },
+          { "icon": "fair", "label": "Consistency", "text": "consistency, fairness, and clarity of benefits" }
+        ],
         "blurb": [
           "Mobility offers Colleagues the opportunity to grow, contribute, and experience new cultures.",
           "This section defines how international assignments, relocations, and short-term postings are managed across the Group to ensure consistency, fairness, and clarity of benefits."
@@ -1104,6 +1221,13 @@ const LIFECYCLE_CONTENT = {
       {
         "num": "1",
         "title": "Performance Management",
+        "splitAfter": 1,
+        "highlights_eyebrow": "What It Provides",
+        "highlights": [
+          { "icon": "audit", "label": "Goal-Setting", "text": "goal-setting, meaningful feedback, and fair evaluation" },
+          { "icon": "develop", "label": "Colleague Growth", "text": "helping Colleagues grow" },
+          { "icon": "operations", "label": "Exceptional Results", "text": "ensuring our teams deliver exceptional results" }
+        ],
         "blurb": [
           "Performance Management provides the foundation for goal-setting, meaningful feedback, and fair evaluation, helping Colleagues grow while ensuring our teams deliver exceptional results. Performance conversations are an opportunity for open dialogue between leaders and Colleagues, supporting both professional growth and operational excellence."
         ],
@@ -1151,11 +1275,20 @@ const LIFECYCLE_CONTENT = {
             "blurb": "Defines eligibility, performance measures, governance, and payout mechanics for annual incentive compensation aligned to business and individual performance."
           }
         ],
-        "transition": "These resources define how we recognise contribution, support improvement, and maintain talent visibility across the Group. As we identify strengths, opportunities, and future capability needs through performance and talent reviews, our focus naturally shifts to how we build those skills. Learning & Capability provides the structure, tools, and standards that help Colleagues grow with confidence and consistency across the Group."
+        "transition_pre": [
+          "These resources define how we recognise contribution, support improvement, and maintain talent visibility across the Group. As we identify strengths, opportunities, and future capability needs through performance and talent reviews, our focus naturally shifts to how we build those skills."
+        ],
+        "transition": "Learning & Capability provides the structure, tools, and standards that help Colleagues grow with confidence and consistency across the Group."
       },
       {
         "num": "2",
         "title": "Learning & Capability",
+        "splitAfter": 1,
+        "highlights_eyebrow": "Building Capability",
+        "highlights": [
+          { "icon": "develop", "label": "Skills & Confidence", "text": "equips Colleagues with the skills, knowledge, and confidence to perform at their best" },
+          { "icon": "build", "label": "Consistent Standards", "text": "how we build capability consistently and strategically across all MO properties" }
+        ],
         "blurb": [
           "Continuous learning ensures our Colleagues remain confident, capable, and inspired to deliver the legendary service our guests expect. Learning & Development equips Colleagues with the skills, knowledge, and confidence to perform at their best.",
           "This section brings together the tools and standards that guide how we build capability consistently and strategically across all MO properties."
@@ -1174,11 +1307,20 @@ const LIFECYCLE_CONTENT = {
             "blurb": "Standardised tool for assessing each hotel’s adherence to MO OD standards and identifying strengths and improvement areas."
           }
         ],
-        "transition": "With strong learning foundations in place, Colleagues are better positioned to take ownership of their growth. The following section focuses on career development pathways that support progression, deeper expertise, and long-term contribution to Mandarin Oriental."
+        "transition_body": [
+          "With strong learning foundations in place, Colleagues are better positioned to take ownership of their growth. The following section focuses on career development pathways that support progression, deeper expertise, and long-term contribution to Mandarin Oriental."
+        ]
       },
       {
         "num": "3",
         "title": "Career Development",
+        "splitAfter": 1,
+        "highlights_eyebrow": "Taking the Next Step",
+        "highlights": [
+          { "icon": "develop", "label": "Deeper Learning", "text": "deeper learning, broader exposure, and formal qualifications" },
+          { "icon": "strategy", "label": "Leadership Pipeline", "text": "MO’s long-term leadership pipeline" },
+          { "icon": "connect", "label": "With Support", "text": "take the next step in their careers with structure and support" }
+        ],
         "blurb": [
           "Career Development supports Colleagues in pursuing deeper learning, broader exposure, and formal qualifications that strengthen both individual growth and MO’s long-term leadership pipeline. These programmes and tools help Colleagues take the next step in their careers with structure and support."
         ],
@@ -1316,6 +1458,15 @@ const CH4_CONTENT = {
     {
       "num": "1",
       "title": "P&C Pre-Opening Tools & Frameworks",
+      "splitAfter": 2,
+      "feature_quote": "Opening a Mandarin Oriental property requires thoughtful preparation to ensure that the culture, service standards, and Colleague experience are established from the very beginning.",
+      "highlights_eyebrow": "The Pre-Opening Path",
+      "highlights": [
+        { "icon": "data", "label": "Shared Platform", "text": "All P&C pre-opening tasks are captured within the shared pre-opening platform." },
+        { "icon": "connect", "label": "Early Coordination", "text": "Early-stage preparations are initiated by the Regional People & Culture team before the People & Culture Director (P&CD) formally joins the project." },
+        { "icon": "build", "label": "Dedicated Workspace", "text": "A dedicated pre-opening P&C workspace should be established." },
+        { "icon": "welcome", "label": "Leadership Arrival", "text": "The early arrival of the leadership team marks an important phase in preparing the hotel for opening." }
+      ],
       "blurb": [
         "Opening a Mandarin Oriental property requires thoughtful preparation to ensure that the culture, service standards, and Colleague experience are established from the very beginning. People & Culture plays a critical role in laying this foundation, ensuring that the right structures, tools, and processes are in place to support Colleagues and deliver the exceptional service for which Mandarin Oriental is known.",
         "The resources in this section support People & Culture leaders in building the people foundation for a successful hotel opening. They provide structured guidance, timelines, and operational tools that help properties prepare for the arrival of the first Colleagues and ensure that key People & Culture functions are in place from day one.",
@@ -1395,7 +1546,11 @@ const CH5_CONTENT = {
           "blurb": "Defines the governance structure, roles, responsibilities, and escalation framework across People & Culture (P&C) at Mandarin Oriental."
         }
       ],
-      "transition": "Strong governance helps ensure that People & Culture processes remain fair, consistent, and compliant across all locations. This Playbook provides the guiding principles, standards, and reference resources that support consistent People & Culture operations. As part of the governance process, properties are expected to regularly review their practices against these standards. Regional People & Culture leaders may also conduct additional reviews or on-site assessments where appropriate to support alignment, strengthen operational practices, and provide guidance to local teams. Through this combination of self-assessment and regional oversight, Mandarin Oriental maintains strong governance while continuing to improve the way People & Culture services are delivered to Colleagues across the organisation."
+      "transition": "Strong governance helps ensure that People & Culture processes remain fair, consistent, and compliant across all locations.",
+      "transition_body": [
+        "This Playbook provides the guiding principles, standards, and reference resources that support consistent People & Culture operations. As part of the governance process, properties are expected to regularly review their practices against these standards.",
+        "Regional People & Culture leaders may also conduct additional reviews or on-site assessments where appropriate to support alignment, strengthen operational practices, and provide guidance to local teams. Through this combination of self-assessment and regional oversight, Mandarin Oriental maintains strong governance while continuing to improve the way People & Culture services are delivered to Colleagues across the organisation."
+      ]
     }
   ]
 };

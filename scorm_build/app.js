@@ -7,9 +7,10 @@
 // Order & numerals follow the source TOC.
 const CHAPTERS = [
   { id: 'cover',    numeral: '',    label: 'Cover',                                      icon: '·'  },
+  { id: 'intro',    numeral: '',    label: 'A Message to Colleagues',                    opener: 'cpo_portrait.jpg',  isVideo: true },
   { id: 'ch-1',     numeral: 'I',   label: 'Introduction',                               opener: 'opener_intro.jpg'   },
   { id: 'ch-2',     numeral: 'II',  label: 'About Mandarin Oriental',                    opener: 'opener_about.jpg'   },
-  { id: 'ch-3',     numeral: 'III', label: 'Leading Through the Colleague Lifecycle',    opener: 'ch_A_integrity.jpg', hasSubs: true },
+  { id: 'ch-3',     numeral: 'III', label: 'Leading Through the Colleague Lifecycle',    opener: 'opener_lifecycle.jpg', hasSubs: true },
   { id: 'ch-4',     numeral: 'IV',  label: 'Pre-Opening Hotels',                         opener: 'opener_preopen.jpg' },
   { id: 'ch-5',     numeral: 'V',   label: 'P&C Audit',                                  opener: 'opener_audit.jpg'   },
   { id: 'ch-6',     numeral: 'VI',  label: 'Staying Connected & Supported',              opener: 'opener_support.jpg' }
@@ -35,6 +36,23 @@ const LIFECYCLE = [
     lede: 'Offboarding with dignity, and staying connected through the Forever Fans alumni community.' }
 ];
 
+// Colleague Journey — how the Colleague Experience maps to the lifecycle,
+// and how People & Culture delivers it at each stage. Stage words are drawn
+// verbatim from the source ("attract, welcome, grow, care for, and stay
+// connected"); the P&C role notes are grounded in the source lifecycle ledes.
+const JOURNEY = [
+  { stage: 'Attract',  img: 'journey_attract.jpg', icon: 'sub-B', pos: '34% 32%',
+    role: 'People &amp; Culture shapes our recruitment philosophy — from talent acquisition strategy to selection and offer management — so the right people find their place with us.' },
+  { stage: 'Welcome',  img: 'journey_welcome.jpg', icon: 'sub-C', pos: 'center 38%',
+    role: 'P&amp;C welcomes new Colleagues into the MO family through structured induction and early performance care.' },
+  { stage: 'Grow',     img: 'journey_grow.jpg', icon: 'sub-G', pos: 'center 40%',
+    role: 'Through performance management, learning, and career development, P&amp;C invests in every Colleague’s craft.' },
+  { stage: 'Care for', img: 'journey_carefor.jpg', icon: 'sub-E', pos: 'center 38%',
+    role: 'P&amp;C nurtures engagement, recognition, wellbeing, and voice — the fabric of daily life at Mandarin Oriental.' },
+  { stage: 'Stay connected', img: 'journey_stay.jpg', icon: 'sub-H', pos: 'center 30%',
+    role: 'Even as Colleagues move on, P&amp;C offboards with dignity and keeps them close through the Forever Fans alumni community.' }
+];
+
 // Senior Management (verbatim)
 const SENIOR_MGMT = [
   { name: 'Laurent Kleitman',      role: 'Group Chief Executive',              img: 'sm_laurent.jpg' },
@@ -47,6 +65,14 @@ const SENIOR_MGMT = [
   { name: 'Raphael Bick',          role: 'Chief Information Officer',          img: 'sm_raphael.jpg' },
   { name: 'Kristin Ruble',         role: 'Chief Commercial Officer',           img: 'sm_kristin.jpg' },
   { name: 'Alex Schellenberger',   role: 'Chief Brand & Marketing Officer',    img: 'sm_alex.jpg' }
+];
+
+// Vice President & Regional P&C Leaders (verbatim)
+const PC_LEADERS = [
+  { name: 'Koray Genckul',   role: 'Group Vice-President · P&C Operations', img: 'vp_koray.jpg' },
+  { name: 'Nicoleta Cucos',  role: 'Regional Director · Middle East',       img: 'vp_nicoleta.jpg' },
+  { name: 'Robin Vermeire',  role: 'Regional Director · Europe',            img: 'vp_robin.jpg' },
+  { name: 'Laura Wilson',    role: 'Regional Director · Asia Pacific',       img: 'vp_laura.jpg' }
 ];
 
 /* =================================================================
@@ -77,7 +103,8 @@ const ICONS = {
 
 // Short descriptions for the visual contents menu
 const MENU_DESC = {
-  'ch-1': 'A letter from our Chief People & Culture Officer, and how to use this Playbook.',
+  'intro': 'A short welcome film introducing our People & Culture Playbook.',
+  'ch-1': 'Our purpose, who this Playbook is for, and how to use it.',
   'ch-2': 'Our heritage, our global presence, and the leadership that guides us.',
   'ch-3': 'The eight stages of the Colleague journey — from integrity to lasting connection.',
   'ch-4': 'How People & Culture brings a new hotel to life, from planning to opening day.',
@@ -96,6 +123,66 @@ const SYM = {
   // chevron for accordion toggles
   chevron: icon('<path d="M6 9l6 6 6-6"/>')
 };
+
+// Elegant line icons for the "How to Use" step sequence
+const STEP_ICONS = {
+  purpose: icon('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.4"/><circle cx="12" cy="12" r="0.6"/>'),
+  scope:   icon('<path d="M9 4.5h6l4 4v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1z"/><path d="M15 4.5v4h4"/><circle cx="11" cy="14" r="2.4"/><path d="M12.7 15.7L15 18"/>'),
+  local:   icon('<circle cx="12" cy="11" r="7.2"/><path d="M4.8 11h14.4"/><path d="M12 3.8c2.4 2 3.6 4.6 3.6 7.2s-1.2 5.2-3.6 7.2c-2.4-2-3.6-4.6-3.6-7.2S9.6 5.8 12 3.8z"/>')
+};
+
+// Elegant line icons for numbered content sections (Chapters III–VI).
+// Keyword-matched from the section title so every section carries a
+// meaningful, on-brand mark in its header.
+const SECTION_ICONS = {
+  ethics:      icon('<path d="M12 4v16"/><path d="M8.5 20h7"/><path d="M4.5 7h15"/><path d="M6.5 7l-2.8 5.5a3.1 3.1 0 0 0 5.6 0L6.5 7z"/><path d="M17.5 7l-2.8 5.5a3.1 3.1 0 0 0 5.6 0L17.5 7z"/>'),
+  fair:        icon('<circle cx="12" cy="12" r="8.5"/><path d="M8 12l2.6 2.6L16 9"/>'),
+  strategy:    icon('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.4"/><circle cx="12" cy="12" r="0.6"/>'),
+  hiring:      icon('<circle cx="8" cy="8" r="4.2"/><path d="M11 11l8.5 8.5"/><path d="M15.5 15.5l2.3-2.3"/>'),
+  contract:    icon('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 15h5"/>'),
+  welcome:     icon('<path d="M5.5 21V5a1.8 1.8 0 0 1 1.8-1.8h9.4A1.8 1.8 0 0 1 18.5 5v16"/><path d="M3 21h18"/><path d="M13.5 3.2V21"/>'),
+  operations:  icon('<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>'),
+  wellbeing:   icon('<path d="M12 20.2S4.8 15.5 3.1 11a5 5 0 0 1 8.9-4.3A5 5 0 0 1 20.9 11c-1.7 4.5-8.9 9.2-8.9 9.2z"/>'),
+  reward:      icon('<path d="M12 3.2l2.6 5.4 6 .8-4.4 4.1 1.1 5.9-5.3-2.9-5.3 2.9 1.1-5.9L3.4 9.4l6-.8L12 3.2z"/>'),
+  develop:     icon('<path d="M12 21v-8"/><path d="M12 13c0-4.2 3.1-7.2 8-7.2 0 4.2-3.1 7.2-8 7.2z"/><path d="M12 13c0-3.2-2.4-5.4-6-5.4 0 3.2 2.4 5.4 6 5.4z"/>'),
+  connect:     icon('<circle cx="9" cy="12" r="4.8"/><circle cx="15" cy="12" r="4.8"/>'),
+  data:        icon('<ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6"/>'),
+  budget:      icon('<circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M9.5 9.2c0-1 1.1-1.7 2.5-1.7s2.5.7 2.5 1.7-1.1 1.6-2.5 1.6-2.5.6-2.5 1.6 1.1 1.7 2.5 1.7 2.5-.7 2.5-1.7"/>'),
+  build:       icon('<path d="M4.5 21V8.5L12 3.5l7.5 5V21"/><path d="M2.5 21h19"/><path d="M10 21v-5h4v5"/>'),
+  audit:       icon('<rect x="5" y="3.5" width="14" height="17.5" rx="1.2"/><path d="M8.5 9l1.7 1.7 3.3-3.3"/><path d="M8.5 14.5h7"/><path d="M8.5 17.5h4.5"/>'),
+  governance:  icon('<path d="M12 20V4.5"/><path d="M12 20L5.3 8"/><path d="M12 20L18.7 8"/><path d="M5.3 8a13.2 13.2 0 0 1 13.4 0"/>'),
+  hotel:       icon('<path d="M4 21V8.4l8-3.9 8 3.9V21"/><path d="M2.5 21h19"/><path d="M9 21v-3.6a3 3 0 0 1 6 0V21"/><path d="M7.5 11h1.4M11.3 11h1.4M15.1 11h1.4M7.5 14h1.4M15.1 14h1.4"/>'),
+  default:     icon('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M7.5 12h9"/>')
+};
+
+// Resolve an icon by explicit SECTION_ICONS key (falls back to keyword match).
+function iconByKey(key) {
+  if (key && SECTION_ICONS[key]) return SECTION_ICONS[key];
+  return sectionIcon(key);
+}
+
+function sectionIcon(title) {
+  const t = String(title || '').toLowerCase();
+  const map = [
+    ['ethic', 'ethics'], ['integrity', 'ethics'], ['conduct', 'ethics'],
+    ['fair', 'fair'], ['equal', 'fair'], ['opportunity', 'fair'],
+    ['strateg', 'strategy'], ['governance', 'governance'], ['escalation', 'governance'],
+    ['acquisition', 'strategy'],
+    ['recruit', 'hiring'], ['hiring', 'hiring'], ['selection', 'hiring'], ['attract', 'hiring'], ['interview', 'hiring'],
+    ['contract', 'contract'], ['document', 'contract'], ['offer', 'contract'], ['record', 'contract'],
+    ['onboard', 'welcome'], ['welcome', 'welcome'], ['induction', 'welcome'], ['orientation', 'welcome'],
+    ['operation', 'operations'], ['payroll', 'budget'], ['system', 'data'], ['digital', 'data'], ['data', 'data'], ['privacy', 'data'],
+    ['wellbeing', 'wellbeing'], ['well-being', 'wellbeing'], ['experience', 'wellbeing'], ['care', 'wellbeing'], ['safety', 'wellbeing'], ['health', 'wellbeing'], ['inclusion', 'wellbeing'],
+    ['reward', 'reward'], ['recognition', 'reward'], ['benefit', 'reward'], ['compensation', 'reward'], ['pay', 'reward'],
+    ['develop', 'develop'], ['grow', 'develop'], ['learning', 'develop'], ['training', 'develop'], ['talent', 'develop'], ['career', 'develop'], ['succession', 'develop'],
+    ['leaving', 'connect'], ['exit', 'connect'], ['alumni', 'connect'], ['connect', 'connect'], ['offboard', 'connect'],
+    ['budget', 'budget'], ['finance', 'budget'],
+    ['pre-open', 'build'], ['opening', 'build'], ['framework', 'build'], ['tool', 'build'], ['workforce', 'build'], ['planning', 'build'],
+    ['audit', 'audit'], ['assessment', 'audit'], ['self-assess', 'audit'], ['risk', 'audit'], ['compliance', 'audit']
+  ];
+  for (const [kw, key] of map) { if (t.includes(kw)) return SECTION_ICONS[key]; }
+  return SECTION_ICONS.default;
+}
 
 /* =================================================================
    CHAPTER 3 — SUB-CHAPTER POLICY CONTENT (verbatim from source)
@@ -136,6 +223,18 @@ let _accId = 0;
 // Expanded: reveals the blurb description and the hyperlinked resource.
 function policyItemHTML(it) {
   const id = 'acc-' + (++_accId);
+  // Group heading row (not a resource): a titled band that introduces the
+  // resources beneath it. Renders name + descriptive blurb, no kind tag.
+  if (it.s === 'group') {
+    return `
+      <div class="policy-group-heading">
+        <div class="policy-group-heading-top">
+          <span class="policy-group-icon" aria-hidden="true">${SYM.kit || ''}</span>
+          <h4 class="policy-group-title">${esc(it.name)}</h4>
+        </div>
+        ${it.desc ? `<p class="policy-group-desc">${esc(it.desc)}</p>` : ''}
+      </div>`;
+  }
   const hasDetail = !!(it.blurb || it.url);
   const kind = symLabel(it.s);
   // Resource line: hyperlink if url present, else plain styled name.
@@ -187,26 +286,507 @@ function policyListHTML(items) {
   </div>`;
 }
 
+// Full-width atmospheric image band for chapter visual rhythm.
+// Purely visual — caption is an editorial descriptor, not source body text.
+function editorialBandHTML(img, eyebrow, caption, fullWidth) {
+  return `
+    <figure class="editorial-band${fullWidth ? ' editorial-band--full' : ''}">
+      <div class="editorial-band-img" style="background-image: url('img/${img}');" role="img" aria-label="${esc(caption || '')}"></div>
+      <figcaption class="editorial-band-cap">
+        ${eyebrow ? `<span class="editorial-band-eyebrow">${esc(eyebrow)}</span>` : ''}
+        ${caption ? `<span class="editorial-band-text">${esc(caption)}</span>` : ''}
+      </figcaption>
+    </figure>`;
+}
+
+// A grid of elegant line-icon cards. Each card's text is a VERBATIM key phrase
+// promoted from the source for scannability (duplicated for emphasis) — purely
+// a visual reframing, the full verbatim prose still renders in the blurb.
+function highlightGridHTML(highlights, eyebrow) {
+  if (!highlights || !highlights.length) return '';
+  const cards = highlights.map(h => `
+    <div class="hl-card">
+      <span class="hl-card-icon" aria-hidden="true">${SECTION_ICONS[h.icon] || SECTION_ICONS.default}</span>
+      ${h.label ? `<span class="hl-card-label">${esc(h.label)}</span>` : ''}
+      <span class="hl-card-text">${esc(h.text)}</span>
+    </div>`).join('');
+  return `
+    <div class="hl-block">
+      ${eyebrow ? `<div class="hl-block-eyebrow">${esc(eyebrow)}</div>` : ''}
+      <div class="hl-grid hl-grid--${highlights.length >= 4 ? 4 : highlights.length}">${cards}</div>
+    </div>`;
+}
+
+// An in-body feature pull-quote (verbatim key sentence, duplicated for emphasis).
+function featureQuoteHTML(quote) {
+  if (!quote) return '';
+  return `
+    <figure class="section-quote section-quote--feature">
+      <span class="section-quote-mark" aria-hidden="true">“</span>
+      <blockquote class="section-quote-text">${esc(quote)}</blockquote>
+      <span class="section-quote-flourish" aria-hidden="true"></span>
+    </figure>`;
+}
+
+// Render blurb paragraphs, optionally split into two chunks so a feature quote /
+// highlight grid can be interleaved (splitAfter = # of paragraphs before break).
+function blurbChunkHTML(paras, from, to) {
+  const slice = paras.slice(from, to);
+  if (!slice.length) return '';
+  return `<div class="policy-section-blurb">${slice.map(p => `<p>${esc(p)}</p>`).join('')}</div>`;
+}
+
 // Section (numbered Heading) — optional intro blurb, resource accordions, optional transition.
+// Optional visual-only fields: feature_quote (verbatim pull-quote), highlights
+// (icon-card grid of verbatim key phrases), splitAfter (interleave point).
 function sectionHTML(sec) {
-  const blurb = (sec.blurb && sec.blurb.length)
-    ? `<div class="policy-section-blurb">${sec.blurb.map(p => `<p>${esc(p)}</p>`).join('')}</div>`
-    : '';
+  let blurb;
+  if (sec.blurb && sec.blurb.length && (sec.feature_quote || sec.highlights)) {
+    // Chunked layout: first paragraphs -> feature quote -> highlight grid -> rest.
+    const splitAt = Number.isInteger(sec.splitAfter) ? sec.splitAfter : 1;
+    blurb = blurbChunkHTML(sec.blurb, 0, splitAt)
+      + featureQuoteHTML(sec.feature_quote)
+      + highlightGridHTML(sec.highlights, sec.highlights_eyebrow)
+      + blurbChunkHTML(sec.blurb, splitAt, sec.blurb.length);
+  } else {
+    blurb = (sec.blurb && sec.blurb.length)
+      ? `<div class="policy-section-blurb">${sec.blurb.map(p => `<p>${esc(p)}</p>`).join('')}</div>`
+      : '';
+  }
+  // The verbatim source "transition" sentence is promoted into an editorial
+  // pull-quote with an oversized quotation mark (magazine treatment). Text
+  // itself is unchanged — only its visual framing is elevated.
   const transition = sec.transition
-    ? `<p class="policy-section-transition">${esc(sec.transition)}</p>`
+    ? `<figure class="section-quote">
+         <span class="section-quote-mark" aria-hidden="true">“</span>
+         <blockquote class="section-quote-text">${esc(sec.transition)}</blockquote>
+         <span class="section-quote-flourish" aria-hidden="true"></span>
+       </figure>`
+    : '';
+  // Verbatim supporting sentences that PRECEDE the pull-quote — ordinary body
+  // text (NOT quoted), so only the key sentence is elevated into a quote.
+  const transitionPre = (sec.transition_pre && sec.transition_pre.length)
+    ? `<div class="policy-section-blurb policy-section-blurb--before">${sec.transition_pre.map(p => `<p>${esc(p)}</p>`).join('')}</div>`
+    : '';
+  // Verbatim supporting sentences that follow the pull-quote — rendered as
+  // ordinary body text (NOT quoted), so only the key sentence stays a quote.
+  const transitionBody = (sec.transition_body && sec.transition_body.length)
+    ? `<div class="policy-section-blurb policy-section-blurb--after">${sec.transition_body.map(p => `<p>${esc(p)}</p>`).join('')}</div>`
     : '';
   const numHTML = sec.num ? `<span class="num">${esc(sec.num)}.</span>` : '';
+  const iconHTML = `<span class="policy-section-icon" aria-hidden="true">${sectionIcon(sec.title)}</span>`;
+  const headerHTML = sec.title
+    ? `<div class="policy-section-header">${iconHTML}${numHTML}<h3>${esc(sec.title)}</h3></div>`
+    : '';
   return `
     <div class="policy-section">
-      <div class="policy-section-header">
-        ${numHTML}
-        <h3>${esc(sec.title)}</h3>
-      </div>
+      ${headerHTML}
       ${blurb}
       ${policyListHTML(sec.items)}
+      ${transitionPre}
       ${transition}
+      ${transitionBody}
     </div>
   `;
+}
+
+// CH4 §1 rendered with a vertical milestone timeline (Task 3). The dense
+// sequential prose describing the Pre-Opening Path is reorganised into a
+// two-column layout: framing intro + callout on the left, an icon-marked
+// vertical timeline of the key stages on the right. Every sentence is verbatim
+// from the source blurb; only the visual framing (icons, labels, layout) is new.
+function ch4Section1HTML(sec) {
+  const b = sec.blurb || [];
+  const numHTML = sec.num ? `<span class="num">${esc(sec.num)}.</span>` : '';
+  const iconHTML = `<span class="policy-section-icon" aria-hidden="true">${sectionIcon(sec.title)}</span>`;
+  const headerHTML = sec.title
+    ? `<div class="policy-section-header">${iconHTML}${numHTML}<h3>${esc(sec.title)}</h3></div>`
+    : '';
+  // Left column: the two framing paragraphs (verbatim), plus the key sentence
+  // (verbatim) promoted into an image-7-style callout band.
+  const timeline = milestoneTimelineHTML({
+    eyebrow: 'The Pre-Opening Path',
+    heading: 'Key Milestones',
+    lead: [b[1]].filter(Boolean),
+    callout_lead: 'People & Culture',
+    callout: 'plays a critical role in laying this foundation, ensuring that the right structures, tools, and processes are in place to support Colleagues and deliver the exceptional service for which Mandarin Oriental is known.',
+    callout_icon: 'connect',
+    steps: [
+      { icon: 'data',    label: 'Shared Platform',    text: b[2] },
+      { icon: 'connect', label: 'Early Coordination', text: b[3] },
+      { icon: 'build',   label: 'Dedicated Workspace', text: b[4] },
+      { icon: 'welcome', label: 'Leadership Arrival',  text: b[5] },
+      { icon: 'operations', label: 'Aligned Delivery', text: b[6] }
+    ].filter(s => s.text)
+  });
+  // Opening framing paragraph (verbatim) sits above the timeline as a lede.
+  const lede = b[0] ? `<div class="policy-section-blurb"><p>${esc(b[0])}</p></div>` : '';
+  // Closing pointer sentence (verbatim) after the timeline + resources.
+  const closing = b[7] ? `<div class="policy-section-blurb policy-section-blurb--after"><p>${esc(b[7])}</p></div>` : '';
+  return `
+    <div class="policy-section">
+      ${headerHTML}
+      ${lede}
+      ${timeline}
+      ${policyListHTML(sec.items)}
+      ${closing}
+    </div>
+  `;
+}
+
+// CH5 — "The P&C Audit Framework" orbit diagram. The Framework sits at the
+// core; Mandarin Oriental properties orbit it on a dashed ring; the three key
+// benefits (verbatim key phrases from the source) anchor around the diagram.
+// Purely a visual reframing — the full verbatim prose still renders alongside.
+function auditOrbitHTML() {
+  // Mandarin Oriental properties (rendered as hotel glyphs) orbit the gold core.
+  // Enlarged diagram: bigger viewBox, wider orbit radius to fill the panel.
+  const cx = 240, cy = 240, ring = 188;
+  const dots = 8;
+  // A single hotel glyph, drawn at unit scale then translated onto the ring.
+  const hotelGlyph = '<path d="M-9 12V-4.2l9-4.4 9 4.4V12"/><path d="M-11 12h22"/><path d="M-3.4 12V7.9a3.4 3.4 0 0 1 6.8 0V12"/><path d="M-6 0h1.6M-1 0h1.6M4 0h1.6M-6 4.4h1.6M4 4.4h1.6"/>';
+  let dotsSVG = '';
+  for (let i = 0; i < dots; i++) {
+    const ang = (i / dots) * Math.PI * 2 - Math.PI / 2;
+    const x = cx + ring * Math.cos(ang);
+    const y = cy + ring * Math.sin(ang);
+    const s = (i % 2 === 0) ? 1.05 : 0.82;
+    // Soft celadon medallion behind each hotel glyph, then the glyph itself.
+    dotsSVG += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(15 * s).toFixed(1)}" fill="${i % 2 === 0 ? '#FFFFFF' : '#EDF1EC'}" stroke="#A9BBAC" stroke-width="1"/>`;
+    dotsSVG += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(0.62 * s).toFixed(3)})" fill="none" stroke="#5C7062" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${hotelGlyph}</g>`;
+  }
+  const benefits = [
+    { icon: 'operations', label: 'Monitor', text: 'monitor operational practices' },
+    { icon: 'develop',    label: 'Improve',  text: 'identify areas for improvement' },
+    { icon: 'governance', label: 'Govern',   text: 'maintain strong governance standards' }
+  ];
+  const benefitCards = benefits.map(b => `
+        <div class="orbit-benefit">
+          <span class="orbit-benefit-icon" aria-hidden="true">${iconByKey(b.icon)}</span>
+          <div class="orbit-benefit-body">
+            <div class="orbit-benefit-label">${esc(b.label)}</div>
+            <p class="orbit-benefit-text">${esc(b.text)}</p>
+          </div>
+        </div>`).join('');
+  return `
+    <div class="orbit">
+      <div class="orbit-eyebrow">The P&amp;C Audit Framework</div>
+        <div class="orbit-stage" role="img" aria-label="The P&amp;C Audit Framework at the core, with Mandarin Oriental hotels orbiting it.">
+          <svg class="audit-orbit-svg" viewBox="0 0 480 480" width="100%" height="100%">
+            <defs>
+              <radialGradient id="orbitCore" cx="50%" cy="42%" r="62%">
+                <stop offset="0%" stop-color="#FFFFFF"/>
+                <stop offset="100%" stop-color="#F5F3EE"/>
+              </radialGradient>
+            </defs>
+            <!-- outer dashed orbit ring (celadon) + inner ring (gold) -->
+            <circle cx="240" cy="240" r="188" fill="none" stroke="#A9BBAC" stroke-width="1" stroke-dasharray="3 7"/>
+            <circle cx="240" cy="240" r="150" fill="none" stroke="#E7DECB" stroke-width="1"/>
+            ${dotsSVG}
+            <!-- core disc -->
+            <circle cx="240" cy="240" r="112" fill="url(#orbitCore)" stroke="#B59060" stroke-width="1.2"/>
+            <circle cx="240" cy="240" r="112" fill="none" stroke="#C9A879" stroke-width="0.6" opacity="0.6" transform="scale(1.06)" transform-origin="240 240"/>
+            <g transform="translate(240 168)" fill="none" stroke="#8f6d3f" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="-13" y="-11" width="26" height="33" rx="1.6"/>
+              <path d="M-6.5 -2l3.2 3.2 6.5-6.5"/>
+              <path d="M-6.5 9h13"/>
+              <path d="M-6.5 15h8.5"/>
+            </g>
+            <text x="240" y="236" text-anchor="middle" font-family="Avenir Next LT Pro" font-size="12" letter-spacing="2.5" fill="#6b625a">THE P&amp;C AUDIT</text>
+            <text x="240" y="270" text-anchor="middle" font-family="MO Exceptional" font-size="31" font-style="italic" font-weight="500" fill="#0d0b08">Framework</text>
+            <text x="240" y="298" text-anchor="middle" font-family="Avenir Next LT Pro" font-size="10" letter-spacing="2.5" fill="#8f6d3f">AT THE CORE</text>
+          </svg>
+          <div class="orbit-caption">All Mandarin Oriental properties orbit a single, shared framework.</div>
+        </div>
+        <div class="orbit-benefits">
+          <div class="orbit-benefits-eyebrow">What the framework enables</div>
+          ${benefitCards}
+        </div>
+    </div>`;
+}
+
+// CH2 — "What We Believe": interactive Vision / Mission / Values.
+// Click a tab to reveal a split panel — the statement (with highlighted
+// keywords) on the left, an icon-led list of principles on the right.
+// Mirrors the reference spreads for Vision, Mission and Values. All verbatim.
+const BELIEFS = [
+  {
+    key: 'vision',
+    tab: 'Our Vision',
+    eyebrow: 'A Meaningful Vision',
+    statement: 'Be <em>Fans</em> of the <em>Exceptional</em>, <em>Every Day</em>, <em>Everywhere</em>',
+    items: [
+      { icon: 'wellbeing',  label: 'Fans',        text: 'We are passionate beyond our duty' },
+      { icon: 'reward',     label: 'Exceptional', text: 'We stand out from the usual and expected' },
+      { icon: 'welcome',    label: 'Every Day',   text: 'Our motivation and dedication is continuous' },
+      { icon: 'connect',    label: 'Everywhere',  text: 'Exceptional delivery in parts of the guest journey' }
+    ]
+  },
+  {
+    key: 'mission',
+    tab: 'Our Mission',
+    eyebrow: 'A Meaningful Mission',
+    statement: 'Craft time-<em>enriching experiences</em> that transform the ordinary to the <em>exceptional</em> and guests to fans',
+    items: [
+      { icon: 'develop',  label: 'Enriching',   text: 'Enabling our guests’ self-growth and fulfillment' },
+      { icon: 'strategy', label: 'Experiences', text: 'We create loyalty through memorable stays and experiences' },
+      { icon: 'reward',   label: 'Exceptional', text: 'Elevated experiences transform simple things into moments of delight' }
+    ]
+  },
+  {
+    key: 'values',
+    tab: 'Our Values',
+    eyebrow: 'Our Values',
+    statement: 'The <em>Exceptional</em> · <em>Growth</em> · <em>Teamwork</em> · <em>Respect</em> · <em>Responsibility</em>',
+    items: [
+      { icon: 'reward',     label: 'The Exceptional', text: 'We Deliver the Exceptional.' },
+      { icon: 'develop',    label: 'Growth',          text: 'We Embrace a Growth Mindset.' },
+      { icon: 'connect',    label: 'Teamwork',        text: 'We Succeed Together.' },
+      { icon: 'fair',       label: 'Respect',         text: 'We Demonstrate Integrity and Respect.' },
+      { icon: 'ethics',     label: 'Responsibility',  text: 'We Act Responsibly.' }
+    ]
+  }
+];
+
+function beliefsTabsHTML() {
+  const tabs = BELIEFS.map((b, i) => `
+        <button class="beliefs-tab${i === 0 ? ' is-active' : ''}" role="tab"
+          aria-selected="${i === 0 ? 'true' : 'false'}" data-belief="${b.key}" id="belief-tab-${b.key}">
+          ${esc(b.tab)}
+        </button>`).join('');
+  const panels = BELIEFS.map((b, i) => {
+    const items = b.items.map(it => `
+          <div class="beliefs-item">
+            <span class="beliefs-item-icon" aria-hidden="true">${iconByKey(it.icon)}</span>
+            <div class="beliefs-item-body">
+              <div class="beliefs-item-label">${esc(it.label)}</div>
+              <p class="beliefs-item-text">${esc(it.text)}</p>
+            </div>
+          </div>`).join('');
+    return `
+        <div class="beliefs-panel${i === 0 ? ' is-active' : ''}" role="tabpanel"
+          data-belief="${b.key}" aria-labelledby="belief-tab-${b.key}"${i === 0 ? '' : ' hidden'}>
+          <div class="beliefs-statement-col">
+            <div class="beliefs-statement-eyebrow">${esc(b.eyebrow)}</div>
+            <div class="beliefs-statement">${b.statement}</div>
+          </div>
+          <div class="beliefs-items-col">
+            ${items}
+          </div>
+        </div>`;
+  }).join('');
+  return `
+    <div class="beliefs">
+      <div class="beliefs-tabs" role="tablist" aria-label="Vision, Mission and Values">
+        ${tabs}
+      </div>
+      <div class="beliefs-panels">
+        ${panels}
+      </div>
+    </div>`;
+}
+
+// Stylised, low-detail world map (equirectangular, viewBox 0 0 460 250).
+// Simplified continent silhouettes — decorative backdrop for the expansion
+// routes, not a survey-accurate map. Longitude maps 0..460, latitude 0..250.
+const WORLD_MAP_PATHS = `
+  <!-- North America -->
+  <path d="M60 46 L128 40 L150 54 L142 70 L156 78 L140 96 L120 100 L110 120 L96 116 L92 96 L78 92 L70 74 L58 66 Z"/>
+  <!-- Central America -->
+  <path d="M110 120 L128 128 L138 150 L128 152 L118 134 L108 126 Z"/>
+  <!-- South America -->
+  <path d="M138 150 L158 150 L166 172 L156 206 L142 222 L134 200 L138 176 L130 160 Z"/>
+  <!-- Greenland -->
+  <path d="M172 34 L196 32 L200 48 L184 56 L172 46 Z"/>
+  <!-- Europe -->
+  <path d="M206 62 L236 58 L242 70 L232 78 L238 90 L224 92 L212 84 L204 74 Z"/>
+  <!-- Africa -->
+  <path d="M224 96 L262 92 L278 108 L272 140 L252 174 L238 172 L230 140 L222 118 L220 104 Z"/>
+  <!-- Middle East / West Asia -->
+  <path d="M270 96 L296 96 L300 112 L286 122 L274 112 Z"/>
+  <!-- Asia -->
+  <path d="M300 56 L378 50 L400 66 L396 84 L372 92 L352 88 L330 96 L308 92 L298 78 L302 66 Z"/>
+  <!-- SE Asia / Indochina -->
+  <path d="M330 100 L356 104 L360 124 L346 134 L336 120 Z"/>
+  <!-- Indian subcontinent -->
+  <path d="M308 96 L330 98 L328 118 L316 124 L308 108 Z"/>
+  <!-- Japan -->
+  <path d="M392 84 L404 88 L400 102 L390 100 Z"/>
+  <!-- Maritime SE Asia -->
+  <path d="M344 142 L376 146 L378 158 L350 160 L342 150 Z"/>
+  <!-- Australia -->
+  <path d="M370 170 L410 168 L420 190 L400 206 L376 200 L366 182 Z"/>
+`;
+
+// CH2 — "Our Strategic Vision" globe diagram. Hotels spread across a stylised
+// globe (celadon meridians, gold location pins); the Group's two headline
+// ambitions — evolving the guest experience and carbon neutrality by 2030 —
+// anchor beneath as goal callouts. A conceptual, icon-led visual reframing.
+function visionGlobeHTML() {
+  // A large STATIC globe (no animation) with criss-crossing gold expansion
+  // lines and small hotel icons scattered across it — a conceptual visual of
+  // Mandarin Oriental's rapid worldwide growth. viewBox 0 0 480 480.
+  const CX = 240, CY = 240, R = 178;
+  // Project a lat/lon (degrees) onto the visible hemisphere of the sphere.
+  // Points on the far side are still drawn but pulled toward the limb.
+  const project = (lat, lon) => {
+    const la = lat * Math.PI / 180, lo = lon * Math.PI / 180;
+    const x = Math.cos(la) * Math.sin(lo);
+    const y = Math.sin(la);
+    const z = Math.cos(la) * Math.cos(lo);
+    return { x: CX + x * R, y: CY - y * R, z };
+  };
+  // Hotel destinations placed by approximate lat/lon, rotated so Asia–Europe
+  // faces the viewer. Heritage hubs (Hong Kong, Bangkok) are emphasised.
+  const cities = [
+    { name: 'Hong Kong', lat: 22,  lon: 24,  hub: true  },
+    { name: 'Bangkok',   lat: 14,  lon: 14,  hub: true  },
+    { name: 'Tokyo',     lat: 36,  lon: 40,  hub: false },
+    { name: 'Singapore', lat: 1,   lon: 20,  hub: false },
+    { name: 'Dubai',     lat: 25,  lon: -18, hub: false },
+    { name: 'Geneva',    lat: 46,  lon: -40, hub: false },
+    { name: 'London',    lat: 51,  lon: -52, hub: false },
+    { name: 'Paris',     lat: 49,  lon: -46, hub: false },
+    { name: 'Shanghai',  lat: 31,  lon: 30,  hub: false },
+    { name: 'Mumbai',    lat: 19,  lon: -2,  hub: false }
+  ].map(c => ({ ...c, ...project(c.lat, c.lon) }));
+  const idx = n => cities.findIndex(c => c.name === n);
+  // Criss-crossing lines fan out from the two heritage hubs to other cities,
+  // drawn as gentle quadratic arcs bowed away from the globe centre.
+  const routes = [
+    ['Hong Kong', 'London'], ['Hong Kong', 'Dubai'], ['Hong Kong', 'Tokyo'],
+    ['Hong Kong', 'Geneva'], ['Hong Kong', 'Mumbai'], ['Bangkok', 'Paris'],
+    ['Bangkok', 'Singapore'], ['Bangkok', 'Shanghai'], ['Bangkok', 'London']
+  ];
+  const arc = (a, b, lift) => {
+    const p1 = cities[idx(a)], p2 = cities[idx(b)];
+    const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+    // Bow the control point outward from the sphere centre for a domed feel.
+    const dx = mx - CX, dy = my - CY, dl = Math.hypot(dx, dy) || 1;
+    const cxp = mx + (dx / dl) * (lift || 34);
+    const cyp = my + (dy / dl) * (lift || 34);
+    return `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} Q ${cxp.toFixed(1)} ${cyp.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  };
+  let routesSVG = '';
+  routes.forEach((r, i) => {
+    const d = arc(r[0], r[1], 26 + (i % 3) * 12);
+    routesSVG += `<path d="${d}" fill="none" stroke="#B59060" stroke-width="1.2" opacity="0.62"/>`;
+  });
+  // Meridian + parallel lines to read as a globe (static).
+  let gridSVG = '';
+  for (let k = -60; k <= 60; k += 30) {
+    const ry = Math.abs(Math.cos(k * Math.PI / 180)) * R;
+    const yy = CY - Math.sin(k * Math.PI / 180) * R;
+    gridSVG += `<ellipse cx="${CX}" cy="${yy.toFixed(1)}" rx="${(R * Math.cos(Math.asin(Math.sin(k*Math.PI/180)))).toFixed(1)}" ry="3.4" fill="none" stroke="#A9BBAC" stroke-width="0.7" opacity="0.55"/>`;
+  }
+  for (let m = 0; m < 6; m++) {
+    const rx = Math.abs(Math.cos((m / 6) * Math.PI)) * R;
+    gridSVG += `<ellipse cx="${CX}" cy="${CY}" rx="${rx.toFixed(1)}" ry="${R}" fill="none" stroke="#A9BBAC" stroke-width="0.7" opacity="0.5"/>`;
+  }
+  // Hotel icon glyph (celadon on cream medallion) for each destination.
+  const hotelGlyph = '<path d="M-7 9V-3.2l7-3.4 7 3.4V9"/><path d="M-8.5 9h17"/><path d="M-2.6 9V5.9a2.6 2.6 0 0 1 5.2 0V9"/><path d="M-4.6 0h1.2M-0.6 0h1.2M3.4 0h1.2"/>';
+  let pinsSVG = '';
+  cities.forEach(c => {
+    const s = c.hub ? 1.15 : 0.9;
+    pinsSVG += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${(12 * s).toFixed(1)}" fill="#FFFFFF" stroke="${c.hub ? '#B59060' : '#A9BBAC'}" stroke-width="${c.hub ? 1.4 : 1}"/>`;
+    pinsSVG += `<g transform="translate(${c.x.toFixed(1)} ${c.y.toFixed(1)}) scale(${(0.66 * s).toFixed(3)})" fill="none" stroke="${c.hub ? '#8f6d3f' : '#5C7062'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${hotelGlyph}</g>`;
+  });
+  const goals = [
+    { icon: 'develop', label: 'Guest Experience', text: 'Evolving the guest experience through digital innovation' },
+    { icon: 'wellbeing', label: 'By 2030', text: 'Achieving carbon neutrality across operations', badge: '2030' }
+  ];
+  const goalCards = goals.map(g => `
+        <div class="globe-goal">
+          <span class="globe-goal-icon" aria-hidden="true">${iconByKey(g.icon)}</span>
+          <div class="globe-goal-body">
+            <div class="globe-goal-label">${esc(g.label)}</div>
+            <p class="globe-goal-text">${esc(g.text)}</p>
+          </div>
+        </div>`).join('');
+  return `
+    <div class="orbit globe">
+      <div class="orbit-eyebrow">A Global Ambition</div>
+      <div class="orbit-stage" role="img" aria-label="A globe with criss-crossing gold lines and hotel icons across it, representing Mandarin Oriental's rapid expansion from its heritage hubs in Hong Kong and Bangkok to destinations worldwide.">
+        <svg class="globe-svg" viewBox="0 0 480 480" width="100%" height="100%">
+          <defs>
+            <radialGradient id="globeSphere" cx="42%" cy="38%" r="72%">
+              <stop offset="0%" stop-color="#FBFDFB"/>
+              <stop offset="62%" stop-color="#EDF1EC"/>
+              <stop offset="100%" stop-color="#DCE6DD"/>
+            </radialGradient>
+          </defs>
+          <circle cx="${CX}" cy="${CY}" r="${R}" fill="url(#globeSphere)" stroke="#A9BBAC" stroke-width="1.1"/>
+          <g>${gridSVG}</g>
+          <g class="globe-routes">${routesSVG}</g>
+          <g class="globe-pins">${pinsSVG}</g>
+        </svg>
+        <div class="orbit-caption">Criss-crossing routes trace Mandarin Oriental's rapid expansion across the world's key destinations.</div>
+      </div>
+      <div class="orbit-benefits globe-goals">
+        <div class="orbit-benefits-eyebrow">Ambitions that guide the Group</div>
+        ${goalCards}
+      </div>
+    </div>`;
+}
+
+// CH2 — "Our Strategic Vision" rendered as the standard magazine spread:
+// verbatim prose + pull-quote on the left, the globe diagram on the right.
+function strategicVisionSpreadHTML() {
+  const paras = [
+    "Mandarin Oriental aims to strengthen its position as one of the world's most admired luxury hospitality brands. The Group continues to expand thoughtfully in key destinations while evolving the guest experience through digital innovation, sustainability leadership and distinctive wellness and lifestyle offerings.",
+    "As the brand grows, Mandarin Oriental remains committed to responsible operations and long-term value creation. The Group has set ambitious sustainability goals, including achieving carbon neutrality across its operations by 2030.",
+    "Supporting this vision requires exceptional Colleagues, strong leadership and a shared commitment to service excellence across every hotel, residence and corporate office."
+  ];
+  // All three paragraphs remain verbatim as body; the memorable closing line
+  // (verbatim, from the original section pull-quote) is promoted for emphasis.
+  const body = `<p class="drop">${esc(paras[0])}</p><p>${esc(paras[1])}</p><p>${esc(paras[2])}</p>`;
+  const quote = `
+        <figure class="editorial-quote">
+          <span class="editorial-quote-mark" aria-hidden="true">“</span>
+          <blockquote class="editorial-quote-text">Every Colleague deserves to feel proud, supported, and inspired — every day, everywhere.</blockquote>
+        </figure>`;
+  return `
+    <div class="editorial-spread philosophy-spread audit-spread">
+      <div class="editorial-col">
+        <div class="philosophy-spread-eyebrow">Our Strategic Vision</div>
+        <div class="editorial-body">${body}</div>
+        ${quote}
+      </div>
+      <div class="editorial-col audit-visual-col">
+        ${visionGlobeHTML()}
+      </div>
+    </div>`;
+}
+
+// CH5 — P&C Audit chapter intro rendered with the Design Language: a lede,
+// the key "Audit Framework helps ensure…" sentence promoted to a pull-quote,
+// the orbit diagram, and the remaining verbatim prose. All wording verbatim.
+function ch5AuditIntroHTML(c) {
+  const p = (c && c.intro) ? c.intro : [];
+  // LEFT column: lede (drop-cap) + remaining body, with the key sentence
+  // promoted to a pull-quote — mirrors the standard magazine spread.
+  // intro[0] = opening lede, intro[1] = pull-quote, intro[2..] = body.
+  const first = p[0] ? `<p class="drop">${esc(p[0])}</p>` : '';
+  const rest = p.slice(2).map(x => `<p>${esc(x)}</p>`).join('');
+  const quote = p[1] ? `
+        <figure class="editorial-quote">
+          <span class="editorial-quote-mark" aria-hidden="true">“</span>
+          <blockquote class="editorial-quote-text">${esc(p[1])}</blockquote>
+        </figure>` : '';
+  return `
+    <div class="editorial-spread philosophy-spread audit-spread">
+      <div class="editorial-col">
+        <div class="philosophy-spread-eyebrow">The P&amp;C Audit Framework</div>
+        <div class="editorial-body">
+          ${first}
+          ${rest}
+        </div>
+        ${quote}
+      </div>
+      <div class="editorial-col audit-visual-col">
+        ${auditOrbitHTML()}
+      </div>
+    </div>`;
 }
 
 // Sub-chapter intro block: tagline + intro paragraphs (with bullet detection).
@@ -246,37 +826,218 @@ function subIntroHTML(c) {
   return parts.join('');
 }
 
-// Philosophy block for a sub-chapter (uses source "Our X Philosophy" heading + paras).
-function philosophyHTML(c, fallbackLede) {
+// Pick a contextually-appropriate line icon for a short verbatim phrase by
+// keyword. Falls back through a rotating set so adjacent points never repeat.
+function phraseIcon(text, i) {
+  const t = String(text || '').toLowerCase();
+  const rules = [
+    [/complian|legal|policy|standard|governanc|regulat/, 'governance'],
+    [/fair|inclusi|transparen|integrity|ethic|respect/, 'fair'],
+    [/hir|recruit|select|candidate|talent|attract/, 'hiring'],
+    [/onboard|welcom|day 1|day one|arriv|first/, 'welcome'],
+    [/develop|grow|learn|capab|train|mobilit|career|progress/, 'develop'],
+    [/manager|leader|model|reinforc|behav|team/, 'strategy'],
+    [/document|record|data|report|measur|track/, 'data'],
+    [/reward|recogni|benefit|pay|compensat/, 'reward'],
+    [/wellbe|care|safe|health|support/, 'wellbeing'],
+    [/communicat|connect|engage|relationship|alumni/, 'connect'],
+    [/review|audit|assess|monitor|check/, 'audit'],
+    [/build|foundation|structur|plan|open/, 'build'],
+    [/operat|process|deliver|service|consisten/, 'operations']
+  ];
+  for (const [re, key] of rules) if (re.test(t)) return key;
+  const cycle = ['fair', 'governance', 'develop', 'connect', 'operations'];
+  return cycle[i % cycle.length];
+}
+
+// An elegant framed iconography card for the right column of a philosophy
+// spread — mirrors the framed visual panel in image-13, but built from line
+// iconography (not a photo). The points are VERBATIM source phrases (the
+// "role is to ensure" list), each paired with a contextual line icon.
+// Tinted emphasis text-box with a gold left border + small line icon
+// (Design Language #2). Used to chunk dense verbatim prose into a visual
+// moment. Text is verbatim from source — only its framing is elevated.
+function emphasisBoxHTML(text, iconKey) {
+  const glyph = SECTION_ICONS[iconKey] || SECTION_ICONS.default;
+  return `
+    <div class="prose-emphasis">
+      <span class="prose-emphasis-icon" aria-hidden="true">${glyph}</span>
+      <p class="prose-emphasis-text">${esc(text)}</p>
+    </div>`;
+}
+
+function philosophyVisualCardHTML(eyebrow, lead, points, themeIcon) {
+  const rows = (points || []).map((p, i) => `
+        <div class="pcard-row">
+          <span class="pcard-row-icon" aria-hidden="true">${SECTION_ICONS[phraseIcon(p, i)] || SECTION_ICONS.default}</span>
+          <span class="pcard-row-text">${esc(p)}</span>
+        </div>`).join('');
+  return `
+    <aside class="philosophy-card" role="group" aria-label="${esc(eyebrow || 'People & Culture priorities')}">
+      <div class="philosophy-card-eyebrow">${esc(eyebrow || 'In Practice')}</div>
+      <div class="philosophy-card-crest" aria-hidden="true">${themeIcon || SECTION_ICONS.default}</div>
+      ${lead ? `<p class="philosophy-card-lead">${esc(lead)}</p>` : ''}
+      <div class="philosophy-card-rows">${rows}</div>
+    </aside>`;
+}
+
+// Philosophy spread for a sub-chapter — two-column magazine layout matching
+// image-13: verbatim prose (drop-cap) on the LEFT with a promoted pull-quote,
+// and a framed iconography card on the RIGHT built from the verbatim
+// "role is to ensure" points. All wording is verbatim from the source.
+function philosophyHTML(c, fallbackLede, themeIcon) {
   const title = (c && c.philosophy && c.philosophy.title) ? c.philosophy.title : 'Our Philosophy';
-  let bodyHTML;
-  if (c && c.philosophy && c.philosophy.paras && c.philosophy.paras.length) {
-    // Detect the "People & Culture's role is to ensure:" lead + bullets pattern.
-    let html = '';
-    let bulletBuf = [];
-    const flush = () => {
-      if (bulletBuf.length) {
-        html += `<ul class="sub-intro-list">${bulletBuf.map(b => `<li>${esc(b)}</li>`).join('')}</ul>`;
-        bulletBuf = [];
-      }
-    };
-    let collecting = false;
-    c.philosophy.paras.forEach(p => {
-      const isLead = /:\s*$/.test(p);
-      if (isLead) { flush(); collecting = true; html += `<p class="sub-intro-lead">${esc(p)}</p>`; }
-      else if (collecting && p.length < 130) { bulletBuf.push(p); }
-      else { flush(); collecting = false; html += `<p>${esc(p)}</p>`; }
-    });
-    flush();
-    bodyHTML = html;
-  } else {
-    bodyHTML = `<p>${esc(fallbackLede || '')}</p>`;
+  const paras = (c && c.philosophy && c.philosophy.paras && c.philosophy.paras.length)
+    ? c.philosophy.paras.slice() : (fallbackLede ? [fallbackLede] : []);
+  // Separate the "...to ensure:" lead + its short bullets from the prose.
+  const leadIdx = paras.findIndex(p => /:\s*$/.test(p));
+  let prose = paras, ensureLead = '', ensurePoints = [], afterEnsure = [];
+  if (leadIdx > -1) {
+    prose = paras.slice(0, leadIdx);
+    ensureLead = paras[leadIdx];
+    const tail = paras.slice(leadIdx + 1);
+    tail.forEach(p => { if (p.length < 130) ensurePoints.push(p); else afterEnsure.push(p); });
+  }
+  // LEFT: drop-cap first para, one sentence promoted to a pull-quote, rest body.
+  // Choose the pull-quote as the shortest punchy middle sentence (verbatim).
+  let quoteIdx = -1;
+  if (prose.length >= 3) {
+    // pick the shortest of paras[1..] as the emphasised line
+    let best = Infinity;
+    for (let k = 1; k < prose.length; k++) {
+      if (prose[k].length < best) { best = prose[k].length; quoteIdx = k; }
+    }
+  }
+  // When the prose is long (dense wall of text), promote the FINAL prose
+  // paragraph into an icon-led emphasis box to chunk the reading rhythm.
+  const emphasiseLast = prose.length >= 4;
+  const lastProseIdx = prose.length - 1;
+  // A drop-cap only reads well when the first paragraph is long enough for the
+  // text to wrap beside the oversized letter. For a short one-line opener
+  // (e.g. "Operational Excellence is an expression of care.") the drop-cap
+  // floats alone and collides with the rule above — so render it as a lead
+  // line instead and move the drop-cap to the first substantial paragraph.
+  const dropIdx = prose.findIndex(p => p.length >= 90);
+  const leftParts = [];
+  prose.forEach((p, k) => {
+    if (k === 0 && dropIdx !== 0) { leftParts.push(`<p class="philosophy-lead-line">${esc(p)}</p>`); return; }
+    if (k === dropIdx) { leftParts.push(`<p class="drop">${esc(p)}</p>`); return; }
+    if (k === quoteIdx) {
+      leftParts.push(`
+        <figure class="editorial-quote">
+          <span class="editorial-quote-mark" aria-hidden="true">&ldquo;</span>
+          <blockquote class="editorial-quote-text">${esc(p)}</blockquote>
+        </figure>`);
+    } else if (emphasiseLast && k === lastProseIdx) {
+      leftParts.push(emphasisBoxHTML(p, phraseIcon(p, k)));
+    } else {
+      leftParts.push(`<p>${esc(p)}</p>`);
+    }
+  });
+  // Verbatim paragraphs that trail the "ensure" list are rendered as icon-led
+  // emphasis boxes so the dense text is visually chunked (Design Language #2).
+  afterEnsure.forEach((p, k) => leftParts.push(emphasisBoxHTML(p, phraseIcon(p, k))));
+  // RIGHT: framed iconography card built from the verbatim "ensure" points.
+  const card = ensurePoints.length
+    ? philosophyVisualCardHTML(title, ensureLead, ensurePoints, themeIcon)
+    : philosophyVisualCardHTML(title, '', prose.slice(0, 3).map(s => s), themeIcon);
+  return `
+    <div class="philosophy-spread">
+      <div class="editorial-spread">
+        <div class="editorial-col">
+          <div class="philosophy-spread-eyebrow">${esc(title)}</div>
+          <div class="editorial-body">${leftParts.join('')}</div>
+        </div>
+        <div class="editorial-col philosophy-card-col">
+          ${card}
+        </div>
+      </div>
+    </div>`;
+}
+
+// CH4 "Our Pre-Opening Philosophy" rendered as a two-column magazine spread:
+// verbatim prose + drop-cap on the left, Colleague-experience image on the
+// right, and the key "build momentum" sentence promoted to a pull-quote below
+// the prose. The "role is to ensure:" lead + bullets follow as a full-width
+// block. All wording is verbatim from CH4_CONTENT.philosophy.paras.
+function ch4PhilosophySpreadHTML(c, img, cap) {
+  const p = (c && c.philosophy && c.philosophy.paras) ? c.philosophy.paras : [];
+  const title = (c && c.philosophy && c.philosophy.title) ? c.philosophy.title : 'Our Philosophy';
+  // Left-column prose: opening para (drop cap) + the framing para (index 2).
+  const proseLeft = [];
+  if (p[0]) proseLeft.push(`<p class="drop">${esc(p[0])}</p>`);
+  if (p[2]) proseLeft.push(`<p>${esc(p[2])}</p>`);
+  // Pull-quote: the "build momentum" sentence (index 1), verbatim.
+  const quote = p[1] ? `
+        <blockquote class="editorial-quote">
+          <span class="editorial-quote-mark" aria-hidden="true">&ldquo;</span>
+          <p class="editorial-quote-text">${esc(p[1])}</p>
+        </blockquote>` : '';
+  // Below the spread: the "role is to ensure:" lead + its bullet list (verbatim).
+  let below = '';
+  const leadIdx = p.findIndex(x => /:\s*$/.test(x));
+  if (leadIdx > -1) {
+    const bullets = p.slice(leadIdx + 1).filter(x => x && x.length < 160);
+    below = `
+      <div class="philosophy-ensure">
+        <p class="philosophy-ensure-lead">${esc(p[leadIdx])}</p>
+        <ul class="philosophy-ensure-list">${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>
+      </div>`;
   }
   return `
-    <div class="philosophy-block">
-      <div class="eyebrow">${esc(title)}</div>
-      <div class="rule"></div>
-      ${bodyHTML}
+    <div class="philosophy-spread">
+      <div class="editorial-spread editorial-spread--reverse">
+        <div class="editorial-col">
+          <div class="philosophy-spread-eyebrow">${esc(title)}</div>
+          <div class="editorial-body">${proseLeft.join('')}</div>
+          ${quote}
+        </div>
+        <figure class="editorial-figure">
+          <div class="editorial-figure-img" style="background-image:url('img/${img}');background-position:center 58%;"></div>
+          <figcaption class="editorial-figure-cap">${esc(cap)}</figcaption>
+        </figure>
+      </div>
+      ${below}
+    </div>`;
+}
+
+// Vertical milestone timeline (CH4 §1): a two-column magazine layout with a
+// short framing intro on the left and a vertical, icon-marked timeline on the
+// right depicting the key stages of the Pre-Opening Path. Each stage carries a
+// UI-only eyebrow label + icon (visual framing) and verbatim source text.
+function milestoneTimelineHTML(cfg) {
+  const eyebrow = cfg.eyebrow ? `<div class="mstone-eyebrow">${esc(cfg.eyebrow)}</div>` : '';
+  const heading = cfg.heading ? `<h4 class="mstone-heading">${esc(cfg.heading)}</h4>` : '';
+  const lead = (cfg.lead || []).map(p => `<p>${esc(p)}</p>`).join('');
+  // Optional image-7-style callout band highlighting one key sentence (verbatim).
+  const callout = cfg.callout ? `
+        <div class="mstone-callout">
+          <span class="mstone-callout-icon" aria-hidden="true">${iconByKey(cfg.callout_icon || 'connect')}</span>
+          <p class="mstone-callout-text">${cfg.callout_lead ? `<em>${esc(cfg.callout_lead)}</em> ` : ''}${esc(cfg.callout)}</p>
+        </div>` : '';
+  const steps = (cfg.steps || []).map((s, i) => `
+        <li class="mstone-step">
+          <div class="mstone-marker">
+            <span class="mstone-icon" aria-hidden="true">${iconByKey(s.icon)}</span>
+          </div>
+          <div class="mstone-body">
+            <div class="mstone-step-eyebrow">${esc(s.label)}</div>
+            <p class="mstone-step-text">${esc(s.text)}</p>
+          </div>
+        </li>`).join('');
+  return `
+    <div class="mstone">
+      <div class="mstone-grid">
+        <div class="mstone-left">
+          ${eyebrow}
+          ${heading}
+          <div class="mstone-lead">${lead}</div>
+          ${callout}
+        </div>
+        <div class="mstone-right">
+          <ol class="mstone-timeline">${steps}</ol>
+        </div>
+      </div>
     </div>`;
 }
 
@@ -284,26 +1045,53 @@ function philosophyHTML(c, fallbackLede) {
 function renderCover() {
   return `
     <section class="chapter" id="cover">
-      <div class="opener">
-        <div class="opener-hero" style="background-image: url('img/cover_hero.jpg');">
-          <div class="opener-content">
-            <div class="opener-top">
-              <div class="opener-numeral">Edition · July 2026</div>
-              <div class="opener-eyebrow">Mandarin Oriental · Global</div>
-            </div>
-            <div class="opener-bottom">
-              <div class="opener-numeral" style="margin-bottom: 20px;">The Interactive Playbook</div>
-              <h1 class="opener-title">People &amp;<br/>Culture<br/><em style="font-family: 'MO Exceptional'; font-weight: 400;">Playbook</em></h1>
-              <p class="opener-sub">A living framework for every People &amp; Culture leader — from attracting talent to leaving with connection.</p>
-              <button class="cover-cta" data-goto="menu">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg>
-                Explore the Contents
-              </button>
-            </div>
+      <div class="cover-full" style="background-image: url('img/cover_colleagues.jpg');">
+        <div class="cover-veil"></div>
+        <div class="cover-inner">
+          <div class="cover-top">
+            <div class="cover-wordmark">Mandarin Oriental</div>
+            <div class="cover-edition">Edition · July 2026</div>
+          </div>
+          <div class="cover-center">
+            <div class="cover-eyebrow">The Interactive Playbook</div>
+            <h1 class="cover-title">People &amp; Culture<br/><em>Playbook</em></h1>
+            <p class="cover-sub">A living framework for every People &amp; Culture leader — from attracting talent to leaving with connection.</p>
+            <button class="cover-cta" data-goto="intro">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 6.2C10 4.8 7.2 4.2 3.5 4.2v13.9c3.7 0 6.5.6 8.5 2 2-1.4 4.8-2 8.5-2V4.2c-3.7 0-6.5.6-8.5 2z"/><path d="M12 6.2v13.9"/></svg>
+              Explore
+            </button>
           </div>
         </div>
       </div>
+    </section>
+  `;
+}
 
+// ---- INTRO VIDEO (welcome interstitial) ----------------------------
+function renderIntro() {
+  return `
+    <section class="chapter" id="intro">
+      <div class="intro-full">
+        <div class="intro-inner">
+          <div class="intro-eyebrow">A Message to Colleagues</div>
+          <h1 class="intro-title">Welcome to our People &amp; Culture (P&amp;C) Playbook</h1>
+          <div class="intro-video-wrap">
+            <video class="intro-video" src="video/intro.mp4" playsinline controls preload="auto"></video>
+          </div>
+          <button class="intro-next" data-goto="menu">
+            Continue to Contents
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+// ---- A LETTER TO COLLEAGUES (Chief People & Culture Officer) --------
+function renderLetter() {
+  return `
+    <section class="chapter" id="letter">
       <div class="spread">
         <div class="spread-header center">
           <div class="running-mini">Foreword</div>
@@ -337,7 +1125,7 @@ function renderCover() {
         </div>
       </div>
 
-      ${chapterNavHTML(null, 'ch-1')}
+      ${chapterNavHTML('intro', 'ch-1')}
     </section>
   `;
 }
@@ -350,7 +1138,7 @@ function renderCh1() {
         <div class="opener-hero" style="background-image: url('img/opener_intro.jpg');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-numeral"><span class="opener-icon">${ICONS["ch-1"]}</span>Chapter I</div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-1"]}</span>Chapter I</div></div>
               <div class="opener-eyebrow">Introduction</div>
             </div>
             <div class="opener-bottom">
@@ -367,11 +1155,46 @@ function renderCh1() {
           <span class="txt">Our Purpose</span>
           <span class="rule"></span>
         </div>
-        <div class="editorial-body">
-          <p class="drop">The Playbook exists to strengthen alignment between our shared values and daily P&amp;C practices; to support P&amp;C teams in delivering a consistent experience — from recruitment to farewell; to ensure every policy is interpreted with care, fairness, and respect; and to provide clarity, templates, and examples that make implementation simple and intuitive.</p>
-          <p>Each section has been designed to follow the Colleague lifecycle, a journey that mirrors how we attract, welcome, grow, care for, and stay connected with our people.</p>
+
+        <!-- Magazine editorial spread: image left, body + featured pull-quote right -->
+        <div class="editorial-spread">
+          <figure class="editorial-figure">
+            <div class="editorial-figure-img" style="background-image:url('img/colleagues_group.jpg');"></div>
+            <figcaption class="editorial-figure-cap">Mandarin Oriental &middot; A culture of care</figcaption>
+          </figure>
+          <div class="editorial-col">
+            <div class="editorial-body">
+              <p class="drop">The Playbook exists to strengthen alignment between our shared values and daily P&amp;C practices; to support P&amp;C teams in delivering a consistent experience — from recruitment to farewell; to ensure every policy is interpreted with care, fairness, and respect; and to provide clarity, templates, and examples that make implementation simple and intuitive.</p>
+              <p>Each section has been designed to follow the Colleague lifecycle, a journey that mirrors how we attract, welcome, grow, care for, and stay connected with our people.</p>
+            </div>
+            <blockquote class="editorial-quote">
+              <span class="editorial-quote-mark" aria-hidden="true">&ldquo;</span>
+              <p class="editorial-quote-text">Our aim is simple: to make the Playbook practical for action and inspiring in spirit — so that every P&amp;C leader can translate Mandarin Oriental's culture of care into everyday decisions and Colleague experiences.</p>
+            </blockquote>
+          </div>
         </div>
-        <div class="pullquote">Our aim is simple: to make the Playbook practical for action and inspiring in spirit — so that every P&amp;C leader can translate Mandarin Oriental's culture of care into everyday decisions and Colleague experiences.</div>
+
+        <!-- The Colleague Journey: an illustration of how P&C delivers the
+             Colleague Experience across the lifecycle (not a navigation menu) -->
+        <div class="journey">
+          <div class="journey-head">
+            <div class="feature-caption">The Colleague Journey</div>
+            <p class="journey-intro">The Colleague Experience unfolds as one continuous journey. At every stage — and even beyond it — People &amp; Culture is the hand that delivers this experience, from the first hello to a lasting connection.</p>
+          </div>
+          <div class="journey-path">
+            ${JOURNEY.map((s, i) => `
+            <div class="journey-stage${i === JOURNEY.length - 1 ? ' journey-stage--last' : ''}">
+              <div class="journey-media">
+                <div class="journey-img" style="background-image:url('img/${s.img}');${s.pos ? `background-position:${s.pos};` : ''}"></div>
+                <span class="journey-node">${ICONS[s.icon]}</span>
+              </div>
+              <div class="journey-step">Stage ${String(i + 1).padStart(2, '0')}</div>
+              <div class="journey-stage-name">${s.stage}</div>
+              <p class="journey-role">${s.role}</p>
+            </div>`).join('')}
+          </div>
+          <p class="journey-foot">People &amp; Culture&rsquo;s role is to deliver this experience — consistently, and with care — at every step of the journey.</p>
+        </div>
       </div>
 
       <div class="spread tight">
@@ -380,17 +1203,43 @@ function renderCh1() {
           <span class="txt">Who This Playbook Is For</span>
           <span class="rule"></span>
         </div>
-        <div class="cols-2">
-          <div>
-            <p>This resource is written primarily for:</p>
-            <ul class="purpose-list" style="margin-top: 12px;">
-              <li><span class="num">i.</span><span class="txt"><strong>People &amp; Culture leaders</strong> at hotel, regional, and corporate levels.</span></li>
-              <li><span class="num">ii.</span><span class="txt"><strong>Support functions</strong> — such as Finance, and Operations — who partner with P&amp;C.</span></li>
-            </ul>
+
+        <div class="editorial-spread editorial-spread--reverse">
+          <div class="editorial-col">
+            <div class="editorial-body">
+              <p class="drop">This resource is written primarily for:</p>
+            </div>
+            <div class="bubble-list">
+              <div class="bubble-item">
+                <div class="bubble-media">
+                  <div class="bubble-img" style="background-image:url('img/ch_F_rewarding.jpg');"></div>
+                  <span class="bubble-num">01</span>
+                </div>
+                <div class="bubble-body">
+                  <h4 class="bubble-title">People &amp; Culture leaders</h4>
+                  <p class="bubble-text">At hotel, regional, and corporate levels.</p>
+                </div>
+              </div>
+              <div class="bubble-item">
+                <div class="bubble-media">
+                  <div class="bubble-img" style="background-image:url('img/ch_D_operations.jpg');"></div>
+                  <span class="bubble-num">02</span>
+                </div>
+                <div class="bubble-body">
+                  <h4 class="bubble-title">Support functions</h4>
+                  <p class="bubble-text">Such as Finance, and Operations — who partner with P&amp;C.</p>
+                </div>
+              </div>
+            </div>
+            <blockquote class="editorial-quote">
+              <span class="editorial-quote-mark" aria-hidden="true">&ldquo;</span>
+              <p class="editorial-quote-text">It may also serve as a reference for any Colleague who wishes to understand how we nurture fairness, inclusion, and excellence across the Group.</p>
+            </blockquote>
           </div>
-          <div>
-            <p style="font-family: 'Avenir Next LT Pro', sans-serif; font-style: italic; font-size: 1.15rem; color: var(--ink);">It may also serve as a reference for any Colleague who wishes to understand how we nurture fairness, inclusion, and excellence across the Group.</p>
-          </div>
+          <figure class="editorial-figure">
+            <div class="editorial-figure-img" style="background-image:url('img/opener_support.jpg');"></div>
+            <figcaption class="editorial-figure-cap">For those who shape the Colleague Experience</figcaption>
+          </figure>
         </div>
       </div>
 
@@ -400,15 +1249,39 @@ function renderCh1() {
           <span class="txt">How to Use the Playbook</span>
           <span class="rule"></span>
         </div>
+        <div class="editorial-spread">
+          <figure class="editorial-figure editorial-figure--short">
+            <div class="editorial-figure-img" style="background-image:url('img/opener_intro.jpg');"></div>
+            <figcaption class="editorial-figure-cap">Structured to be practical and intuitive</figcaption>
+          </figure>
+          <div class="editorial-col">
+            <div class="editorial-body">
+              <p class="drop">The Playbook is structured to be practical and intuitive. Each section begins with the <strong>why</strong> — the purpose or belief behind the policy — followed by the <strong>what</strong> and <strong>how</strong>: the key standards and responsibilities. Resources are grouped by stage of the Colleague lifecycle, from Foundations to Leaving with Dignity &amp; Connection.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-caption">When consulting a resource</div>
+        <div class="step-row">
+          <div class="step-node">
+            <div class="step-icon">${STEP_ICONS.purpose}<span class="step-index">i</span></div>
+            <div class="step-title">Purpose</div>
+            <p class="step-text">Start by reading its <strong>purpose</strong> — this explains the intent.</p>
+          </div>
+          <div class="step-node">
+            <div class="step-icon">${STEP_ICONS.scope}<span class="step-index">ii</span></div>
+            <div class="step-title">Scope &amp; Responsibilities</div>
+            <p class="step-text">Review the <strong>scope and responsibilities</strong> — who it applies to and what's expected.</p>
+          </div>
+          <div class="step-node">
+            <div class="step-icon">${STEP_ICONS.local}<span class="step-index">iii</span></div>
+            <div class="step-title">Local Adaptation</div>
+            <p class="step-text">Refer to the <strong>local adaptation notes</strong> — these ensure compliance with country-specific laws and practices.</p>
+          </div>
+        </div>
+
         <div class="editorial-body">
-          <p>The Playbook is structured to be practical and intuitive. Each section begins with the <strong>why</strong> — the purpose or belief behind the policy — followed by the <strong>what</strong> and <strong>how</strong>: the key standards and responsibilities. Resources are grouped by stage of the Colleague lifecycle, from Foundations to Leaving with Dignity &amp; Connection.</p>
-          <p>When consulting a resource:</p>
-          <ul class="purpose-list">
-            <li><span class="num">i.</span><span class="txt">Start by reading its <strong>purpose</strong> — this explains the intent.</span></li>
-            <li><span class="num">ii.</span><span class="txt">Review the <strong>scope and responsibilities</strong> — who it applies to and what's expected.</span></li>
-            <li><span class="num">iii.</span><span class="txt">Refer to the <strong>local adaptation notes</strong> — these ensure compliance with country-specific laws and practices.</span></li>
-          </ul>
-          <p style="margin-top: 24px;">Local P&amp;C teams may adapt policies, practices, and guidelines to meet legal or cultural needs, while remaining aligned with Group guidelines.</p>
+          <p style="margin-top: 8px;">Local P&amp;C teams may adapt policies, practices, and guidelines to meet legal or cultural needs, while remaining aligned with Group guidelines.</p>
         </div>
       </div>
 
@@ -418,9 +1291,20 @@ function renderCh1() {
           <span class="txt">Tone and Spirit</span>
           <span class="rule"></span>
         </div>
-        <div class="editorial-body">
-          <p>Every policy in this Playbook reflects our belief that <strong>care begins with our Colleagues</strong>. Our tone is human and respectful — clear enough for action, yet warm enough to remind us that every decision touches someone's experience.</p>
-          <p>We invite you to approach these pages not as a rulebook, but as a <strong>living framework</strong>: a guide that evolves as we continue to learn, grow, and serve together.</p>
+        <div class="editorial-spread">
+          <figure class="editorial-figure">
+            <div class="editorial-figure-img" style="background-image:url('img/intro_care.jpg');"></div>
+            <figcaption class="editorial-figure-cap">Care begins with our Colleagues</figcaption>
+          </figure>
+          <div class="editorial-col">
+            <div class="editorial-body">
+              <p class="drop">Every policy in this Playbook reflects our belief that <strong>care begins with our Colleagues</strong>. Our tone is human and respectful — clear enough for action, yet warm enough to remind us that every decision touches someone's experience.</p>
+            </div>
+            <blockquote class="editorial-quote">
+              <span class="editorial-quote-mark" aria-hidden="true">&ldquo;</span>
+              <p class="editorial-quote-text">We invite you to approach these pages not as a rulebook, but as a living framework: a guide that evolves as we continue to learn, grow, and serve together.</p>
+            </blockquote>
+          </div>
         </div>
       </div>
 
@@ -430,8 +1314,9 @@ function renderCh1() {
           <span class="txt">Understanding Symbols</span>
           <span class="rule"></span>
         </div>
-        <p style="max-width: 640px; margin: 0 0 8px; color: var(--ink-mute); font-family: 'Avenir Next LT Pro', sans-serif; font-style: italic; font-size: 1.1rem;">To make this Playbook easier to read, we use a few simple symbols throughout to help you recognise what kind of information you're looking at and how to use it.</p>
-        <div class="symbol-legend">
+        <p class="section-lead">To make this Playbook easier to read, we use a few simple symbols throughout to help you recognise what kind of information you're looking at and how to use it.</p>
+        <div class="feature-caption">The Four Symbols</div>
+        <div class="symbol-legend symbol-legend--refined">
           <div class="symbol-item"><div class="sym">${SYM.policy}</div><div><h4>Global Policy</h4><p>Indicates a Group-wide policy that applies to all properties. Local versions must align with the guidelines outlined here.</p></div></div>
           <div class="symbol-item"><div class="sym">${SYM.guide}</div><div><h4>Guidelines</h4><p>Offers recommended practices that help interpret or apply Group policies consistently.</p></div></div>
           <div class="symbol-item"><div class="sym">${SYM.kit}</div><div><h4>Template / Toolkit</h4><p>Points to practical tools such as forms, checklists, and dashboards that support implementation.</p></div></div>
@@ -439,7 +1324,7 @@ function renderCh1() {
         </div>
       </div>
 
-      ${chapterNavHTML('cover', 'ch-2')}
+      ${chapterNavHTML('intro', 'ch-2')}
     </section>
   `;
 }
@@ -452,7 +1337,7 @@ function renderCh2() {
         <div class="opener-hero" style="background-image: url('img/opener_about.jpg');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-numeral"><span class="opener-icon">${ICONS["ch-2"]}</span>Chapter II</div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-2"]}</span>Chapter II</div></div>
               <div class="opener-eyebrow">The House</div>
             </div>
             <div class="opener-bottom">
@@ -464,10 +1349,22 @@ function renderCh2() {
       </div>
 
       <div class="spread">
-        <div class="editorial-body">
-          <p class="drop">Mandarin Oriental Hotel Group is internationally recognised for delivering some of the world's most distinctive luxury hospitality experiences. Renowned for its legendary service, refined design, and deep respect for local culture, the Group has built a reputation for creating memorable moments that reflect both global standards and a strong sense of place.</p>
-          <p>At Mandarin Oriental, it is our Colleagues who bring this vision to life. Through their professionalism, care, and attention to detail, they create the experiences that define the brand.</p>
-          <p>For this reason, the Colleague Experience sits at the heart of how we operate. Directors of People &amp; Culture play a critical role in shaping environments where Colleagues feel supported, inspired, and empowered to deliver exceptional service.</p>
+        <div class="editorial-spread editorial-spread--reverse">
+          <div class="editorial-col">
+            <div class="editorial-body">
+              <p class="drop">Mandarin Oriental Hotel Group is internationally recognised for delivering some of the world's most distinctive luxury hospitality experiences. Renowned for its legendary service, refined design, and deep respect for local culture, the Group has built a reputation for creating memorable moments that reflect both global standards and a strong sense of place.</p>
+              <p>At Mandarin Oriental, it is our Colleagues who bring this vision to life. Through their professionalism, care, and attention to detail, they create the experiences that define the brand.</p>
+              <p>For this reason, the Colleague Experience sits at the heart of how we operate.</p>
+            </div>
+            <blockquote class="editorial-quote">
+              <span class="editorial-quote-mark">&ldquo;</span>
+              <p class="editorial-quote-text">Directors of People &amp; Culture play a critical role in shaping environments where Colleagues feel supported, inspired, and empowered to deliver exceptional service.</p>
+            </blockquote>
+          </div>
+          <figure class="editorial-figure">
+            <div class="editorial-figure-img" style="background-image:url('img/about_foh.jpg');"></div>
+            <figcaption class="editorial-figure-cap">The Colleague Experience &middot; Front of house</figcaption>
+          </figure>
         </div>
       </div>
 
@@ -475,34 +1372,55 @@ function renderCh2() {
         <div class="section-eyebrow" id="heritage"><span class="num">01</span><span class="txt">Our Heritage</span><span class="rule"></span></div>
         <div class="cols-2">
           <div>
+            <figure class="heritage-figure">
+              <div class="heritage-figure-img" style="background-image:url('img/about_reception.jpg');"></div>
+              <figcaption class="heritage-figure-cap">A sense of place &middot; Colleagues at reception</figcaption>
+            </figure>
             <p>Mandarin Oriental's story is rooted in two legendary hotels: The Mandarin in Hong Kong, which opened in 1963 as a symbol of modern luxury in the city, and The Oriental in Bangkok, which dates back to 1876 and became renowned for its heritage and service excellence.</p>
             <p>In 1974, Mandarin International Hotels acquired a significant stake in The Oriental, bringing together Hong Kong's spirit of innovation with Bangkok's rich hospitality tradition. This partnership evolved into a full merger in 1985, forming Mandarin Oriental Hotel Group under a unified brand and the now-iconic fan logo.</p>
             <p>This heritage established the foundation for a global brand that blends Eastern elegance with world-class hospitality.</p>
           </div>
           <div class="timeline">
-            <div class="timeline-item">
+            <div class="timeline-item timeline-item--media">
               <div class="timeline-node"></div>
-              <div class="timeline-year">1876</div>
-              <div class="timeline-label">The Oriental · Bangkok</div>
-              <div class="timeline-note">A legend of heritage and service excellence is born on the Chao Phraya.</div>
+              <div class="timeline-text">
+                <div class="timeline-year">1876</div>
+                <div class="timeline-label">The Oriental · Bangkok</div>
+                <div class="timeline-note">A legend of heritage and service excellence is born on the Chao Phraya.</div>
+              </div>
+              <figure class="timeline-media">
+                <img src="img/heritage_bangkok_1876.jpg" alt="The Oriental Hotel, Bangkok, in its early years" loading="lazy">
+              </figure>
+            </div>
+            <div class="timeline-item timeline-item--media">
+              <div class="timeline-node"></div>
+              <div class="timeline-text">
+                <div class="timeline-year">1963</div>
+                <div class="timeline-label">The Mandarin · Hong Kong</div>
+                <div class="timeline-note">A new symbol of modern luxury opens in the heart of the city.</div>
+              </div>
+              <figure class="timeline-media">
+                <img src="img/heritage_hongkong_1963.jpg" alt="The Mandarin, Hong Kong, rising above the harbour district" loading="lazy">
+              </figure>
             </div>
             <div class="timeline-item">
               <div class="timeline-node"></div>
-              <div class="timeline-year">1963</div>
-              <div class="timeline-label">The Mandarin · Hong Kong</div>
-              <div class="timeline-note">A new symbol of modern luxury opens in the heart of the city.</div>
+              <div class="timeline-text">
+                <div class="timeline-year">1974</div>
+                <div class="timeline-label">Two Legends Join</div>
+                <div class="timeline-note">Mandarin International Hotels acquires a significant stake in The Oriental.</div>
+              </div>
             </div>
-            <div class="timeline-item">
+            <div class="timeline-item timeline-item--media timeline-item--wide">
               <div class="timeline-node"></div>
-              <div class="timeline-year">1974</div>
-              <div class="timeline-label">Two Legends Join</div>
-              <div class="timeline-note">Mandarin International Hotels acquires a significant stake in The Oriental.</div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-node"></div>
-              <div class="timeline-year">1985</div>
-              <div class="timeline-label">Full Merger · Unified Brand</div>
-              <div class="timeline-note">Mandarin Oriental Hotel Group is formed under the iconic fan.</div>
+              <div class="timeline-text">
+                <div class="timeline-year">1985</div>
+                <div class="timeline-label">Full Merger · Unified Brand</div>
+                <div class="timeline-note">Mandarin Oriental Hotel Group is formed under the iconic fan.</div>
+              </div>
+              <figure class="timeline-media timeline-media--wide">
+                <img src="img/heritage_merger_1985.jpg" alt="Dual roots: The Mandarin in Hong Kong and The Oriental in Bangkok unite under one brand" loading="lazy">
+              </figure>
             </div>
           </div>
         </div>
@@ -513,6 +1431,65 @@ function renderCh2() {
         <div class="editorial-body">
           <p>Mandarin Oriental's portfolio spans hotels, resorts, residences, and Exceptional Homes in some of the world's most desirable destinations. Each property is designed to reflect its location, integrating local culture, heritage, and design into a contemporary luxury experience.</p>
         </div>
+
+        <div class="portfolio-grid">
+          <div class="portfolio-card">
+            <div class="portfolio-icon">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M9 41V15l15-8 15 8v26" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                <path d="M6 41h36" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                <path d="M16 41V25h5v16M27 41V25h5v16" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                <path d="M21 17h6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="portfolio-name">Hotels</div>
+            <div class="portfolio-desc">Landmark city addresses defined by legendary service.</div>
+          </div>
+          <div class="portfolio-card">
+            <div class="portfolio-icon">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M6 40h36" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                <path d="M24 40V22" stroke="currentColor" stroke-width="1.1"/>
+                <path d="M24 22c-7 0-12-4-12-9 6 0 12 3 12 9zM24 22c7 0 12-4 12-9-6 0-12 3-12 9z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                <path d="M14 40c2-4 6-6 10-6s8 2 10 6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="portfolio-name">Resorts</div>
+            <div class="portfolio-desc">Sanctuaries in the world's most sought-after destinations.</div>
+          </div>
+          <div class="portfolio-card">
+            <div class="portfolio-icon">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M10 41V11l14-4v34M38 41V19l-14-4" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                <path d="M6 41h36" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                <path d="M15 16v3M15 24v3M15 32v3M31 24v3M31 32v3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="portfolio-name">Residences</div>
+            <div class="portfolio-desc">Branded homes with the assurance of hotel living.</div>
+          </div>
+          <div class="portfolio-card">
+            <div class="portfolio-icon">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M8 42V20l16-11 16 11v22" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                <path d="M5 42h38" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                <path d="M24 15.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="portfolio-name">Exceptional Homes</div>
+            <div class="portfolio-desc">A curated collection of the rarest private retreats.</div>
+          </div>
+        </div>
+
+        <div class="place-statement">
+          <span class="place-mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 36s12-9.6 12-19a12 12 0 1 0-24 0c0 9.4 12 19 12 19z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+              <circle cx="20" cy="17" r="4.4" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+          </span>
+          <p class="place-text">Every Mandarin Oriental is shaped by its <em>sense of place</em> &mdash; each property reflecting the culture, heritage, and design of its own location to create a distinctly contemporary luxury experience.</p>
+        </div>
       </div>
 
       <div class="spread tight">
@@ -520,6 +1497,64 @@ function renderCh2() {
         <div class="editorial-body">
           <p>Mandarin Oriental operates through a combination of owned and managed properties, ensuring consistency in brand standards across the Group. While each property reflects its unique destination, all operate within a shared commitment to service excellence, operational discipline, and continuous improvement.</p>
           <p>This approach is supported by strong collaboration across functions, with People &amp; Culture playing a key role in developing talent, enabling performance, and sustaining the standards that define the Mandarin Oriental experience.</p>
+        </div>
+
+        <div class="ops-model">
+          <div class="ops-model-head">The Operating Model</div>
+          <div class="ops-pillars">
+            <div class="ops-pillar">
+              <div class="ops-icon">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <rect x="8" y="18" width="14" height="22" stroke="currentColor" stroke-width="1.1"/>
+                  <path d="M26 40V12l14 6v22" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                  <path d="M5 40h38" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                  <path d="M12 24h6M12 30h6M31 22v3M31 29v3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="ops-name">Owned &amp; Managed</div>
+              <div class="ops-desc">A balanced portfolio operated to one consistent standard.</div>
+            </div>
+            <div class="ops-pillar">
+              <div class="ops-icon">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M24 6l14 5v11c0 9-6 15-14 20-8-5-14-11-14-20V11z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                  <path d="M18 24l4 4 8-9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="ops-name">Brand Standards</div>
+              <div class="ops-desc">Consistency in every detail, in every destination.</div>
+            </div>
+            <div class="ops-pillar">
+              <div class="ops-icon">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M24 9l4.3 8.7 9.7 1.4-7 6.8 1.7 9.6L24 41l-8.6 4.5 1.7-9.6-7-6.8 9.7-1.4z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="ops-name">Service Excellence</div>
+              <div class="ops-desc">A shared commitment that defines the experience.</div>
+            </div>
+            <div class="ops-pillar">
+              <div class="ops-icon">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M38 14a17 17 0 1 0 3.4 12" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                  <path d="M39 8v8h-8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M24 16v8l6 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="ops-name">Continuous Improvement</div>
+              <div class="ops-desc">Discipline and refinement, sustained over time.</div>
+            </div>
+          </div>
+          <div class="ops-pc-band">
+            <span class="ops-pc-icon" aria-hidden="true">
+              <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="15" cy="16" r="5" stroke="currentColor" stroke-width="1.1"/>
+                <circle cx="29" cy="16" r="5" stroke="currentColor" stroke-width="1.1"/>
+                <path d="M6 34c1.5-5 5-7.5 9-7.5s7.5 2.5 9 7.5M20 34c1.3-4.4 4.6-6.8 9-6.8s7.7 2.4 9 6.8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <p class="ops-pc-text"><span class="ops-pc-label">People &amp; Culture</span>&nbsp;connects every function &mdash; developing talent, enabling performance, and sustaining the standards that define the Mandarin Oriental experience.</p>
+          </div>
         </div>
       </div>
 
@@ -549,67 +1584,29 @@ function renderCh2() {
           <p>Through their partnership with Directors of People &amp; Culture, they guide leadership capability, talent development and workforce planning across the Group's global portfolio.</p>
         </div>
 
-        <div class="vp-hierarchy">
-          <div class="vp-top">
-            <div class="vp-card vp-card--top">
-              <div class="vp-role-eyebrow">Group Vice-President · P&amp;C Operations</div>
-              <img class="vp-photo" src="img/vp_koray.jpg" alt="Koray Genckul" />
-              <div class="vp-name">Koray Genckul</div>
+        <div class="leaders-grid leaders-grid--pc">
+          ${PC_LEADERS.map(l => `
+            <div class="leader">
+              <img class="leader-photo" src="img/${l.img}" alt="${l.name}" />
+              <div class="leader-name">${l.name}</div>
+              <div class="leader-role">${l.role}</div>
             </div>
-          </div>
-          <div class="vp-branches">
-            <div class="vp-branch">
-              <div class="vp-card">
-                <div class="vp-role-eyebrow">Regional Director · Middle East</div>
-                <img class="vp-photo" src="img/vp_nicoleta.jpg" alt="Nicoleta Cucos" />
-                <div class="vp-name">Nicoleta Cucos</div>
-              </div>
-            </div>
-            <div class="vp-branch">
-              <div class="vp-card">
-                <div class="vp-role-eyebrow">Regional Director · Europe</div>
-                <img class="vp-photo" src="img/vp_robin.jpg" alt="Robin Vermeire" />
-                <div class="vp-name">Robin Vermeire</div>
-              </div>
-            </div>
-            <div class="vp-branch">
-              <div class="vp-card">
-                <div class="vp-role-eyebrow">Regional Director · Asia Pacific</div>
-                <img class="vp-photo" src="img/vp_laura.jpg" alt="Laura Wilson" />
-                <div class="vp-name">Laura Wilson</div>
-              </div>
-            </div>
-          </div>
+          `).join('')}
         </div>
         <p style="text-align:center; font-family:'Avenir Next LT Pro'; font-style: italic; color: var(--ink-mute); margin-top: 32px;">Together, they provide strategic leadership for People &amp; Culture across Mandarin Oriental's global portfolio.</p>
       </div>
 
       <div class="spread">
-        <div class="section-eyebrow"><span class="num">06</span><span class="txt">Our Strategic Vision</span><span class="rule"></span></div>
-        <div class="editorial-body">
-          <p>Mandarin Oriental aims to strengthen its position as one of the world's most admired luxury hospitality brands. The Group continues to expand thoughtfully in key destinations while evolving the guest experience through digital innovation, sustainability leadership and distinctive wellness and lifestyle offerings.</p>
-          <p>As the brand grows, Mandarin Oriental remains committed to responsible operations and long-term value creation. The Group has set ambitious sustainability goals, including achieving carbon neutrality across its operations by 2030.</p>
-          <p>Supporting this vision requires exceptional Colleagues, strong leadership and a shared commitment to service excellence across every hotel, residence and corporate office.</p>
-        </div>
-        <div class="pullquote">Every Colleague deserves to feel proud, supported, and inspired — every day, everywhere.</div>
+        ${strategicVisionSpreadHTML()}
       </div>
 
       <div class="spread tight">
         <div class="section-eyebrow"><span class="num">07</span><span class="txt">What We Believe</span><span class="rule"></span></div>
-        <div class="values-grid">
-          <div class="value-block">
-            <h3>Our Vision</h3>
-            <p>To be Fans of the Exceptional, Every Day, Everywhere.</p>
-          </div>
-          <div class="value-block">
-            <h3>Our Mission</h3>
-            <p>To craft time-enriching experiences that transform the ordinary to the exceptional and guests to fans.</p>
-          </div>
-          <div class="value-block" style="grid-column: 1 / -1;">
-            <h3>Our Values</h3>
-            <p>Mandarin Oriental's approach is guided by core values that shape every interaction with guests, Colleagues and partners. These values reflect the Group's commitment to exceptional service, continuous growth, collaboration, respect and responsible business practices.</p>
-            <p>Across all Mandarin Oriental properties, these principles help ensure that every destination delivers a distinctive sense of place while maintaining the Group's global standards of excellence.</p>
-          </div>
+        <p class="beliefs-intro">Select Vision, Mission or Values to explore what guides Mandarin Oriental.</p>
+        ${beliefsTabsHTML()}
+        <div class="editorial-body beliefs-values-note">
+          <p>Mandarin Oriental's approach is guided by core values that shape every interaction with guests, Colleagues and partners. These values reflect the Group's commitment to exceptional service, continuous growth, collaboration, respect and responsible business practices.</p>
+          <p>Across all Mandarin Oriental properties, these principles help ensure that every destination delivers a distinctive sense of place while maintaining the Group's global standards of excellence.</p>
         </div>
       </div>
 
@@ -621,8 +1618,32 @@ function renderCh2() {
             <p>While Mandarin Oriental operates with its own brand identity, leadership and culture, it benefits from Jardine Matheson's long-term investment philosophy, strong governance framework and commitment to responsible business practices.</p>
           </div>
           <div>
-            <h4 style="color: var(--ink); margin-bottom: 12px;">Board Leadership</h4>
             <p>Jardine Matheson operates through a network of listed companies and affiliated businesses supported by the Group's strategic oversight. The Group's leaders guide the broader Jardine Matheson organization.</p>
+          </div>
+        </div>
+
+        <div class="board-block">
+          <div class="board-heading">
+            <span class="board-rule"></span>
+            <span class="board-title">Board Leadership</span>
+            <span class="board-rule"></span>
+          </div>
+          <div class="board-grid">
+            <div class="board-card">
+              <div class="board-role">Chairman</div>
+              <img class="board-photo" src="img/board_keswick.jpg" alt="Ben Keswick, Chairman" loading="lazy" />
+              <div class="board-name">Ben Keswick</div>
+            </div>
+            <div class="board-card">
+              <div class="board-role">Group Managing Director</div>
+              <img class="board-photo" src="img/board_pan.jpg" alt="Lincoln Pan, Group Managing Director" loading="lazy" />
+              <div class="board-name">Lincoln Pan</div>
+            </div>
+            <div class="board-card">
+              <div class="board-role">Group Finance Director</div>
+              <img class="board-photo" src="img/board_baker.jpg" alt="Graham Baker, Group Finance Director" loading="lazy" />
+              <div class="board-name">Graham Baker</div>
+            </div>
           </div>
         </div>
       </div>
@@ -634,23 +1655,21 @@ function renderCh2() {
           <p>Across all properties, People &amp; Culture works in partnership with business leaders to ensure that people decisions support Mandarin Oriental's strategy, values and long-term growth.</p>
           <p>To support consistent execution across the Group, Mandarin Oriental provides tools and guidance to help hotels translate People &amp; Culture priorities into clear annual plans.</p>
         </div>
-        <div class="policy-list" style="max-width: 800px; margin: 32px auto 0;">
-          <div class="policy-item">
-            <div class="policy-symbol">${SYM.kit}</div>
-            <div>
-              <div class="policy-name">Hotel P&amp;C Strategy Planning Template</div>
-              <div class="policy-name-sub">Each hotel develops an annual P&amp;C strategy aligned with Group priorities and regional guidance.</div>
-            </div>
-            <div class="policy-kind">Template</div>
-          </div>
-          <div class="policy-item">
-            <div class="policy-symbol">${SYM.kit}</div>
-            <div>
-              <div class="policy-name">Hotel Organisation Chart</div>
-              <div class="policy-name-sub">Reporting lines, team composition, and how roles connect across the business.</div>
-            </div>
-            <div class="policy-kind">Template</div>
-          </div>
+        <div style="max-width: 800px; margin: 32px auto 0;">
+          ${policyListHTML([
+            {
+              s: 'kit',
+              name: 'Hotel P&C Strategy Planning Template',
+              blurb: 'Each hotel develops an annual P&C strategy aligned with Group priorities and regional guidance.',
+              url: 'https://mohgl.sharepoint.com/:p:/r/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Files%20Linking%20to%20Playbook/II.%20About%20MO/P%26C%20Strategy%202026%20Template.pptx?d=w5d1c5cd5f0e34eeda763ceb15ce91326&csf=1&web=1&e=3PDo1g'
+            },
+            {
+              s: 'kit',
+              name: 'Hotel Organisation Chart',
+              blurb: 'Reporting lines, team composition, and how roles connect across the business.',
+              url: 'https://mohgl.sharepoint.com/sites/GlobalHRPP/Shared%20Documents/General/0.%20PathPoints/4.%20Resource%20Files%20Linking%20to%20Playbook/II.%20About%20MO/Hotel%20Organisation%20Chart.pdf'
+            }
+          ])}
         </div>
       </div>
 
@@ -664,10 +1683,10 @@ function renderCh3() {
   return `
     <section class="chapter" id="ch-3">
       <div class="opener">
-        <div class="opener-hero" style="background-image: url('img/ch_E_experience.jpg');">
+        <div class="opener-hero" style="background-image: url('img/opener_lifecycle.jpg');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-numeral"><span class="opener-icon">${ICONS["ch-3"]}</span>Chapter III</div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-3"]}</span>Chapter III</div></div>
               <div class="opener-eyebrow">The Colleague Lifecycle</div>
             </div>
             <div class="opener-bottom">
@@ -695,19 +1714,29 @@ function renderCh3() {
         </div>
         <p class="spread-lede center" style="max-width: 640px; margin: 0 auto 12px;">Select any stage to explore its governance, tools, and guidance.</p>
 
-        <div class="wheel-wrap">
-          ${buildWheelSVG()}
-        </div>
+        <div class="wheel-layout">
+          <div class="wheel-wrap">
+            ${buildWheelSVG()}
+          </div>
 
-        <div class="wheel-legend">
-          ${LIFECYCLE.map((s, i) => `
-            <button class="wheel-legend-item" data-sub="${s.id}">
-              <div class="icon">${ICONS[s.id]}</div>
-              <div class="num">${s.letter} · 0${i+1}</div>
-              <div class="title">${s.label}</div>
-              <div class="desc">${s.lede}</div>
-            </button>
-          `).join('')}
+          <div class="wheel-caption" id="wheelCaption" aria-live="polite">
+            <div class="wheel-caption-inner wheel-caption--rest" data-state="rest">
+              <div class="wheel-caption-eyebrow">Eight Stages</div>
+              <h3 class="wheel-caption-title">Explore the Colleague Lifecycle</h3>
+              <p class="wheel-caption-desc">Hover over a stage on the wheel to preview it — or tap a stage to see its focus, then open it in full.</p>
+            </div>
+            ${LIFECYCLE.map((s, i) => `
+              <div class="wheel-caption-inner" data-sub="${s.id}" hidden>
+                <div class="wheel-caption-icon">${ICONS[s.id]}</div>
+                <div class="wheel-caption-eyebrow">${s.letter} · 0${i+1} · Colleague Lifecycle</div>
+                <h3 class="wheel-caption-title">${esc(s.label)}</h3>
+                <p class="wheel-caption-desc">${esc(s.lede)}</p>
+                <button class="wheel-caption-cta" data-goto="ch-3" data-sub="${s.id}">Explore this stage
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+            `).join('')}
+          </div>
         </div>
       </div>
 
@@ -752,7 +1781,7 @@ function buildWheelSVG() {
         </filter>
       </defs>
       <g filter="url(#wheelShadow)">
-        ${arcs.map(a => `<path class="wheel-slice" d="${a.d}" fill="${a.fill}" stroke="#ffffff" stroke-width="2" data-sub="${a.id}"/>`).join('')}
+        ${arcs.map(a => `<path class="wheel-slice" d="${a.d}" fill="${a.fill}" stroke="#ffffff" stroke-width="2" data-sub="${a.id}" tabindex="0" role="button" aria-label="${esc(labelFor(a.id))} — explore this stage"/>`).join('')}
       </g>
       ${arcs.map(a => `
         <text class="wheel-letter" x="${a.letterPos.x}" y="${a.letterPos.y}" text-anchor="middle" dominant-baseline="middle">${a.letter}</text>
@@ -782,6 +1811,26 @@ function polar(cx, cy, r, deg) {
 function renderSubChapter(sub) {
   const c = LIFECYCLE_CONTENT[sub.id];
   const heroLede = (c && c.tagline) ? c.tagline : sub.lede;
+  const theme = sectionIcon(sub.label);
+  const hasPhil = !!(c && c.philosophy && c.philosophy.paras && c.philosophy.paras.length);
+  const hasIntro = !!(c && c.intro && c.intro.length);
+  const introHasEnsure = hasIntro && c.intro.some(p => /:\s*$/.test(p));
+  // Build the intro/philosophy design-language block.
+  let introBlock = '';
+  if (hasPhil) {
+    // Standard case: a dedicated philosophy → two-column iconography spread,
+    // preceded by any plain intro paragraphs.
+    if (hasIntro) introBlock += subIntroHTML({ intro: c.intro });
+    introBlock += philosophyHTML(c, sub.lede, theme);
+  } else if (introHasEnsure) {
+    // No separate philosophy but the intro carries a "role is to ensure" list
+    // (e.g. sub-A). Render the intro itself as the two-column iconography spread.
+    introBlock += philosophyHTML({ philosophy: { title: 'Governance & Standards', paras: c.intro } }, sub.lede, theme);
+  } else if (hasIntro) {
+    introBlock += subIntroHTML({ intro: c.intro });
+  } else {
+    introBlock += philosophyHTML(c, sub.lede, theme);
+  }
   return `
     <div class="sub-chapter" id="${sub.id}" style="scroll-margin-top: 90px;">
       <div class="sub-hero" style="margin-top: 24px;">
@@ -796,8 +1845,7 @@ function renderSubChapter(sub) {
         </div>
       </div>
       <div class="spread tight">
-        ${c && c.intro && c.intro.length ? subIntroHTML({ intro: c.intro }) : ''}
-        ${c && c.philosophy && c.philosophy.paras && c.philosophy.paras.length ? philosophyHTML(c, sub.lede) : (c && c.intro && c.intro.length ? '' : philosophyHTML(c, sub.lede))}
+        ${introBlock}
         ${c ? c.sections.map(sectionHTML).join('') : ''}
       </div>
     </div>
@@ -812,7 +1860,7 @@ function renderCh4() {
         <div class="opener-hero" style="background-image: url('img/opener_preopen.jpg');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-numeral"><span class="opener-icon">${ICONS["ch-4"]}</span>Chapter IV</div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-4"]}</span>Chapter IV</div></div>
               <div class="opener-eyebrow">Openings</div>
             </div>
             <div class="opener-bottom">
@@ -824,8 +1872,11 @@ function renderCh4() {
       </div>
       <div class="spread">
         ${CH4_CONTENT.intro && CH4_CONTENT.intro.length ? subIntroHTML({ intro: CH4_CONTENT.intro }) : ''}
-        ${philosophyHTML(CH4_CONTENT, 'A hotel opens once. Every hire, contract, and system put in place during the pre-opening period sets the standard for the years that follow.')}
-        ${CH4_CONTENT.sections.map(sectionHTML).join('')}
+        ${ch4PhilosophySpreadHTML(CH4_CONTENT, 'preopen_table.jpg', 'The Colleague Experience · Setting the stage')}
+      </div>
+      ${editorialBandHTML('journey_welcome.jpg', 'The Pre-Opening Journey', 'Building the People & Culture foundation of a new hotel, Colleague by Colleague.', true)}
+      <div class="spread">
+        ${CH4_CONTENT.sections.map((sec, i) => i === 0 ? ch4Section1HTML(sec) : sectionHTML(sec)).join('')}
       </div>
       ${chapterNavHTML('ch-3', 'ch-5')}
     </section>
@@ -840,7 +1891,7 @@ function renderCh5() {
         <div class="opener-hero" style="background-image: url('img/opener_audit.jpg');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-numeral"><span class="opener-icon">${ICONS["ch-5"]}</span>Chapter V</div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-5"]}</span>Chapter V</div></div>
               <div class="opener-eyebrow">Governance</div>
             </div>
             <div class="opener-bottom">
@@ -851,7 +1902,8 @@ function renderCh5() {
         </div>
       </div>
       <div class="spread">
-        ${CH5_CONTENT.intro && CH5_CONTENT.intro.length ? subIntroHTML({ intro: CH5_CONTENT.intro }) : ''}
+        ${CH5_CONTENT.intro && CH5_CONTENT.intro.length ? ch5AuditIntroHTML(CH5_CONTENT) : ''}
+        ${editorialBandHTML('colleagues_group.jpg', 'A Shared Standard', 'Governance exists to protect the Colleague experience at every property.')}
         ${CH5_CONTENT.sections.map(sectionHTML).join('')}
       </div>
       ${chapterNavHTML('ch-4', 'ch-6')}
@@ -867,7 +1919,7 @@ function renderCh6() {
         <div class="opener-hero" style="background-image: url('img/opener_support.jpg');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-numeral"><span class="opener-icon">${ICONS["ch-6"]}</span>Chapter VI</div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-6"]}</span>Chapter VI</div></div>
               <div class="opener-eyebrow">Closing</div>
             </div>
             <div class="opener-bottom">
@@ -879,25 +1931,30 @@ function renderCh6() {
       </div>
 
       <div class="spread">
-        <div class="section-eyebrow"><span class="num">01</span><span class="txt">Confidentiality &amp; Use</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="eyebrow-icon" aria-hidden="true">${SECTION_ICONS.data}</span><span class="num">01</span><span class="txt">Confidentiality &amp; Use</span><span class="rule"></span></div>
         <div class="editorial-body">
           <p>This Playbook is an internal Mandarin Oriental resource. It is intended for the exclusive use of Colleagues and authorised partners. Its content, tools and templates should not be shared externally without formal approval from Group People &amp; Culture.</p>
         </div>
+        ${editorialBandHTML('journey_stay.jpg', 'Connected & Supported', 'Every Colleague remains part of the Mandarin Oriental community.')}
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow"><span class="num">02</span><span class="txt">Authorship &amp; Development</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="eyebrow-icon" aria-hidden="true">${SECTION_ICONS.develop}</span><span class="num">02</span><span class="txt">Authorship &amp; Development</span><span class="rule"></span></div>
         <div class="editorial-body">
           <p>The Playbook is developed and maintained by the Group People &amp; Culture team in collaboration with Regional People &amp; Culture leaders and cross-functional partners. It draws on Group policies, guidelines, tools and templates that have been reviewed and endorsed for consistent adoption across the portfolio.</p>
         </div>
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow"><span class="num">03</span><span class="txt">Disclaimer</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="eyebrow-icon" aria-hidden="true">${SECTION_ICONS.governance}</span><span class="num">03</span><span class="txt">Disclaimer</span><span class="rule"></span></div>
         <div class="editorial-body">
           <p>This Playbook offers a Group-level reference framework. It does not replace local labour laws, regulations, or country-specific requirements. Local People &amp; Culture teams remain responsible for ensuring compliance with all applicable legal and regulatory obligations in their markets.</p>
         </div>
-        <div class="pullquote">A living framework — evolving as we continue to learn, grow, and serve together.</div>
+        <figure class="section-quote section-quote--closing">
+          <span class="section-quote-mark" aria-hidden="true">“</span>
+          <blockquote class="section-quote-text">A living framework — evolving as we continue to learn, grow, and serve together.</blockquote>
+          <span class="section-quote-flourish" aria-hidden="true"></span>
+        </figure>
       </div>
 
       ${chapterNavHTML('ch-5', null)}
@@ -949,11 +2006,11 @@ function renderRail() {
 
 // ---- VISUAL CONTENTS MENU ------------------------------------------
 function renderMenu() {
-  const chapterCards = CHAPTERS.filter(c => c.id !== 'cover').map(c => `
+  const chapterCards = CHAPTERS.filter(c => c.id !== 'cover' && c.id !== 'letter' && c.id !== 'intro').map(c => `
     <button class="menu-card" data-goto="${c.id}">
       <div class="menu-card-img"><img src="img/${c.opener}" alt="${c.label}" loading="lazy" /></div>
       <div class="menu-card-body">
-        <div class="menu-card-eyebrow"><span class="menu-card-icon">${ICONS[c.id]}</span>Chapter ${c.numeral}</div>
+        <div class="menu-card-eyebrow">${ICONS[c.id] ? `<span class="menu-card-icon">${ICONS[c.id]}</span>` : ''}${c.numeral ? 'Chapter ' + c.numeral : (c.isVideo ? 'Welcome Film' : 'Foreword')}</div>
         <div class="menu-card-title">${c.label}</div>
         <div class="menu-card-desc">${MENU_DESC[c.id] || ''}</div>
       </div>
@@ -964,10 +2021,10 @@ function renderMenu() {
     <section class="chapter" id="menu">
       <div class="spread">
         <div class="spread-header">
-          <div class="running-mini">People &amp; Culture Playbook</div>
+          <div class="running-mini">People &amp; Culture</div>
           <div class="center-rule"></div>
-          <h2 class="spread-title center">Contents</h2>
-          <p class="spread-lede center">Choose where to begin — every page of the Playbook is one step away.</p>
+          <h2 class="spread-title center">Explore our Playbook</h2>
+          <p class="spread-lede center">Globally Defined &middot; Regionally Governed &middot; Locally Executed</p>
         </div>
         <div class="menu-grid">${chapterCards}</div>
       </div>
@@ -979,6 +2036,7 @@ function renderAll() {
   const reader = document.getElementById('reader');
   reader.innerHTML = [
     renderCover(),
+    renderIntro(),
     renderMenu(),
     renderCh1(),
     renderCh2(),
@@ -1015,17 +2073,45 @@ function goTo(chapterId, subId) {
   // close mobile rail
   document.getElementById('rail').classList.remove('on');
 
-  // hide the floating Contents button while on the menu or cover
+  // hide the floating Contents button while on the menu, cover or intro
   const fab = document.getElementById('menuFab');
-  if (fab) fab.classList.toggle('hidden', chapterId === 'menu' || chapterId === 'cover');
+  if (fab) fab.classList.toggle('hidden', chapterId === 'menu' || chapterId === 'cover' || chapterId === 'intro');
+
+  // Full-screen immersive pages (cover + intro video): hide the top bar & side
+  // rail so the page fills the viewport like a magazine — chrome is restored the
+  // moment you continue into the Contents.
+  document.body.classList.toggle('on-cover', chapterId === 'cover' || chapterId === 'intro');
+
+  // Manage the intro video: autoplay WITH SOUND when arriving (arriving here is
+  // always via a user click on “Explore”, which satisfies browser autoplay
+  // policies). If a browser still blocks audio, fall back to muted playback so
+  // the video at least plays, and let the user unmute via the controls.
+  const introVideo = document.querySelector('#intro .intro-video');
+  if (introVideo) {
+    if (chapterId === 'intro') {
+      introVideo.currentTime = 0;
+      introVideo.muted = false;
+      introVideo.volume = 1;
+      const p = introVideo.play();
+      if (p && p.catch) {
+        p.catch(() => {
+          introVideo.muted = true;
+          const p2 = introVideo.play();
+          if (p2 && p2.catch) p2.catch(() => {});
+        });
+      }
+    } else {
+      introVideo.pause();
+    }
+  }
 }
 
 // ---- Search --------------------------------------------------------
 function buildSearchIndex() {
   const idx = [];
   CHAPTERS.forEach(c => {
-    if (c.id === 'cover') return;
-    idx.push({ chapter: c.id, sub: null, title: `${c.numeral}. ${c.label}`, crumb: 'Chapter', text: c.label });
+    if (c.id === 'cover' || c.id === 'intro') return;
+    idx.push({ chapter: c.id, sub: null, title: c.numeral ? `${c.numeral}. ${c.label}` : c.label, crumb: c.numeral ? 'Chapter' : 'Foreword', text: c.label });
   });
   LIFECYCLE.forEach(s => {
     idx.push({ chapter: 'ch-3', sub: s.id, title: `${s.letter}. ${s.label}`, crumb: 'Lifecycle', text: s.label + ' ' + s.lede });
@@ -1115,7 +2201,8 @@ function highlight(text, q) {
 // ---- Bookmarks (session only) -------------------------------------
 let bookmarks = [];
 function updateBookmarkCount() {
-  document.getElementById('bookmarkCount').textContent = bookmarks.length;
+  const el = document.getElementById('bookmarkCount');
+  if (el) el.textContent = bookmarks.length;
 }
 
 // ---- Progress bar -------------------------------------------------
@@ -1129,7 +2216,46 @@ function initProgress() {
 }
 
 // ---- Global click wiring ------------------------------------------
+// Reveal a stage's description in the wheel caption panel (hover/focus/tap).
+function showWheelCaption(subId) {
+  const cap = document.getElementById('wheelCaption');
+  if (!cap) return;
+  cap.querySelectorAll('.wheel-caption-inner').forEach(el => {
+    el.hidden = (el.dataset.sub !== subId) && !(subId === null && el.dataset.state === 'rest');
+  });
+  document.querySelectorAll('.wheel-slice').forEach(sl => {
+    sl.classList.toggle('is-active', sl.dataset.sub === subId);
+  });
+}
+
 function wireEvents() {
+  // Wheel: preview a stage's description on hover / keyboard focus (desktop).
+  const wheelLayout = () => document.querySelector('.wheel-layout');
+  document.addEventListener('mouseover', e => {
+    const slice = e.target.closest('.wheel-slice');
+    if (slice && slice.dataset.sub && window.matchMedia('(hover: hover)').matches) {
+      showWheelCaption(slice.dataset.sub);
+    }
+  });
+  document.addEventListener('mouseout', e => {
+    const slice = e.target.closest('.wheel-slice');
+    const wl = wheelLayout();
+    if (slice && wl && window.matchMedia('(hover: hover)').matches) {
+      // Only reset when the pointer leaves the wheel entirely.
+      const to = e.relatedTarget;
+      if (!to || !to.closest || !to.closest('.wheel-layout')) showWheelCaption(null);
+    }
+  });
+  document.addEventListener('focusin', e => {
+    const slice = e.target.closest('.wheel-slice');
+    if (slice && slice.dataset.sub) showWheelCaption(slice.dataset.sub);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const slice = e.target.closest && e.target.closest('.wheel-slice');
+    if (slice && slice.dataset.sub) { e.preventDefault(); goTo('ch-3', slice.dataset.sub); }
+  });
+
   document.addEventListener('click', e => {
     // accordion toggle (expandable subheading)
     const toggle = e.target.closest('.policy-item-toggle');
@@ -1143,26 +2269,41 @@ function wireEvents() {
       else { panel.hidden = false; }
       return;
     }
-    // wheel slice
+    // Vision / Mission / Values interactive tabs (click to reveal)
+    const belTab = e.target.closest('.beliefs-tab');
+    if (belTab) {
+      const key = belTab.dataset.belief;
+      const root = belTab.closest('.beliefs');
+      root.querySelectorAll('.beliefs-tab').forEach(t => {
+        const on = t === belTab;
+        t.classList.toggle('is-active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      root.querySelectorAll('.beliefs-panel').forEach(p => {
+        const on = p.dataset.belief === key;
+        p.classList.toggle('is-active', on);
+        p.hidden = !on;
+      });
+      return;
+    }
+    // feature card (Welcome page lifecycle preview)
+    const fcard = e.target.closest('.feature-card[data-nav-chapter]');
+    if (fcard) { e.preventDefault(); goTo(fcard.dataset.navChapter, fcard.dataset.navSub || null); return; }
+    // wheel slice — on hover-capable devices, click navigates directly (the
+    // description already previews on hover). On touch devices (no hover),
+    // the first tap reveals the stage description in the caption panel; the
+    // “Explore this stage” button (data-goto) then navigates.
     const slice = e.target.closest('.wheel-slice');
-    if (slice && slice.dataset.sub) { goTo('ch-3', slice.dataset.sub); return; }
-    // wheel legend — on touch devices (no hover), first tap reveals the
-    // description; second tap navigates. On hover-capable devices, click
-    // navigates directly (description already shows on hover).
-    const leg = e.target.closest('.wheel-legend-item');
-    if (leg && leg.dataset.sub) {
+    if (slice && slice.dataset.sub) {
       const noHover = window.matchMedia('(hover: none)').matches;
-      if (noHover && !leg.classList.contains('open')) {
-        document.querySelectorAll('.wheel-legend-item.open').forEach(el => el.classList.remove('open'));
-        leg.classList.add('open');
-        return;
-      }
-      goTo('ch-3', leg.dataset.sub);
+      if (noHover) { showWheelCaption(slice.dataset.sub); return; }
+      goTo('ch-3', slice.dataset.sub);
       return;
     }
     // any generic data-goto
     const btn = e.target.closest('[data-goto]');
     if (btn) {
+      if (btn.tagName === 'A') e.preventDefault();
       const chapter = btn.dataset.goto;
       const sub = btn.dataset.sub || undefined;
       goTo(chapter, sub);
