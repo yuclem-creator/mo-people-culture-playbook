@@ -2093,6 +2093,42 @@ function renderAll() {
     renderCh5(),
     renderCh6()
   ].join('');
+  resolveAssets(reader);
+}
+
+// Replace img/<filename> references with uploaded data URLs held in
+// PLAYBOOK.assets. When assets is empty (the seed) this is a no-op, so render
+// parity with the original design is preserved exactly. Keys may be either the
+// bare filename ("cover_colleagues.jpg") or the full relative path
+// ("img/cover_colleagues.jpg").
+function assetFor(path) {
+  var a = PB.assets || {};
+  if (a[path]) return a[path];
+  var bare = path.replace(/^img\//, '');
+  if (a['img/' + bare]) return a['img/' + bare];
+  if (a[bare]) return a[bare];
+  return null;
+}
+function resolveAssets(root) {
+  if (!PB.assets || !Object.keys(PB.assets).length) return;
+  // background-image styles
+  root.querySelectorAll('[style*="img/"]').forEach(function (el) {
+    var m = el.getAttribute('style');
+    el.setAttribute('style', m.replace(/url\((['"]?)img\/([^'")]+)\1\)/g, function (full, q, fn) {
+      var u = assetFor('img/' + fn);
+      return u ? "url('" + u + "')" : full;
+    }));
+  });
+  // <img src="img/...">
+  root.querySelectorAll('img[src^="img/"]').forEach(function (el) {
+    var u = assetFor(el.getAttribute('src'));
+    if (u) el.setAttribute('src', u);
+  });
+  // <video>/<source src="video/..."> and poster attributes
+  root.querySelectorAll('video[src^="video/"],source[src^="video/"]').forEach(function (el) {
+    var u = assetFor(el.getAttribute('src'));
+    if (u) el.setAttribute('src', u);
+  });
 }
 
 // ---- Navigation ----------------------------------------------------
@@ -2385,3 +2421,47 @@ function init() {
   updateBookmarkCount();
 }
 document.addEventListener('DOMContentLoaded', init);
+
+// ---- Live-preview bridge (used by the authoring tool) --------------------
+// The editor hosts this renderer in an <iframe> and pushes a fresh PLAYBOOK
+// whenever the author changes something. We swap window.PLAYBOOK, rebind the
+// PB reference the render helpers close over, and re-render in place while
+// trying to keep the reader on the same chapter.
+function applyPlaybook(next, opts) {
+  opts = opts || {};
+  window.PLAYBOOK = next || {};
+  PB = window.PLAYBOOK;
+  if (!PB.prose) PB.prose = {};
+  var keep = opts.chapter || currentChapter || 'cover';
+  var keepSub = opts.sub || null;
+  try {
+    renderRail();
+    renderAll();
+    initSearch();
+    wireEvents();
+    // restore position (chapter may no longer exist -> fall back to cover)
+    if (document.getElementById(keep)) goTo(keep, keepSub);
+    else goTo('cover');
+  } catch (e) {
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'preview-error', message: String(e && e.message || e) }, '*');
+    }
+    throw e;
+  }
+}
+window.applyPlaybook = applyPlaybook;
+
+window.addEventListener('message', function (ev) {
+  var d = ev.data || {};
+  if (d.type === 'set-playbook') {
+    applyPlaybook(d.playbook, { chapter: d.chapter, sub: d.sub });
+    if (window.parent !== window) window.parent.postMessage({ type: 'preview-ready' }, '*');
+  } else if (d.type === 'goto') {
+    goTo(d.chapter, d.sub);
+  }
+});
+
+// Announce readiness so the editor can push the initial PLAYBOOK.
+if (window.parent !== window) {
+  window.parent.postMessage({ type: 'preview-boot' }, '*');
+}

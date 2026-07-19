@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MO Playbook Authoring Tool</title>
+<link rel="stylesheet" href="editor.css" />
+</head>
+<body>
+<div class="app">
+  <!-- ---- Topbar ---------------------------------------------------------- -->
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 2C7 6 7 12 12 22C17 12 17 6 12 2Z" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M12 2C10 8 10 16 12 22C14 16 14 8 12 2Z" fill="currentColor" opacity=".18"/>
+      </svg>
+      <div>
+        <div class="title">Playbook Studio</div>
+        <div class="sub">Mandarin Oriental · content authoring</div>
+      </div>
+    </div>
+    <input id="docName" class="doc-name" title="Playbook name (used for the file name and SCORM title)" aria-label="Playbook name" />
+    <div class="spacer"></div>
+    <div id="autosave" class="autosave"><span class="dot"></span><span class="txt">Not saved yet</span></div>
+    <button class="btn ghost" id="btnNew" title="Start a new playbook">New</button>
+    <button class="btn" id="btnOpen" title="Open a .json playbook from your computer">Open</button>
+    <button class="btn" id="btnSave" title="Download this playbook as a .json file (images included)">Save</button>
+    <button class="btn primary" id="btnExport" title="Export a SCORM 1.2 package for your LMS">Export SCORM</button>
+  </header>
+
+  <!-- ---- Body ------------------------------------------------------------ -->
+  <div class="cols">
+    <!-- Left: outline tree -->
+    <nav class="col col-outline" aria-label="Playbook outline">
+      <div class="col-head">
+        <span>Outline</span>
+        <button class="btn ghost" id="btnSettings" title="Playbook settings, completion rules & SCORM manifest" style="padding:3px 8px">Settings</button>
+      </div>
+      <div id="tree" class="tree"></div>
+    </nav>
+
+    <!-- Center: live preview -->
+    <main class="col col-preview" aria-label="Live preview">
+      <div class="preview-toolbar">
+        <span>Live preview</span>
+        <div class="seg" role="group" aria-label="Preview width">
+          <button id="pvDesktop" class="on" title="Desktop (1300px)">Desktop</button>
+          <button id="pvMobile" title="Mobile (390px)">Mobile</button>
+        </div>
+        <span class="spacer" style="flex:1"></span>
+        <span id="pvStatus" style="color:#6b665d"></span>
+      </div>
+      <div class="preview-wrap">
+        <iframe id="preview" class="preview-frame" title="Playbook preview"
+                src="preview-engine/index.html"></iframe>
+      </div>
+    </main>
+
+    <!-- Right: inspector -->
+    <aside class="col col-inspector" aria-label="Inspector">
+      <div class="col-head"><span>Editor</span><span class="hint">Content only</span></div>
+      <div id="inspector" class="inspector">
+        <div class="empty">Select an item in the outline to edit its content.</div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toasts" class="toast-wrap" aria-live="polite"></div>
+
+<!-- Third-party libraries (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+<!-- App -->
+<script src="storage.js"></script>
+<script src="export.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>

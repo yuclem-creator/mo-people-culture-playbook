@@ -25,7 +25,15 @@
   // The set of top-level chapters that must be OPENED for completion.
   // These mirror the CHAPTERS ids in app.js. Sub-sections (A–H under ch-3)
   // are intentionally NOT included — opening the chapter itself suffices.
-  var REQUIRED_PAGES = ['cover', 'intro', 'ch-1', 'ch-2', 'ch-3', 'ch-4', 'ch-5', 'ch-6'];
+  //
+  // DATA-DRIVEN OVERRIDE: the authoring tool writes the required-page list into
+  // window.SCORM_REQUIRED_PAGES (derived from the playbook's completion rules)
+  // when it exports a package, so this file never has to be rewritten. If that
+  // global is present and non-empty we use it; otherwise we fall back to the
+  // full-chapter default below.
+  var REQUIRED_PAGES = (global.SCORM_REQUIRED_PAGES && global.SCORM_REQUIRED_PAGES.length)
+    ? global.SCORM_REQUIRED_PAGES.slice()
+    : ['cover', 'intro', 'ch-1', 'ch-2', 'ch-3', 'ch-4', 'ch-5', 'ch-6'];
 
   var api = null;          // discovered LMS API object
   var initialised = false; // LMSInitialize succeeded
