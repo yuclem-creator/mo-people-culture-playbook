@@ -1183,15 +1183,15 @@ function renderCh1() {
   return `
     <section class="chapter" id="ch-1">
       <div class="opener">
-        <div class="opener-hero" style="background-image: url('img/opener_intro.jpg');">
+        <div class="opener-hero" style="background-image: url('img/${T('ch1.opener.bg','opener_intro.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
               <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-1"]}</span>Chapter I</div></div>
-              <div class="opener-eyebrow">Introduction</div>
+              <div class="opener-eyebrow">${T('ch1.opener.eyebrow','Introduction')}</div>
             </div>
             <div class="opener-bottom">
-              <h1 class="opener-title">Welcome to our<br/>Playbook</h1>
-              <p class="opener-sub">Why this guide exists, who it serves, and how to use it.</p>
+              <h1 class="opener-title">${T('ch1.opener.title','Welcome to our<br/>Playbook')}</h1>
+              <p class="opener-sub">${T('ch1.opener.sub','Why this guide exists, who it serves, and how to use it.')}</p>
             </div>
           </div>
         </div>
@@ -1200,24 +1200,24 @@ function renderCh1() {
       <div class="spread">
         <div class="section-eyebrow">
           <span class="num">01</span>
-          <span class="txt">Our Purpose</span>
+          <span class="txt">${T('ch1.s01.eyebrow','Our Purpose')}</span>
           <span class="rule"></span>
         </div>
 
         <!-- Magazine editorial spread: image left, body + featured pull-quote right -->
         <div class="editorial-spread">
           <figure class="editorial-figure">
-            <div class="editorial-figure-img" style="background-image:url('img/colleagues_group.jpg');"></div>
-            <figcaption class="editorial-figure-cap">Mandarin Oriental &middot; A culture of care</figcaption>
+            <div class="editorial-figure-img" style="background-image:url('img/${T('ch1.s01.img','colleagues_group.jpg')}');"></div>
+            <figcaption class="editorial-figure-cap">${T('ch1.s01.cap','Mandarin Oriental &middot; A culture of care')}</figcaption>
           </figure>
           <div class="editorial-col">
             <div class="editorial-body">
-              <p class="drop">The Playbook exists to strengthen alignment between our shared values and daily P&amp;C practices; to support P&amp;C teams in delivering a consistent experience — from recruitment to farewell; to ensure every policy is interpreted with care, fairness, and respect; and to provide clarity, templates, and examples that make implementation simple and intuitive.</p>
-              <p>Each section has been designed to follow the Colleague lifecycle, a journey that mirrors how we attract, welcome, grow, care for, and stay connected with our people.</p>
+              <p class="drop">${T('ch1.s01.p1','The Playbook exists to strengthen alignment between our shared values and daily P&amp;C practices; to support P&amp;C teams in delivering a consistent experience — from recruitment to farewell; to ensure every policy is interpreted with care, fairness, and respect; and to provide clarity, templates, and examples that make implementation simple and intuitive.')}</p>
+              <p>${T('ch1.s01.p2','Each section has been designed to follow the Colleague lifecycle, a journey that mirrors how we attract, welcome, grow, care for, and stay connected with our people.')}</p>
             </div>
             <blockquote class="editorial-quote">
               <span class="editorial-quote-mark" aria-hidden="true">&ldquo;</span>
-              <p class="editorial-quote-text">Our aim is simple: to make the Playbook practical for action and inspiring in spirit — so that every P&amp;C leader can translate Mandarin Oriental's culture of care into everyday decisions and Colleague experiences.</p>
+              <p class="editorial-quote-text">${T('ch1.s01.quote',"Our aim is simple: to make the Playbook practical for action and inspiring in spirit — so that every P&amp;C leader can translate Mandarin Oriental's culture of care into everyday decisions and Colleague experiences.")}</p>
             </blockquote>
           </div>
         </div>
@@ -1226,8 +1226,8 @@ function renderCh1() {
              Colleague Experience across the lifecycle (not a navigation menu) -->
         <div class="journey">
           <div class="journey-head">
-            <div class="feature-caption">The Colleague Journey</div>
-            <p class="journey-intro">The Colleague Experience unfolds as one continuous journey. At every stage — and even beyond it — People &amp; Culture is the hand that delivers this experience, from the first hello to a lasting connection.</p>
+            <div class="feature-caption">${T('ch1.journey.caption','The Colleague Journey')}</div>
+            <p class="journey-intro">${T('ch1.journey.intro','The Colleague Experience unfolds as one continuous journey. At every stage — and even beyond it — People &amp; Culture is the hand that delivers this experience, from the first hello to a lasting connection.')}</p>
           </div>
           <div class="journey-path">
             ${JOURNEY.map((s, i) => `
@@ -1241,52 +1241,52 @@ function renderCh1() {
               <p class="journey-role">${s.role}</p>
             </div>`).join('')}
           </div>
-          <p class="journey-foot">People &amp; Culture&rsquo;s role is to deliver this experience — consistently, and with care — at every step of the journey.</p>
+          <p class="journey-foot">${T('ch1.journey.foot','People &amp; Culture&rsquo;s role is to deliver this experience — consistently, and with care — at every step of the journey.')}</p>
         </div>
       </div>
 
       <div class="spread tight">
         <div class="section-eyebrow">
           <span class="num">02</span>
-          <span class="txt">Who This Playbook Is For</span>
+          <span class="txt">${T('ch1.s02.eyebrow','Who This Playbook Is For')}</span>
           <span class="rule"></span>
         </div>
 
         <div class="editorial-spread editorial-spread--reverse">
           <div class="editorial-col">
             <div class="editorial-body">
-              <p class="drop">This resource is written primarily for:</p>
+              <p class="drop">${T('ch1.s02.intro','This resource is written primarily for:')}</p>
             </div>
             <div class="bubble-list">
               <div class="bubble-item">
                 <div class="bubble-media">
-                  <div class="bubble-img" style="background-image:url('img/ch_F_rewarding.jpg');"></div>
+                  <div class="bubble-img" style="background-image:url('img/${T('ch1.s02.b1.img','ch_F_rewarding.jpg')}');"></div>
                   <span class="bubble-num">01</span>
                 </div>
                 <div class="bubble-body">
-                  <h4 class="bubble-title">People &amp; Culture leaders</h4>
-                  <p class="bubble-text">At hotel, regional, and corporate levels.</p>
+                  <h4 class="bubble-title">${T('ch1.s02.b1.title','People &amp; Culture leaders')}</h4>
+                  <p class="bubble-text">${T('ch1.s02.b1.text','At hotel, regional, and corporate levels.')}</p>
                 </div>
               </div>
               <div class="bubble-item">
                 <div class="bubble-media">
-                  <div class="bubble-img" style="background-image:url('img/ch_D_operations.jpg');"></div>
+                  <div class="bubble-img" style="background-image:url('img/${T('ch1.s02.b2.img','ch_D_operations.jpg')}');"></div>
                   <span class="bubble-num">02</span>
                 </div>
                 <div class="bubble-body">
-                  <h4 class="bubble-title">Support functions</h4>
-                  <p class="bubble-text">Such as Finance, and Operations — who partner with P&amp;C.</p>
+                  <h4 class="bubble-title">${T('ch1.s02.b2.title','Support functions')}</h4>
+                  <p class="bubble-text">${T('ch1.s02.b2.text','Such as Finance, and Operations — who partner with P&amp;C.')}</p>
                 </div>
               </div>
             </div>
             <blockquote class="editorial-quote">
               <span class="editorial-quote-mark" aria-hidden="true">&ldquo;</span>
-              <p class="editorial-quote-text">It may also serve as a reference for any Colleague who wishes to understand how we nurture fairness, inclusion, and excellence across the Group.</p>
+              <p class="editorial-quote-text">${T('ch1.s02.quote','It may also serve as a reference for any Colleague who wishes to understand how we nurture fairness, inclusion, and excellence across the Group.')}</p>
             </blockquote>
           </div>
           <figure class="editorial-figure">
-            <div class="editorial-figure-img" style="background-image:url('img/opener_support.jpg');"></div>
-            <figcaption class="editorial-figure-cap">For those who shape the Colleague Experience</figcaption>
+            <div class="editorial-figure-img" style="background-image:url('img/${T('ch1.s02.img','opener_support.jpg')}');"></div>
+            <figcaption class="editorial-figure-cap">${T('ch1.s02.cap','For those who shape the Colleague Experience')}</figcaption>
           </figure>
         </div>
       </div>
@@ -1294,63 +1294,63 @@ function renderCh1() {
       <div class="spread tight">
         <div class="section-eyebrow">
           <span class="num">03</span>
-          <span class="txt">How to Use the Playbook</span>
+          <span class="txt">${T('ch1.s03.eyebrow','How to Use the Playbook')}</span>
           <span class="rule"></span>
         </div>
         <div class="editorial-spread">
           <figure class="editorial-figure editorial-figure--short">
-            <div class="editorial-figure-img" style="background-image:url('img/opener_intro.jpg');"></div>
-            <figcaption class="editorial-figure-cap">Structured to be practical and intuitive</figcaption>
+            <div class="editorial-figure-img" style="background-image:url('img/${T('ch1.s03.img','opener_intro.jpg')}');"></div>
+            <figcaption class="editorial-figure-cap">${T('ch1.s03.cap','Structured to be practical and intuitive')}</figcaption>
           </figure>
           <div class="editorial-col">
             <div class="editorial-body">
-              <p class="drop">The Playbook is structured to be practical and intuitive. Each section begins with the <strong>why</strong> — the purpose or belief behind the policy — followed by the <strong>what</strong> and <strong>how</strong>: the key standards and responsibilities. Resources are grouped by stage of the Colleague lifecycle, from Foundations to Leaving with Dignity &amp; Connection.</p>
+              <p class="drop">${T('ch1.s03.p1','The Playbook is structured to be practical and intuitive. Each section begins with the <strong>why</strong> — the purpose or belief behind the policy — followed by the <strong>what</strong> and <strong>how</strong>: the key standards and responsibilities. Resources are grouped by stage of the Colleague lifecycle, from Foundations to Leaving with Dignity &amp; Connection.')}</p>
             </div>
           </div>
         </div>
 
-        <div class="feature-caption">When consulting a resource</div>
+        <div class="feature-caption">${T('ch1.s03.stepsCaption','When consulting a resource')}</div>
         <div class="step-row">
           <div class="step-node">
             <div class="step-icon">${STEP_ICONS.purpose}<span class="step-index">i</span></div>
-            <div class="step-title">Purpose</div>
-            <p class="step-text">Start by reading its <strong>purpose</strong> — this explains the intent.</p>
+            <div class="step-title">${T('ch1.s03.step1.title','Purpose')}</div>
+            <p class="step-text">${T('ch1.s03.step1.text','Start by reading its <strong>purpose</strong> — this explains the intent.')}</p>
           </div>
           <div class="step-node">
             <div class="step-icon">${STEP_ICONS.scope}<span class="step-index">ii</span></div>
-            <div class="step-title">Scope &amp; Responsibilities</div>
-            <p class="step-text">Review the <strong>scope and responsibilities</strong> — who it applies to and what's expected.</p>
+            <div class="step-title">${T('ch1.s03.step2.title','Scope &amp; Responsibilities')}</div>
+            <p class="step-text">${T('ch1.s03.step2.text',"Review the <strong>scope and responsibilities</strong> — who it applies to and what's expected.")}</p>
           </div>
           <div class="step-node">
             <div class="step-icon">${STEP_ICONS.local}<span class="step-index">iii</span></div>
-            <div class="step-title">Local Adaptation</div>
-            <p class="step-text">Refer to the <strong>local adaptation notes</strong> — these ensure compliance with country-specific laws and practices.</p>
+            <div class="step-title">${T('ch1.s03.step3.title','Local Adaptation')}</div>
+            <p class="step-text">${T('ch1.s03.step3.text','Refer to the <strong>local adaptation notes</strong> — these ensure compliance with country-specific laws and practices.')}</p>
           </div>
         </div>
 
         <div class="editorial-body">
-          <p style="margin-top: 8px;">Local P&amp;C teams may adapt policies, practices, and guidelines to meet legal or cultural needs, while remaining aligned with Group guidelines.</p>
+          <p style="margin-top: 8px;">${T('ch1.s03.foot','Local P&amp;C teams may adapt policies, practices, and guidelines to meet legal or cultural needs, while remaining aligned with Group guidelines.')}</p>
         </div>
       </div>
 
       <div class="spread tight">
         <div class="section-eyebrow">
           <span class="num">04</span>
-          <span class="txt">Tone and Spirit</span>
+          <span class="txt">${T('ch1.s04.eyebrow','Tone and Spirit')}</span>
           <span class="rule"></span>
         </div>
         <div class="editorial-spread">
           <figure class="editorial-figure">
-            <div class="editorial-figure-img" style="background-image:url('img/intro_care.jpg');"></div>
-            <figcaption class="editorial-figure-cap">Care begins with our Colleagues</figcaption>
+            <div class="editorial-figure-img" style="background-image:url('img/${T('ch1.s04.img','intro_care.jpg')}');"></div>
+            <figcaption class="editorial-figure-cap">${T('ch1.s04.cap','Care begins with our Colleagues')}</figcaption>
           </figure>
           <div class="editorial-col">
             <div class="editorial-body">
-              <p class="drop">Every policy in this Playbook reflects our belief that <strong>care begins with our Colleagues</strong>. Our tone is human and respectful — clear enough for action, yet warm enough to remind us that every decision touches someone's experience.</p>
+              <p class="drop">${T('ch1.s04.p1',"Every policy in this Playbook reflects our belief that <strong>care begins with our Colleagues</strong>. Our tone is human and respectful — clear enough for action, yet warm enough to remind us that every decision touches someone's experience.")}</p>
             </div>
             <blockquote class="editorial-quote">
               <span class="editorial-quote-mark" aria-hidden="true">&ldquo;</span>
-              <p class="editorial-quote-text">We invite you to approach these pages not as a rulebook, but as a living framework: a guide that evolves as we continue to learn, grow, and serve together.</p>
+              <p class="editorial-quote-text">${T('ch1.s04.quote','We invite you to approach these pages not as a rulebook, but as a living framework: a guide that evolves as we continue to learn, grow, and serve together.')}</p>
             </blockquote>
           </div>
         </div>
@@ -1359,16 +1359,16 @@ function renderCh1() {
       <div class="spread tight">
         <div class="section-eyebrow">
           <span class="num">05</span>
-          <span class="txt">Understanding Symbols</span>
+          <span class="txt">${T('ch1.s05.eyebrow','Understanding Symbols')}</span>
           <span class="rule"></span>
         </div>
-        <p class="section-lead">To make this Playbook easier to read, we use a few simple symbols throughout to help you recognise what kind of information you're looking at and how to use it.</p>
-        <div class="feature-caption">The Four Symbols</div>
+        <p class="section-lead">${T('ch1.s05.lead',"To make this Playbook easier to read, we use a few simple symbols throughout to help you recognise what kind of information you're looking at and how to use it.")}</p>
+        <div class="feature-caption">${T('ch1.s05.caption','The Four Symbols')}</div>
         <div class="symbol-legend symbol-legend--refined">
-          <div class="symbol-item"><div class="sym">${SYM.policy}</div><div><h4>Global Policy</h4><p>Indicates a Group-wide policy that applies to all properties. Local versions must align with the guidelines outlined here.</p></div></div>
-          <div class="symbol-item"><div class="sym">${SYM.guide}</div><div><h4>Guidelines</h4><p>Offers recommended practices that help interpret or apply Group policies consistently.</p></div></div>
-          <div class="symbol-item"><div class="sym">${SYM.kit}</div><div><h4>Template / Toolkit</h4><p>Points to practical tools such as forms, checklists, and dashboards that support implementation.</p></div></div>
-          <div class="symbol-item"><div class="sym">${SYM.xref}</div><div><h4>Cross-Reference</h4><p>Shows where another related policy or section may also apply.</p></div></div>
+          <div class="symbol-item"><div class="sym">${SYM.policy}</div><div><h4>${T('ch1.s05.sym1.title','Global Policy')}</h4><p>${T('ch1.s05.sym1.text','Indicates a Group-wide policy that applies to all properties. Local versions must align with the guidelines outlined here.')}</p></div></div>
+          <div class="symbol-item"><div class="sym">${SYM.guide}</div><div><h4>${T('ch1.s05.sym2.title','Guidelines')}</h4><p>${T('ch1.s05.sym2.text','Offers recommended practices that help interpret or apply Group policies consistently.')}</p></div></div>
+          <div class="symbol-item"><div class="sym">${SYM.kit}</div><div><h4>${T('ch1.s05.sym3.title','Template / Toolkit')}</h4><p>${T('ch1.s05.sym3.text','Points to practical tools such as forms, checklists, and dashboards that support implementation.')}</p></div></div>
+          <div class="symbol-item"><div class="sym">${SYM.xref}</div><div><h4>${T('ch1.s05.sym4.title','Cross-Reference')}</h4><p>${T('ch1.s05.sym4.text','Shows where another related policy or section may also apply.')}</p></div></div>
         </div>
       </div>
 
@@ -1382,15 +1382,15 @@ function renderCh2() {
   return `
     <section class="chapter" id="ch-2">
       <div class="opener">
-        <div class="opener-hero" style="background-image: url('img/opener_about.jpg');">
+        <div class="opener-hero" style="background-image: url('img/${T('ch2.opener.bg','opener_about.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
               <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-2"]}</span>Chapter II</div></div>
-              <div class="opener-eyebrow">The House</div>
+              <div class="opener-eyebrow">${T('ch2.opener.eyebrow','The House')}</div>
             </div>
             <div class="opener-bottom">
-              <h1 class="opener-title">About<br/>Mandarin Oriental</h1>
-              <p class="opener-sub">Our heritage, our people, and the leadership that guides everything from Hong Kong 1963 to today.</p>
+              <h1 class="opener-title">${T('ch2.opener.title','About<br/>Mandarin Oriental')}</h1>
+              <p class="opener-sub">${T('ch2.opener.sub','Our heritage, our people, and the leadership that guides everything from Hong Kong 1963 to today.')}</p>
             </div>
           </div>
         </div>
@@ -1400,33 +1400,33 @@ function renderCh2() {
         <div class="editorial-spread editorial-spread--reverse">
           <div class="editorial-col">
             <div class="editorial-body">
-              <p class="drop">Mandarin Oriental Hotel Group is internationally recognised for delivering some of the world's most distinctive luxury hospitality experiences. Renowned for its legendary service, refined design, and deep respect for local culture, the Group has built a reputation for creating memorable moments that reflect both global standards and a strong sense of place.</p>
-              <p>At Mandarin Oriental, it is our Colleagues who bring this vision to life. Through their professionalism, care, and attention to detail, they create the experiences that define the brand.</p>
-              <p>For this reason, the Colleague Experience sits at the heart of how we operate.</p>
+              <p class="drop">${T('ch2.intro.p1',"Mandarin Oriental Hotel Group is internationally recognised for delivering some of the world's most distinctive luxury hospitality experiences. Renowned for its legendary service, refined design, and deep respect for local culture, the Group has built a reputation for creating memorable moments that reflect both global standards and a strong sense of place.")}</p>
+              <p>${T('ch2.intro.p2','At Mandarin Oriental, it is our Colleagues who bring this vision to life. Through their professionalism, care, and attention to detail, they create the experiences that define the brand.')}</p>
+              <p>${T('ch2.intro.p3','For this reason, the Colleague Experience sits at the heart of how we operate.')}</p>
             </div>
             <blockquote class="editorial-quote">
               <span class="editorial-quote-mark">&ldquo;</span>
-              <p class="editorial-quote-text">Directors of People &amp; Culture play a critical role in shaping environments where Colleagues feel supported, inspired, and empowered to deliver exceptional service.</p>
+              <p class="editorial-quote-text">${T('ch2.intro.quote','Directors of People &amp; Culture play a critical role in shaping environments where Colleagues feel supported, inspired, and empowered to deliver exceptional service.')}</p>
             </blockquote>
           </div>
           <figure class="editorial-figure">
-            <div class="editorial-figure-img" style="background-image:url('img/about_foh.jpg');"></div>
-            <figcaption class="editorial-figure-cap">The Colleague Experience &middot; Front of house</figcaption>
+            <div class="editorial-figure-img" style="background-image:url('img/${T('ch2.intro.img','about_foh.jpg')}');"></div>
+            <figcaption class="editorial-figure-cap">${T('ch2.intro.cap','The Colleague Experience &middot; Front of house')}</figcaption>
           </figure>
         </div>
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow" id="heritage"><span class="num">01</span><span class="txt">Our Heritage</span><span class="rule"></span></div>
+        <div class="section-eyebrow" id="heritage"><span class="num">01</span><span class="txt">${T('ch2.s01.eyebrow','Our Heritage')}</span><span class="rule"></span></div>
         <div class="cols-2">
           <div>
             <figure class="heritage-figure">
-              <div class="heritage-figure-img" style="background-image:url('img/about_reception.jpg');"></div>
-              <figcaption class="heritage-figure-cap">A sense of place &middot; Colleagues at reception</figcaption>
+              <div class="heritage-figure-img" style="background-image:url('img/${T('ch2.s01.img','about_reception.jpg')}');"></div>
+              <figcaption class="heritage-figure-cap">${T('ch2.s01.cap','A sense of place &middot; Colleagues at reception')}</figcaption>
             </figure>
-            <p>Mandarin Oriental's story is rooted in two legendary hotels: The Mandarin in Hong Kong, which opened in 1963 as a symbol of modern luxury in the city, and The Oriental in Bangkok, which dates back to 1876 and became renowned for its heritage and service excellence.</p>
-            <p>In 1974, Mandarin International Hotels acquired a significant stake in The Oriental, bringing together Hong Kong's spirit of innovation with Bangkok's rich hospitality tradition. This partnership evolved into a full merger in 1985, forming Mandarin Oriental Hotel Group under a unified brand and the now-iconic fan logo.</p>
-            <p>This heritage established the foundation for a global brand that blends Eastern elegance with world-class hospitality.</p>
+            <p>${T('ch2.s01.p1',"Mandarin Oriental's story is rooted in two legendary hotels: The Mandarin in Hong Kong, which opened in 1963 as a symbol of modern luxury in the city, and The Oriental in Bangkok, which dates back to 1876 and became renowned for its heritage and service excellence.")}</p>
+            <p>${T('ch2.s01.p2',"In 1974, Mandarin International Hotels acquired a significant stake in The Oriental, bringing together Hong Kong's spirit of innovation with Bangkok's rich hospitality tradition. This partnership evolved into a full merger in 1985, forming Mandarin Oriental Hotel Group under a unified brand and the now-iconic fan logo.")}</p>
+            <p>${T('ch2.s01.p3','This heritage established the foundation for a global brand that blends Eastern elegance with world-class hospitality.')}</p>
           </div>
           <div class="timeline">
             <div class="timeline-item timeline-item--media">
@@ -1475,9 +1475,9 @@ function renderCh2() {
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow"><span class="num">02</span><span class="txt">Global Presence</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="num">02</span><span class="txt">${T('ch2.s02.eyebrow','Global Presence')}</span><span class="rule"></span></div>
         <div class="editorial-body">
-          <p>Mandarin Oriental's portfolio spans hotels, resorts, residences, and Exceptional Homes in some of the world's most desirable destinations. Each property is designed to reflect its location, integrating local culture, heritage, and design into a contemporary luxury experience.</p>
+          <p>${T('ch2.s02.p1',"Mandarin Oriental's portfolio spans hotels, resorts, residences, and Exceptional Homes in some of the world's most desirable destinations. Each property is designed to reflect its location, integrating local culture, heritage, and design into a contemporary luxury experience.")}</p>
         </div>
 
         <div class="portfolio-grid">
@@ -1536,15 +1536,15 @@ function renderCh2() {
               <circle cx="20" cy="17" r="4.4" stroke="currentColor" stroke-width="1.1"/>
             </svg>
           </span>
-          <p class="place-text">Every Mandarin Oriental is shaped by its <em>sense of place</em> &mdash; each property reflecting the culture, heritage, and design of its own location to create a distinctly contemporary luxury experience.</p>
+          <p class="place-text">${T('ch2.s02.place','Every Mandarin Oriental is shaped by its <em>sense of place</em> &mdash; each property reflecting the culture, heritage, and design of its own location to create a distinctly contemporary luxury experience.')}</p>
         </div>
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow"><span class="num">03</span><span class="txt">Operations</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="num">03</span><span class="txt">${T('ch2.s03.eyebrow','Operations')}</span><span class="rule"></span></div>
         <div class="editorial-body">
-          <p>Mandarin Oriental operates through a combination of owned and managed properties, ensuring consistency in brand standards across the Group. While each property reflects its unique destination, all operate within a shared commitment to service excellence, operational discipline, and continuous improvement.</p>
-          <p>This approach is supported by strong collaboration across functions, with People &amp; Culture playing a key role in developing talent, enabling performance, and sustaining the standards that define the Mandarin Oriental experience.</p>
+          <p>${T('ch2.s03.p1','Mandarin Oriental operates through a combination of owned and managed properties, ensuring consistency in brand standards across the Group. While each property reflects its unique destination, all operate within a shared commitment to service excellence, operational discipline, and continuous improvement.')}</p>
+          <p>${T('ch2.s03.p2','This approach is supported by strong collaboration across functions, with People &amp; Culture playing a key role in developing talent, enabling performance, and sustaining the standards that define the Mandarin Oriental experience.')}</p>
         </div>
 
         <div class="ops-model">
@@ -1607,10 +1607,10 @@ function renderCh2() {
       </div>
 
       <div class="spread">
-        <div class="section-eyebrow"><span class="num">04</span><span class="txt">Senior Management</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="num">04</span><span class="txt">${T('ch2.s04.eyebrow','Senior Management')}</span><span class="rule"></span></div>
         <div class="editorial-body">
-          <p>Mandarin Oriental's Senior Management team provides the strategic leadership that guides the Group's global operations. Working across hotels, residences and corporate functions, the team ensures alignment with the Group's vision, brand standards and long-term growth ambitions.</p>
-          <p>In close partnership with regional and hotel leadership teams, Senior Management supports operational excellence, consistent guest experiences and strong Colleague engagement across the portfolio. People &amp; Culture plays an important role in supporting this leadership through talent development, workforce planning and the cultivation of a strong and enduring service culture.</p>
+          <p>${T('ch2.s04.p1',"Mandarin Oriental's Senior Management team provides the strategic leadership that guides the Group's global operations. Working across hotels, residences and corporate functions, the team ensures alignment with the Group's vision, brand standards and long-term growth ambitions.")}</p>
+          <p>${T('ch2.s04.p2','In close partnership with regional and hotel leadership teams, Senior Management supports operational excellence, consistent guest experiences and strong Colleague engagement across the portfolio. People &amp; Culture plays an important role in supporting this leadership through talent development, workforce planning and the cultivation of a strong and enduring service culture.')}</p>
         </div>
 
         <div class="leaders-grid">
@@ -1622,14 +1622,14 @@ function renderCh2() {
             </div>
           `).join('')}
         </div>
-        <div class="leader-footnote">To learn more about Mandarin Oriental's Senior Management team, please visit <a href="https://www.mandarinoriental.com/en/our-company/senior-management" target="_blank" rel="noopener">mandarinoriental.com/en/our-company/senior-management</a>.</div>
+        <div class="leader-footnote">${T('ch2.s04.footnote','To learn more about Mandarin Oriental\'s Senior Management team, please visit <a href="https://www.mandarinoriental.com/en/our-company/senior-management" target="_blank" rel="noopener">mandarinoriental.com/en/our-company/senior-management</a>.')}</div>
       </div>
 
       <div class="spread">
-        <div class="section-eyebrow"><span class="num">05</span><span class="txt">Vice President &amp; Regional P&amp;C Leaders</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="num">05</span><span class="txt">${T('ch2.s05.eyebrow','Vice President &amp; Regional P&amp;C Leaders')}</span><span class="rule"></span></div>
         <div class="editorial-body">
-          <p>The Vice President and Regional People &amp; Culture Leaders play a key role in translating the Group's People &amp; Culture strategy into meaningful practices across regions and hotels. Working closely with business and hotel leadership teams, they help ensure that people decisions support operational excellence, sustainable growth and a consistent Colleague experience across Mandarin Oriental.</p>
-          <p>Through their partnership with Directors of People &amp; Culture, they guide leadership capability, talent development and workforce planning across the Group's global portfolio.</p>
+          <p>${T('ch2.s05.p1',"The Vice President and Regional People &amp; Culture Leaders play a key role in translating the Group's People &amp; Culture strategy into meaningful practices across regions and hotels. Working closely with business and hotel leadership teams, they help ensure that people decisions support operational excellence, sustainable growth and a consistent Colleague experience across Mandarin Oriental.")}</p>
+          <p>${T('ch2.s05.p2',"Through their partnership with Directors of People &amp; Culture, they guide leadership capability, talent development and workforce planning across the Group's global portfolio.")}</p>
         </div>
 
         <div class="leaders-grid leaders-grid--pc">
@@ -1641,7 +1641,7 @@ function renderCh2() {
             </div>
           `).join('')}
         </div>
-        <p style="text-align:center; font-family:'Avenir Next LT Pro'; font-style: italic; color: var(--ink-mute); margin-top: 32px;">Together, they provide strategic leadership for People &amp; Culture across Mandarin Oriental's global portfolio.</p>
+        <p style="text-align:center; font-family:'Avenir Next LT Pro'; font-style: italic; color: var(--ink-mute); margin-top: 32px;">${T('ch2.s05.foot',"Together, they provide strategic leadership for People &amp; Culture across Mandarin Oriental's global portfolio.")}</p>
       </div>
 
       <div class="spread">
@@ -1649,31 +1649,31 @@ function renderCh2() {
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow"><span class="num">07</span><span class="txt">What We Believe</span><span class="rule"></span></div>
-        <p class="beliefs-intro">Select Vision, Mission or Values to explore what guides Mandarin Oriental.</p>
+        <div class="section-eyebrow"><span class="num">07</span><span class="txt">${T('ch2.s07.eyebrow','What We Believe')}</span><span class="rule"></span></div>
+        <p class="beliefs-intro">${T('ch2.s07.intro','Select Vision, Mission or Values to explore what guides Mandarin Oriental.')}</p>
         ${beliefsTabsHTML()}
         <div class="editorial-body beliefs-values-note">
-          <p>Mandarin Oriental's approach is guided by core values that shape every interaction with guests, Colleagues and partners. These values reflect the Group's commitment to exceptional service, continuous growth, collaboration, respect and responsible business practices.</p>
-          <p>Across all Mandarin Oriental properties, these principles help ensure that every destination delivers a distinctive sense of place while maintaining the Group's global standards of excellence.</p>
+          <p>${T('ch2.s07.p1',"Mandarin Oriental's approach is guided by core values that shape every interaction with guests, Colleagues and partners. These values reflect the Group's commitment to exceptional service, continuous growth, collaboration, respect and responsible business practices.")}</p>
+          <p>${T('ch2.s07.p2',"Across all Mandarin Oriental properties, these principles help ensure that every destination delivers a distinctive sense of place while maintaining the Group's global standards of excellence.")}</p>
         </div>
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow"><span class="num">08</span><span class="txt">Within the Jardine Matheson Group</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="num">08</span><span class="txt">${T('ch2.s08.eyebrow','Within the Jardine Matheson Group')}</span><span class="rule"></span></div>
         <div class="cols-2">
           <div>
-            <p>Mandarin Oriental Hotel Group is part of the Jardine Matheson Group, a diversified international business group with a long-standing heritage in Asia.</p>
-            <p>While Mandarin Oriental operates with its own brand identity, leadership and culture, it benefits from Jardine Matheson's long-term investment philosophy, strong governance framework and commitment to responsible business practices.</p>
+            <p>${T('ch2.s08.p1','Mandarin Oriental Hotel Group is part of the Jardine Matheson Group, a diversified international business group with a long-standing heritage in Asia.')}</p>
+            <p>${T('ch2.s08.p2',"While Mandarin Oriental operates with its own brand identity, leadership and culture, it benefits from Jardine Matheson's long-term investment philosophy, strong governance framework and commitment to responsible business practices.")}</p>
           </div>
           <div>
-            <p>Jardine Matheson operates through a network of listed companies and affiliated businesses supported by the Group's strategic oversight. The Group's leaders guide the broader Jardine Matheson organization.</p>
+            <p>${T('ch2.s08.p3',"Jardine Matheson operates through a network of listed companies and affiliated businesses supported by the Group's strategic oversight. The Group's leaders guide the broader Jardine Matheson organization.")}</p>
           </div>
         </div>
 
         <div class="board-block">
           <div class="board-heading">
             <span class="board-rule"></span>
-            <span class="board-title">Board Leadership</span>
+            <span class="board-title">${T('ch2.s08.boardTitle','Board Leadership')}</span>
             <span class="board-rule"></span>
           </div>
           <div class="board-grid">
@@ -1697,11 +1697,11 @@ function renderCh2() {
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow"><span class="num">09</span><span class="txt">Our People &amp; Culture Strategy</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="num">09</span><span class="txt">${T('ch2.s09.eyebrow','Our People &amp; Culture Strategy')}</span><span class="rule"></span></div>
         <div class="editorial-body">
-          <p>Mandarin Oriental's People &amp; Culture Strategy strengthens the Group's ability to deliver exceptional Colleague and guest experiences. It focuses on attracting outstanding talent, building capability, developing future leaders, and fostering a culture where wellbeing, inclusion and performance thrive together.</p>
-          <p>Across all properties, People &amp; Culture works in partnership with business leaders to ensure that people decisions support Mandarin Oriental's strategy, values and long-term growth.</p>
-          <p>To support consistent execution across the Group, Mandarin Oriental provides tools and guidance to help hotels translate People &amp; Culture priorities into clear annual plans.</p>
+          <p>${T('ch2.s09.p1',"Mandarin Oriental's People &amp; Culture Strategy strengthens the Group's ability to deliver exceptional Colleague and guest experiences. It focuses on attracting outstanding talent, building capability, developing future leaders, and fostering a culture where wellbeing, inclusion and performance thrive together.")}</p>
+          <p>${T('ch2.s09.p2',"Across all properties, People &amp; Culture works in partnership with business leaders to ensure that people decisions support Mandarin Oriental's strategy, values and long-term growth.")}</p>
+          <p>${T('ch2.s09.p3','To support consistent execution across the Group, Mandarin Oriental provides tools and guidance to help hotels translate People &amp; Culture priorities into clear annual plans.')}</p>
         </div>
         <div style="max-width: 800px; margin: 32px auto 0;">
           ${policyListHTML([
