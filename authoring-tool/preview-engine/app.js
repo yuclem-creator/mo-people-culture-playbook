@@ -1731,15 +1731,15 @@ function renderCh3() {
   return `
     <section class="chapter" id="ch-3">
       <div class="opener">
-        <div class="opener-hero" style="background-image: url('img/opener_lifecycle.jpg');">
+        <div class="opener-hero" style="background-image: url('img/${T('ch3.opener.bg','opener_lifecycle.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
               <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-3"]}</span>Chapter III</div></div>
-              <div class="opener-eyebrow">The Colleague Lifecycle</div>
+              <div class="opener-eyebrow">${T('ch3.opener.eyebrow','The Colleague Lifecycle')}</div>
             </div>
             <div class="opener-bottom">
-              <h1 class="opener-title">Leading Through<br/>the Colleague<br/><em style="font-family:'MO Exceptional'; font-weight:400;">Lifecycle</em></h1>
-              <p class="opener-sub">How People &amp; Culture drives consistency, care, and compliance across each stage — from attracting talent to leaving with connection.</p>
+              <h1 class="opener-title">${T('ch3.opener.title',"Leading Through<br/>the Colleague<br/><em style=\"font-family:'MO Exceptional'; font-weight:400;\">Lifecycle</em>")}</h1>
+              <p class="opener-sub">${T('ch3.opener.sub','How People &amp; Culture drives consistency, care, and compliance across each stage — from attracting talent to leaving with connection.')}</p>
             </div>
           </div>
         </div>
@@ -1747,9 +1747,9 @@ function renderCh3() {
 
       <div class="spread">
         <div class="editorial-body">
-          <p>Our People Philosophy defines who we are. The Colleague Lifecycle shows how we bring that philosophy to life.</p>
-          <p>This playbook follows the key touchpoints of the Colleague lifecycle at Mandarin Oriental — from attracting talent and welcoming new Colleagues, to developing capabilities, supporting Colleague wellbeing, and maintaining meaningful connections even after Colleagues move on.</p>
-          <p>This section brings together the Group's key People &amp; Culture resources and practices, organised around the Colleague journey. For each stage, you will find the governance, tools and guidance that help P&amp;C leaders support both business priorities and the Colleague experience.</p>
+          <p>${T('ch3.intro.p1','Our People Philosophy defines who we are. The Colleague Lifecycle shows how we bring that philosophy to life.')}</p>
+          <p>${T('ch3.intro.p2','This playbook follows the key touchpoints of the Colleague lifecycle at Mandarin Oriental — from attracting talent and welcoming new Colleagues, to developing capabilities, supporting Colleague wellbeing, and maintaining meaningful connections even after Colleagues move on.')}</p>
+          <p>${T('ch3.intro.p3',"This section brings together the Group's key People &amp; Culture resources and practices, organised around the Colleague journey. For each stage, you will find the governance, tools and guidance that help P&amp;C leaders support both business priorities and the Colleague experience.")}</p>
         </div>
       </div>
 
@@ -1757,10 +1757,10 @@ function renderCh3() {
       <div class="wheel-spread">
         <div class="section-eyebrow" style="max-width: 720px; margin: 0 auto 24px;">
           <span class="num">◈</span>
-          <span class="txt">The Colleague Lifecycle · Eight Stages</span>
+          <span class="txt">${T('ch3.wheel.eyebrow','The Colleague Lifecycle · Eight Stages')}</span>
           <span class="rule"></span>
         </div>
-        <p class="spread-lede center" style="max-width: 640px; margin: 0 auto 12px;">Select any stage to explore its governance, tools, and guidance.</p>
+        <p class="spread-lede center" style="max-width: 640px; margin: 0 auto 12px;">${T('ch3.wheel.lede','Select any stage to explore its governance, tools, and guidance.')}</p>
 
         <div class="wheel-layout">
           <div class="wheel-wrap">
@@ -1769,9 +1769,9 @@ function renderCh3() {
 
           <div class="wheel-caption" id="wheelCaption" aria-live="polite">
             <div class="wheel-caption-inner wheel-caption--rest" data-state="rest">
-              <div class="wheel-caption-eyebrow">Eight Stages</div>
-              <h3 class="wheel-caption-title">Explore the Colleague Lifecycle</h3>
-              <p class="wheel-caption-desc">Hover over a stage on the wheel to preview it — or tap a stage to see its focus, then open it in full.</p>
+              <div class="wheel-caption-eyebrow">${T('ch3.wheel.restEyebrow','Eight Stages')}</div>
+              <h3 class="wheel-caption-title">${T('ch3.wheel.restTitle','Explore the Colleague Lifecycle')}</h3>
+              <p class="wheel-caption-desc">${T('ch3.wheel.restDesc','Hover over a stage on the wheel to preview it — or tap a stage to see its focus, then open it in full.')}</p>
             </div>
             ${LIFECYCLE.map((s, i) => `
               <div class="wheel-caption-inner" data-sub="${s.id}" hidden>
@@ -1779,7 +1779,7 @@ function renderCh3() {
                 <div class="wheel-caption-eyebrow">${s.letter} · 0${i+1} · Colleague Lifecycle</div>
                 <h3 class="wheel-caption-title">${esc(s.label)}</h3>
                 <p class="wheel-caption-desc">${esc(s.lede)}</p>
-                <button class="wheel-caption-cta" data-goto="ch-3" data-sub="${s.id}">Explore this stage
+                <button class="wheel-caption-cta" data-goto="ch-3" data-sub="${s.id}">${T('ch3.wheel.cta','Explore this stage')}
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </button>
               </div>
@@ -1905,15 +1905,15 @@ function renderCh4() {
   return `
     <section class="chapter" id="ch-4">
       <div class="opener">
-        <div class="opener-hero" style="background-image: url('img/opener_preopen.jpg');">
+        <div class="opener-hero" style="background-image: url('img/${T('ch4.opener.bg','opener_preopen.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
               <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-4"]}</span>Chapter IV</div></div>
-              <div class="opener-eyebrow">Openings</div>
+              <div class="opener-eyebrow">${T('ch4.opener.eyebrow','Openings')}</div>
             </div>
             <div class="opener-bottom">
-              <h1 class="opener-title">Pre-Opening<br/>Hotels</h1>
-              <p class="opener-sub">The tools and frameworks that ensure every new property opens with a fully-realised People &amp; Culture foundation.</p>
+              <h1 class="opener-title">${T('ch4.opener.title','Pre-Opening<br/>Hotels')}</h1>
+              <p class="opener-sub">${T('ch4.opener.sub','The tools and frameworks that ensure every new property opens with a fully-realised People &amp; Culture foundation.')}</p>
             </div>
           </div>
         </div>
@@ -1922,7 +1922,7 @@ function renderCh4() {
         ${PB_CH4_CONTENT.intro && PB_CH4_CONTENT.intro.length ? subIntroHTML({ intro: PB_CH4_CONTENT.intro }) : ''}
         ${ch4PhilosophySpreadHTML(PB_CH4_CONTENT, 'preopen_table.jpg', 'The Colleague Experience · Setting the stage')}
       </div>
-      ${editorialBandHTML('journey_welcome.jpg', 'The Pre-Opening Journey', 'Building the People & Culture foundation of a new hotel, Colleague by Colleague.', true)}
+      ${editorialBandHTML(T('ch4.band.img','journey_welcome.jpg'), T('ch4.band.title','The Pre-Opening Journey'), T('ch4.band.text','Building the People & Culture foundation of a new hotel, Colleague by Colleague.'), true)}
       <div class="spread">
         ${PB_CH4_CONTENT.sections.map((sec, i) => i === 0 ? ch4Section1HTML(sec) : sectionHTML(sec)).join('')}
       </div>
@@ -1936,22 +1936,22 @@ function renderCh5() {
   return `
     <section class="chapter" id="ch-5">
       <div class="opener">
-        <div class="opener-hero" style="background-image: url('img/opener_audit.jpg');">
+        <div class="opener-hero" style="background-image: url('img/${T('ch5.opener.bg','opener_audit.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
               <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-5"]}</span>Chapter V</div></div>
-              <div class="opener-eyebrow">Governance</div>
+              <div class="opener-eyebrow">${T('ch5.opener.eyebrow','Governance')}</div>
             </div>
             <div class="opener-bottom">
-              <h1 class="opener-title">P&amp;C<br/>Audit</h1>
-              <p class="opener-sub">Self-assessment, governance and escalation frameworks that keep People Operations disciplined at every property.</p>
+              <h1 class="opener-title">${T('ch5.opener.title','P&amp;C<br/>Audit')}</h1>
+              <p class="opener-sub">${T('ch5.opener.sub','Self-assessment, governance and escalation frameworks that keep People Operations disciplined at every property.')}</p>
             </div>
           </div>
         </div>
       </div>
       <div class="spread">
         ${PB_CH5_CONTENT.intro && PB_CH5_CONTENT.intro.length ? ch5AuditIntroHTML(PB_CH5_CONTENT) : ''}
-        ${editorialBandHTML('colleagues_group.jpg', 'A Shared Standard', 'Governance exists to protect the Colleague experience at every property.')}
+        ${editorialBandHTML(T('ch5.band.img','colleagues_group.jpg'), T('ch5.band.title','A Shared Standard'), T('ch5.band.text','Governance exists to protect the Colleague experience at every property.'))}
         ${PB_CH5_CONTENT.sections.map(sectionHTML).join('')}
       </div>
       ${chapterNavHTML('ch-4', 'ch-6')}
@@ -1964,43 +1964,43 @@ function renderCh6() {
   return `
     <section class="chapter" id="ch-6">
       <div class="opener">
-        <div class="opener-hero" style="background-image: url('img/opener_support.jpg');">
+        <div class="opener-hero" style="background-image: url('img/${T('ch6.opener.bg','opener_support.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
               <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-6"]}</span>Chapter VI</div></div>
-              <div class="opener-eyebrow">Closing</div>
+              <div class="opener-eyebrow">${T('ch6.opener.eyebrow','Closing')}</div>
             </div>
             <div class="opener-bottom">
-              <h1 class="opener-title">Staying Connected<br/>&amp; Supported</h1>
-              <p class="opener-sub">Confidentiality, authorship, and how this Playbook continues to evolve with the Group.</p>
+              <h1 class="opener-title">${T('ch6.opener.title','Staying Connected<br/>&amp; Supported')}</h1>
+              <p class="opener-sub">${T('ch6.opener.sub','Confidentiality, authorship, and how this Playbook continues to evolve with the Group.')}</p>
             </div>
           </div>
         </div>
       </div>
 
       <div class="spread">
-        <div class="section-eyebrow"><span class="eyebrow-icon" aria-hidden="true">${SECTION_ICONS.data}</span><span class="num">01</span><span class="txt">Confidentiality &amp; Use</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="eyebrow-icon" aria-hidden="true">${SECTION_ICONS.data}</span><span class="num">01</span><span class="txt">${T('ch6.s01.eyebrow','Confidentiality &amp; Use')}</span><span class="rule"></span></div>
         <div class="editorial-body">
-          <p>This Playbook is an internal Mandarin Oriental resource. It is intended for the exclusive use of Colleagues and authorised partners. Its content, tools and templates should not be shared externally without formal approval from Group People &amp; Culture.</p>
+          <p>${T('ch6.s01.p1','This Playbook is an internal Mandarin Oriental resource. It is intended for the exclusive use of Colleagues and authorised partners. Its content, tools and templates should not be shared externally without formal approval from Group People &amp; Culture.')}</p>
         </div>
-        ${editorialBandHTML('journey_stay.jpg', 'Connected & Supported', 'Every Colleague remains part of the Mandarin Oriental community.')}
+        ${editorialBandHTML(T('ch6.band.img','journey_stay.jpg'), T('ch6.band.title','Connected & Supported'), T('ch6.band.text','Every Colleague remains part of the Mandarin Oriental community.'))}
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow"><span class="eyebrow-icon" aria-hidden="true">${SECTION_ICONS.develop}</span><span class="num">02</span><span class="txt">Authorship &amp; Development</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="eyebrow-icon" aria-hidden="true">${SECTION_ICONS.develop}</span><span class="num">02</span><span class="txt">${T('ch6.s02.eyebrow','Authorship &amp; Development')}</span><span class="rule"></span></div>
         <div class="editorial-body">
-          <p>The Playbook is developed and maintained by the Group People &amp; Culture team in collaboration with Regional People &amp; Culture leaders and cross-functional partners. It draws on Group policies, guidelines, tools and templates that have been reviewed and endorsed for consistent adoption across the portfolio.</p>
+          <p>${T('ch6.s02.p1','The Playbook is developed and maintained by the Group People &amp; Culture team in collaboration with Regional People &amp; Culture leaders and cross-functional partners. It draws on Group policies, guidelines, tools and templates that have been reviewed and endorsed for consistent adoption across the portfolio.')}</p>
         </div>
       </div>
 
       <div class="spread tight">
-        <div class="section-eyebrow"><span class="eyebrow-icon" aria-hidden="true">${SECTION_ICONS.governance}</span><span class="num">03</span><span class="txt">Disclaimer</span><span class="rule"></span></div>
+        <div class="section-eyebrow"><span class="eyebrow-icon" aria-hidden="true">${SECTION_ICONS.governance}</span><span class="num">03</span><span class="txt">${T('ch6.s03.eyebrow','Disclaimer')}</span><span class="rule"></span></div>
         <div class="editorial-body">
-          <p>This Playbook offers a Group-level reference framework. It does not replace local labour laws, regulations, or country-specific requirements. Local People &amp; Culture teams remain responsible for ensuring compliance with all applicable legal and regulatory obligations in their markets.</p>
+          <p>${T('ch6.s03.p1','This Playbook offers a Group-level reference framework. It does not replace local labour laws, regulations, or country-specific requirements. Local People &amp; Culture teams remain responsible for ensuring compliance with all applicable legal and regulatory obligations in their markets.')}</p>
         </div>
         <figure class="section-quote section-quote--closing">
           <span class="section-quote-mark" aria-hidden="true">“</span>
-          <blockquote class="section-quote-text">A living framework — evolving as we continue to learn, grow, and serve together.</blockquote>
+          <blockquote class="section-quote-text">${T('ch6.s03.quote','A living framework — evolving as we continue to learn, grow, and serve together.')}</blockquote>
           <span class="section-quote-flourish" aria-hidden="true"></span>
         </figure>
       </div>
@@ -2069,10 +2069,10 @@ function renderMenu() {
     <section class="chapter" id="menu">
       <div class="spread">
         <div class="spread-header">
-          <div class="running-mini">People &amp; Culture</div>
+          <div class="running-mini">${T('menu.running','People &amp; Culture')}</div>
           <div class="center-rule"></div>
-          <h2 class="spread-title center">Explore our Playbook</h2>
-          <p class="spread-lede center">Globally Defined &middot; Regionally Governed &middot; Locally Executed</p>
+          <h2 class="spread-title center">${T('menu.title','Explore our Playbook')}</h2>
+          <p class="spread-lede center">${T('menu.lede','Globally Defined &middot; Regionally Governed &middot; Locally Executed')}</p>
         </div>
         <div class="menu-grid">${chapterCards}</div>
       </div>
