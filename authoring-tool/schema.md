@@ -46,6 +46,8 @@ supplies the **content**. The seed file `seed-playbook.json` is a complete
   "title":   "People & Culture Playbook",   // internal name
   "wordmark":"Mandarin Oriental",           // cover wordmark (also editable via prose "cover.wordmark")
   "edition": "Edition · July 2026",
+  "slug": "pc-playbook",  // optional; URL-safe id for Publish/Remote SCORM. Defaults
+                          // to a kebab-case slug of `title` if omitted (see Settings panel).
   "scorm": {
     "identifier":   "MO_PC_PLAYBOOK_MANIFEST", // written into imsmanifest.xml on export
     "title":        "MO People & Culture Playbook", // manifest <title>

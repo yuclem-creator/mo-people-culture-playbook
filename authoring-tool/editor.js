@@ -100,6 +100,7 @@
     pb.meta = pb.meta || {};
     pb.meta.scorm = pb.meta.scorm || { identifier: 'MO_PLAYBOOK_MANIFEST', title: pb.meta.title || 'Playbook', masteryScore: 100 };
     pb.meta.completion = pb.meta.completion || { mode: 'open-each-chapter', requiredChapterIds: [] };
+    if (!pb.meta.slug) pb.meta.slug = window.PlaybookPublish ? window.PlaybookPublish.slugify(pb.meta.title) : '';
     pb.chapters = pb.chapters || [];
     pb.lifecycle = pb.lifecycle || [];
     pb.journey = pb.journey || [];
@@ -625,6 +626,10 @@
     box.appendChild(textField('Playbook title', m.title || '', function (v) { m.title = v; $('#docName').value = v; touch(); }));
     box.appendChild(textField('Wordmark (cover)', m.wordmark || '', function (v) { m.wordmark = v; touch(); }));
     box.appendChild(textField('Edition line', m.edition || '', function (v) { m.edition = v; touch(); }));
+    box.appendChild(textField('Publish slug', m.slug || '', function (v) {
+      m.slug = window.PlaybookPublish ? window.PlaybookPublish.slugify(v) : v;
+      touch(); renderInspector();
+    }, 'URL-safe id used for the published bucket path. Defaults from the title if left blank.'));
 
     box.appendChild(sectionLabel('SCORM package'));
     m.scorm = m.scorm || {};
@@ -735,7 +740,9 @@
     $('#btnNew').addEventListener('click', openNewModal);
     $('#btnOpen').addEventListener('click', doOpen);
     $('#btnSave').addEventListener('click', doSave);
-    $('#btnExport').addEventListener('click', doExport);
+    $('#btnExport').addEventListener('click', doExportOffline);
+    $('#btnExportMenu').addEventListener('click', toggleExportMenu);
+    $('#btnPublish').addEventListener('click', doPublishClick);
     $('#pvDesktop').addEventListener('click', function () { setPreviewWidth(false); });
     $('#pvMobile').addEventListener('click', function () { setPreviewWidth(true); });
   }
@@ -909,15 +916,162 @@
   function uid(p) { return (p || 'id') + '-' + Math.random().toString(36).slice(2, 8); }
 
   // =========================================================================
-  // SCORM 1.2 export  (implemented in export.js; attached to window)
+  // SCORM 1.2 export — offline (unchanged behaviour) + remote (new)
   // =========================================================================
-  function doExport() {
-    busy(true, 'Building SCORM package…');
+  function doExportOffline() {
+    closeExportMenu();
+    busy(true, 'Building SCORM package (offline)…');
     window.buildScormPackage(PB, computeRequiredPages(), {
       toast: toast,
       done: function () { busy(false); },
       fail: function (e) { busy(false); toast('Export failed: ' + (e.message || e), 'err'); }
     });
+  }
+
+  function doExportRemote() {
+    closeExportMenu();
+    if (!window.buildRemoteScormPackage) { toast('Remote export module not loaded.', 'err'); return; }
+    var slug = window.PlaybookPublish ? window.PlaybookPublish.slugFor(PB) : (PB.meta && PB.meta.slug);
+    busy(true, 'Building SCORM package (remote)…');
+    window.buildRemoteScormPackage(PB, computeRequiredPages(), slug, {
+      toast: toast,
+      done: function () { busy(false); },
+      fail: function (e) { busy(false); toast('Remote export failed: ' + (e.message || e), 'err'); }
+    });
+  }
+
+  function toggleExportMenu() {
+    var existing = document.querySelector('.export-menu');
+    if (existing) { closeExportMenu(); return; }
+    var menu = el('div', { class: 'export-menu' }, [
+      el('button', { class: 'em-opt', onclick: doExportOffline }, [
+        el('div', { class: 'em-title' }, ['Export SCORM (offline)', el('span', { class: 'tag', text: 'self-contained' })]),
+        el('div', { class: 'em-desc', text: 'A complete, self-contained package with all content and images bundled in. Works with no network access, but you must re-export and re-upload to the LMS whenever content changes.' })
+      ]),
+      el('button', { class: 'em-opt', onclick: doExportRemote }, [
+        el('div', { class: 'em-title' }, ['Export SCORM (remote)', el('span', { class: 'tag', text: 'auto-updates' })]),
+        el('div', { class: 'em-desc', text: 'A small package that fetches the latest content from the cloud each time a learner opens it, after you Publish. Needs the LMS network to allow reaching Supabase; always falls back to a bundled offline-safe copy if that fails.' })
+      ])
+    ]);
+    var btn = $('#btnExportMenu');
+    document.body.appendChild(menu);
+    var r = btn.getBoundingClientRect();
+    menu.style.top = (r.bottom + 6 + window.scrollY) + 'px';
+    menu.style.left = Math.max(8, r.right - menu.offsetWidth) + 'px';
+    setTimeout(function () { document.addEventListener('click', onDocClickCloseMenu); }, 0);
+  }
+  function onDocClickCloseMenu(e) {
+    var menu = document.querySelector('.export-menu');
+    if (menu && !menu.contains(e.target) && e.target.id !== 'btnExportMenu') closeExportMenu();
+  }
+  function closeExportMenu() {
+    var menu = document.querySelector('.export-menu');
+    if (menu) menu.remove();
+    document.removeEventListener('click', onDocClickCloseMenu);
+  }
+
+  // =========================================================================
+  // Publish (Supabase) — login gate + upload flow
+  // =========================================================================
+  var _authSession = null;
+  function renderAuthChip() {
+    var chip = $('#authChip');
+    if (!chip) return;
+    if (_authSession && _authSession.user) {
+      chip.style.display = '';
+      chip.innerHTML = '';
+      chip.appendChild(el('span', {}, ['Signed in as ']));
+      chip.appendChild(el('span', { class: 'who', text: _authSession.user.email }));
+      chip.appendChild(el('button', { class: 'linklike', onclick: function () {
+        window.PlaybookPublish.signOut().then(function () { _authSession = null; renderAuthChip(); toast('Signed out', 'ok'); });
+      } }, ['Sign out']));
+    } else {
+      chip.style.display = 'none';
+      chip.innerHTML = '';
+    }
+  }
+  if (window.PlaybookPublish) {
+    window.PlaybookPublish.getSession().then(function (s) { _authSession = s; renderAuthChip(); });
+    window.PlaybookPublish.onAuthChange(function (s) { _authSession = s; renderAuthChip(); });
+  }
+
+  function doPublishClick() {
+    if (!window.PlaybookPublish) { toast('Publish is unavailable (Supabase client failed to load).', 'err'); return; }
+    window.PlaybookPublish.getSession().then(function (session) {
+      _authSession = session;
+      if (session) { runPublish(session); }
+      else { openLoginModal(runPublish); }
+    });
+  }
+
+  function openLoginModal(onSignedIn) {
+    var body = el('div', { class: 'login-form' });
+    var errBox = el('div', { class: 'form-error', style: 'display:none' });
+    var emailInput = el('input', { type: 'email', placeholder: 'you@mandarinoriental.com', autocomplete: 'username' });
+    var passInput = el('input', { type: 'password', placeholder: 'Password', autocomplete: 'current-password' });
+    body.appendChild(errBox);
+    body.appendChild(el('div', { class: 'form-note', text: 'Sign in with your Supabase account to publish this playbook.' }));
+    body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Email']), emailInput]));
+    body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Password']), passInput]));
+
+    function attemptSignIn() {
+      var email = emailInput.value.trim();
+      var pass = passInput.value;
+      errBox.style.display = 'none';
+      if (!email || !pass) { errBox.textContent = 'Enter both an email and a password.'; errBox.style.display = ''; return; }
+      var signInBtn = document.querySelector('.modal .m-foot .btn.primary');
+      if (signInBtn) signInBtn.disabled = true;
+      window.PlaybookPublish.signIn(email, pass).then(function (session) {
+        if (signInBtn) signInBtn.disabled = false;
+        _authSession = session;
+        closeModal();
+        toast('Signed in as ' + (session.user && session.user.email || email), 'ok');
+        if (onSignedIn) onSignedIn(session);
+      }).catch(function (e) {
+        if (signInBtn) signInBtn.disabled = false;
+        errBox.textContent = (e && e.message) || 'Sign-in failed. Check your email and password.';
+        errBox.style.display = '';
+      });
+    }
+
+    passInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') attemptSignIn(); });
+
+    showModal('Sign in to publish', body, [
+      { label: 'Cancel', onClick: closeModal },
+      { label: 'Sign in', primary: true, onClick: attemptSignIn }
+    ]);
+    setTimeout(function () { emailInput.focus(); }, 30);
+  }
+
+  function runPublish(session) {
+    var slug = window.PlaybookPublish.slugFor(PB);
+    if (!PB.meta.slug) { PB.meta.slug = slug; touch(); }
+    busy(true, 'Publishing… (0 files)');
+    window.PlaybookPublish.publish(PB, {
+      onProgress: function (done, total) { busy(true, 'Publishing… (' + done + '/' + total + ' files)'); }
+    }).then(function (result) {
+      busy(false);
+      toast('Published “' + (PB.meta.title || slug) + '” · ' + result.assetCount + ' asset(s) uploaded', 'ok');
+      showPublishSuccessModal(result);
+    }).catch(function (e) {
+      busy(false);
+      if (e && e.message === 'NOT_AUTHENTICATED') {
+        toast('Your session expired. Please sign in again.', 'err');
+        openLoginModal(runPublish);
+        return;
+      }
+      toast('Publish failed: ' + ((e && e.message) || e), 'err');
+    });
+  }
+
+  function showPublishSuccessModal(result) {
+    var body = el('div', {}, [
+      el('div', { class: 'form-note', text: 'Your playbook is live at:' }),
+      el('div', { class: 'kv' }, [el('span', { class: 'k', text: 'Content URL' }), el('span', { class: 'v', text: result.contentUrl })]),
+      el('div', { class: 'kv' }, [el('span', { class: 'k', text: 'Slug' }), el('span', { class: 'v', text: result.slug })]),
+      el('div', { class: 'note', text: 'Use “Export SCORM (remote)” now (or re-use an already-exported remote package) — it will automatically pick up this update the next time a learner opens it.' })
+    ]);
+    showModal('Published', body, [{ label: 'Done', primary: true, onClick: closeModal }]);
   }
 
   // expose a couple of helpers for export.js

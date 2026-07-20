@@ -23,10 +23,16 @@
     <input id="docName" class="doc-name" title="Playbook name (used for the file name and SCORM title)" aria-label="Playbook name" />
     <div class="spacer"></div>
     <div id="autosave" class="autosave"><span class="dot"></span><span class="txt">Not saved yet</span></div>
+    <div id="authChip" class="auth-chip" style="display:none"></div>
     <button class="btn ghost" id="btnNew" title="Start a new playbook">New</button>
     <button class="btn" id="btnOpen" title="Open a .json playbook from your computer">Open</button>
     <button class="btn" id="btnSave" title="Download this playbook as a .json file (images included)">Save</button>
-    <button class="btn primary" id="btnExport" title="Export a SCORM 1.2 package for your LMS">Export SCORM</button>
+
+    <div class="seg export-seg" role="group" aria-label="Export type">
+      <button class="btn primary" id="btnExport" title="Export a self-contained SCORM 1.2 package for your LMS (offline)">Export SCORM</button>
+      <button class="btn primary seg-caret" id="btnExportMenu" title="Choose export type (offline / remote)" aria-haspopup="true">▾</button>
+    </div>
+    <button class="btn" id="btnPublish" title="Publish this playbook to the cloud so Remote SCORM packages auto-update">Publish</button>
   </header>
 
   <!-- ---- Body ------------------------------------------------------------ -->
@@ -73,10 +79,14 @@
 <!-- Third-party libraries (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <!-- App -->
+<script src="supabase-config.js"></script>
 <script src="storage.js"></script>
 <script src="export.js"></script>
+<script src="export-remote.js"></script>
+<script src="publish.js"></script>
 <script src="editor.js"></script>
 </body>
 </html>

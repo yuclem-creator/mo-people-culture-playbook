@@ -122,6 +122,20 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // Expose shared helpers so publish.js and export-remote.js can reuse the
+  // exact same data-URL decode logic instead of duplicating/rewriting it.
+  window.__scormExportHelpers = {
+    externalizeAssets: externalizeAssets,
+    dataUrlToParts: dataUrlToParts,
+    extFor: extFor,
+    escapeXml: escapeXml,
+    buildManifest: buildManifest,
+    buildIndexHtml: buildIndexHtml,
+    textFile: textFile,
+    binFile: binFile,
+    BASE: BASE
+  };
+
   window.buildScormPackage = function (pb, requiredPages, cb) {
     cb = cb || {};
     if (!window.JSZip) { (cb.fail || function(){})(new Error('JSZip not loaded')); return; }
