@@ -77,7 +77,18 @@
       .then(function (loaderSrc) {
         zip.file('remote-loader.js', loaderSrc);
 
-        // 6. Fallback snapshot: fallback-playbook-data.js + fallback-assets/
+        // 6. Fallback snapshot: fallback-playbook-data.js + img//video/ assets.
+        //    IMPORTANT: app.js hardcodes ~30 template strings like
+        //    `url('img/${...}')` and `src="img/${...}"` (see preview-engine/app.js)
+        //    — those literal "img/"/"video/" prefixes are NOT data-driven and
+        //    are shared verbatim with the offline export, so we must NOT
+        //    change app.js. Instead the fallback snapshot ships its decoded
+        //    assets under the exact same img/ and video/ folder names the
+        //    offline package already uses, so app.js's hardcoded paths
+        //    resolve correctly with zero changes to app.js. The playbook
+        //    JSON itself only ever stores bare filenames like "cover_hero.jpg"
+        //    (app.js's own templates add the "img/"/"video/" prefix at render
+        //    time), so no JSON path rewriting is needed here.
         var fallbackPb = JSON.parse(JSON.stringify(ext.playbook));
         delete fallbackPb.__remoteAssetBase; // fallback uses bundled relative paths, not a bucket base
         zip.file('fallback-playbook-data.js',
@@ -86,11 +97,13 @@
           'window.FALLBACK_PLAYBOOK = ' + JSON.stringify(rewriteFallbackAssetPaths(fallbackPb)) + ';\n');
 
         Object.keys(ext.extraFiles).forEach(function (path) {
-          zip.file('fallback-assets/' + path.replace(/^(img|video)\//, ''), ext.extraFiles[path].base64, { base64: true });
+          // path is already "img/foo.jpg" or "video/foo.mp4" — keep as-is so it
+          // matches app.js's hardcoded template prefixes exactly.
+          zip.file(path, ext.extraFiles[path].base64, { base64: true });
         });
 
         // Bundled original assets not replaced by an upload also need to be
-        // present in fallback-assets/ so the snapshot is truly self-contained.
+        // present under img//video/ so the snapshot is truly self-contained.
         return fetch(BASE + 'asset-manifest.json').then(function (r) { return r.json(); });
       })
       .then(function (bundledAssets) {
@@ -99,7 +112,8 @@
         var needed = bundledAssets.filter(function (p) { return !replaced[p]; });
         return Promise.all(needed.map(function (p) {
           return helpers.binFile(p).then(function (blob) {
-            zip.file('fallback-assets/' + p.replace(/^(img|video)\//, ''), blob);
+            // p is already "img/foo.jpg" or "video/foo.mp4" from asset-manifest.json.
+            zip.file(p, blob);
           }).catch(function () {/* skip missing */});
         }));
       })
@@ -119,11 +133,17 @@
       .catch(function (e) { (cb.fail || function () {})(e); });
   };
 
-  // The fallback snapshot ships its own fallback-assets/ folder (relative
-  // paths, no network needed), so bare "img/xxx"/"video/xxx" references are
-  // exactly right already — externalizeAssets() already normalises them.
-  // This helper exists as a hook point in case future asset path shapes need
-  // adjustment; currently a no-op passthrough (kept explicit for clarity/QA).
+  // The playbook JSON only ever stores BARE filenames (e.g. "cover_hero.jpg"
+  // or "ch_A_integrity.jpg") — app.js's own render templates prepend the
+  // literal "img/"/"video/" prefix at render time (see preview-engine/app.js,
+  // e.g. `url('img/${T('cover.bg','cover_colleagues.jpg')}')`). That means
+  // there is nothing to rewrite in the JSON for the fallback snapshot to
+  // resolve correctly — it just needs its decoded assets physically placed
+  // under img//video/ (done above), matching the same folder names app.js
+  // already hardcodes for the offline package. Kept as an explicit no-op
+  // passthrough (not deleted) as a hook point + so the intent is documented
+  // for future maintainers who might assume otherwise (as an earlier version
+  // of this function incorrectly did).
   function rewriteFallbackAssetPaths(pb) { return pb; }
 
   function buildRemoteIndexHtml(indexSrc) {

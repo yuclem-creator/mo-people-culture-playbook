@@ -113,6 +113,95 @@ once the learner has opened the required chapters, and **incomplete** before the
 
 ---
 
+## Publishing & Remote SCORM
+
+Alongside the offline export above, Playbook Studio can **publish** your
+playbook to the cloud and export a small **remote SCORM** package that fetches
+the latest content each time a learner opens it — so you can update the
+playbook after the course is already live in the LMS, without re-uploading a
+new ZIP.
+
+### Signing in
+
+Click **Publish**. The first time, you'll be asked to **sign in** with a
+Supabase account (email + password). Signing in is required because only
+authorised editors may publish — anyone can *view* a published playbook, but
+only signed-in accounts can write to it. Once signed in, your session persists
+for the rest of your visit; a small chip near **Publish** shows you're signed
+in, with a **Sign out** option.
+
+If you enter the wrong email or password, the dialog shows the error inline
+(for example *"Invalid login credentials"*) — nothing is sent, and you can try
+again immediately.
+
+> Playbook Studio never asks for or stores a secret/admin key. It only ever
+> uses a public, read-safe key to talk to Supabase, exactly like a normal
+> website would. Publishing itself is only possible because your signed-in
+> account has permission — the key alone can't write anything.
+
+### The publish slug
+
+Open **Settings → Publish slug**. This is the URL-safe identifier your
+playbook is published under (for example `people-culture-playbook`). It
+defaults automatically from your playbook title (lower-cased, spaces turned to
+hyphens) if you leave it blank. Set it once per playbook and keep it stable —
+if you change the slug later, the remote package you already handed to the LMS
+will keep looking for the **old** slug's content, so treat the slug as a
+permanent address once you've distributed a remote SCORM package.
+
+### Publishing
+
+Click **Publish** (once signed in). This uploads your current playbook — its
+content and every image/video — to Mandarin Oriental's Supabase storage bucket
+under your slug. A short progress toast confirms success. You can publish
+again any time you edit; the previous version is simply overwritten at the
+same address.
+
+### Exporting a remote SCORM package
+
+Click the small **▾** next to **Export SCORM** and choose **Export SCORM
+(remote)** instead of the default offline option. You'll get a much smaller ZIP
+that, instead of bundling every image, contains:
+
+- A tiny loader (`remote-loader.js`) that fetches your **published** content
+  from Supabase each time the learner opens the course.
+- A **bundled fallback snapshot** — a full offline-safe copy of the playbook
+  (content *and* images/video) taken at the moment you exported, used
+  automatically if the network fetch fails (no internet in the LMS's network,
+  the bucket is briefly unreachable, or nothing has been published yet). This
+  keeps the remote package just as reliable as the offline one, even though it
+  is normally much lighter over the network.
+- The same SCORM 1.2 plumbing as the offline package (manifest, `scorm_api.js`,
+  completion rule) — completion behaves identically either way.
+
+**Typical workflow:** publish once, export the **remote** package, upload that
+ZIP to your LMS. From then on, edit and re-publish as often as you like — the
+LMS package doesn't need to change. Only re-export and re-upload if you change
+the **completion rule**, the **manifest identifier**, or other SCORM-level
+settings (those are baked into the ZIP itself, not fetched at runtime).
+
+**Choosing between the two exports:**
+
+| | **Export SCORM (offline)** | **Export SCORM (remote)** |
+| --- | --- | --- |
+| Needs network at runtime? | No | Prefers it; falls back to bundled copy if unavailable |
+| Package size | Full (all images bundled) | Small on disk, but still contains a full fallback copy |
+| Update content without re-uploading to LMS? | No — re-export and re-upload every time | Yes — just publish again |
+| Requires a Supabase account? | No | Yes, to publish (viewing/fallback needs no account) |
+
+### Troubleshooting
+
+- **"Sign in to publish" keeps appearing** — your session may have ended;
+  sign in again. Signing out and back in is always safe.
+- **Publish succeeded but the remote package still shows old content** — the
+  remote package fetches fresh content each launch, but LMSs sometimes cache
+  aggressively; try a hard refresh or a new attempt in the LMS.
+- **The remote package shows content from the export, not the latest publish**
+  — that's the bundled fallback doing its job because the live fetch failed;
+  check your network/bucket, or simply re-export after publishing again.
+
+---
+
 ## What you can and can’t edit
 
 **You can edit:** all chapter titles and descriptions; cover, foreword, intro
