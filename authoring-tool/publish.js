@@ -71,29 +71,41 @@
     var onProgress = opts.onProgress || function () {};
     if (!sb) return Promise.reject(new Error('Supabase client is not available (check your connection and reload).'));
 
-    // Force a fresh access token before publishing. Supabase access tokens
-    // expire (~1h); if the tab has been open a while, autoRefresh may not have
-    // fired yet and a stale token is silently treated as anon -> RLS 403.
-    // Refreshing here guarantees the upload runs as a valid authenticated user.
-    function freshSession() {
+    // Resolve a usable authenticated session. In embedded/iframe contexts the
+    // Supabase client often cannot persist its session to browser storage, so
+    // getSession()/refreshSession() come back empty even right after a
+    // successful sign-in. To be robust we PREFER a session object passed in
+    // directly from the sign-in call (opts.session), which always holds a fresh
+    // access_token in memory, and only fall back to the persisted session.
+    function resolveSession() {
+      if (opts.session && opts.session.access_token) return Promise.resolve(opts.session);
       return getSession().then(function (session) {
         if (!session) return null;
         var now = Math.floor(Date.now() / 1000);
         var exp = session.expires_at || 0;
-        // Refresh if expired or within 5 minutes of expiring.
         if (exp - now < 300) {
           return sb.auth.refreshSession().then(function (r) {
-            if (r.error || !r.data || !r.data.session) return null;
-            return r.data.session;
+            return (r.error || !r.data || !r.data.session) ? null : r.data.session;
           }).catch(function () { return null; });
         }
         return session;
       });
     }
 
-    return freshSession().then(function (session) {
-      if (!session) return Promise.reject(new Error('NOT_AUTHENTICATED'));
+    return resolveSession().then(function (session) {
+      if (!session || !session.access_token) return Promise.reject(new Error('NOT_AUTHENTICATED'));
       var email = session.user && session.user.email;
+
+      // Build a storage client that explicitly carries THIS session's access
+      // token on every request, instead of relying on the shared client reading
+      // a (possibly unpersisted) session back from storage. This is what makes
+      // the upload reliably run as `authenticated` in an iframe.
+      var sbUpload = (global.supabase && global.supabase.createClient)
+        ? global.supabase.createClient(cfg.url, cfg.anonKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+            global: { headers: { Authorization: 'Bearer ' + session.access_token } }
+          })
+        : sb;
       var helpers = global.__scormExportHelpers;
       if (!helpers || !helpers.externalizeAssets) {
         return Promise.reject(new Error('Internal error: export helpers not loaded.'));
@@ -133,7 +145,7 @@
           var info = ext.extraFiles[path];
           var mime = guessMime(path);
           var blob = base64ToBlob(info.base64, mime);
-          return sb.storage.from(bucket).upload(basePath + 'assets/' + path.replace(/^(img|video)\//, ''), blob, {
+          return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + path.replace(/^(img|video)\//, ''), blob, {
             upsert: true, contentType: mime
           }).then(function (r) {
             if (r.error) throw new Error('Asset upload failed (' + path + '): ' + r.error.message);
@@ -146,7 +158,7 @@
         .then(function () {
           // 2. Upload playbook-data.json
           var blob = new Blob([JSON.stringify(playbookForUpload)], { type: 'application/json' });
-          return sb.storage.from(bucket).upload(basePath + 'playbook-data.json', blob, {
+          return sbUpload.storage.from(bucket).upload(basePath + 'playbook-data.json', blob, {
             upsert: true, contentType: 'application/json'
           });
         })
@@ -156,7 +168,7 @@
           // 3. Upload version.json
           var version = { publishedAt: new Date().toISOString(), publishedBy: email || null };
           var blob = new Blob([JSON.stringify(version)], { type: 'application/json' });
-          return sb.storage.from(bucket).upload(basePath + 'version.json', blob, {
+          return sbUpload.storage.from(bucket).upload(basePath + 'version.json', blob, {
             upsert: true, contentType: 'application/json'
           });
         })

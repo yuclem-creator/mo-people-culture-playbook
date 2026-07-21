@@ -1048,6 +1048,10 @@
     if (!PB.meta.slug) { PB.meta.slug = slug; touch(); }
     busy(true, 'Publishing… (0 files)');
     window.PlaybookPublish.publish(PB, {
+      // Pass the in-memory session straight through so the upload uses this
+      // exact access token, even when the browser blocks session persistence
+      // (common inside an embedded/iframe preview).
+      session: session,
       onProgress: function (done, total) { busy(true, 'Publishing… (' + done + '/' + total + ' files)'); }
     }).then(function (result) {
       busy(false);
