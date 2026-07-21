@@ -762,8 +762,17 @@
 
   function doSave() {
     var name = safeName(PB.meta.title || 'playbook').toLowerCase() + '.json';
-    STORE.save(PB).then(function () { return STORE.exportFile(PB, name); }).then(function () {
-      markSaved(); STORE.clearAutosnapshot(); toast('Saved ' + name, 'ok');
+    STORE.save(PB).then(function (status) {
+      return STORE.exportFile(PB, name).then(function () { return status; });
+    }).then(function (status) {
+      markSaved(); STORE.clearAutosnapshot();
+      if (status && status.blocked) {
+        // Storage is sandboxed (e.g. embedded preview) — the .json download still
+        // succeeded, so nothing is lost, but reload-restore won't work here.
+        toast('Downloaded ' + name + '. (This preview can\u2019t remember work-in-progress across reloads — open in its own tab for that, or just keep using this tab.)', 'ok');
+      } else {
+        toast('Saved ' + name, 'ok');
+      }
     }).catch(function (e) { toast('Save failed: ' + (e.message || e), 'err'); });
   }
 

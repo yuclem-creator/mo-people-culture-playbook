@@ -23,29 +23,54 @@
   var AUTOSAVE_KEY = 'mo_playbook_autosave_v1';
   var CURRENT_KEY = 'mo_playbook_current_v1';
 
+  // In-memory fallback store. Some hosting contexts (e.g. a sandboxed preview
+  // iframe without the 'allow-same-origin' flag) throw a SecurityError on ANY
+  // localStorage access — not just when quota is exceeded. In that case we
+  // still keep the current doc + autosnapshot safe in memory for the rest of
+  // this page session, so editing/Publish keep working; only "restore after a
+  // real page reload" is unavailable, and we tell the user that plainly
+  // instead of a scary hard failure.
+  var memFallback = { current: null, autosave: null, blocked: false };
+
+  function isBlockedStorageError(e) {
+    return !!e && (e.name === 'SecurityError' || /sandboxed|localStorage/i.test(e.message || ''));
+  }
+
   /* ---- LocalFileAdapter --------------------------------------------------
      - "current" document + autosnapshot live in localStorage so a page reload
        restores work-in-progress.
      - The authoritative, portable copy is the .json file the author saves to
        disk (with images embedded as data URLs) via exportFile()/importFile().
+     - Falls back to in-memory storage if localStorage is blocked (sandboxed
+       iframe), so editing/Publish still work within the session.
      ---------------------------------------------------------------------- */
   function LocalFileAdapter() {}
+
+  LocalFileAdapter.prototype.storageBlocked = function () { return memFallback.blocked; };
 
   LocalFileAdapter.prototype.load = function () {
     return new Promise(function (resolve) {
       try {
         var raw = global.localStorage.getItem(CURRENT_KEY);
         resolve(raw ? JSON.parse(raw) : null);
-      } catch (e) { resolve(null); }
+      } catch (e) {
+        if (isBlockedStorageError(e)) memFallback.blocked = true;
+        resolve(memFallback.current);
+      }
     });
   };
 
   LocalFileAdapter.prototype.save = function (playbook) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
       try {
         global.localStorage.setItem(CURRENT_KEY, JSON.stringify(playbook));
-        resolve();
-      } catch (e) { reject(e); }
+        resolve({ persisted: true });
+      } catch (e) {
+        // Keep the doc safe in memory instead of failing the save outright.
+        memFallback.current = playbook;
+        memFallback.blocked = isBlockedStorageError(e) || memFallback.blocked;
+        resolve({ persisted: false, blocked: memFallback.blocked });
+      }
     });
   };
 
@@ -55,7 +80,11 @@
         global.localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
           at: Date.now(), playbook: playbook
         }));
-      } catch (e) { /* quota — ignore, autosave is best-effort */ }
+      } catch (e) {
+        // quota, or blocked storage — keep best-effort in-memory snapshot instead.
+        memFallback.autosave = { at: Date.now(), playbook: playbook };
+        memFallback.blocked = isBlockedStorageError(e) || memFallback.blocked;
+      }
       resolve();
     });
   };
@@ -65,13 +94,17 @@
       try {
         var raw = global.localStorage.getItem(AUTOSAVE_KEY);
         resolve(raw ? JSON.parse(raw) : null);
-      } catch (e) { resolve(null); }
+      } catch (e) {
+        if (isBlockedStorageError(e)) memFallback.blocked = true;
+        resolve(memFallback.autosave);
+      }
     });
   };
 
   LocalFileAdapter.prototype.clearAutosnapshot = function () {
     return new Promise(function (resolve) {
       try { global.localStorage.removeItem(AUTOSAVE_KEY); } catch (e) {}
+      memFallback.autosave = null;
       resolve();
     });
   };
