@@ -71,7 +71,27 @@
     var onProgress = opts.onProgress || function () {};
     if (!sb) return Promise.reject(new Error('Supabase client is not available (check your connection and reload).'));
 
-    return getSession().then(function (session) {
+    // Force a fresh access token before publishing. Supabase access tokens
+    // expire (~1h); if the tab has been open a while, autoRefresh may not have
+    // fired yet and a stale token is silently treated as anon -> RLS 403.
+    // Refreshing here guarantees the upload runs as a valid authenticated user.
+    function freshSession() {
+      return getSession().then(function (session) {
+        if (!session) return null;
+        var now = Math.floor(Date.now() / 1000);
+        var exp = session.expires_at || 0;
+        // Refresh if expired or within 5 minutes of expiring.
+        if (exp - now < 300) {
+          return sb.auth.refreshSession().then(function (r) {
+            if (r.error || !r.data || !r.data.session) return null;
+            return r.data.session;
+          }).catch(function () { return null; });
+        }
+        return session;
+      });
+    }
+
+    return freshSession().then(function (session) {
       if (!session) return Promise.reject(new Error('NOT_AUTHENTICATED'));
       var email = session.user && session.user.email;
       var helpers = global.__scormExportHelpers;
@@ -148,7 +168,14 @@
         });
     }).catch(function (e) {
       if (e && e.message === 'NOT_AUTHENTICATED') throw e;
-      // Session may have expired mid-publish (RLS will 403) — surface plainly.
+      // A stale/expired session is silently treated as anonymous, so the server
+      // returns an RLS violation. Translate that into a clear, actionable message
+      // instead of the raw Postgres error.
+      if (e && /row-level security|Unauthorized|JWT|expired/i.test(e.message || '')) {
+        var friendly = new Error('Your sign-in session expired. Please sign out and sign in again, then Publish.');
+        friendly.code = 'SESSION_EXPIRED';
+        throw friendly;
+      }
       throw e;
     });
   }
