@@ -11,7 +11,11 @@
    ============================================================================ */
 window.SUPABASE_CONFIG = {
   url: 'https://akcypiuealhfqspiwebp.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrY3lwaXVlYWxoZnFzcGl3ZWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0OTkwMjEsImV4cCI6MjEwMDA3NTAyMX0.lld5gwZd1Bv74ctEguYLpXN6_1QgJ6Uyl1iHtSSTzyk',
+  // New-format publishable key (browser-safe). Preferred over the legacy JWT
+  // anon key: it is signed/validated consistently across Auth and Storage on
+  // projects using the new API key system, which fixes storage RLS requests
+  // being silently downgraded to anonymous.
+  anonKey: 'sb_publishable_h1lL2W5wJt3DOz2nr4IoAQ_20TPGTtF',
   bucket: 'playbook-content'
 };
 
