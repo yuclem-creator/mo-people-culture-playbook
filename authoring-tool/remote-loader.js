@@ -134,7 +134,7 @@
     // Load the rest of the app chain in the same order the offline export
     // uses: scorm_api.js (needs SCORM_REQUIRED_PAGES already set) -> renderer
     // (playbook-content.js + app.js) -> scorm_hook.js.
-    loadScriptsSequentially(['scorm_api.js', 'playbook-content.js', 'app.js', 'scorm_hook.js'], function () {
+    loadScriptsSequentially(['scorm_api.js', 'playbook-content.js', 'app.js', 'ask.js', 'scorm_hook.js'], function () {
       log('boot-complete');
     });
   }
