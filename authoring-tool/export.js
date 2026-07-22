@@ -96,7 +96,7 @@
     out = out.replace('<script src="playbook-content.js"><\/script>',
       '<script src="playbook-data.js"><\/script>\n<script src="playbook-content.js"><\/script>');
     out = out.replace('<script src="app.js"><\/script>',
-      '<script src="app.js"><\/script>\n<script src="scorm_hook.js"><\/script>');
+      '<script src="app.js"><\/script>\n<script src="ask.js"><\/script>\n<script src="scorm_hook.js"><\/script>');
     return out;
   }
 
@@ -142,7 +142,7 @@
     var zip = new JSZip();
     var ext = externalizeAssets(pb);
 
-    var TEXT = ['index.html', 'app.js', 'playbook-content.js', 'mo-brand.css',
+    var TEXT = ['index.html', 'app.js', 'ask.js', 'playbook-content.js', 'mo-brand.css',
       'scorm_api.js', 'scorm_hook.js', 'imsmanifest.xml',
       'adlcp_rootv1p2.xsd', 'ims_xml.xsd', 'imscp_rootv1p1p2.xsd', 'imsmd_rootv1p2p1.xsd'];
 
@@ -159,7 +159,7 @@
       zip.file('imsmanifest.xml', buildManifest(texts['imsmanifest.xml'], pb.meta || {}));
 
       // 2. Verbatim renderer + plumbing + schemas
-      ['app.js', 'playbook-content.js', 'mo-brand.css', 'scorm_api.js', 'scorm_hook.js',
+      ['app.js', 'ask.js', 'playbook-content.js', 'mo-brand.css', 'scorm_api.js', 'scorm_hook.js',
         'adlcp_rootv1p2.xsd', 'ims_xml.xsd', 'imscp_rootv1p1p2.xsd', 'imsmd_rootv1p2p1.xsd']
         .forEach(function (f) { zip.file(f, texts[f]); });
 
