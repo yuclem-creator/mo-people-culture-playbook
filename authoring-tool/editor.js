@@ -62,27 +62,56 @@
 
   function boot() {
     wireTopbar();
+    pendingCreate = readCreateParam();
     // Restore: autosnapshot > saved current > seed
     STORE.loadAutosnapshot().then(function (snap) {
       if (snap && snap.playbook) {
         setPlaybook(snap.playbook);
         toast('Restored your last autosaved work', 'ok');
+        maybePromptCreate();
         return;
       }
       STORE.load().then(function (cur) {
-        if (cur) { setPlaybook(cur); return; }
-        loadSeed();
+        if (cur) { setPlaybook(cur); maybePromptCreate(); return; }
+        loadSeed().then(maybePromptCreate);
       });
     });
   }
 
   function loadSeed() {
-    fetch('seed-playbook.json').then(function (r) { return r.json(); }).then(function (seed) {
+    return fetch('seed-playbook.json').then(function (r) { return r.json(); }).then(function (seed) {
       setPlaybook(seed);
     }).catch(function () {
       setPlaybook(blankPlaybook());
       toast('Could not load the seed playbook; started blank.', 'err');
     });
+  }
+
+  // ---- Create-from-library flow ------------------------------------------
+  // The Playbook Library hub links here as:
+  //   authoring-tool/?create=<department-id>&dept=<department name>
+  // We open the New-playbook dialog automatically and tag the created
+  // playbook's meta.department so Publish can suggest the right folder.
+  var pendingCreate = null;
+  function readCreateParam() {
+    try {
+      var q = new URLSearchParams(window.location.search);
+      var id = (q.get('create') || '').trim();
+      if (!id) return null;
+      return { id: id, name: (q.get('dept') || id).trim() };
+    } catch (e) { return null; }
+  }
+  function maybePromptCreate() {
+    if (!pendingCreate) return;
+    openNewModal();
+  }
+  function applyPendingCreate(pb) {
+    if (!pendingCreate) return;
+    pb.meta = pb.meta || {};
+    pb.meta.department = pendingCreate.id;
+    toast('Tagged to department folder: ' + pendingCreate.name, 'ok');
+    try { window.history.replaceState({}, '', window.location.pathname); } catch (e) {}
+    pendingCreate = null;
   }
 
   function setPlaybook(pb) {
@@ -630,6 +659,9 @@
       m.slug = window.PlaybookPublish ? window.PlaybookPublish.slugify(v) : v;
       touch(); renderInspector();
     }, 'URL-safe id used for the published bucket path. Defaults from the title if left blank.'));
+    box.appendChild(textField('Department (library folder)', m.department || '', function (v) {
+      m.department = v.trim(); touch();
+    }, 'Folder id from playbooks.json — files this playbook under that department in the Playbook Library.'));
 
     box.appendChild(sectionLabel('SCORM package'));
     m.scorm = m.scorm || {};
@@ -780,6 +812,9 @@
   // ---- New playbook flows -------------------------------------------------
   function openNewModal() {
     var body = el('div', {});
+    if (pendingCreate) {
+      body.appendChild(el('div', { class: 'form-note', text: 'Creating for department: ' + pendingCreate.name + '. The new playbook will be tagged to this library folder.' }));
+    }
     body.appendChild(el('button', { class: 'new-card', onclick: function () { closeModal(); newFromSeed(); } }, [
       el('div', {}, [el('div', { class: 'nc-title', text: 'Duplicate the P&C seed' }),
         el('div', { class: 'nc-desc', text: 'Start from a full copy of the current People & Culture playbook and edit from there.' })])
@@ -798,6 +833,7 @@
       seed = JSON.parse(JSON.stringify(seed));
       seed.meta = seed.meta || {};
       seed.meta.title = 'Copy of ' + (seed.meta.title || 'Playbook');
+      applyPendingCreate(seed);
       setPlaybook(seed);
       touch();
       toast('Duplicated the seed playbook', 'ok');
@@ -809,7 +845,7 @@
     var order = ['cover', 'intro-video', 'letter', 'standard', 'lifecycle', 'directory', 'sections-list'];
     var body = el('div', {});
     body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Playbook title']),
-      el('input', { type: 'text', id: 'newTitle', value: 'New Playbook' })]));
+      el('input', { type: 'text', id: 'newTitle', value: pendingCreate ? pendingCreate.name + ' Playbook' : 'New Playbook' })]));
     body.appendChild(el('div', { class: 'note', text: 'Tick the chapters to include. You can add, rename or reorder content later.' }));
     var ul = el('ul', { class: 'check-list' });
     order.forEach(function (t, idx) {
@@ -832,6 +868,7 @@
   function buildBlank(title, types) {
     var pb = blankPlaybook();
     pb.meta.title = title;
+    applyPendingCreate(pb);
     var romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
     var n = 0;
     types.forEach(function (t) {
@@ -1080,13 +1117,43 @@
   }
 
   function showPublishSuccessModal(result) {
+    var libraryEntry = {
+      slug: result.slug,
+      title: (PB.meta && PB.meta.title) || result.slug,
+      department: (PB.meta && PB.meta.department) || '',
+      edition: (PB.meta && PB.meta.edition) || '',
+      description: ''
+    };
+    var snippet = JSON.stringify(libraryEntry, null, 2);
+    var pre = el('pre', { class: 'snippet', text: snippet });
+    var copyBtn = el('button', { class: 'btn', onclick: function () {
+      var doneOk = function () { toast('Library entry copied — paste it into playbooks.json', 'ok'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(snippet).then(doneOk, function () { fallbackCopy(snippet, doneOk); });
+      } else { fallbackCopy(snippet, doneOk); }
+    } }, ['Copy library entry']);
     var body = el('div', {}, [
       el('div', { class: 'form-note', text: 'Your playbook is live at:' }),
       el('div', { class: 'kv' }, [el('span', { class: 'k', text: 'Content URL' }), el('span', { class: 'v', text: result.contentUrl })]),
       el('div', { class: 'kv' }, [el('span', { class: 'k', text: 'Slug' }), el('span', { class: 'v', text: result.slug })]),
-      el('div', { class: 'note', text: 'Use “Export SCORM (remote)” now (or re-use an already-exported remote package) — it will automatically pick up this update the next time a learner opens it.' })
+      el('div', { class: 'note', text: 'Use “Export SCORM (remote)” now (or re-use an already-exported remote package) — it will automatically pick up this update the next time a learner opens it.' }),
+      el('div', { class: 'section-label', text: 'List it in the Playbook Library' }),
+      el('div', { class: 'note', text: 'Paste this entry into the “playbooks” array in playbooks.json (fill in department + description), then push — the playbook appears in that department folder.' }),
+      pre,
+      copyBtn
     ]);
     showModal('Published', body, [{ label: 'Done', primary: true, onClick: closeModal }]);
+  }
+
+  function fallbackCopy(text, cb) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (cb) cb();
+    } catch (e) { toast('Copy failed — select the text manually.', 'err'); }
   }
 
   // =========================================================================
