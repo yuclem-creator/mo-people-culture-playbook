@@ -273,6 +273,15 @@ fetches the latest published content.
 
 ## What you can and can’t edit
 
+**Building the outline:** use **+ Add chapter** at the bottom of the outline to
+append a chapter — pick a type (standard, sections list, lifecycle, directory
+or letter). Select any chapter to **Move up / Move down / Delete** it from its
+panel; the cover and welcome film stay pinned at the top. Inside a standard or
+sections-list chapter, use **Add section** in its panel, then **Add item**
+inside each section. Lifecycle stages are added from the lifecycle chapter’s
+panel (“Add lifecycle stage”). Chapters you add are rendered with a clean
+generic layout; the seed’s bespoke set-pieces stay bespoke.
+
 **You can edit:** all chapter titles and descriptions; cover, foreword, intro
 and closing text; every section heading, paragraph, quote and caption; policy /
 resource items and their links; lifecycle stage labels and summaries; the people
