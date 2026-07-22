@@ -902,19 +902,40 @@
     }).catch(function (e) { toast(e.message || 'Open failed', 'err'); });
   }
 
-  function doSave() {
+  function downloadJsonFallback() {
     var name = safeName(PB.meta.title || 'playbook').toLowerCase() + '.json';
-    STORE.save(PB).then(function (status) {
-      return STORE.exportFile(PB, name).then(function () { return status; });
-    }).then(function (status) {
+    return STORE.exportFile(PB, name).then(function () { return name; });
+  }
+
+  // Save = browser working copy + (when signed in) a version snapshot in the
+  // Supabase dashboard, filed under the playbook's department. The .json
+  // download is now just the fallback for when you're not signed in or the
+  // version write fails.
+  function doSave() {
+    STORE.save(PB).then(function () {
       markSaved(); STORE.clearAutosnapshot();
-      if (status && status.blocked) {
-        // Storage is sandboxed (e.g. embedded preview) — the .json download still
-        // succeeded, so nothing is lost, but reload-restore won't work here.
-        toast('Downloaded ' + name + '. (This preview can\u2019t remember work-in-progress across reloads — open in its own tab for that, or just keep using this tab.)', 'ok');
-      } else {
-        toast('Saved ' + name, 'ok');
+      if (!(window.PlaybookPublish && window.PlaybookPublish.getSession && window.PlaybookVersions)) {
+        return downloadJsonFallback().then(function (name) { toast('Saved ' + name, 'ok'); });
       }
+      return window.PlaybookPublish.getSession().then(function (session) {
+        if (!(session && session.access_token)) {
+          return downloadJsonFallback().then(function (name) {
+            toast('Saved ' + name + '. Sign in to also save it to the version dashboard.', 'ok');
+          });
+        }
+        return window.PlaybookVersions.saveSnapshot(PB, {
+          source: 'manual-save',
+          session: session,
+          publishedBy: (session.user && session.user.email) || null
+        }).then(function () {
+          var dept = (PB.meta && PB.meta.department) ? PB.meta.department : null;
+          toast('Saved to the version dashboard' + (dept ? ' · ' + dept : ''), 'ok');
+        }).catch(function (err) {
+          return downloadJsonFallback().then(function (name) {
+            toast('Saved ' + name + ' — but the dashboard version failed: ' + ((err && err.message) || err), 'err');
+          });
+        });
+      });
     }).catch(function (e) { toast('Save failed: ' + (e.message || e), 'err'); });
   }
 
@@ -1341,13 +1362,31 @@
     });
   }
 
+  var deptNamesPromise = null;
+  function loadDeptNames() {
+    // Department display names come from the library index (single source of
+    // truth); ids are humanized as a fallback when it can't be read.
+    if (!deptNamesPromise) {
+      deptNamesPromise = fetch('../playbooks.json').then(function (r) { return r.ok ? r.json() : {}; }).then(function (data) {
+        var map = {};
+        (data.departments || []).forEach(function (d) { map[d.id] = d.name; });
+        return map;
+      }).catch(function () { return {}; });
+    }
+    return deptNamesPromise;
+  }
+
   function loadDashboard(session, selectedSlug, playbookList, listBox) {
     playbookList.innerHTML = '';
     listBox.innerHTML = '';
     playbookList.appendChild(el('div', { class: 'empty', text: 'Loading playbooks…' }));
     listBox.appendChild(el('div', { class: 'empty', text: 'Loading versions…' }));
-    window.PlaybookVersions.listAllVersions({ session: session }).then(function (rows) {
-      var groups = groupVersionsBySlug(rows);
+    Promise.all([window.PlaybookVersions.listAllVersions({ session: session }), loadDeptNames()]).then(function (res) {
+      var rows = res[0];
+      var deptNames = res[1];
+      var depts = groupVersionsByDepartment(rows, deptNames);
+      var groups = [];
+      depts.forEach(function (d) { groups = groups.concat(d.groups); });
       playbookList.innerHTML = '';
       listBox.innerHTML = '';
       if (!groups.length) {
@@ -1356,13 +1395,16 @@
         return;
       }
       var selected = groups.some(function (g) { return g.slug === selectedSlug; }) ? selectedSlug : groups[0].slug;
-      groups.forEach(function (group) {
-        playbookList.appendChild(dashboardPlaybookRow(group, group.slug === selected, function () {
-          playbookList.querySelectorAll('.playbook-row').forEach(function (rowEl) { rowEl.classList.remove('on'); });
-          var rowEl = rowElForGroup(playbookList, group.slug);
-          if (rowEl) rowEl.classList.add('on');
-          renderDashboardVersions(session, group.rows, listBox);
-        }));
+      depts.forEach(function (dept) {
+        playbookList.appendChild(el('div', { class: 'dept-header', text: dept.label }));
+        dept.groups.forEach(function (group) {
+          playbookList.appendChild(dashboardPlaybookRow(group, group.slug === selected, function () {
+            playbookList.querySelectorAll('.playbook-row').forEach(function (rowEl) { rowEl.classList.remove('on'); });
+            var rowEl = rowElForGroup(playbookList, group.slug);
+            if (rowEl) rowEl.classList.add('on');
+            renderDashboardVersions(session, group.rows, listBox);
+          }));
+        });
       });
       renderDashboardVersions(session, (groups.filter(function (g) { return g.slug === selected; })[0] || groups[0]).rows, listBox);
     }).catch(function (e) {
@@ -1373,18 +1415,44 @@
     });
   }
 
-  function groupVersionsBySlug(rows) {
-    var map = {};
+  function humanizeDept(id) {
+    if (!id || id === 'uncategorized') return 'Uncategorized';
+    return id.split('-').map(function (w) {
+      if (w === 'pc') return 'P&C';
+      if (w === 'and') return '&';
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    }).join(' ');
+  }
+
+  // Group saved versions into department folders, then playbooks inside each.
+  // Versions saved before departments existed (no department value) collect
+  // under "Uncategorized".
+  function groupVersionsByDepartment(rows, deptNames) {
+    var depts = {};
     var order = [];
     (rows || []).forEach(function (row) {
-      var slug = row.slug || 'playbook';
-      if (!map[slug]) {
-        map[slug] = { slug: slug, title: row.title || slug, rows: [] };
-        order.push(slug);
+      var d = (row.department || '').trim() || 'uncategorized';
+      if (!depts[d]) {
+        depts[d] = { id: d, label: (deptNames && deptNames[d]) || humanizeDept(d), slugs: {}, slugOrder: [] };
+        order.push(d);
       }
-      map[slug].rows.push(row);
+      var slug = row.slug || 'playbook';
+      if (!depts[d].slugs[slug]) {
+        depts[d].slugs[slug] = { slug: slug, title: row.title || slug, rows: [] };
+        depts[d].slugOrder.push(slug);
+      }
+      depts[d].slugs[slug].rows.push(row);
     });
-    return order.map(function (slug) { return map[slug]; });
+    // departments alphabetically, "Uncategorized" always last
+    order.sort(function (a, b) {
+      if (a === 'uncategorized') return 1;
+      if (b === 'uncategorized') return -1;
+      return depts[a].label.localeCompare(depts[b].label);
+    });
+    return order.map(function (d) {
+      var dd = depts[d];
+      return { id: dd.id, label: dd.label, groups: dd.slugOrder.map(function (s) { return dd.slugs[s]; }) };
+    });
   }
 
   function rowElForGroup(playbookList, slug) {
