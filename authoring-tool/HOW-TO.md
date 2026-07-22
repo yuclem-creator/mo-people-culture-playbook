@@ -268,6 +268,13 @@ playbooks instead of opening a single course link directly:
   unavailable it falls back to the last copy that browser cached; if nothing
   is available it shows a branded error with a link back to the hub.
 
+**Editing an existing playbook.** Every playbook card in the Library has an
+**Edit** button. It opens Playbook Studio and loads **that playbook's latest
+published version** for editing (no sign-in needed to load; sign-in is
+required to Save versions or Publish). If you have a different draft open,
+Studio asks before replacing it. The "Playbook Studio" header link, by
+contrast, always restores your most recent draft.
+
 **Creating a playbook from the Library.** Every department view has a
 **Create a playbook** button. It opens Playbook Studio with the New-playbook
 dialog, pre-fills the title (e.g. “Front Office Playbook”), and tags the
