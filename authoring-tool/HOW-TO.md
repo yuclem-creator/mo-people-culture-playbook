@@ -202,6 +202,32 @@ settings (those are baked into the ZIP itself, not fetched at runtime).
 
 ---
 
+## Version history (Supabase)
+
+Playbook Studio can also keep named snapshots in Supabase so you can go back
+to an earlier state without digging through downloaded `.json` files.
+
+- Open **Versions** in the top bar. Sign in if asked (the same Supabase sign-in
+  used for Publish).
+- **Save current as version** writes a snapshot of the current playbook to the
+  Supabase table `public.playbook_versions`. Add an optional note such as
+  “before CPO review”.
+- **Publish** also writes a version-history row after the normal Remote SCORM
+  publish succeeds. The Remote SCORM latest path is unchanged; version history
+  is an additional safety net, not a replacement for Publish.
+- **Restore** loads a snapshot back into the editor. **Download** exports that
+  snapshot as a portable `.json`, exactly like the normal Save flow.
+
+Where things are stored: version metadata and the playbook JSON snapshot live in
+`public.playbook_versions`; published files for Remote SCORM remain in the
+`playbook-content` Storage bucket under `published/<slug>/`.
+
+> If Publish succeeds but version history cannot be written (for example the
+> version table has not been created yet), Playbook Studio warns you but does
+> not fail the Remote SCORM publish.
+
+---
+
 ## What you can and can’t edit
 
 **You can edit:** all chapter titles and descriptions; cover, foreword, intro
