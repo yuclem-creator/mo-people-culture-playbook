@@ -743,6 +743,7 @@
     $('#btnExport').addEventListener('click', doExportOffline);
     $('#btnExportMenu').addEventListener('click', toggleExportMenu);
     $('#btnPublish').addEventListener('click', doPublishClick);
+    $('#btnVersions').addEventListener('click', doVersionsClick);
     $('#pvDesktop').addEventListener('click', function () { setPreviewWidth(false); });
     $('#pvMobile').addEventListener('click', function () { setPreviewWidth(true); });
   }
@@ -1066,6 +1067,7 @@
       busy(false);
       toast('Published “' + (PB.meta.title || slug) + '” · ' + result.assetCount + ' asset(s) uploaded', 'ok');
       showPublishSuccessModal(result);
+      recordPublishedVersion(result, session);
     }).catch(function (e) {
       busy(false);
       if (e && e.message === 'NOT_AUTHENTICATED') {
@@ -1085,6 +1087,136 @@
       el('div', { class: 'note', text: 'Use “Export SCORM (remote)” now (or re-use an already-exported remote package) — it will automatically pick up this update the next time a learner opens it.' })
     ]);
     showModal('Published', body, [{ label: 'Done', primary: true, onClick: closeModal }]);
+  }
+
+  // =========================================================================
+  // Version history (Supabase) — additive snapshot layer
+  // =========================================================================
+  function doVersionsClick() {
+    if (!window.PlaybookVersions) { toast('Version history is unavailable (versions.js failed to load).', 'err'); return; }
+    if (!window.PlaybookPublish) { toast('Version history needs Supabase sign-in, but the Supabase client failed to load.', 'err'); return; }
+    window.PlaybookPublish.getSession().then(function (session) {
+      _authSession = session;
+      if (session) openVersionsModal(session);
+      else openLoginModal(function (s) { openVersionsModal(s); });
+    });
+  }
+
+  function recordPublishedVersion(result, session) {
+    if (!window.PlaybookVersions) return;
+    window.PlaybookVersions.saveSnapshot(PB, {
+      slug: result.slug,
+      source: 'publish',
+      note: 'Published to Remote SCORM',
+      session: session,
+      publishedBy: result.publishedBy || (session && session.user && session.user.email) || null,
+      storagePrefix: 'published/' + result.slug + '/'
+    }).then(function (row) {
+      toast('Version history saved (' + String(row.id).slice(0, 8) + ')', 'ok');
+    }).catch(function (e) {
+      // Deliberately non-blocking: Remote SCORM latest publish already succeeded.
+      console.warn('[versions] publish snapshot failed:', e);
+      toast('Published, but version history was not saved: ' + ((e && e.message) || e), 'err');
+    });
+  }
+
+  function openVersionsModal(session) {
+    var slug = window.PlaybookPublish.slugFor(PB);
+    var body = el('div', { class: 'versions-ui' });
+    body.appendChild(el('div', { class: 'form-note', text: 'Snapshots are stored in Supabase table public.playbook_versions. The Remote SCORM latest publish path is unchanged.' }));
+
+    var noteInput = el('input', { type: 'text', placeholder: 'Optional note — e.g. “before CPO review”' });
+    var saveBtn = el('button', { class: 'btn primary', onclick: function () { saveCurrentVersion(session, slug, noteInput, saveBtn); } }, ['Save current as version']);
+    body.appendChild(el('div', { class: 'version-save-row' }, [noteInput, saveBtn]));
+
+    var listBox = el('div', { class: 'version-list' }, [el('div', { class: 'empty', text: 'Loading versions…' })]);
+    body.appendChild(el('div', { class: 'section-label', text: 'Saved versions' }));
+    body.appendChild(listBox);
+
+    showModal('Version history · ' + slug, body, [{ label: 'Close', primary: true, onClick: closeModal }]);
+    loadVersionRows(session, slug, listBox);
+  }
+
+  function saveCurrentVersion(session, slug, noteInput, saveBtn) {
+    saveBtn.disabled = true;
+    window.PlaybookVersions.saveSnapshot(PB, {
+      slug: slug,
+      source: 'manual-save',
+      note: noteInput.value.trim() || null,
+      session: session,
+      publishedBy: (session && session.user && session.user.email) || null,
+      storagePrefix: 'local-json/' + slug + '/'
+    }).then(function (row) {
+      saveBtn.disabled = false;
+      noteInput.value = '';
+      toast('Version saved (' + String(row.id).slice(0, 8) + ')', 'ok');
+      var listBox = document.querySelector('.version-list');
+      if (listBox) loadVersionRows(session, slug, listBox);
+    }).catch(function (e) {
+      saveBtn.disabled = false;
+      toast('Version save failed: ' + ((e && e.message) || e), 'err');
+    });
+  }
+
+  function loadVersionRows(session, slug, listBox) {
+    listBox.innerHTML = '';
+    listBox.appendChild(el('div', { class: 'empty', text: 'Loading versions…' }));
+    window.PlaybookVersions.listVersions(slug, { session: session }).then(function (rows) {
+      listBox.innerHTML = '';
+      if (!rows.length) {
+        listBox.appendChild(el('div', { class: 'empty', text: 'No Supabase versions yet for this slug.' }));
+        return;
+      }
+      rows.forEach(function (row) { listBox.appendChild(versionRow(session, row)); });
+    }).catch(function (e) {
+      listBox.innerHTML = '';
+      listBox.appendChild(el('div', { class: 'form-error', text: (e && e.message) || 'Could not load versions.' }));
+    });
+  }
+
+  function versionRow(session, row) {
+    var when = fmtDate(row.published_at);
+    var meta = el('div', { class: 'version-meta' }, [
+      el('div', { class: 'version-title', text: row.title || row.slug || 'Playbook' }),
+      el('div', { class: 'version-sub', text: when + ' · ' + (row.source || 'save') + (row.published_by ? ' · ' + row.published_by : '') }),
+      row.note ? el('div', { class: 'version-note', text: row.note }) : null
+    ]);
+    var actions = el('div', { class: 'version-actions' }, [
+      el('button', { class: 'btn ghost', onclick: function () { restoreVersion(session, row.id); } }, ['Restore']),
+      el('button', { class: 'btn ghost', onclick: function () { downloadVersion(session, row); } }, ['Download'])
+    ]);
+    return el('div', { class: 'version-row' }, [meta, actions]);
+  }
+
+  function restoreVersion(session, id) {
+    busy(true, 'Restoring version…');
+    window.PlaybookVersions.getVersion(id, { session: session }).then(function (row) {
+      busy(false);
+      if (!row || !row.data) throw new Error('That version has no playbook data.');
+      setPlaybook(row.data);
+      scheduleAutosave();
+      closeModal();
+      toast('Version restored into the editor', 'ok');
+    }).catch(function (e) {
+      busy(false);
+      toast('Restore failed: ' + ((e && e.message) || e), 'err');
+    });
+  }
+
+  function downloadVersion(session, row) {
+    window.PlaybookVersions.getVersion(row.id, { session: session }).then(function (full) {
+      var name = safeName((full && full.title) || row.title || row.slug || 'playbook').toLowerCase() + '-' + String(row.id).slice(0, 8) + '.json';
+      return STORE.exportFile(full.data, name);
+    }).then(function () {
+      toast('Version downloaded', 'ok');
+    }).catch(function (e) {
+      toast('Download failed: ' + ((e && e.message) || e), 'err');
+    });
+  }
+
+  function fmtDate(iso) {
+    try { return iso ? new Date(iso).toLocaleString() : '—'; }
+    catch (e) { return iso || '—'; }
   }
 
   // expose a couple of helpers for export.js
