@@ -208,7 +208,8 @@ Playbook Studio can also keep named snapshots in Supabase so you can go back
 to an earlier state without digging through downloaded `.json` files.
 
 - Open **Versions** in the top bar. Sign in if asked (the same Supabase sign-in
-  used for Publish).
+  used for Publish). This opens the version dashboard: playbooks on the left,
+  saved versions for the selected playbook on the right.
 - **Save current as version** writes a snapshot of the current playbook to the
   Supabase table `public.playbook_versions`. Add an optional note such as
   “before CPO review”.
