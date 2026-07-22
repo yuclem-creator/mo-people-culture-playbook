@@ -60,8 +60,24 @@
     }
   });
 
+  function armPreviewHandshake() {
+    var frame = $('#preview');
+    if (!frame) return;
+    var ping = function () {
+      try { if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'editor-ping' }, '*'); } catch (err) {}
+    };
+    frame.addEventListener('load', function () { previewReady = false; ping(); });
+    ping(); // the iframe may have finished before this listener attached
+    var tries = 0;
+    var timer = setInterval(function () {
+      if (previewReady || ++tries > 12) { clearInterval(timer); return; }
+      ping();
+    }, 800);
+  }
+
   function boot() {
     wireTopbar();
+    armPreviewHandshake();
     pendingCreate = readCreateParam();
     // Restore: autosnapshot > saved current > seed
     STORE.loadAutosnapshot().then(function (snap) {
@@ -131,6 +147,7 @@
     pb.meta.completion = pb.meta.completion || { mode: 'open-each-chapter', requiredChapterIds: [] };
     if (!pb.meta.slug) pb.meta.slug = window.PlaybookPublish ? window.PlaybookPublish.slugify(pb.meta.title) : '';
     pb.chapters = pb.chapters || [];
+    pb.sectionBodies = pb.sectionBodies || {};
     pb.lifecycle = pb.lifecycle || [];
     pb.journey = pb.journey || [];
     pb.seniorMgmt = pb.seniorMgmt || [];
@@ -206,8 +223,85 @@
         tree.appendChild(kids);
       }
     });
+    // chapter management: add
+    tree.appendChild(el('button', { class: 'tree-add', onclick: openAddChapterModal }, ['+ Add chapter']));
+
     // reflect current selection
     if (SEL) highlightTree();
+  }
+
+  // ---- Chapter management: add / move / delete ----------------------------
+  var ROMANS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+  function realChapterCount() {
+    return PB.chapters.filter(function (c) { return c.id !== 'cover' && c.id !== 'intro' && c.id !== 'menu'; }).length;
+  }
+  function nextChapterId() {
+    var max = 0;
+    PB.chapters.forEach(function (c) {
+      var m = /^ch-(\d+)$/.exec(c.id);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return 'ch-' + (max + 1);
+  }
+  function openAddChapterModal() {
+    var order = ['standard', 'sections-list', 'lifecycle', 'directory', 'letter'];
+    var descs = {
+      'standard': 'Opener plus numbered policy sections with items.',
+      'sections-list': 'A simple list of sections — good for toolkits and resources.',
+      'lifecycle': 'Stages with their own policy sections (the wheel model).',
+      'directory': 'People grids: senior management, leaders and beliefs.',
+      'letter': 'Foreword-style editorial chapter.'
+    };
+    var body = el('div', {});
+    body.appendChild(el('div', { class: 'note', text: 'Pick the kind of chapter to add. It is appended to the outline — use Move up / Move down in the chapter panel to reorder.' }));
+    order.forEach(function (t) {
+      body.appendChild(el('button', { class: 'new-card', onclick: function () { closeModal(); addChapter(t); } }, [
+        el('div', {}, [
+          el('div', { class: 'nc-title', text: CHAPTER_TYPES[t].label }),
+          el('div', { class: 'nc-desc', text: descs[t] })
+        ])
+      ]));
+    });
+    showModal('Add chapter', body, [{ label: 'Cancel', onClick: closeModal }]);
+  }
+  function addChapter(type) {
+    var id = nextChapterId();
+    var ch = { id: id, numeral: ROMANS[realChapterCount()] || String(realChapterCount() + 1), label: CHAPTER_TYPES[type].label, type: type, opener: '' };
+    if (type === 'lifecycle') {
+      ch.hasSubs = true;
+      var sub = { id: uid('sub'), letter: 'A', label: 'Stage one', img: '', lede: '' };
+      PB.lifecycle.push(sub);
+      PB.lifecycleContent[sub.id] = { sections: [] };
+    }
+    if (type === 'standard' || type === 'sections-list') {
+      PB.sectionBodies[id] = { intro: [], sections: [] };
+    }
+    PB.chapters.push(ch);
+    touch(); renderTree();
+    select({ kind: 'chapter', id: id, type: type, chapter: id });
+    toast('Chapter added — rename it and add content in the inspector.', 'ok');
+  }
+  function firstMovableIndex() {
+    var i = 0;
+    while (i < PB.chapters.length && (PB.chapters[i].id === 'cover' || PB.chapters[i].id === 'intro')) i++;
+    return i; // cover + welcome film stay pinned at the top
+  }
+  function moveChapter(id, dir) {
+    var i = -1;
+    PB.chapters.forEach(function (c, ix) { if (c.id === id) i = ix; });
+    var j = i + dir;
+    var lo = firstMovableIndex();
+    if (i < lo || j < lo || j >= PB.chapters.length) return;
+    var tmp = PB.chapters[i]; PB.chapters[i] = PB.chapters[j]; PB.chapters[j] = tmp;
+    touch(); renderTree(); renderInspector();
+  }
+  function deleteChapter(id) {
+    if (!window.confirm('Delete this chapter and all its content? This cannot be undone.')) return;
+    PB.chapters = PB.chapters.filter(function (c) { return c.id !== id; });
+    if (PB.sectionBodies) delete PB.sectionBodies[id];
+    SEL = null;
+    touch(); renderTree(); renderInspector();
+    toast('Chapter deleted', 'ok');
   }
 
   function treeNode(o) {
@@ -267,11 +361,24 @@
     var type = sel.type;
     inspTitle(box, ch.label || ch.id, (ch.numeral ? 'Chapter ' + ch.numeral + ' · ' : '') + (CHAPTER_TYPES[type] ? CHAPTER_TYPES[type].label : type));
 
+    // Chapter actions: reorder / remove (cover + welcome film are fixed)
+    if (ch.id !== 'cover' && ch.id !== 'intro') {
+      var chIx = -1;
+      PB.chapters.forEach(function (c, ix) { if (c.id === ch.id) chIx = ix; });
+      var loIx = firstMovableIndex();
+      box.appendChild(el('div', { class: 'ch-actions' }, [
+        el('button', { class: 'btn', disabled: chIx <= loIx ? 'disabled' : null, onclick: function () { moveChapter(ch.id, -1); } }, ['↑ Move up']),
+        el('button', { class: 'btn', disabled: chIx >= PB.chapters.length - 1 ? 'disabled' : null, onclick: function () { moveChapter(ch.id, 1); } }, ['↓ Move down']),
+        el('button', { class: 'btn danger', onclick: function () { deleteChapter(ch.id); } }, ['Delete chapter'])
+      ]));
+    }
+
     // Chapter label + card description
     box.appendChild(sectionLabel('Chapter'));
     box.appendChild(textField('Title', ch.label || '', function (v) { ch.label = v; touch(); renderTree(); }, 'Shown in the menu, rail and navigation.'));
     if (ch.id !== 'cover' && ch.id !== 'intro') {
       box.appendChild(textField('Contents-card description', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'One line under the card on the Contents page.', true));
+      box.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
     }
 
     // Prose group for this chapter (openers, headings, paragraphs, quotes...)
@@ -323,7 +430,9 @@
   function bodyForChapter(ch) {
     if (ch.id === 'ch-4') return PB.ch4;
     if (ch.id === 'ch-5') return PB.ch5;
-    return null;
+    PB.sectionBodies = PB.sectionBodies || {};
+    if (!PB.sectionBodies[ch.id]) PB.sectionBodies[ch.id] = { intro: [], sections: [] };
+    return PB.sectionBodies[ch.id];
   }
 
   // ---- Prose fields -------------------------------------------------------
@@ -886,6 +995,7 @@
           pb.lifecycleContent[pb.lifecycle[pb.lifecycle.length - 1].id] = { sections: [] };
         }
         if (t === 'standard' || t === 'sections-list') {
+          pb.sectionBodies[id] = { intro: [], sections: [] };
           if (id === 'ch-4') pb.ch4 = { sections: [] };
           else if (id === 'ch-5') pb.ch5 = { sections: [] };
         }
@@ -904,7 +1014,8 @@
         scorm: { identifier: 'MO_PLAYBOOK_MANIFEST', title: 'New Playbook', masteryScore: 100 },
         completion: { mode: 'open-all', requiredChapterIds: [] } },
       chapters: [], lifecycle: [], journey: [], seniorMgmt: [], pcLeaders: [], beliefs: [],
-      menuDesc: {}, lifecycleContent: {}, ch4: { sections: [] }, ch5: { sections: [] }, prose: {}, assets: {}
+      menuDesc: {}, lifecycleContent: {}, ch4: { sections: [] }, ch5: { sections: [] },
+      sectionBodies: {}, prose: {}, assets: {}
     };
   }
 
