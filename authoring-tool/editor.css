@@ -281,6 +281,9 @@ a{color:var(--gold)}
 .playbook-row{width:100%;text-align:left;border:1px solid var(--line);background:var(--panel-2);border-radius:8px;padding:10px 12px;cursor:pointer;color:inherit;font:inherit}
 .playbook-row:hover{border-color:var(--gold)}
 .playbook-row.on{border-color:var(--gold);box-shadow:0 0 0 3px rgba(181,144,96,.14);background:#fff}
+.dept-header{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);margin:10px 2px 2px;padding-top:6px;border-top:1px solid var(--line)}
+.dept-header:first-child{border-top:0;margin-top:0;padding-top:0}
+.dept-header svg{flex:0 0 auto}
 .playbook-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .playbook-sub{color:var(--ink-3);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .playbook-meta{color:var(--ink-2);font-size:12px;margin-top:6px}
