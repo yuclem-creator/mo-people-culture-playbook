@@ -95,12 +95,14 @@
       note: opts.note || null,
       source: opts.source || 'manual-save'
     };
+    // Graceful degradation for tables that predate the department column:
+    // never send a null department (PostgREST still rejects unknown columns
+    // even with null values), and if the column is missing altogether, retry
+    // once without it so the version always saves.
+    if (!row.department) delete row.department;
     return db.from(TABLE).insert(row).then(function (r) {
       if (!r.error) return row;
-      // Graceful degradation: if the table predates the department column
-      // (PostgREST PGRST204), retry once without it so the version still saves.
-      var msg = (r.error && r.error.message) || '';
-      if (row.department != null && /department/i.test(msg) && /column|schema cache/i.test(msg)) {
+      if ('department' in row && isMissingDeptColumn(r.error)) {
         var rowNoDept = {};
         Object.keys(row).forEach(function (k) { if (k !== 'department') rowNoDept[k] = row[k]; });
         return db.from(TABLE).insert(rowNoDept).then(function (r2) {
@@ -112,6 +114,13 @@
     }).catch(function (e) { throw friendlyTableError(e); });
   }
 
+  // True when Supabase/PostgREST reports the department column missing —
+  // either as PGRST204 ("schema cache") or a plain Postgres "does not exist".
+  function isMissingDeptColumn(err) {
+    var msg = (err && err.message) || '';
+    return /department/i.test(msg) && (/does not exist/i.test(msg) || /schema cache/i.test(msg));
+  }
+
   function listVersions(slug, opts) {
     opts = opts || {};
     var db = clientFor(opts.session);
@@ -121,6 +130,16 @@
       .eq('slug', slug)
       .order('published_at', { ascending: false })
       .limit(100)
+      .then(function (r) {
+        if (r.error && isMissingDeptColumn(r.error)) {
+          return db.from(TABLE)
+            .select('id,slug,title,published_by,published_at,note,source,storage_prefix')
+            .eq('slug', slug)
+            .order('published_at', { ascending: false })
+            .limit(100);
+        }
+        return r;
+      })
       .then(function (r) {
         if (r.error) throw friendlyTableError(r.error);
         return r.data || [];
@@ -135,6 +154,15 @@
       .select('id,slug,title,department,published_by,published_at,note,source,storage_prefix')
       .order('published_at', { ascending: false })
       .limit(500)
+      .then(function (r) {
+        if (r.error && isMissingDeptColumn(r.error)) {
+          return db.from(TABLE)
+            .select('id,slug,title,published_by,published_at,note,source,storage_prefix')
+            .order('published_at', { ascending: false })
+            .limit(500);
+        }
+        return r;
+      })
       .then(function (r) {
         if (r.error) throw friendlyTableError(r.error);
         return r.data || [];
