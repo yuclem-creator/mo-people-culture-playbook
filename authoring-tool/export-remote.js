@@ -35,7 +35,7 @@
       '/published/' + slug + '/playbook-data.json';
 
     // Files needed to RENDER (shell + plumbing), reused verbatim.
-    var TEXT_SHELL = ['index.html', 'app.js', 'playbook-content.js', 'mo-brand.css',
+    var TEXT_SHELL = ['index.html', 'app.js', 'ask.js', 'playbook-content.js', 'mo-brand.css',
       'scorm_api.js', 'scorm_hook.js', 'imsmanifest.xml',
       'adlcp_rootv1p2.xsd', 'ims_xml.xsd', 'imscp_rootv1p1p2.xsd', 'imsmd_rootv1p2p1.xsd'];
 
@@ -58,7 +58,7 @@
 
         // 3. Renderer + plumbing, verbatim (same files as offline; this is
         //    NOT the heavy part — img/video are what's stripped for remote).
-        ['app.js', 'playbook-content.js', 'mo-brand.css', 'scorm_api.js', 'scorm_hook.js',
+        ['app.js', 'ask.js', 'playbook-content.js', 'mo-brand.css', 'scorm_api.js', 'scorm_hook.js',
           'adlcp_rootv1p2.xsd', 'ims_xml.xsd', 'imscp_rootv1p1p2.xsd', 'imsmd_rootv1p2p1.xsd']
           .forEach(function (f) { zip.file(f, texts[f]); });
 
