@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MO Playbook Authoring Tool</title>
+<link rel="icon" href="data:," />
 <link rel="stylesheet" href="editor.css" />
 </head>
 <body>
@@ -33,6 +34,7 @@
       <button class="btn primary seg-caret" id="btnExportMenu" title="Choose export type (offline / remote)" aria-haspopup="true">▾</button>
     </div>
     <button class="btn" id="btnPublish" title="Publish this playbook to the cloud so Remote SCORM packages auto-update">Publish</button>
+    <button class="btn" id="btnVersions" title="Save, view, and restore Supabase version-history snapshots">Versions</button>
   </header>
 
   <!-- ---- Body ------------------------------------------------------------ -->
@@ -87,6 +89,7 @@
 <script src="export.js"></script>
 <script src="export-remote.js"></script>
 <script src="publish.js"></script>
+<script src="versions.js"></script>
 <script src="editor.js"></script>
 </body>
 </html>
