@@ -253,10 +253,18 @@ playbooks instead of opening a single course link directly:
   unavailable it falls back to the last copy that browser cached; if nothing
   is available it shows a branded error with a link back to the hub.
 
-**After you publish a new playbook from Studio**, add one entry to
-`playbooks.json` (and a new department if needed) and push — it then appears
-in the library automatically. Re-publishing an existing slug needs no change;
-the player always fetches the latest published content.
+**Creating a playbook from the Library.** Every department view has a
+**Create a playbook** button. It opens Playbook Studio with the New-playbook
+dialog, pre-fills the title (e.g. “Front Office Playbook”), and tags the
+playbook’s **Department** field (visible under Settings) with that folder’s
+id — so nothing has to be remembered or typed twice.
+
+**After you publish a new playbook from Studio**, the publish-success dialog
+shows a ready-to-paste **library entry** (slug, title, department, edition)
+with a Copy button. Paste it into the `playbooks` array in `playbooks.json`,
+fill in a description, and push — the playbook then appears in its department
+folder. Re-publishing an existing slug needs no change; the player always
+fetches the latest published content.
 
 > The hub and player only READ public published content. Version history
 > (`public.playbook_versions`) stays sign-in only and is not exposed here.
