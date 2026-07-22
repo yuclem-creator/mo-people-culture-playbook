@@ -1122,22 +1122,28 @@
 
   function openVersionsModal(session) {
     var slug = window.PlaybookPublish.slugFor(PB);
-    var body = el('div', { class: 'versions-ui' });
-    body.appendChild(el('div', { class: 'form-note', text: 'Snapshots are stored in Supabase table public.playbook_versions. The Remote SCORM latest publish path is unchanged.' }));
+    var body = el('div', { class: 'versions-ui dashboard-ui' });
+    body.appendChild(el('div', { class: 'form-note', text: 'Saved versions are stored in Supabase table public.playbook_versions. Sign-in is required; the Remote SCORM latest publish path is unchanged.' }));
 
+    var playbookList = el('div', { class: 'playbook-list' }, [el('div', { class: 'empty', text: 'Loading playbooks…' })]);
+    var listBox = el('div', { class: 'version-list' }, [el('div', { class: 'empty', text: 'Loading versions…' })]);
+    var refresh = function () { loadDashboard(session, slug, playbookList, listBox); };
     var noteInput = el('input', { type: 'text', placeholder: 'Optional note — e.g. “before CPO review”' });
-    var saveBtn = el('button', { class: 'btn primary', onclick: function () { saveCurrentVersion(session, slug, noteInput, saveBtn); } }, ['Save current as version']);
+    var saveBtn = el('button', { class: 'btn primary', onclick: function () { saveCurrentVersion(session, slug, noteInput, saveBtn, refresh); } }, ['Save current as version']);
     body.appendChild(el('div', { class: 'version-save-row' }, [noteInput, saveBtn]));
 
-    var listBox = el('div', { class: 'version-list' }, [el('div', { class: 'empty', text: 'Loading versions…' })]);
-    body.appendChild(el('div', { class: 'section-label', text: 'Saved versions' }));
-    body.appendChild(listBox);
+    body.appendChild(el('div', { class: 'dashboard-grid' }, [
+      el('div', { class: 'dashboard-playbooks' }, [el('div', { class: 'section-label', text: 'Playbooks' }), playbookList]),
+      el('div', { class: 'dashboard-versions' }, [el('div', { class: 'section-label', text: 'Saved versions' }), listBox])
+    ]));
 
-    showModal('Version history · ' + slug, body, [{ label: 'Close', primary: true, onClick: closeModal }]);
-    loadVersionRows(session, slug, listBox);
+    showModal('Version dashboard', body, [{ label: 'Close', primary: true, onClick: closeModal }]);
+    var modal = document.querySelector('.modal');
+    if (modal) modal.classList.add('modal-dashboard');
+    refresh();
   }
 
-  function saveCurrentVersion(session, slug, noteInput, saveBtn) {
+  function saveCurrentVersion(session, slug, noteInput, saveBtn, refresh) {
     saveBtn.disabled = true;
     window.PlaybookVersions.saveSnapshot(PB, {
       slug: slug,
@@ -1150,24 +1156,90 @@
       saveBtn.disabled = false;
       noteInput.value = '';
       toast('Version saved (' + String(row.id).slice(0, 8) + ')', 'ok');
-      var listBox = document.querySelector('.version-list');
-      if (listBox) loadVersionRows(session, slug, listBox);
+      if (refresh) refresh();
     }).catch(function (e) {
       saveBtn.disabled = false;
       toast('Version save failed: ' + ((e && e.message) || e), 'err');
     });
   }
 
+  function loadDashboard(session, selectedSlug, playbookList, listBox) {
+    playbookList.innerHTML = '';
+    listBox.innerHTML = '';
+    playbookList.appendChild(el('div', { class: 'empty', text: 'Loading playbooks…' }));
+    listBox.appendChild(el('div', { class: 'empty', text: 'Loading versions…' }));
+    window.PlaybookVersions.listAllVersions({ session: session }).then(function (rows) {
+      var groups = groupVersionsBySlug(rows);
+      playbookList.innerHTML = '';
+      listBox.innerHTML = '';
+      if (!groups.length) {
+        playbookList.appendChild(el('div', { class: 'empty', text: 'No Supabase versions yet.' }));
+        listBox.appendChild(el('div', { class: 'empty', text: 'Save a version or Publish to create one.' }));
+        return;
+      }
+      var selected = groups.some(function (g) { return g.slug === selectedSlug; }) ? selectedSlug : groups[0].slug;
+      groups.forEach(function (group) {
+        playbookList.appendChild(dashboardPlaybookRow(group, group.slug === selected, function () {
+          playbookList.querySelectorAll('.playbook-row').forEach(function (rowEl) { rowEl.classList.remove('on'); });
+          var rowEl = rowElForGroup(playbookList, group.slug);
+          if (rowEl) rowEl.classList.add('on');
+          renderDashboardVersions(session, group.rows, listBox);
+        }));
+      });
+      renderDashboardVersions(session, (groups.filter(function (g) { return g.slug === selected; })[0] || groups[0]).rows, listBox);
+    }).catch(function (e) {
+      playbookList.innerHTML = '';
+      listBox.innerHTML = '';
+      playbookList.appendChild(el('div', { class: 'form-error', text: (e && e.message) || 'Could not load playbooks.' }));
+      listBox.appendChild(el('div', { class: 'form-error', text: (e && e.message) || 'Could not load versions.' }));
+    });
+  }
+
+  function groupVersionsBySlug(rows) {
+    var map = {};
+    var order = [];
+    (rows || []).forEach(function (row) {
+      var slug = row.slug || 'playbook';
+      if (!map[slug]) {
+        map[slug] = { slug: slug, title: row.title || slug, rows: [] };
+        order.push(slug);
+      }
+      map[slug].rows.push(row);
+    });
+    return order.map(function (slug) { return map[slug]; });
+  }
+
+  function rowElForGroup(playbookList, slug) {
+    var rows = playbookList.querySelectorAll('.playbook-row');
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].getAttribute('data-slug') === slug) return rows[i];
+    }
+    return null;
+  }
+
+  function dashboardPlaybookRow(group, isOn, onSelect) {
+    var latest = group.rows[0] || {};
+    return el('button', { class: 'playbook-row' + (isOn ? ' on' : ''), 'data-slug': group.slug, onclick: onSelect }, [
+      el('div', { class: 'playbook-title', text: group.title || group.slug }),
+      el('div', { class: 'playbook-sub', text: group.slug }),
+      el('div', { class: 'playbook-meta', text: group.rows.length + ' version' + (group.rows.length === 1 ? '' : 's') + ' · latest ' + fmtDate(latest.published_at) })
+    ]);
+  }
+
+  function renderDashboardVersions(session, rows, listBox) {
+    listBox.innerHTML = '';
+    if (!rows || !rows.length) {
+      listBox.appendChild(el('div', { class: 'empty', text: 'No saved versions for this playbook yet.' }));
+      return;
+    }
+    rows.forEach(function (row) { listBox.appendChild(versionRow(session, row)); });
+  }
+
   function loadVersionRows(session, slug, listBox) {
     listBox.innerHTML = '';
     listBox.appendChild(el('div', { class: 'empty', text: 'Loading versions…' }));
     window.PlaybookVersions.listVersions(slug, { session: session }).then(function (rows) {
-      listBox.innerHTML = '';
-      if (!rows.length) {
-        listBox.appendChild(el('div', { class: 'empty', text: 'No Supabase versions yet for this slug.' }));
-        return;
-      }
-      rows.forEach(function (row) { listBox.appendChild(versionRow(session, row)); });
+      renderDashboardVersions(session, rows, listBox);
     }).catch(function (e) {
       listBox.innerHTML = '';
       listBox.appendChild(el('div', { class: 'form-error', text: (e && e.message) || 'Could not load versions.' }));
