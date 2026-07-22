@@ -202,6 +202,21 @@ settings (those are baked into the ZIP itself, not fetched at runtime).
 
 ---
 
+## Saving vs autosaving
+
+Three different things keep your work safe:
+
+- **Autosave** — every change is quietly snapshotted to your **browser** (no
+  sign-in, no Supabase). If you close and reopen the Studio, your work is
+  restored.
+- **Save (top bar)** — saves the browser working copy and, **when you're
+  signed in**, also files a version snapshot into the **version dashboard
+  (Supabase)** under the playbook's department folder. If you're not signed in
+  (or the dashboard write fails), it falls back to downloading a `.json` file
+  you can re-open later.
+- **Publish** — pushes the playbook live (Remote SCORM + web player) and also
+  records a version snapshot.
+
 ## Version history (Supabase)
 
 Playbook Studio can also keep named snapshots in Supabase so you can go back
