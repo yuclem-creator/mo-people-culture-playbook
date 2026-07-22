@@ -79,17 +79,18 @@
     wireTopbar();
     armPreviewHandshake();
     pendingCreate = readCreateParam();
+    pendingEdit = readEditParam();
     // Restore: autosnapshot > saved current > seed
     STORE.loadAutosnapshot().then(function (snap) {
       if (snap && snap.playbook) {
         setPlaybook(snap.playbook);
         toast('Restored your last autosaved work', 'ok');
-        maybePromptCreate();
+        maybeEnterFromLibrary();
         return;
       }
       STORE.load().then(function (cur) {
-        if (cur) { setPlaybook(cur); maybePromptCreate(); return; }
-        loadSeed().then(maybePromptCreate);
+        if (cur) { setPlaybook(cur); maybeEnterFromLibrary(); return; }
+        loadSeed().then(maybeEnterFromLibrary);
       });
     });
   }
@@ -120,6 +121,63 @@
   function maybePromptCreate() {
     if (!pendingCreate) return;
     openNewModal();
+  }
+
+  // ---- Edit-from-library flow --------------------------------------------
+  // Library playbook cards link here as authoring-tool/?edit=<slug>.
+  // The published content is public, so loading works without sign-in;
+  // sign-in is only needed to Save versions / Publish.
+  var pendingEdit = null;
+  function readEditParam() {
+    try {
+      var q = new URLSearchParams(window.location.search);
+      var s = (q.get('edit') || '').trim();
+      return s || null;
+    } catch (e) { return null; }
+  }
+  function stripLibraryParams() {
+    try { window.history.replaceState({}, '', window.location.pathname); } catch (e) {}
+  }
+  function maybeEnterFromLibrary() {
+    if (pendingEdit) { maybeLoadEditParam(); return; }
+    maybePromptCreate();
+  }
+  function maybeLoadEditParam() {
+    var slug = pendingEdit;
+    var curSlug = window.PlaybookPublish ? window.PlaybookPublish.slugFor(PB) : (PB.meta && PB.meta.slug);
+    if (curSlug && curSlug !== slug) {
+      var body = el('div', {}, [
+        el('div', { class: 'form-note', text: 'Load the published \u201C' + slug + '\u201D for editing? Your current draft \u201C' + curSlug + '\u201D will be replaced — Save it first if you need a copy.' })
+      ]);
+      showModal('Edit published playbook', body, [
+        { label: 'Load published version', primary: true, onClick: function () { closeModal(); loadPublishedForEdit(slug); } },
+        { label: 'Cancel', onClick: function () { closeModal(); pendingEdit = null; stripLibraryParams(); } }
+      ]);
+      return;
+    }
+    loadPublishedForEdit(slug);
+  }
+  function loadPublishedForEdit(slug) {
+    var cfg = window.SUPABASE_CONFIG || {};
+    if (!cfg.url) { toast('Supabase is not configured here.', 'err'); pendingEdit = null; return; }
+    var url = String(cfg.url).replace(/\/$/, '') + '/storage/v1/object/public/playbook-content/published/' +
+      encodeURIComponent(slug) + '/playbook-data.json?t=' + Date.now();
+    toast('Loading published playbook\u2026');
+    fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (pb) {
+      pb.meta = pb.meta || {};
+      if (!pb.meta.slug) pb.meta.slug = slug;
+      setPlaybook(pb);
+      markSaved();
+      toast('Loaded \u201C' + ((pb.meta && pb.meta.title) || slug) + '\u201D — you are editing the published version.', 'ok');
+    }).catch(function (err) {
+      toast('Could not load the published playbook: ' + (err.message || err), 'err');
+    }).then(function () {
+      pendingEdit = null;
+      stripLibraryParams();
+    });
   }
   function applyPendingCreate(pb) {
     if (!pendingCreate) return;
