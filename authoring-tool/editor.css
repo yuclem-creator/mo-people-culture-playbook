@@ -136,6 +136,11 @@ a{color:var(--gold)}
 .field .html-hint{font-size:11px;color:var(--ink-3);margin-top:4px}
 
 .snippet{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre;overflow:auto;max-height:180px;margin:8px 0 10px}
+.tree-add{display:block;width:calc(100% - 16px);margin:10px 8px 6px;padding:9px 10px;border:1px dashed var(--line-2);border-radius:8px;background:transparent;color:var(--ink-3);font:inherit;font-size:13px;cursor:pointer;text-align:center}
+.tree-add:hover{border-color:var(--gold);color:var(--ink)}
+.ch-actions{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px}
+.ch-actions .btn{font-size:12px;padding:6px 10px}
+.btn.danger:hover{border-color:#8B1E2C;color:#8B1E2C}
 .section-label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
   font-weight:600;margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 
