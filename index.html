@@ -141,6 +141,17 @@ a { color: inherit; }
 }
 .pcard:hover .open { background: var(--gold); color: #fff; border-color: var(--gold); }
 
+.create-card {
+  border-style: dashed; border-color: var(--gold-hair); background: var(--paper-warm);
+}
+.create-card:hover { border-color: var(--gold); }
+.create-card .book {
+  border-style: dashed; color: var(--celadon); font-size: 26px; line-height: 1;
+  font-family: Georgia, serif;
+}
+.create-card h3 { color: var(--gold-deep); }
+.create-card .open { border-style: dashed; }
+
 .empty {
   max-width: 1200px; margin: 0 auto; padding: 40px clamp(20px, 5vw, 64px) 80px;
   color: var(--ink-fade); font-size: 14px;
@@ -271,7 +282,15 @@ a { color: inherit; }
     document.getElementById('crumb-home').addEventListener('click', function () { state.dept = null; renderFolders(); });
 
     var books = playbooksIn(d.id).filter(function (p) { return matching(p, state.query); });
-    var html = '';
+    var createUrl = 'authoring-tool/?create=' + encodeURIComponent(d.id) + '&dept=' + encodeURIComponent(d.name);
+    var html = '<a class="pcard create-card" href="' + esc(createUrl) + '" title="Open Playbook Studio to author a new playbook for this department">' +
+      '<span class="book">+</span>' +
+      '<span class="body">' +
+        '<h3>Create a playbook</h3>' +
+        '<p class="desc">Author a new ' + esc(d.name) + ' playbook in Playbook Studio. Sign-in required; it appears here once published and listed in playbooks.json.</p>' +
+      '</span>' +
+      '<span class="open">Create</span>' +
+      '</a>';
     books.forEach(function (p) {
       html += '<a class="pcard" href="' + esc(playbookUrl(p)) + '">' +
         '<span class="book">' + BOOK_SVG + '</span>' +
@@ -287,7 +306,7 @@ a { color: inherit; }
     grid.className = 'cards';
     grid.innerHTML = html;
     if (!books.length) {
-      grid.innerHTML = '<div class="empty">No playbooks published in ' + esc(d.name) + ' yet.' +
+      grid.innerHTML = html + '<div class="empty" style="padding-top:8px;padding-bottom:40px;">No playbooks published in ' + esc(d.name) + ' yet.' +
         (state.query ? ' Try clearing your search.' : '') + '</div>';
       return;
     }
