@@ -87,6 +87,7 @@
       id: id,
       slug: slug,
       title: (pb && pb.meta && pb.meta.title) || slug,
+      department: (pb && pb.meta && pb.meta.department) || null,
       data: pb,
       asset_manifest: opts.assetManifest || assetManifest(pb),
       storage_prefix: opts.storagePrefix || ('local-json/' + slug + '/' + id + '/'),
@@ -105,7 +106,7 @@
     var db = clientFor(opts.session);
     if (!db) return Promise.reject(unavailable());
     return db.from(TABLE)
-      .select('id,slug,title,published_by,published_at,note,source,storage_prefix')
+      .select('id,slug,title,department,published_by,published_at,note,source,storage_prefix')
       .eq('slug', slug)
       .order('published_at', { ascending: false })
       .limit(100)
@@ -120,7 +121,7 @@
     var db = clientFor(opts.session);
     if (!db) return Promise.reject(unavailable());
     return db.from(TABLE)
-      .select('id,slug,title,published_by,published_at,note,source,storage_prefix')
+      .select('id,slug,title,department,published_by,published_at,note,source,storage_prefix')
       .order('published_at', { ascending: false })
       .limit(500)
       .then(function (r) {
