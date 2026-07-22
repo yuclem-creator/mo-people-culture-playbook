@@ -255,6 +255,18 @@ a{color:var(--gold)}
 .publish-progress .bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:6px}
 .publish-progress .bar > i{display:block;height:100%;background:var(--gold);transition:width .18s}
 
+/* ---- Version history ------------------------------------------------------ */
+.version-save-row{display:flex;gap:10px;margin:12px 0 16px}
+.version-save-row input{flex:1 1 auto;min-width:0;padding:8px 10px;border:1px solid var(--line-2);border-radius:6px;background:#fff}
+.version-save-row input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(181,144,96,.14)}
+.version-list{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto;padding-right:2px}
+.version-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);padding:10px 12px}
+.version-meta{min-width:0}
+.version-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.version-sub{color:var(--ink-3);font-size:12px;margin-top:2px}
+.version-note{margin-top:5px;color:var(--ink-2);font-size:12.5px}
+.version-actions{display:flex;gap:6px;flex:0 0 auto}
+
 .fallback-note{
   position:fixed;right:10px;bottom:10px;z-index:80;background:rgba(27,27,26,.78);color:#fff;
   font-size:10.5px;letter-spacing:.03em;border-radius:20px;padding:5px 11px;pointer-events:none;
@@ -263,4 +275,60 @@ a{color:var(--gold)}
 
 @media (max-width:640px){
   .export-menu{width:280px;right:0}
+}
+
+/* ---- Responsive authoring shell ------------------------------------------
+   The editor was designed as a desktop three-column tool. On narrow screens,
+   keep the same DOM and let the shell scroll vertically instead of forcing the
+   outline / preview / inspector columns to overflow sideways. */
+@media (max-width:900px){
+  html,body{height:auto}
+  body{overflow-x:hidden}
+  .app{height:auto;min-height:100vh;min-height:100dvh;overflow:visible}
+  .topbar{
+    position:sticky;top:0;height:auto;min-height:56px;flex:0 0 auto;
+    flex-wrap:wrap;gap:8px;padding:8px 10px;
+  }
+  .brand{flex:1 1 auto;min-width:150px}
+  .brand .sub{display:none}
+  .spacer{display:none}
+  .autosave{order:2;margin-left:auto;font-size:11px}
+  .topbar .doc-name{order:10;flex:1 1 100%;max-width:none;margin-left:0}
+  .auth-chip{order:11;flex:1 1 100%;justify-content:flex-end}
+  .topbar #btnNew{order:3}
+  .topbar #btnOpen{order:4}
+  .topbar #btnSave{order:5}
+  .topbar .export-seg{order:6}
+  .topbar #btnPublish{order:7}
+  .topbar #btnVersions{order:8}
+  .cols{flex-direction:column;min-height:0;overflow:visible}
+  .col{width:100%;flex:0 0 auto;min-height:0;border-right:0;border-left:0;border-bottom:1px solid var(--line)}
+  .col-outline{max-height:32vh;overflow:auto}
+  .col-preview{position:relative;height:62vh;min-height:440px;background:#ded9d0}
+  .preview-toolbar{position:relative;z-index:2;flex-wrap:wrap}
+  .preview-wrap{inset:44px 0 0 0;padding:10px}
+  .preview-frame{max-width:100%;height:100%}
+  .col-inspector{overflow:visible;border-bottom:0}
+  .inspector{padding-bottom:90px}
+  .export-menu{max-width:min(340px,calc(100vw - 16px))}
+}
+
+@media (max-width:640px){
+  .topbar{gap:6px}
+  .brand{min-width:132px}
+  .brand .title{font-size:13px}
+  .autosave .txt{max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar .btn{font-size:12px;padding:6px 8px;gap:5px}
+  .export-seg .btn:first-child{max-width:112px;overflow:hidden;text-overflow:ellipsis}
+  .col-outline{max-height:28vh}
+  .col-preview{height:58vh;min-height:360px}
+  .preview-toolbar{font-size:11px;padding:7px 8px}
+  .preview-toolbar .seg button{padding:4px 8px}
+  .preview-wrap{inset:52px 0 0 0;padding:8px}
+  .modal-back{padding:10px}
+  .version-save-row{flex-direction:column}
+  .version-row{flex-direction:column}
+  .version-actions{width:100%}
+  .version-actions .btn{flex:1 1 auto;justify-content:center}
+  .toast{max-width:calc(100vw - 24px)}
 }
