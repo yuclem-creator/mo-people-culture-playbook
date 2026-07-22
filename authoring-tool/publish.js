@@ -120,7 +120,29 @@
       // relative path -> { base64 } for every image/video that needs writing.
       var ext = helpers.externalizeAssets(pb);
       var assetPaths = Object.keys(ext.extraFiles); // e.g. "img/foo.jpg"
-      var total = assetPaths.length + 2; // + playbook-data.json + version.json
+
+      // Also collect BUNDLED media referenced by path (e.g. "video/intro.mp4"
+      // from the starter content). The remote shell rewrites such references
+      // to bucket URLs, so the files must exist in the bucket or they 404
+      // (symptom: black video player). Data-URL assets above are uploaded
+      // from memory; bundled files are fetched from preview-engine/ below.
+      var bundledRefs = [];
+      (function scan(node) {
+        if (node == null) return;
+        if (typeof node === 'string') {
+          if (/^(img|video)\/[A-Za-z0-9_\-.]+\.(jpg|jpeg|png|webp|gif|svg|mp4|webm)$/.test(node)) bundledRefs.push(node);
+          return;
+        }
+        if (Array.isArray(node)) { node.forEach(scan); return; }
+        if (typeof node === 'object') { Object.keys(node).forEach(function (k) { scan(node[k]); }); }
+      })(ext.playbook);
+      var seenRef = {};
+      var bundledPaths = bundledRefs.filter(function (p) {
+        if (seenRef[p] || ext.extraFiles[p]) return false; // dedupe + skip data-URL assets
+        seenRef[p] = true; return true;
+      });
+
+      var total = assetPaths.length + bundledPaths.length + 2; // + playbook-data.json + version.json
       var done = 0;
       function tick() { done++; onProgress(done, total); }
 
@@ -154,7 +176,29 @@
         });
       }, Promise.resolve());
 
+      // 1b. Upload bundled media referenced by path (fetched from
+      // preview-engine/, which ships the starter img/ + video/ files).
+      // A missing local file is warned about and skipped — never fails the
+      // publish (the shell simply keeps its previous behaviour for that file).
+      var uploadBundled = bundledPaths.reduce(function (chain, path) {
+        return chain.then(function () {
+          return fetch('preview-engine/' + path).then(function (res) {
+            if (!res.ok) { console.warn('[publish] bundled media not found locally, skipped:', path); return; }
+            return res.blob().then(function (blob) {
+              var mime = guessMime(path);
+              return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + path.replace(/^(img|video)\//, ''), blob, {
+                upsert: true, contentType: mime
+              }).then(function (r) {
+                if (r.error) throw new Error('Asset upload failed (' + path + '): ' + r.error.message);
+                tick();
+              });
+            });
+          });
+        });
+      }, Promise.resolve());
+
       return uploadAssets
+        .then(function () { return uploadBundled; })
         .then(function () {
           // 2. Upload playbook-data.json
           var blob = new Blob([JSON.stringify(playbookForUpload)], { type: 'application/json' });
