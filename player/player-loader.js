@@ -150,7 +150,7 @@
     } catch (e) {}
     log(sourceLabel);
     if (sourceLabel !== 'network') showNote('Showing last saved version');
-    loadScriptsSequentially(['playbook-content.js', 'app.js'], function () {
+    loadScriptsSequentially(['playbook-content.js', 'app.js', 'ask.js'], function () {
       log('boot-complete');
     });
   }
