@@ -96,8 +96,19 @@
       source: opts.source || 'manual-save'
     };
     return db.from(TABLE).insert(row).then(function (r) {
-      if (r.error) throw friendlyTableError(r.error);
-      return row;
+      if (!r.error) return row;
+      // Graceful degradation: if the table predates the department column
+      // (PostgREST PGRST204), retry once without it so the version still saves.
+      var msg = (r.error && r.error.message) || '';
+      if (row.department != null && /department/i.test(msg) && /column|schema cache/i.test(msg)) {
+        var rowNoDept = {};
+        Object.keys(row).forEach(function (k) { if (k !== 'department') rowNoDept[k] = row[k]; });
+        return db.from(TABLE).insert(rowNoDept).then(function (r2) {
+          if (r2.error) throw friendlyTableError(r2.error);
+          return row;
+        });
+      }
+      throw friendlyTableError(r.error);
     }).catch(function (e) { throw friendlyTableError(e); });
   }
 
