@@ -267,6 +267,18 @@ a{color:var(--gold)}
 .version-note{margin-top:5px;color:var(--ink-2);font-size:12.5px}
 .version-actions{display:flex;gap:6px;flex:0 0 auto}
 
+/* ---- Version dashboard ---------------------------------------------------- */
+.modal.modal-dashboard{max-width:980px}
+.dashboard-grid{display:grid;grid-template-columns:minmax(220px,.9fr) minmax(340px,1.6fr);gap:14px;align-items:start;margin-top:4px}
+.dashboard-playbooks,.dashboard-versions{min-width:0}
+.playbook-list{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto;padding-right:2px}
+.playbook-row{width:100%;text-align:left;border:1px solid var(--line);background:var(--panel-2);border-radius:8px;padding:10px 12px;cursor:pointer;color:inherit;font:inherit}
+.playbook-row:hover{border-color:var(--gold)}
+.playbook-row.on{border-color:var(--gold);box-shadow:0 0 0 3px rgba(181,144,96,.14);background:#fff}
+.playbook-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playbook-sub{color:var(--ink-3);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playbook-meta{color:var(--ink-2);font-size:12px;margin-top:6px}
+
 .fallback-note{
   position:fixed;right:10px;bottom:10px;z-index:80;background:rgba(27,27,26,.78);color:#fff;
   font-size:10.5px;letter-spacing:.03em;border-radius:20px;padding:5px 11px;pointer-events:none;
@@ -327,6 +339,8 @@ a{color:var(--gold)}
   .preview-wrap{inset:52px 0 0 0;padding:8px}
   .modal-back{padding:10px}
   .version-save-row{flex-direction:column}
+  .dashboard-grid{grid-template-columns:1fr}
+  .playbook-list{max-height:26vh}
   .version-row{flex-direction:column}
   .version-actions{width:100%}
   .version-actions .btn{flex:1 1 auto;justify-content:center}
