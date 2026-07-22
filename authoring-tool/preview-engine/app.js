@@ -44,7 +44,7 @@ const CHAPTERS_DEFAULT = [
   { id: 'ch-5',     numeral: 'V',   label: 'P&C Audit',                                  opener: 'opener_audit.jpg'   },
   { id: 'ch-6',     numeral: 'VI',  label: 'Staying Connected & Supported',              opener: 'opener_support.jpg' }
 ];
-const CHAPTERS = (PB.chapters && PB.chapters.length) ? PB.chapters : CHAPTERS_DEFAULT;
+let CHAPTERS;
 
 // Sub-chapters for Chapter III (Colleague Lifecycle)
 const LIFECYCLE_DEFAULT = [
@@ -65,7 +65,7 @@ const LIFECYCLE_DEFAULT = [
   { id: 'sub-H', letter: 'H', label: 'Leaving with Connection',     img: 'ch_H_leaving.jpg',
     lede: 'Offboarding with dignity, and staying connected through the Forever Fans alumni community.' }
 ];
-const LIFECYCLE = (PB.lifecycle && PB.lifecycle.length) ? PB.lifecycle : LIFECYCLE_DEFAULT;
+let LIFECYCLE;
 
 // Colleague Journey — how the Colleague Experience maps to the lifecycle,
 // and how People & Culture delivers it at each stage. Stage words are drawn
@@ -83,7 +83,7 @@ const JOURNEY_DEFAULT = [
   { stage: 'Stay connected', img: 'journey_stay.jpg', icon: 'sub-H', pos: 'center 30%',
     role: 'Even as Colleagues move on, P&amp;C offboards with dignity and keeps them close through the Forever Fans alumni community.' }
 ];
-const JOURNEY = (PB.journey && PB.journey.length) ? PB.journey : JOURNEY_DEFAULT;
+let JOURNEY;
 
 // Senior Management (verbatim)
 const SENIOR_MGMT_DEFAULT = [
@@ -98,7 +98,7 @@ const SENIOR_MGMT_DEFAULT = [
   { name: 'Kristin Ruble',         role: 'Chief Commercial Officer',           img: 'sm_kristin.jpg' },
   { name: 'Alex Schellenberger',   role: 'Chief Brand & Marketing Officer',    img: 'sm_alex.jpg' }
 ];
-const SENIOR_MGMT = (PB.seniorMgmt && PB.seniorMgmt.length) ? PB.seniorMgmt : SENIOR_MGMT_DEFAULT;
+let SENIOR_MGMT;
 
 // Vice President & Regional P&C Leaders (verbatim)
 const PC_LEADERS_DEFAULT = [
@@ -107,7 +107,7 @@ const PC_LEADERS_DEFAULT = [
   { name: 'Robin Vermeire',  role: 'Regional Director · Europe',            img: 'vp_robin.jpg' },
   { name: 'Laura Wilson',    role: 'Regional Director · Asia Pacific',       img: 'vp_laura.jpg' }
 ];
-const PC_LEADERS = (PB.pcLeaders && PB.pcLeaders.length) ? PB.pcLeaders : PC_LEADERS_DEFAULT;
+let PC_LEADERS;
 
 /* =================================================================
    ELEGANT LINE ICONS — thin-stroke, MO style
@@ -145,7 +145,7 @@ const MENU_DESC_DEFAULT = {
   'ch-5': 'How we measure and uphold the standards of People & Culture across the Group.',
   'ch-6': 'The networks, tools, and communities that keep every Colleague supported.'
 };
-const MENU_DESC = (PB.menuDesc) ? PB.menuDesc : MENU_DESC_DEFAULT;
+let MENU_DESC;
 
 // Policy chip symbols — thin-stroke line icons
 const SYM = {
@@ -238,15 +238,27 @@ function _globalOr(name, fallback) {
   try { return (typeof window !== 'undefined' && name in window) ? window[name] : eval(name); }
   catch (e) { return fallback; }
 }
-const _LC  = PB.lifecycleContent || _globalOr('LIFECYCLE_CONTENT', {});
-const _CH4 = PB.ch4 || _globalOr('CH4_CONTENT', { sections: [] });
-const _CH5 = PB.ch5 || _globalOr('CH5_CONTENT', { sections: [] });
-// Public aliases used throughout the renderer.
-const PB_LIFECYCLE_CONTENT = _LC;
-const PB_CH4_CONTENT = _CH4;
-const PB_CH5_CONTENT = _CH5;
-const CH4_SECTIONS = PB_CH4_CONTENT.sections;
-const CH5_SECTIONS = PB_CH5_CONTENT.sections;
+let _LC, _CH4, _CH5, PB_LIFECYCLE_CONTENT, PB_CH4_CONTENT, PB_CH5_CONTENT, CH4_SECTIONS, CH5_SECTIONS, BELIEFS;
+// Recompute every PB-derived module value. Called once at load and again on
+// every applyPlaybook() so the editor's live preview (and remote boots) render
+// the CURRENT playbook, not whatever was baked at page load.
+function refreshDerived() {
+  CHAPTERS = (PB.chapters && PB.chapters.length) ? PB.chapters : CHAPTERS_DEFAULT;
+  LIFECYCLE = (PB.lifecycle && PB.lifecycle.length) ? PB.lifecycle : LIFECYCLE_DEFAULT;
+  JOURNEY = (PB.journey && PB.journey.length) ? PB.journey : JOURNEY_DEFAULT;
+  SENIOR_MGMT = (PB.seniorMgmt && PB.seniorMgmt.length) ? PB.seniorMgmt : SENIOR_MGMT_DEFAULT;
+  PC_LEADERS = (PB.pcLeaders && PB.pcLeaders.length) ? PB.pcLeaders : PC_LEADERS_DEFAULT;
+  MENU_DESC = (PB.menuDesc) ? PB.menuDesc : MENU_DESC_DEFAULT;
+  BELIEFS = (PB.beliefs && PB.beliefs.length) ? PB.beliefs : BELIEFS_DEFAULT;
+  _LC  = PB.lifecycleContent || _globalOr('LIFECYCLE_CONTENT', {});
+  _CH4 = PB.ch4 || _globalOr('CH4_CONTENT', { sections: [] });
+  _CH5 = PB.ch5 || _globalOr('CH5_CONTENT', { sections: [] });
+  PB_LIFECYCLE_CONTENT = _LC;
+  PB_CH4_CONTENT = _CH4;
+  PB_CH5_CONTENT = _CH5;
+  CH4_SECTIONS = PB_CH4_CONTENT.sections;
+  CH5_SECTIONS = PB_CH5_CONTENT.sections;
+}
 
 
 /* =================================================================
@@ -598,7 +610,7 @@ const BELIEFS_DEFAULT = [
     ]
   }
 ];
-const BELIEFS = (PB.beliefs && PB.beliefs.length) ? PB.beliefs : BELIEFS_DEFAULT;
+
 
 function beliefsTabsHTML() {
   const tabs = BELIEFS.map((b, i) => `
@@ -2080,19 +2092,130 @@ function renderMenu() {
   `;
 }
 
+// Chapter type, mirroring the editor's chapterType() (seed chapters carry no
+// explicit type, so ids fall back to the legacy mapping).
+function chapterTypeOf(ch) {
+  if (ch.type) return ch.type;
+  if (ch.id === 'cover') return 'cover';
+  if (ch.id === 'intro') return 'intro-video';
+  if (ch.id === 'ch-1') return 'letter';
+  if (ch.hasSubs) return 'lifecycle';
+  if (ch.id === 'ch-2') return 'directory';
+  return 'standard';
+}
+
+// Per-chapter section bodies. The seed's two bespoke bodies stay on
+// PB.ch4 / PB.ch5; chapters created in the editor store theirs under
+// PB.sectionBodies[chapterId].
+function chapterBodyFor(ch) {
+  if (ch.id === 'ch-4') return PB_CH4_CONTENT;
+  if (ch.id === 'ch-5') return PB_CH5_CONTENT;
+  return (PB.sectionBodies && PB.sectionBodies[ch.id]) || { intro: [], sections: [] };
+}
+
+// Generic magazine-style chapter page, used for any chapter that has no
+// bespoke (seed) renderer — i.e. everything authored from a blank playbook.
+function renderGenericChapter(ch, prevId, nextId) {
+  const type = chapterTypeOf(ch);
+  const prefix = ch.id.replace('ch-', 'ch'); // prose key convention: ch-7 -> ch7
+  const bg = T(prefix + '.opener.bg', '');
+  const title = T(prefix + '.opener.title', '') || esc(ch.label || '');
+  const sub = T(prefix + '.opener.sub', ch.opener || '');
+  const eyebrow = T(prefix + '.opener.eyebrow', '');
+  const backBtn = '<button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button>';
+  const numeral = ch.numeral ? 'Chapter ' + esc(ch.numeral) : '';
+
+  const opener = bg
+    ? `<div class="opener">
+        <div class="opener-hero" style="background-image: url('img/${bg}');">
+          <div class="opener-content">
+            <div class="opener-top">
+              <div class="opener-top-left">${backBtn}<div class="opener-numeral">${numeral}</div></div>
+              ${eyebrow ? `<div class="opener-eyebrow">${eyebrow}</div>` : ''}
+            </div>
+            <div class="opener-bottom">
+              <h1 class="opener-title">${title}</h1>
+              ${sub ? `<p class="opener-sub">${sub}</p>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>`
+    : `<div class="opener">
+        <div style="padding: 56px 6vw 34px; border-bottom: 1px solid var(--rule); background: var(--paper-warm);">
+          <div class="opener-top-left" style="display:flex; align-items:center; gap:18px;">${backBtn}<div class="opener-numeral">${numeral}</div></div>
+          ${eyebrow ? `<div class="opener-eyebrow" style="margin-top:26px;">${eyebrow}</div>` : ''}
+          <h1 class="opener-title" style="color:var(--ink); margin:10px 0 0;">${title}</h1>
+          ${sub ? `<p class="opener-sub" style="color:var(--ink-mute); margin:12px 0 0; max-width:640px;">${sub}</p>` : ''}
+        </div>
+      </div>`;
+
+  let body = '';
+  if (type === 'lifecycle') {
+    body = LIFECYCLE.map(s => {
+      const c = PB_LIFECYCLE_CONTENT[s.id] || { sections: [] };
+      return `
+        <div class="spread tight" id="${esc(s.id)}">
+          <div class="section-eyebrow"><span class="txt">${esc((s.letter ? s.letter + '. ' : '') + (s.label || ''))}</span><span class="rule"></span></div>
+          ${s.lede ? `<div class="editorial-body"><p>${esc(s.lede)}</p></div>` : ''}
+          ${(c.sections || []).map(sectionHTML).join('')}
+        </div>`;
+    }).join('');
+  } else if (type === 'directory') {
+    body = `
+      <div class="spread">
+        <div class="section-eyebrow"><span class="txt">${T(prefix + '.people.eyebrow', 'Senior Management')}</span><span class="rule"></span></div>
+        <div class="leaders-grid">
+          ${SENIOR_MGMT.map(l => `
+            <div class="leader">
+              <img class="leader-photo" src="img/${l.img}" alt="${esc(l.name)}" />
+              <div class="leader-name">${esc(l.name)}</div>
+              <div class="leader-role">${esc(l.role)}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="spread">
+        <div class="section-eyebrow"><span class="txt">${T(prefix + '.leaders.eyebrow', 'P&C Leaders')}</span><span class="rule"></span></div>
+        <div class="leaders-grid leaders-grid--pc">
+          ${PC_LEADERS.map(l => `
+            <div class="leader">
+              <img class="leader-photo" src="img/${l.img}" alt="${esc(l.name)}" />
+              <div class="leader-name">${esc(l.name)}</div>
+              <div class="leader-role">${esc(l.role)}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      ${BELIEFS && BELIEFS.length ? `<div class="spread tight">${beliefsTabsHTML()}</div>` : ''}`;
+  } else {
+    const b = chapterBodyFor(ch);
+    body = `<div class="spread">
+      ${b.intro && b.intro.length ? subIntroHTML({ intro: b.intro }) : ''}
+      ${(b.sections || []).map(sectionHTML).join('')}
+    </div>`;
+  }
+
+  return `
+    <section class="chapter" id="${esc(ch.id)}">
+      ${opener}
+      ${body}
+      ${chapterNavHTML(prevId, nextId)}
+    </section>`;
+}
+
 function renderAll() {
   const reader = document.getElementById('reader');
-  reader.innerHTML = [
-    renderCover(),
-    renderIntro(),
-    renderMenu(),
-    renderCh1(),
-    renderCh2(),
-    renderCh3(),
-    renderCh4(),
-    renderCh5(),
-    renderCh6()
-  ].join('');
+  const parts = [renderCover(), renderIntro(), renderMenu()];
+  // Bespoke seed renderers are used only when this playbook actually carries
+  // seed prose; blank-authored playbooks take the generic path for every
+  // chapter so no seed wording leaks through.
+  const seedLike = PB.prose && Object.keys(PB.prose).length > 0;
+  const BESPOKE = { 'ch-1': renderCh1, 'ch-2': renderCh2, 'ch-3': renderCh3, 'ch-4': renderCh4, 'ch-5': renderCh5, 'ch-6': renderCh6 };
+  const realChs = CHAPTERS.filter(c => c.id !== 'cover' && c.id !== 'intro' && c.id !== 'menu');
+  realChs.forEach((ch, i) => {
+    const prev = realChs[i - 1], next = realChs[i + 1];
+    if (seedLike && BESPOKE[ch.id]) parts.push(BESPOKE[ch.id]());
+    else parts.push(renderGenericChapter(ch, prev ? prev.id : null, next ? next.id : null));
+  });
+  reader.innerHTML = parts.join('');
   resolveAssets(reader);
 }
 
@@ -2432,6 +2555,7 @@ function applyPlaybook(next, opts) {
   window.PLAYBOOK = next || {};
   PB = window.PLAYBOOK;
   if (!PB.prose) PB.prose = {};
+  refreshDerived();
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
   try {
@@ -2453,6 +2577,11 @@ window.applyPlaybook = applyPlaybook;
 
 window.addEventListener('message', function (ev) {
   var d = ev.data || {};
+  if (d.type === 'editor-ping') {
+    // The editor (re)announces itself — reply so it knows we are listening.
+    if (window.parent !== window) window.parent.postMessage({ type: 'preview-boot' }, '*');
+    return;
+  }
   if (d.type === 'set-playbook') {
     applyPlaybook(d.playbook, { chapter: d.chapter, sub: d.sub });
     if (window.parent !== window) window.parent.postMessage({ type: 'preview-ready' }, '*');
@@ -2461,7 +2590,8 @@ window.addEventListener('message', function (ev) {
   }
 });
 
-// Announce readiness so the editor can push the initial PLAYBOOK.
+// Initial derivation + announce readiness so the editor can push PLAYBOOK.
+refreshDerived();
 if (window.parent !== window) {
   window.parent.postMessage({ type: 'preview-boot' }, '*');
 }
