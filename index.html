@@ -111,8 +111,14 @@ a { color: inherit; }
 .folder .glyph { color: var(--gold); margin-bottom: 14px; }
 .folder h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: 20px; color: var(--ink); margin: 0 0 6px; }
 .folder .desc { font-size: 13px; color: var(--ink-mute); margin: 0 0 14px; min-height: 2.6em; }
-.folder .count { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-fade); }
+.folder .count { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-fade); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .folder .count b { color: var(--gold-deep); font-weight: 600; }
+.folder-create {
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--gold-deep); text-decoration: none; white-space: nowrap;
+  border-bottom: 1px solid transparent; padding-bottom: 1px;
+}
+.folder-create:hover { border-bottom-color: var(--gold-hair); }
 
 /* ---- playbook cards ------------------------------------------- */
 .cards { max-width: 1200px; margin: 0 auto; padding: 26px clamp(20px, 5vw, 64px) 80px; display: flex; flex-direction: column; gap: 14px; }
@@ -260,17 +266,25 @@ a { color: inherit; }
     state.departments.forEach(function (d) {
       var books = playbooksIn(d.id).filter(function (p) { return matching(p, q); });
       if (q && books.length === 0) return; // searching hides empty folders
-      html += '<button class="folder" data-dept="' + esc(d.id) + '">' +
+      var createUrl = 'authoring-tool/?create=' + encodeURIComponent(d.id) + '&dept=' + encodeURIComponent(d.name);
+      html += '<div class="folder" data-dept="' + esc(d.id) + '" role="button" tabindex="0">' +
         '<span class="folder-tab"></span>' + FOLDER_SVG +
         '<h2>' + esc(d.name) + '</h2>' +
         '<p class="desc">' + esc(d.description || '') + '</p>' +
-        '<div class="count"><b>' + books.length + '</b> playbook' + (books.length === 1 ? '' : 's') + '</div>' +
-        '</button>';
+        '<div class="count"><span><b>' + books.length + '</b> playbook' + (books.length === 1 ? '' : 's') + '</span>' +
+        '<a class="folder-create" href="' + esc(createUrl) + '" title="Create a new ' + esc(d.name) + ' playbook in Playbook Studio">+ Create</a></div>' +
+        '</div>';
     });
     grid.className = 'grid';
     grid.innerHTML = html || '<div class="empty">No departments match your search.</div>';
-    Array.prototype.forEach.call(grid.querySelectorAll('.folder'), function (btn) {
-      btn.addEventListener('click', function () { state.dept = btn.getAttribute('data-dept'); renderDepartment(); });
+    Array.prototype.forEach.call(grid.querySelectorAll('.folder'), function (card) {
+      card.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('.folder-create')) return; // let the create link navigate
+        state.dept = card.getAttribute('data-dept'); renderDepartment();
+      });
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target === card) { state.dept = card.getAttribute('data-dept'); renderDepartment(); }
+      });
     });
   }
 
