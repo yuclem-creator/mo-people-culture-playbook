@@ -123,7 +123,7 @@ a { color: inherit; }
 /* ---- playbook cards ------------------------------------------- */
 .cards { max-width: 1200px; margin: 0 auto; padding: 26px clamp(20px, 5vw, 64px) 80px; display: flex; flex-direction: column; gap: 14px; }
 .pcard {
-  display: flex; align-items: center; gap: 24px;
+  display: flex; align-items: center; gap: 24px; cursor: pointer;
   background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
   padding: 24px 28px; text-decoration: none;
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
@@ -144,8 +144,17 @@ a { color: inherit; }
   flex: 0 0 auto; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
   color: var(--gold-deep); border: 1px solid var(--gold-hair); border-radius: 2px;
   padding: 11px 22px; white-space: nowrap; transition: background .2s, color .2s;
+  text-decoration: none;
 }
 .pcard:hover .open { background: var(--gold); color: #fff; border-color: var(--gold); }
+.pcard .edit-link {
+  flex: 0 0 auto; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-mute); border: 1px solid var(--rule); border-radius: 2px;
+  padding: 11px 18px; white-space: nowrap; text-decoration: none;
+  transition: border-color .2s, color .2s;
+}
+.pcard .edit-link:hover { border-color: var(--gold-hair); color: var(--gold-deep); }
+.pcard .actions { flex: 0 0 auto; display: flex; gap: 8px; align-items: center; }
 
 .create-card {
   border-style: dashed; border-color: var(--gold-hair); background: var(--paper-warm);
@@ -177,7 +186,9 @@ a { color: inherit; }
 
 @media (max-width: 640px) {
   .pcard { flex-wrap: wrap; gap: 16px; }
-  .pcard .open { width: 100%; text-align: center; }
+  .pcard .actions { width: 100%; }
+  .pcard .actions .open { flex: 1; text-align: center; }
+  .pcard .actions .edit-link { flex: 0 0 auto; }
   .wordmark { font-size: 11px; letter-spacing: .26em; }
 }
 </style>
@@ -306,7 +317,7 @@ a { color: inherit; }
       '<span class="open">Create</span>' +
       '</a>';
     books.forEach(function (p) {
-      html += '<a class="pcard" href="' + esc(playbookUrl(p)) + '">' +
+      html += '<div class="pcard" data-url="' + esc(playbookUrl(p)) + '" role="link" tabindex="0">' +
         '<span class="book">' + BOOK_SVG + '</span>' +
         '<span class="body">' +
           '<h3>' + esc(p.title || p.slug) + '</h3>' +
@@ -314,11 +325,23 @@ a { color: inherit; }
           '<p class="desc">' + esc(p.description || '') + '</p>' +
           '<div class="meta" data-version-for="' + esc(p.slug) + '"></div>' +
         '</span>' +
-        '<span class="open">Open Playbook</span>' +
-        '</a>';
+        '<span class="actions">' +
+          '<a class="edit-link" href="authoring-tool/?edit=' + encodeURIComponent(p.slug) + '" title="Edit this playbook in Playbook Studio (sign-in to save and publish)">Edit</a>' +
+          '<a class="open" href="' + esc(playbookUrl(p)) + '">Open Playbook</a>' +
+        '</span>' +
+        '</div>';
     });
     grid.className = 'cards';
     grid.innerHTML = html;
+    Array.prototype.forEach.call(grid.querySelectorAll('.pcard'), function (card) {
+      card.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('a')) return; // real links handle themselves
+        window.location.href = card.getAttribute('data-url');
+      });
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target === card) window.location.href = card.getAttribute('data-url');
+      });
+    });
     if (!books.length) {
       grid.innerHTML = html + '<div class="empty" style="padding-top:8px;padding-bottom:40px;">No playbooks published in ' + esc(d.name) + ' yet.' +
         (state.query ? ' Try clearing your search.' : '') + '</div>';
