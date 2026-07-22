@@ -135,6 +135,7 @@ a{color:var(--gold)}
 .field textarea{min-height:74px;line-height:1.5}
 .field .html-hint{font-size:11px;color:var(--ink-3);margin-top:4px}
 
+.snippet{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre;overflow:auto;max-height:180px;margin:8px 0 10px}
 .section-label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
   font-weight:600;margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 
