@@ -1315,7 +1315,7 @@
     }).catch(function (e) {
       // Deliberately non-blocking: Remote SCORM latest publish already succeeded.
       console.warn('[versions] publish snapshot failed:', e);
-      toast('Published, but version history was not saved: ' + ((e && e.message) || e), 'err');
+      toast('Remote SCORM published successfully. (The version-history row was not saved: ' + ((e && e.message) || e) + ')', 'err');
     });
   }
 
