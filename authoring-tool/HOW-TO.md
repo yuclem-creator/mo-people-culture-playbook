@@ -229,6 +229,40 @@ Where things are stored: version metadata and the playbook JSON snapshot live in
 
 ---
 
+## The Playbook Library (hub & web player)
+
+The repository root contains a colleague-facing landing page so people browse
+playbooks instead of opening a single course link directly:
+
+- `index.html` — **the hub**. Shows department folders (from `playbooks.json`),
+  a search box, and playbook cards inside each folder. Reading requires **no
+  sign-in**: published playbooks are public by design in the
+  `playbook-content` bucket. The “Playbook Studio” button in the header links
+  to the editor for authors.
+- `playbooks.json` — **the library index**. Two lists:
+  - `departments`: the folders shown on the hub (`id`, `name`, `description`).
+    Add, rename or reorder departments here.
+  - `playbooks`: one entry per published playbook:
+    `{ "slug", "title", "department", "edition", "description" }`.
+    `slug` must match the slug used at Publish time (shown in the publish
+    success dialog). `department` must match a department `id`.
+- `player/` — **the web player**. Opens any published playbook by slug
+  (`player/index.html?slug=<slug>`) using the same data-driven renderer as the
+  SCORM exports, fetching content from
+  `published/<slug>/playbook-data.json` in Supabase Storage. If the network is
+  unavailable it falls back to the last copy that browser cached; if nothing
+  is available it shows a branded error with a link back to the hub.
+
+**After you publish a new playbook from Studio**, add one entry to
+`playbooks.json` (and a new department if needed) and push — it then appears
+in the library automatically. Re-publishing an existing slug needs no change;
+the player always fetches the latest published content.
+
+> The hub and player only READ public published content. Version history
+> (`public.playbook_versions`) stays sign-in only and is not exposed here.
+
+---
+
 ## What you can and can’t edit
 
 **You can edit:** all chapter titles and descriptions; cover, foreword, intro

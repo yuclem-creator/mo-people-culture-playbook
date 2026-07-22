@@ -1,0 +1,21 @@
+{
+  "departments": [
+    { "id": "people-culture", "name": "People & Culture", "description": "Culture, policies, colleague lifecycle and P&C operations" },
+    { "id": "front-office", "name": "Front Office", "description": "Reception, concierge, guest services and arrivals" },
+    { "id": "food-beverage", "name": "Food & Beverage", "description": "Restaurants, bars, in-room dining and banqueting" },
+    { "id": "rooms", "name": "Rooms Division", "description": "Housekeeping, laundry and room operations" },
+    { "id": "spa-wellness", "name": "Spa & Wellness", "description": "Spa, fitness and wellness experiences" },
+    { "id": "sales-marketing", "name": "Sales & Marketing", "description": "Sales, revenue, marketing and communications" },
+    { "id": "finance", "name": "Finance", "description": "Finance, procurement and business controls" },
+    { "id": "engineering", "name": "Engineering & Security", "description": "Property operations, maintenance, safety and security" }
+  ],
+  "playbooks": [
+    {
+      "slug": "people-culture-playbook",
+      "title": "People & Culture Playbook",
+      "department": "people-culture",
+      "edition": "Edition · July 2026",
+      "description": "The Group People & Culture playbook — our culture, policies, the colleague lifecycle, and the resources that guide how we lead and work."
+    }
+  ]
+}
