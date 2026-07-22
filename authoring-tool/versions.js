@@ -115,6 +115,20 @@
       }).catch(function (e) { throw friendlyTableError(e); });
   }
 
+  function listAllVersions(opts) {
+    opts = opts || {};
+    var db = clientFor(opts.session);
+    if (!db) return Promise.reject(unavailable());
+    return db.from(TABLE)
+      .select('id,slug,title,published_by,published_at,note,source,storage_prefix')
+      .order('published_at', { ascending: false })
+      .limit(500)
+      .then(function (r) {
+        if (r.error) throw friendlyTableError(r.error);
+        return r.data || [];
+      }).catch(function (e) { throw friendlyTableError(e); });
+  }
+
   function getVersion(id, opts) {
     opts = opts || {};
     var db = clientFor(opts.session);
@@ -128,6 +142,7 @@
   global.PlaybookVersions = {
     saveSnapshot: saveSnapshot,
     listVersions: listVersions,
+    listAllVersions: listAllVersions,
     getVersion: getVersion,
     assetManifest: assetManifest
   };
