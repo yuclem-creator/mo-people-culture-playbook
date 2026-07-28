@@ -1103,13 +1103,49 @@
     body.appendChild(list);
     showModal('Import preview', body, [
       { label: 'Cancel', onClick: closeModal },
-      { label: 'Add chapter to outline', primary: true, onClick: function () {
+      { label: 'Sections as chapters', onClick: function () {
+        result.chapter.title = titleInput.value.trim() || result.chapter.title;
+        result.chapter.blurb = blurbInput.value.trim();
+        closeModal();
+        insertPdfChaptersSplit(result);
+      } },
+      { label: 'Add as one chapter', primary: true, onClick: function () {
         result.chapter.title = titleInput.value.trim() || result.chapter.title;
         result.chapter.blurb = blurbInput.value.trim();
         closeModal();
         insertPdfChapter(result);
       } }
     ]);
+  }
+
+  // One chapter per document heading: each section becomes its own outline
+  // entry / Contents card (its paragraphs as the opening prose, its bullets
+  // as a closing list). The document title's blurb opens the first chapter.
+  function insertPdfChaptersSplit(result) {
+    PB.sectionBodies = PB.sectionBodies || {};
+    var lastId = null;
+    result.sections.forEach(function (s, i) {
+      var id = nextChapterId();
+      var ch = {
+        id: id,
+        numeral: ROMANS[realChapterCount()] || String(realChapterCount() + 1),
+        label: s.title || (result.chapter.title + ' — part ' + (i + 1)),
+        type: 'standard',
+        opener: ''
+      };
+      var bodySec = { intro: [], sections: [] };
+      if (i === 0 && result.chapter.blurb) bodySec.intro.push(result.chapter.blurb);
+      (s.paragraphs || []).forEach(function (p) { bodySec.intro.push(p); });
+      if ((s.bullets || []).length) {
+        bodySec.sections.push({ num: '', title: '', blurb: [], items: s.bullets });
+      }
+      PB.sectionBodies[id] = bodySec;
+      PB.chapters.push(ch);
+      lastId = id;
+    });
+    touch(); renderTree();
+    if (lastId) select({ kind: 'chapter', id: lastId, type: 'standard', chapter: lastId });
+    toast(result.sections.length + ' chapters added from PDF — review and edit in the inspector.', 'ok');
   }
 
   function insertPdfChapter(result) {
