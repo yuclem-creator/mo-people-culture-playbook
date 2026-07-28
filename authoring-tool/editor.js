@@ -492,6 +492,9 @@
   }
 
   function bodyForChapter(ch) {
+    // Authored sectionBodies win (a chapter that merely LANDS on id ch-4/ch-5
+    // must not fall back to the seed's legacy ch4/ch5 containers).
+    if (PB.sectionBodies && PB.sectionBodies[ch.id]) return PB.sectionBodies[ch.id];
     if (ch.id === 'ch-4') return PB.ch4;
     if (ch.id === 'ch-5') return PB.ch5;
     PB.sectionBodies = PB.sectionBodies || {};

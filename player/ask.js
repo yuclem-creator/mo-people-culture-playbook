@@ -127,7 +127,7 @@
           });
         });
       } else {
-        var body = ch.id === 'ch-4' ? ch4 : ch.id === 'ch-5' ? ch5 : (sectionBodies[ch.id] || { sections: [] });
+        var body = sectionBodies[ch.id] || (ch.id === 'ch-4' ? ch4 : ch.id === 'ch-5' ? ch5 : { sections: [] });
         addSections(ch.id, ch.label, null, null, body.sections);
       }
     });

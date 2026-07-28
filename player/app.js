@@ -2119,9 +2119,13 @@ function chapterTypeOf(ch) {
 // PB.ch4 / PB.ch5; chapters created in the editor store theirs under
 // PB.sectionBodies[chapterId].
 function chapterBodyFor(ch) {
+  // Authored content wins: any chapter with a body in sectionBodies uses it.
+  // The ch-4/ch-5 legacy containers only apply to the seed playbook, which
+  // has no sectionBodies entries for those ids.
+  if (PB.sectionBodies && PB.sectionBodies[ch.id]) return PB.sectionBodies[ch.id];
   if (ch.id === 'ch-4') return PB_CH4_CONTENT;
   if (ch.id === 'ch-5') return PB_CH5_CONTENT;
-  return (PB.sectionBodies && PB.sectionBodies[ch.id]) || { intro: [], sections: [] };
+  return { intro: [], sections: [] };
 }
 
 // Generic magazine-style chapter page, used for any chapter that has no
