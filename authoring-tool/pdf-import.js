@@ -319,13 +319,15 @@
     });
   }
 
-  function foldWrappers(sections) {
+  function foldWrappers(sections, opts) {
+    opts = opts || {};
     var out = [];
     for (var i = 0; i < sections.length; i++) {
       var s = sections[i];
       var bodyChars = s.paragraphs.join(' ').length + s.bullets.join(' ').length;
-      var isWrapper = !NUMBERED_STEP.test(s.title) && bodyChars < 200 && i < sections.length - 1 &&
-        (WRAPPER_NAMES.test(s.title) || bodyChars === 0 || !s.title);
+      var isWrapper = !NUMBERED_STEP.test(s.title) && i < sections.length - 1 &&
+        (opts.onlyEmpty ? bodyChars === 0
+                        : (bodyChars < 200 && (WRAPPER_NAMES.test(s.title) || bodyChars === 0 || !s.title)));
       if (isWrapper && out.length >= 0) {
         var nxt = sections[i + 1];
         var introBits = [];
@@ -345,7 +347,12 @@
   function buildResult(extracted, fileName) {
     var sections = segment(extracted.paragraphs);
     attachImages(sections, extracted.images || []);
-    sections = foldWrappers(sections);
+    // Wrapper headings ("Procedures" etc.) stay VISIBLE as grouping headings
+    // when they carry intro text; only completely bodiless ones fold into the
+    // section that follows. Fuller folding happens only in "Sections as
+    // chapters" mode (editor.js), where a bodiless wrapper would otherwise
+    // become an empty chapter.
+    sections = foldWrappers(sections, { onlyEmpty: true });
     if (!sections.length) {
       throw new Error('Could not find any structured sections in this document. Is it a text-based PDF (not a scan)?');
     }
@@ -391,6 +398,7 @@
     extractPdf: extractPdf,
     buildResult: buildResult,
     toSectionsBody: toSectionsBody,
-    sectionItems: sectionItems
+    sectionItems: sectionItems,
+    foldWrappers: foldWrappers
   };
 })(window);

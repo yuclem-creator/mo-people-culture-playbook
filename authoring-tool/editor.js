@@ -1085,7 +1085,7 @@
     body.appendChild(el('div', { class: 'form-note', text: fileName + ' — ' + extracted.pageCount + ' page(s) read, ' +
       (extracted.images || []).length + ' figure(s) found' +
       (extracted.truncated ? ' (large document: truncated)' : '') +
-      '. Structured locally in your browser — review below; everything stays editable after inserting.' }));
+      '. “Add as one chapter” keeps headings as numbered sections (recommended for SOPs); “Sections as chapters” creates one chapter per heading.' }));
     body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Chapter title']), titleInput]));
     body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Chapter blurb (opening line)']), blurbInput]));
     body.appendChild(el('div', { class: 'section-label', text: 'Sections found (' + result.sections.length + ')' }));
@@ -1118,7 +1118,11 @@
   function insertPdfChaptersSplit(result) {
     PB.sectionBodies = PB.sectionBodies || {};
     var lastId = null;
-    result.sections.forEach(function (s, i) {
+    // Fold wrapper headings ("Procedures" & friends) into their first step so
+    // no empty standalone chapter is created; one-chapter mode keeps them
+    // visible as grouping headings instead.
+    var sections = window.PdfImport.foldWrappers(result.sections);
+    sections.forEach(function (s, i) {
       var id = nextChapterId();
       var ch = {
         id: id,
@@ -1140,7 +1144,7 @@
     });
     touch(); renderTree();
     if (lastId) select({ kind: 'chapter', id: lastId, type: 'standard', chapter: lastId });
-    toast(result.sections.length + ' chapters added from PDF — review and edit in the inspector.', 'ok');
+    toast(sections.length + ' chapters added from PDF — review and edit in the inspector.', 'ok');
   }
 
   function insertPdfChapter(result) {
