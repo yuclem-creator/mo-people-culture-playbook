@@ -41,6 +41,12 @@ const SYSTEM_PROMPT = [
   "- Remove repeated page headers/footers, page numbers, and masthead/boilerplate metadata.",
   "- Split the document at its own top-level headings (aim for 3-12 sections).",
   "- Keep the document's own wording; you may lightly smooth broken line-wraps and spacing.",
+  "- A numbered step or role (e.g. \"1. Front Office\") owns ALL text up to the next heading",
+  "  of the same level: narrative, field lists, bullets and approval steps. Include the FULL",
+  "  body of every section. Never return a section with an empty body.",
+  "- Headings that merely introduce a group of steps and have no substantive body of their",
+  "  own (e.g. \"Procedures\", \"Process\", \"Steps\") are NOT sections — put their intro text",
+  "  into the first step's section instead.",
   "- Output ONLY valid JSON (no markdown fences, no commentary) with this exact shape:",
   '{"chapter":{"title":string,"blurb":string},"sections":[{"title":string,"paragraphs":string[],"bullets":string[]}]}',
   "- chapter.blurb = one-sentence summary of the whole document.",
@@ -72,6 +78,44 @@ function str(v: unknown, max = 1200): string {
 function strArr(v: unknown, maxItems: number): string[] {
   if (!Array.isArray(v)) return [];
   return v.map((x) => str(x)).filter((x) => x.length > 0).slice(0, maxItems);
+}
+
+type Section = { title: string; paragraphs: string[]; bullets: string[] };
+
+// Global wrapper-merge rule: a heading that merely introduces the steps after
+// it (e.g. "Procedures", "Process", "Steps") and carries little or no body of
+// its own must never become a standalone, empty section — its intro text is
+// folded into the first substantive section that follows, so the wrapper is
+// always viewable together with its first step. Numbered steps are exempt:
+// an empty numbered section is a model failure, not a wrapper.
+const WRAPPER_NAMES = /^(procedures?|process(es)?|steps?|workflow|overview|introduction)\b/i;
+const NUMBERED_STEP = /^\s*(\d+[.)]|[A-Z][.)]|[ivxlcdm]+[.)])/i;
+
+function mergeWrapperSections(sections: Section[]): Section[] {
+  const src = sections.map((s) => ({
+    title: s.title,
+    paragraphs: [...s.paragraphs],
+    bullets: [...s.bullets],
+  }));
+  const out: Section[] = [];
+  for (let i = 0; i < src.length; i++) {
+    const s = src[i];
+    const bodyChars = s.paragraphs.join(" ").length + s.bullets.join(" ").length;
+    const looksNumbered = NUMBERED_STEP.test(s.title);
+    const isWrapper =
+      !looksNumbered &&
+      bodyChars < 200 &&
+      i < src.length - 1 &&
+      (WRAPPER_NAMES.test(s.title) || bodyChars === 0);
+    if (isWrapper) {
+      const nxt = src[i + 1];
+      nxt.paragraphs = s.paragraphs.concat(nxt.paragraphs);
+      nxt.bullets = s.bullets.concat(nxt.bullets);
+      continue; // the wrapper travels with its first step
+    }
+    out.push(s);
+  }
+  return out.filter((s) => s.paragraphs.length > 0 || s.bullets.length > 0);
 }
 
 Deno.serve(async (req) => {
@@ -160,16 +204,16 @@ Deno.serve(async (req) => {
     title: str(parsed?.chapter?.title, 120) || docName.replace(/\.pdf$/i, ""),
     blurb: str(parsed?.chapter?.blurb, 400),
   };
-  const sections = (Array.isArray(parsed?.sections) ? parsed.sections : [])
-    .slice(0, 20)
-    .map((s: unknown) => ({
-      title: str((s as Record<string, unknown>)?.title, 160),
-      paragraphs: strArr((s as Record<string, unknown>)?.paragraphs, 40),
-      bullets: strArr((s as Record<string, unknown>)?.bullets, 60),
-    }))
-    .filter((s: { title: string; paragraphs: string[]; bullets: string[] }) =>
-      s.title || s.paragraphs.length || s.bullets.length
-    );
+  const sections = mergeWrapperSections(
+    (Array.isArray(parsed?.sections) ? parsed.sections : [])
+      .slice(0, 20)
+      .map((s: unknown) => ({
+        title: str((s as Record<string, unknown>)?.title, 160),
+        paragraphs: strArr((s as Record<string, unknown>)?.paragraphs, 40),
+        bullets: strArr((s as Record<string, unknown>)?.bullets, 60),
+      }))
+      .filter((s: Section) => s.title || s.paragraphs.length || s.bullets.length)
+  );
 
   if (!sections.length) return json(502, { error: "Model returned no usable sections" });
   return json(200, { chapter, sections });
