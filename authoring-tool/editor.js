@@ -320,6 +320,12 @@
         ])
       ]));
     });
+    body.appendChild(el('button', { class: 'new-card', onclick: function () { closeModal(); openPdfImportFlow(); } }, [
+      el('div', {}, [
+        el('div', { class: 'nc-title', text: 'From PDF (AI)' }),
+        el('div', { class: 'nc-desc', text: 'Upload a PDF — AI extracts its structure into a new chapter for your review.' })
+      ])
+    ]));
     showModal('Add chapter', body, [{ label: 'Cancel', onClick: closeModal }]);
   }
   function addChapter(type) {
@@ -1011,9 +1017,116 @@
       el('div', {}, [el('div', { class: 'nc-title', text: 'Blank playbook' }),
         el('div', { class: 'nc-desc', text: 'Choose which chapter types to include and build up from empty templates.' })])
     ]));
+    body.appendChild(el('button', { class: 'new-card', onclick: function () { closeModal(); newFromPdfModal(); } }, [
+      el('div', {}, [el('div', { class: 'nc-title', text: 'Import from PDF (AI)' }),
+        el('div', { class: 'nc-desc', text: 'Upload an SOP or policy PDF — AI structures it into chapters and sections for your review.' })])
+    ]));
     showModal('Start a new playbook', body, [
       { label: 'Cancel', onClick: closeModal }
     ]);
+  }
+
+  // ---- Course Creation: import chapters from PDF (AI) ---------------------
+  function newFromPdfModal() {
+    var body = el('div', {});
+    body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Playbook title']),
+      el('input', { type: 'text', id: 'pdfNewTitle', value: pendingCreate ? pendingCreate.name + ' Playbook' : 'New Playbook' })]));
+    body.appendChild(el('div', { class: 'note', text: 'A cover is created first; each PDF you import then becomes a chapter. You can import more PDFs later via "+ Add chapter → From PDF (AI)".' }));
+    showModal('Import from PDF', body, [
+      { label: 'Cancel', onClick: closeModal },
+      { label: 'Create & choose PDF', primary: true, onClick: function () {
+        var title = ($('#pdfNewTitle') && $('#pdfNewTitle').value) || 'New Playbook';
+        closeModal();
+        buildBlank(title, ['cover']);
+        openPdfImportFlow();
+      } }
+    ]);
+  }
+
+  var _pdfInput = null;
+  function openPdfImportFlow() {
+    if (!window.PdfImport || !window.PdfImport.supported()) {
+      toast('PDF engine is unavailable (pdf.js failed to load). Check your connection and reload.', 'err');
+      return;
+    }
+    if (!_pdfInput) {
+      _pdfInput = el('input', { type: 'file', accept: 'application/pdf', style: 'display:none' });
+      document.body.appendChild(_pdfInput);
+      _pdfInput.addEventListener('change', function () {
+        var f = _pdfInput.files && _pdfInput.files[0];
+        _pdfInput.value = '';
+        if (f) handlePdfFile(f);
+      });
+    }
+    _pdfInput.click();
+  }
+
+  function handlePdfFile(file) {
+    busy(true, 'Reading PDF…');
+    window.PdfImport.extractPdf(file).then(function (extracted) {
+      if (!extracted.text || extracted.text.length < 200) {
+        throw new Error('No readable text found — this looks like a scanned PDF. A text-based PDF is required.');
+      }
+      busy(true, 'Structuring with AI…');
+      return window.PdfImport.structureChapter(extracted, { docName: file.name }).then(function (result) {
+        return { result: result, extracted: extracted };
+      });
+    }).then(function (pack) {
+      busy(false);
+      openPdfPreviewModal(pack.result, pack.extracted, file.name);
+    }).catch(function (e) {
+      busy(false);
+      if (e && e.code === 'AUTH_REQUIRED') {
+        toast('Sign in to use PDF import.', 'err');
+        openLoginModal(function () { handlePdfFile(file); });
+        return;
+      }
+      toast('Import failed: ' + ((e && e.message) || e), 'err');
+    });
+  }
+
+  function openPdfPreviewModal(result, extracted, fileName) {
+    var titleInput = el('input', { type: 'text', value: result.chapter.title });
+    var blurbInput = el('input', { type: 'text', value: result.chapter.blurb || '' });
+    var body = el('div', {});
+    body.appendChild(el('div', { class: 'form-note', text: fileName + ' — ' + extracted.pageCount + ' page(s) read' +
+      (extracted.truncated ? ' (large document: truncated)' : '') +
+      '. Review the proposed chapter below; everything stays editable after inserting.' }));
+    body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Chapter title']), titleInput]));
+    body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Chapter blurb (opening line)']), blurbInput]));
+    body.appendChild(el('div', { class: 'section-label', text: 'Sections found (' + result.sections.length + ')' }));
+    var list = el('ul', { class: 'check-list' });
+    result.sections.forEach(function (s) {
+      list.appendChild(el('li', {}, [(s.title || '(untitled)') + ' — ' + s.paragraphs.length + ' paragraph(s)' +
+        (s.bullets.length ? ', ' + s.bullets.length + ' bullet(s)' : '')]));
+    });
+    body.appendChild(list);
+    showModal('Import preview', body, [
+      { label: 'Cancel', onClick: closeModal },
+      { label: 'Add chapter to outline', primary: true, onClick: function () {
+        result.chapter.title = titleInput.value.trim() || result.chapter.title;
+        result.chapter.blurb = blurbInput.value.trim();
+        closeModal();
+        insertPdfChapter(result);
+      } }
+    ]);
+  }
+
+  function insertPdfChapter(result) {
+    var id = nextChapterId();
+    var ch = {
+      id: id,
+      numeral: ROMANS[realChapterCount()] || String(realChapterCount() + 1),
+      label: result.chapter.title,
+      type: 'standard',
+      opener: ''
+    };
+    PB.sectionBodies = PB.sectionBodies || {};
+    PB.sectionBodies[id] = window.PdfImport.toSectionsBody(result);
+    PB.chapters.push(ch);
+    touch(); renderTree();
+    select({ kind: 'chapter', id: id, type: 'standard', chapter: id });
+    toast('Chapter "' + ch.label + '" added from PDF — review and edit in the inspector.', 'ok');
   }
 
   function newFromSeed() {

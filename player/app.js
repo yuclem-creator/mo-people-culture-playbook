@@ -2550,12 +2550,25 @@ document.addEventListener('DOMContentLoaded', init);
 // whenever the author changes something. We swap window.PLAYBOOK, rebind the
 // PB reference the render helpers close over, and re-render in place while
 // trying to keep the reader on the same chapter.
+// Keep the rail "About this edition" note in sync with the loaded playbook
+// (the HTML carries a seed-flavoured fallback for the no-data boot only).
+function updateRailAbout() {
+  var el = document.getElementById('railAbout');
+  if (!el) return;
+  var m = (PB && PB.meta) || {};
+  var title = m.title || 'Playbook';
+  var edition = String(m.edition || '').replace(/^Edition\s*[·\-–]?\s*/i, '').trim();
+  el.textContent = 'An interactive companion to Mandarin Oriental\u2019s ' + title + '.' +
+    (edition ? ' All wording is drawn verbatim from the ' + edition + ' edition.' : '');
+}
+
 function applyPlaybook(next, opts) {
   opts = opts || {};
   window.PLAYBOOK = next || {};
   PB = window.PLAYBOOK;
   if (!PB.prose) PB.prose = {};
   refreshDerived();
+  updateRailAbout();
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
   try {

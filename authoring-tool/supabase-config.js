@@ -11,6 +11,9 @@
    ============================================================================ */
 window.SUPABASE_CONFIG = {
   url: 'https://akcypiuealhfqspiwebp.supabase.co',
+  // Edge Functions base (PDF import). Defaults to <url>/functions/v1 — only
+  // set this for local testing against a stub.
+  functionsUrl: null,
   // New-format publishable key (browser-safe). Preferred over the legacy JWT
   // anon key: it is signed/validated consistently across Auth and Storage on
   // projects using the new API key system, which fixes storage RLS requests
