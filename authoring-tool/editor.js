@@ -322,8 +322,8 @@
     });
     body.appendChild(el('button', { class: 'new-card', onclick: function () { closeModal(); openPdfImportFlow(); } }, [
       el('div', {}, [
-        el('div', { class: 'nc-title', text: 'From PDF (AI)' }),
-        el('div', { class: 'nc-desc', text: 'Upload a PDF — AI extracts its structure into a new chapter for your review.' })
+        el('div', { class: 'nc-title', text: 'From PDF' }),
+        el('div', { class: 'nc-desc', text: 'Upload a PDF — its structure, text and figures become a new chapter for your review.' })
       ])
     ]));
     showModal('Add chapter', body, [{ label: 'Cancel', onClick: closeModal }]);
@@ -1018,8 +1018,8 @@
         el('div', { class: 'nc-desc', text: 'Choose which chapter types to include and build up from empty templates.' })])
     ]));
     body.appendChild(el('button', { class: 'new-card', onclick: function () { closeModal(); newFromPdfModal(); } }, [
-      el('div', {}, [el('div', { class: 'nc-title', text: 'Import from PDF (AI)' }),
-        el('div', { class: 'nc-desc', text: 'Upload an SOP or policy PDF — AI structures it into chapters and sections for your review.' })])
+      el('div', {}, [el('div', { class: 'nc-title', text: 'Import from PDF' }),
+        el('div', { class: 'nc-desc', text: 'Upload an SOP or policy PDF — it is structured into chapters and sections automatically, with figures carried over. Nothing leaves your browser.' })])
     ]));
     showModal('Start a new playbook', body, [
       { label: 'Cancel', onClick: closeModal }
@@ -1031,7 +1031,7 @@
     var body = el('div', {});
     body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Playbook title']),
       el('input', { type: 'text', id: 'pdfNewTitle', value: pendingCreate ? pendingCreate.name + ' Playbook' : 'New Playbook' })]));
-    body.appendChild(el('div', { class: 'note', text: 'A cover is created first; each PDF you import then becomes a chapter. You can import more PDFs later via "+ Add chapter → From PDF (AI)".' }));
+    body.appendChild(el('div', { class: 'note', text: 'A cover is created first; each PDF you import then becomes a chapter. You can import more PDFs later via "+ Add chapter → From PDF".' }));
     showModal('Import from PDF', body, [
       { label: 'Cancel', onClick: closeModal },
       { label: 'Create & choose PDF', primary: true, onClick: function () {
@@ -1064,23 +1064,16 @@
   function handlePdfFile(file) {
     busy(true, 'Reading PDF…');
     window.PdfImport.extractPdf(file).then(function (extracted) {
-      if (!extracted.text || extracted.text.length < 200) {
+      if (!extracted.paragraphs || !extracted.paragraphs.length) {
         throw new Error('No readable text found — this looks like a scanned PDF. A text-based PDF is required.');
       }
-      busy(true, 'Structuring with AI…');
-      return window.PdfImport.structureChapter(extracted, { docName: file.name }).then(function (result) {
-        return { result: result, extracted: extracted };
-      });
+      busy(true, 'Structuring document…');
+      return window.PdfImport.buildResult(extracted, file.name);
     }).then(function (pack) {
       busy(false);
       openPdfPreviewModal(pack.result, pack.extracted, file.name);
     }).catch(function (e) {
       busy(false);
-      if (e && e.code === 'AUTH_REQUIRED') {
-        toast('Sign in to use PDF import.', 'err');
-        openLoginModal(function () { handlePdfFile(file); });
-        return;
-      }
       toast('Import failed: ' + ((e && e.message) || e), 'err');
     });
   }
@@ -1089,9 +1082,10 @@
     var titleInput = el('input', { type: 'text', value: result.chapter.title });
     var blurbInput = el('input', { type: 'text', value: result.chapter.blurb || '' });
     var body = el('div', {});
-    body.appendChild(el('div', { class: 'form-note', text: fileName + ' — ' + extracted.pageCount + ' page(s) read' +
+    body.appendChild(el('div', { class: 'form-note', text: fileName + ' — ' + extracted.pageCount + ' page(s) read, ' +
+      (extracted.images || []).length + ' figure(s) found' +
       (extracted.truncated ? ' (large document: truncated)' : '') +
-      '. Review the proposed chapter below; everything stays editable after inserting.' }));
+      '. Structured locally in your browser — review below; everything stays editable after inserting.' }));
     body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Chapter title']), titleInput]));
     body.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Chapter blurb (opening line)']), blurbInput]));
     body.appendChild(el('div', { class: 'section-label', text: 'Sections found (' + result.sections.length + ')' }));
@@ -1136,8 +1130,9 @@
       var bodySec = { intro: [], sections: [] };
       if (i === 0 && result.chapter.blurb) bodySec.intro.push(result.chapter.blurb);
       (s.paragraphs || []).forEach(function (p) { bodySec.intro.push(p); });
-      if ((s.bullets || []).length) {
-        bodySec.sections.push({ num: '', title: '', blurb: [], items: s.bullets });
+      var items = window.PdfImport.sectionItems(s);
+      if (items.length) {
+        bodySec.sections.push({ num: '', title: '', blurb: [], items: items });
       }
       PB.sectionBodies[id] = bodySec;
       PB.chapters.push(ch);

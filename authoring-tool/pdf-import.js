@@ -1,19 +1,21 @@
 /* ============================================================================
-   pdf-import.js — "Course Creation" engine for MO Playbook Studio
+   pdf-import.js — "Course Creation" engine for MO Playbook Studio (v2)
    ----------------------------------------------------------------------------
-   Turns an uploaded PDF into a structured playbook chapter:
+   Turns an uploaded PDF into structured playbook chapters — DETERMINISTICALLY,
+   entirely in the browser. No AI in the path: v1 delegated structuring to an
+   LLM, which kept dropping section bodies and mangling formatting, so v2 does
+   the layout analysis itself and keeps the document's text VERBATIM:
 
-     1. extractPdf(file)     — text + layout extraction in the browser (pdf.js).
-                               The file never leaves the author's machine; only
-                               extracted text is sent onward.
-                               Strips repeated page headers/footers (SOP
-                               mastheads, page numbers) and detects headings
-                               from font sizes/bold flags.
-     2. structureChapter()   — calls the Supabase Edge Function
-                               'structure-document' (the LLM lives there; only
-                               signed-in authors can call it).
-     3. toSectionsBody()     — maps the AI result onto the playbook schema
-                               ({intro, sections:[{num,title,blurb,items}]}).
+     1. extractPdf(file)    — pdf.js text+layout extraction (masthead/footer
+                              stripping, heading detection, bullet detection).
+     2. segment()           — split at detected headings; wrapper headings
+                              ("Procedures" & friends) fold into their first
+                              step; every section keeps its full source text.
+     3. extractImages()     — embedded figures (exhibits, screenshots) pulled
+                              out as downscaled JPEG data-URLs and attached to
+                              the section they appear in. Repeated masthead
+                              logos are skipped.
+     4. buildResult()       — assembles {chapter, sections} for editor.js.
 
    Exposed as window.PdfImport. UI glue lives in editor.js.
    ============================================================================ */
@@ -23,7 +25,8 @@
   var PDFJS_VERSION = '3.11.174';
   var PDFJS_CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@' + PDFJS_VERSION + '/build/';
   var MAX_PAGES = 50;
-  var MAX_CHARS = 60000;
+  var MAX_CHARS = 200000;
+  var MAX_IMG_WIDTH = 1400;
 
   function supported() {
     return !!(global.pdfjsLib && global.fetch);
@@ -41,7 +44,6 @@
     return String(s || '').toLowerCase().replace(/\d+/g, '#').replace(/\s+/g, ' ').trim();
   }
 
-  // Group pdf.js text items into visual lines per page.
   function pageLines(items) {
     var lines = {};
     items.forEach(function (it) {
@@ -60,6 +62,8 @@
     }).sort(function (a, b) { return b.y - a.y; }); // pdf y grows upward
   }
 
+  var BULLET_RE = /^[\u2022\u00b7\u25aa\u25e6\u2023\-\u2013\u2014*]\s+/;
+
   function extractPdf(file) {
     if (!supported()) return Promise.reject(new Error('PDF engine failed to load (pdf.js). Check your connection and reload.'));
     ensureWorker();
@@ -68,6 +72,8 @@
     }).then(function (doc) {
       var pageCount = Math.min(doc.numPages, MAX_PAGES);
       var pages = [];
+      var images = []; // {page, objId, isJpeg}
+      var imgSeen = {}; // objId -> pages seen on (boilerplate logo filter)
       var chain = Promise.resolve();
       for (var p = 1; p <= pageCount; p++) {
         (function (pageNum) {
@@ -75,17 +81,33 @@
             return doc.getPage(pageNum).then(function (page) {
               return page.getTextContent().then(function (tc) {
                 pages.push(pageLines(tc.items));
+                return page.getOperatorList().then(function (ops) {
+                  for (var i = 0; i < ops.fnArray.length; i++) {
+                    var fn = ops.fnArray[i];
+                    var OPS = global.pdfjsLib.OPS;
+                    if (fn === OPS.paintImageXObject || fn === OPS.paintJpegXObject) {
+                      var objId = ops.argsArray[i][0];
+                      imgSeen[objId] = (imgSeen[objId] || 0) + 1;
+                      images.push({ page: pageNum, objId: objId, isJpeg: fn === OPS.paintJpegXObject, doc: doc, pageObj: page });
+                    }
+                  }
+                });
               });
             });
           });
         })(p);
       }
-      return chain.then(function () { return assemble(pages, doc.numPages); });
+      return chain.then(function () {
+        var assembled = assemble(pages, doc.numPages);
+        return extractImages(images, imgSeen, pages, assembled.counts, assembled.threshold).then(function (imgs) {
+          assembled.images = imgs;
+          return assembled;
+        });
+      });
     });
   }
 
   function assemble(pages, totalPages) {
-    // Median font size across all lines.
     var sizes = [];
     pages.forEach(function (lines) { lines.forEach(function (l) { sizes.push(l.size); }); });
     sizes.sort(function (a, b) { return a - b; });
@@ -107,8 +129,7 @@
     }
     var threshold = Math.ceil(pages.length * 0.6);
 
-    var headingCandidates = [];
-    var paragraphs = [];
+    var paragraphs = []; // {text, heading, bullet, page}
     var charCount = 0;
     var truncated = false;
 
@@ -118,112 +139,238 @@
         var l = lines[i];
         var n = normLine(l.text);
         if (counts[n] >= threshold) continue; // repeated masthead/footer line
+
         // Heading signals, strongest first: larger font, bold face, or a short
-        // punctuation-less line isolated by vertical gaps (typical for SOP
-        // section headings, whose fonts are often subset-embedded with no
-        // readable bold flag).
+        // punctuation-less line isolated by vertical gaps. Lines ending with
+        // ':' are sub-headings (kept as body lines) and lines containing
+        // <...> are exhibit references, not headings.
         var gapBefore = i === 0 || Math.abs(lines[i - 1].y - l.y) > median * 1.6;
         var gapAfter = i === lines.length - 1 || Math.abs(l.y - lines[i + 1].y) > median * 1.6;
         var isShort = l.text.length > 2 && l.text.length <= 60 && !/[.,;:]$/.test(l.text);
+        var isNumberedHeading = /^\s*\d+\.\s+\S/.test(l.text) && l.text.length <= 80 && gapBefore;
         var isHeading = ((l.size > median * 1.18) || (l.bold && l.text.length <= 90) ||
-          (isShort && gapBefore && gapAfter)) && l.text.length <= 120;
-        if (isHeading && headingCandidates.length < 40 && headingCandidates.indexOf(l.text) < 0) {
-          headingCandidates.push(l.text);
+          (isShort && gapBefore && gapAfter) || isNumberedHeading) && l.text.length <= 120 &&
+          !/[<>]/.test(l.text) && !/:$/.test(l.text);
+
+        var bullet = false;
+        var text = l.text;
+        if (BULLET_RE.test(text)) {
+          bullet = true;
+          text = text.replace(BULLET_RE, '').trim();
         }
+
         var prev = paragraphs[paragraphs.length - 1];
         var gap = prev && prev.page === p ? Math.abs(prev.y - l.y) : Infinity;
-        if (isHeading || !prev || prev.page !== p || gap > median * 1.7) {
-          paragraphs.push({ page: p, y: l.y, text: l.text, heading: isHeading });
+        if (isHeading || bullet || !prev || prev.page !== p || prev.bullet || prev.heading || gap > median * 1.7) {
+          paragraphs.push({ page: p, y: l.y, text: text, heading: isHeading, bullet: bullet });
         } else {
-          prev.text += ' ' + l.text;
+          prev.text += ' ' + text;
           prev.y = l.y;
         }
-        charCount += l.text.length;
+        charCount += text.length;
         if (charCount > MAX_CHARS) { truncated = true; break; }
       }
     }
 
-    var text = paragraphs.map(function (para) {
-      return (para.heading ? '\n' : '') + para.text;
-    }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
-
-    return {
-      text: text,
-      headingCandidates: headingCandidates,
-      pageCount: pages.length,
-      totalPages: totalPages,
-      truncated: truncated || (totalPages > MAX_PAGES)
-    };
+    return { paragraphs: paragraphs, pageCount: pages.length, totalPages: totalPages,
+      truncated: truncated || (totalPages > MAX_PAGES), images: [], counts: counts, threshold: threshold };
   }
 
-  /* ---- 2. AI structuring (via Edge Function) --------------------------------- */
+  /* ---- 2. figure capture (render + crop) ----------------------------------------
+     Embedded-image extraction is unreliable across PDF producers (masks,
+     Form XObjects, vector-drawn figures). Instead we render any page that
+     paints non-boilerplate graphics to a canvas and crop away the repeated
+     masthead/footer band — the remaining region IS the figure, whether it
+     was raster or vector. Boilerplate is identified the same way as for
+     text: lines repeated on most pages.
+  ------------------------------------------------------------------------------- */
 
-  function functionsBase() {
-    var cfg = global.SUPABASE_CONFIG || {};
-    if (cfg.functionsUrl) return String(cfg.functionsUrl).replace(/\/$/, '');
-    return String(cfg.url || '').replace(/\/$/, '') + '/functions/v1';
-  }
+  var FIGURE_SCALE = 2;
 
-  function structureChapter(extracted, opts) {
-    opts = opts || {};
-    if (!global.PlaybookPublish || !global.PlaybookPublish.getSession) {
-      return Promise.reject(new Error('Sign-in is required for PDF import.'));
+  function isMostlyBlank(ctx, w, h) {
+    var data = ctx.getImageData(0, 0, w, h).data;
+    var dark = 0, total = 0;
+    for (var i = 0; i < data.length; i += 4 * 97) {
+      total++;
+      if (data[i] < 235 || data[i + 1] < 235 || data[i + 2] < 235) dark++;
     }
-    return global.PlaybookPublish.getSession().then(function (session) {
-      if (!session || !session.access_token) {
-        var e = new Error('AUTH_REQUIRED');
-        e.code = 'AUTH_REQUIRED';
-        throw e;
+    return total === 0 || (dark / total) < 0.01;
+  }
+
+  function renderPageFigure(page, lines, boilerplateCount, boilerplateThreshold) {
+    var viewport = page.getViewport({ scale: FIGURE_SCALE });
+    var vh1 = page.getViewport({ scale: 1 }).height;
+
+    // Crop band: masthead = boilerplate lines in the page's top half (high
+    // pdf-y), footer = boilerplate lines in the bottom half (low pdf-y).
+    var mastBottom = null, footTop = null;
+    lines.forEach(function (l) {
+      if ((boilerplateCount[normLine(l.text)] || 0) < boilerplateThreshold) return;
+      if (l.y > vh1 / 2) mastBottom = mastBottom == null ? l.y : Math.min(mastBottom, l.y);
+      else footTop = footTop == null ? l.y : Math.max(footTop, l.y);
+    });
+    var padTop = 18, padBottom = 24;
+    var cropTop = mastBottom != null ? (vh1 - mastBottom - padTop) * FIGURE_SCALE : 0;
+    var cropBottom = footTop != null ? (vh1 - footTop - padBottom) * FIGURE_SCALE : viewport.height;
+    if (cropBottom - cropTop < 80 * FIGURE_SCALE) { cropTop = 0; cropBottom = viewport.height; }
+
+    var full = document.createElement('canvas');
+    full.width = viewport.width; full.height = viewport.height;
+    var fctx = full.getContext('2d');
+    fctx.fillStyle = '#ffffff';
+    fctx.fillRect(0, 0, full.width, full.height);
+    return page.render({ canvasContext: fctx, viewport: viewport }).promise.then(function () {
+      var w = full.width;
+      var h = Math.max(1, Math.round(cropBottom - cropTop));
+      var crop = document.createElement('canvas');
+      crop.width = w; crop.height = h;
+      var cctx = crop.getContext('2d');
+      cctx.fillStyle = '#ffffff';
+      cctx.fillRect(0, 0, w, h);
+      cctx.drawImage(full, 0, Math.round(cropTop), w, h, 0, 0, w, h);
+      if (isMostlyBlank(cctx, w, h)) return null;
+      if (crop.width > MAX_IMG_WIDTH) {
+        var scale = MAX_IMG_WIDTH / crop.width;
+        var down = document.createElement('canvas');
+        down.width = MAX_IMG_WIDTH; down.height = Math.round(crop.height * scale);
+        down.getContext('2d').drawImage(crop, 0, 0, down.width, down.height);
+        crop = down;
       }
-      var cfg = global.SUPABASE_CONFIG || {};
-      return fetch(functionsBase() + '/structure-document', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': cfg.anonKey || '',
-          'Authorization': 'Bearer ' + session.access_token
-        },
-        body: JSON.stringify({
-          docName: opts.docName || 'document.pdf',
-          text: extracted.text,
-          headingCandidates: extracted.headingCandidates || []
-        })
-      }).then(function (r) {
-        return r.json().then(function (j) {
-          if (r.status === 401) {
-            var e1 = new Error('AUTH_REQUIRED');
-            e1.code = 'AUTH_REQUIRED';
-            throw e1;
-          }
-          if (r.status === 404) {
-            throw new Error('The PDF import service is not deployed yet — run the Edge Function deploy steps (supabase/README.md).');
-          }
-          if (!r.ok) throw new Error(j.error || ('Import failed (HTTP ' + r.status + ')'));
-          return validateResult(j);
-        });
-      });
+      return crop.toDataURL('image/jpeg', 0.85);
     });
   }
 
-  function validateResult(j) {
-    var chapter = (j && j.chapter) || {};
-    var sections = Array.isArray(j && j.sections) ? j.sections : [];
-    if (!chapter.title || !sections.length) {
-      throw new Error('The AI could not find a structure in this document. Try a text-based PDF (not a scan).');
+  function extractImages(images, imgSeen, pages, counts, threshold) {
+    // Pages that paint at least one non-boilerplate graphic get a figure.
+    var boilerplateIds = {};
+    Object.keys(imgSeen).forEach(function (id) { if (imgSeen[id] >= 3) boilerplateIds[id] = true; });
+    var figurePages = {};
+    images.forEach(function (im) {
+      if (boilerplateIds[im.objId]) return;
+      if (im.page === 1 && pages.length >= 3) return; // page 1 masthead/logo, not a figure
+      figurePages[im.page] = im.pageObj;
+    });
+    var out = [];
+    var chain = Promise.resolve();
+    Object.keys(figurePages).forEach(function (pageNum) {
+      var n = parseInt(pageNum, 10);
+      chain = chain.then(function () {
+        return renderPageFigure(figurePages[n], pages[n - 1] || [], counts, threshold).then(function (dataUrl) {
+          if (dataUrl) out.push({ page: n, dataUrl: dataUrl });
+        }).catch(function () { /* a page that fails to render is skipped, never fatal */ });
+      });
+    });
+    return chain.then(function () { return out; });
+  }
+
+  /* ---- 3. segmentation (deterministic) ----------------------------------------- */
+
+  var WRAPPER_NAMES = /^(procedures?|process(es)?|steps?|workflow)\b/i;
+  var NUMBERED_STEP = /^\s*(\d+[.)]|[A-Z][.)]|[ivxlcdm]+[.)])/i;
+
+  function cleanTitle(fileName, sections) {
+    var t = String(fileName || '').replace(/\.pdf$/i, '')
+      .replace(/\s*\(\d+\)\s*$/, '')           // "(1)" download suffix
+      .replace(/^\w+\s*\d+\s+SOP\s*\d+\s*[-–]\s*/i, '') // "A 01 SOP 04 - "
+      .replace(/^SOP\s*\d+\s*[-–]\s*/i, '')
+      .trim();
+    if (!t && sections.length) t = sections[0].title;
+    return t || 'Imported chapter';
+  }
+
+  // Split paragraphs into sections at heading lines; fold wrapper headings
+  // ("Procedures", "Process", "Steps", "Workflow") and bodiless unnumbered
+  // headings into the first substantive section that follows — a wrapper is
+  // always viewable together with its first step.
+  function segment(paragraphs) {
+    var sections = [];
+    var cur = null;
+    paragraphs.forEach(function (p) {
+      if (p.heading) {
+        cur = { title: p.text, paragraphs: [], bullets: [], images: [], startPage: p.page };
+        sections.push(cur);
+        return;
+      }
+      if (!cur) { // content before the first heading (rare after boilerplate strip)
+        cur = { title: '', paragraphs: [], bullets: [], images: [], startPage: p.page };
+        sections.push(cur);
+      }
+      if (p.bullet) cur.bullets.push(p.text);
+      else cur.paragraphs.push(p.text);
+    });
+
+    // Attach images to the section covering their page.
+    return sections;
+  }
+
+  function attachImages(sections, images) {
+    images.forEach(function (img) {
+      var target = null;
+      for (var i = 0; i < sections.length; i++) {
+        var s = sections[i];
+        var nextStart = i + 1 < sections.length ? sections[i + 1].startPage : Infinity;
+        if (img.page >= s.startPage && img.page < nextStart) target = s;
+      }
+      if (!target && sections.length) target = sections[sections.length - 1];
+      if (target) {
+        var n = target.images.length + 1;
+        target.images.push({ caption: target.title ? (target.title + ' — figure ' + n) : ('Figure ' + n), dataUrl: img.dataUrl });
+      }
+    });
+  }
+
+  function foldWrappers(sections) {
+    var out = [];
+    for (var i = 0; i < sections.length; i++) {
+      var s = sections[i];
+      var bodyChars = s.paragraphs.join(' ').length + s.bullets.join(' ').length;
+      var isWrapper = !NUMBERED_STEP.test(s.title) && bodyChars < 200 && i < sections.length - 1 &&
+        (WRAPPER_NAMES.test(s.title) || bodyChars === 0 || !s.title);
+      if (isWrapper && out.length >= 0) {
+        var nxt = sections[i + 1];
+        var introBits = [];
+        if (s.title) introBits.push(s.title + ':');
+        nxt.paragraphs = [introBits.concat(s.paragraphs).join(' ')].concat(nxt.paragraphs).filter(function (x) { return x; });
+        nxt.bullets = s.bullets.concat(nxt.bullets);
+        nxt.images = s.images.concat(nxt.images);
+        continue;
+      }
+      out.push(s);
+    }
+    return out.filter(function (s) {
+      return s.title && (s.paragraphs.length || s.bullets.length || s.images.length);
+    });
+  }
+
+  function buildResult(extracted, fileName) {
+    var sections = segment(extracted.paragraphs);
+    attachImages(sections, extracted.images || []);
+    sections = foldWrappers(sections);
+    if (!sections.length) {
+      throw new Error('Could not find any structured sections in this document. Is it a text-based PDF (not a scan)?');
+    }
+    var firstBody = '';
+    for (var i = 0; i < sections.length && !firstBody; i++) {
+      firstBody = sections[i].paragraphs[0] || '';
     }
     return {
-      chapter: { title: String(chapter.title), blurb: String(chapter.blurb || '') },
-      sections: sections.map(function (s) {
-        return {
-          title: String(s.title || ''),
-          paragraphs: Array.isArray(s.paragraphs) ? s.paragraphs.map(String) : [],
-          bullets: Array.isArray(s.bullets) ? s.bullets.map(String) : []
-        };
-      })
+      result: {
+        chapter: { title: cleanTitle(fileName, sections), blurb: firstBody.slice(0, 300) },
+        sections: sections
+      },
+      extracted: extracted
     };
   }
 
-  /* ---- 3. schema mapping ------------------------------------------------------ */
+  /* ---- 4. schema mapping (shared by both insert modes) ------------------------- */
+
+  function sectionItems(s) {
+    var items = (s.bullets || []).slice();
+    (s.images || []).forEach(function (img) {
+      items.push({ s: 'image', name: img.caption, url: img.dataUrl });
+    });
+    return items;
+  }
 
   function toSectionsBody(result) {
     return {
@@ -233,7 +380,7 @@
           num: String(i + 1),
           title: s.title || ('Section ' + (i + 1)),
           blurb: s.paragraphs || [],
-          items: s.bullets || []
+          items: sectionItems(s)
         };
       })
     };
@@ -242,7 +389,8 @@
   global.PdfImport = {
     supported: supported,
     extractPdf: extractPdf,
-    structureChapter: structureChapter,
-    toSectionsBody: toSectionsBody
+    buildResult: buildResult,
+    toSectionsBody: toSectionsBody,
+    sectionItems: sectionItems
   };
 })(window);

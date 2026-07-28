@@ -286,6 +286,17 @@ let _accId = 0;
 // Expanded: reveals the blurb description and the hyperlinked resource.
 function policyItemHTML(it) {
   const id = 'acc-' + (++_accId);
+  // Embedded figure carried over from an imported document.
+  if (it && it.s === 'image') {
+    return `<figure class="policy-image" style="margin:16px 0;">
+      <img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;border:1px solid var(--rule);border-radius:4px;display:block;" />
+      ${it.name ? `<figcaption style="font-size:12px;color:var(--ink-mute);margin-top:8px;">${esc(it.name)}</figcaption>` : ''}
+    </figure>`;
+  }
+  // Plain text bullet (e.g. imported list items): simple row, no resource chrome.
+  if (typeof it === 'string') {
+    return `<div class="policy-text-item" style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule);line-height:1.55;"><span style="color:#B59060;flex:none;">•</span><span>${esc(it)}</span></div>`;
+  }
   // Group heading row (not a resource): a titled band that introduces the
   // resources beneath it. Renders name + descriptive blurb, no kind tag.
   if (it.s === 'group') {
