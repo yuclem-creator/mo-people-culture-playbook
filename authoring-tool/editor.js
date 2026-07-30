@@ -447,6 +447,8 @@
       var prefix0 = prosePrefixFor(ch, type);
       if (prefix0 && (type === 'standard' || type === 'sections-list')) {
         box.appendChild(imageField('Opener image (header)', PB.prose[prefix0 + '.opener.bg'] || '', function (fn) { PB.prose[prefix0 + '.opener.bg'] = fn; touch(); }));
+        var body0 = bodyForChapter(ch);
+        box.appendChild(paraArrayField('Opening paragraph(s)', body0.intro || [], function (arr) { body0.intro = arr; touch(); }));
       }
     }
     if (ch.id === 'cover') {
@@ -607,8 +609,8 @@
     box.appendChild(sectionLabel('Items (' + (sec.items ? sec.items.length : 0) + ')'));
     sec.items = sec.items || [];
     renderRepeatable(box, sec.items, {
-      nameOf: function (it) { return it.name || '(item)'; },
-      subOf: function (it) { return symbolLabel(it.s) + (it.blurb ? ' · ' + it.blurb : ''); },
+      nameOf: function (it) { return typeof it === 'string' ? (it.slice(0, 60) || '(empty)') : (it.name || '(item)'); },
+      subOf: function (it) { return typeof it === 'string' ? 'Text' : (symbolLabel(it.s) + (it.blurb ? ' · ' + it.blurb : '')); },
       open: function (it, i) { select({ kind: 'item', ref: { arr: sec.items, index: i }, chapter: sel.chapter, sub: sel.sub, backSel: SEL }); },
       addLabel: 'Add item',
       make: function () { return { s: 'policy', name: 'New item', blurb: '', url: '' }; }
@@ -642,6 +644,13 @@
 
   function renderItem(box, sel) {
     var it = sel.ref.arr[sel.ref.index];
+    // Plain-text bullet (e.g. imported list items): edit the text directly.
+    if (typeof it === 'string') {
+      inspTitle(box, it.slice(0, 40) || 'Text item', 'Text bullet', function () { SEL = sel.backSel; renderInspector(); });
+      box.appendChild(sectionLabel('Bullet'));
+      box.appendChild(textField('Text', it, function (v) { sel.ref.arr[sel.ref.index] = v; touch(); }, '', true));
+      return;
+    }
     inspTitle(box, it.name || 'Item', 'Resource / media / tab item', function () { SEL = sel.backSel; renderInspector(); });
     box.appendChild(sectionLabel('Item'));
     box.appendChild(selectField('Type', it.s || 'policy', ITEM_SYMBOLS, function (v) { it.s = v; touch(); renderInspector(); }));
