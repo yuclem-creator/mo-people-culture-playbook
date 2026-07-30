@@ -286,6 +286,24 @@ let _accId = 0;
 // Expanded: reveals the blurb description and the hyperlinked resource.
 function policyItemHTML(it) {
   const id = 'acc-' + (++_accId);
+  // Video frame (uploaded or linked).
+  if (it && it.s === 'video') {
+    return `<figure class="policy-video" style="margin:16px 0;">
+      <video controls playsinline style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:#0d0b08;"><source src="${esc(it.url)}" /></video>
+      ${it.name ? `<figcaption style="font-size:12px;color:var(--ink-mute);margin-top:8px;">${esc(it.name)}</figcaption>` : ''}
+    </figure>`;
+  }
+  // Tabbed interaction: a labelled tab bar with switchable panels.
+  if (it && it.s === 'tabs') {
+    const tabs = Array.isArray(it.tabs) ? it.tabs : [];
+    const tid = 'tabs-' + (++_accId);
+    return `<div class="policy-tabs" id="${tid}" style="margin:16px 0;border:1px solid var(--rule);border-radius:6px;overflow:hidden;">
+      <div class="policy-tabs-bar" style="display:flex;flex-wrap:wrap;background:#F4F1EA;border-bottom:1px solid var(--rule);">
+        ${tabs.map((t, i) => `<button type="button" class="policy-tab${i === 0 ? ' on' : ''}" data-tab-i="${i}" style="border:0;border-right:1px solid var(--rule);background:${i === 0 ? '#fff' : 'none'};padding:12px 18px;font:600 12px system-ui;letter-spacing:.08em;text-transform:uppercase;color:${i === 0 ? '#8f6d3f' : '#6b625a'};cursor:pointer;">${esc(t.label || ('Tab ' + (i + 1)))}</button>`).join('')}
+      </div>
+      ${tabs.map((t, i) => `<div class="policy-tab-panel" data-tab-p="${i}" style="display:${i === 0 ? 'block' : 'none'};padding:18px 22px;background:#fff;"><p style="margin:0;font-size:14px;color:#4a443f;line-height:1.7;">${esc(t.text || '')}</p></div>`).join('')}
+    </div>`;
+  }
   // Embedded figure carried over from an imported document.
   if (it && it.s === 'image') {
     return `<figure class="policy-image" style="margin:16px 0;">
@@ -2450,6 +2468,27 @@ function showWheelCaption(subId) {
   });
 }
 
+// Tab switching for .policy-tabs components (event delegation, wired once).
+if (!window.__policyTabsWired) {
+  window.__policyTabsWired = true;
+  document.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest('.policy-tab') : null;
+    if (!btn) return;
+    var wrap = btn.closest('.policy-tabs');
+    if (!wrap) return;
+    var idx = btn.getAttribute('data-tab-i');
+    wrap.querySelectorAll('.policy-tab').forEach(function (b) {
+      var on = b.getAttribute('data-tab-i') === idx;
+      b.classList.toggle('on', on);
+      b.style.background = on ? '#fff' : 'none';
+      b.style.color = on ? '#8f6d3f' : '#6b625a';
+    });
+    wrap.querySelectorAll('.policy-tab-panel').forEach(function (p) {
+      p.style.display = p.getAttribute('data-tab-p') === idx ? 'block' : 'none';
+    });
+  });
+}
+
 function wireEvents() {
   // Wheel: preview a stage's description on hover / keyboard focus (desktop).
   const wheelLayout = () => document.querySelector('.wheel-layout');
@@ -2577,6 +2616,16 @@ function updateRailAbout() {
     (edition ? ' All wording is drawn verbatim from the ' + edition + ' edition.' : '');
 }
 
+// Masthead bar follows the loaded playbook (wordmark + title + edition),
+// so non-P&C playbooks no longer carry P&C branding.
+function updateMasthead() {
+  var m = (PB && PB.meta) || {};
+  var wm = document.getElementById('brandWordmark');
+  if (wm) wm.textContent = (m.wordmark || 'Mandarin Oriental') + ' \u00b7 ' + (m.title || 'Playbook');
+  var rh = document.getElementById('runningHeader');
+  if (rh) rh.textContent = m.edition || '';
+}
+
 function applyPlaybook(next, opts) {
   opts = opts || {};
   window.PLAYBOOK = next || {};
@@ -2584,6 +2633,7 @@ function applyPlaybook(next, opts) {
   if (!PB.prose) PB.prose = {};
   refreshDerived();
   updateRailAbout();
+  updateMasthead();
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
   try {

@@ -44,7 +44,8 @@
 
   var ITEM_SYMBOLS = [
     { v: 'policy', l: 'Policy' }, { v: 'guide', l: 'Guideline' },
-    { v: 'kit', l: 'Toolkit' }, { v: 'xref', l: 'Cross-reference' }
+    { v: 'kit', l: 'Toolkit' }, { v: 'xref', l: 'Cross-reference' },
+    { v: 'image', l: 'Image' }, { v: 'video', l: 'Video' }, { v: 'tabs', l: 'Tabbed group' }
   ];
 
   // =========================================================================
@@ -443,6 +444,16 @@
     if (ch.id !== 'cover' && ch.id !== 'intro') {
       box.appendChild(textField('Contents-card description', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'One line under the card on the Contents page.', true));
       box.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
+      var prefix0 = prosePrefixFor(ch, type);
+      if (prefix0 && (type === 'standard' || type === 'sections-list')) {
+        box.appendChild(imageField('Opener image (header)', PB.prose[prefix0 + '.opener.bg'] || '', function (fn) { PB.prose[prefix0 + '.opener.bg'] = fn; touch(); }));
+      }
+    }
+    if (ch.id === 'cover') {
+      box.appendChild(sectionLabel('Cover page'));
+      box.appendChild(imageField('Cover image', PB.prose['cover.bg'] || '', function (fn) { PB.prose['cover.bg'] = fn; touch(); }));
+      box.appendChild(textField('Cover title (HTML allowed)', PB.prose['cover.titleHtml'] || '', function (v) { PB.prose['cover.titleHtml'] = v; touch(); }, 'e.g. Finance<br/><em>Playbook</em>', true));
+      box.appendChild(textField('Cover sub-line', PB.prose['cover.sub'] || '', function (v) { PB.prose['cover.sub'] = v; touch(); }, '', true));
     }
 
     // Prose group for this chapter (openers, headings, paragraphs, quotes...)
@@ -602,6 +613,25 @@
       addLabel: 'Add item',
       make: function () { return { s: 'policy', name: 'New item', blurb: '', url: '' }; }
     });
+    // Rich frames: image / video / tabbed interaction
+    box.appendChild(el('div', { class: 'media-actions', style: 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;' }, [
+      el('button', { class: 'btn ghost', onclick: function () { addMediaItem(sec, 'image'); } }, ['+ Add image']),
+      el('button', { class: 'btn ghost', onclick: function () { addMediaItem(sec, 'video'); } }, ['+ Add video']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        sec.items.push({ s: 'tabs', name: 'Tabbed group', tabs: [{ label: 'Tab 1', text: '' }] });
+        touch(); renderInspector();
+      } }, ['+ Add tabs'])
+    ]));
+  }
+
+  function addMediaItem(sec, kind) {
+    chooseFile(kind === 'image' ? 'image/*' : 'video/*', function (dataUrl, name) {
+      var virtual = (kind === 'image' ? 'img/' : 'video/') + 'upload_' + Date.now() + '_' + safeName(name);
+      PB.assets[virtual] = dataUrl;
+      sec.items = sec.items || [];
+      sec.items.push({ s: kind, name: name.replace(/\.[a-z0-9]+$/i, ''), url: virtual });
+      touch(); renderInspector();
+    });
   }
 
   function inlineHighlight(h, wrap) {
@@ -612,10 +642,38 @@
 
   function renderItem(box, sel) {
     var it = sel.ref.arr[sel.ref.index];
-    inspTitle(box, it.name || 'Item', 'Resource / policy item', function () { SEL = sel.backSel; renderInspector(); });
+    inspTitle(box, it.name || 'Item', 'Resource / media / tab item', function () { SEL = sel.backSel; renderInspector(); });
     box.appendChild(sectionLabel('Item'));
-    box.appendChild(selectField('Type', it.s || 'policy', ITEM_SYMBOLS, function (v) { it.s = v; touch(); }));
+    box.appendChild(selectField('Type', it.s || 'policy', ITEM_SYMBOLS, function (v) { it.s = v; touch(); renderInspector(); }));
     box.appendChild(textField('Name', it.name || '', function (v) { it.name = v; touch(); }));
+    if (it.s === 'image' || it.s === 'video') {
+      box.appendChild(el('div', { class: 'note', text: 'File: ' + (it.url || '(none)') }));
+      box.appendChild(el('button', { class: 'btn', onclick: function () {
+        chooseFile(it.s === 'image' ? 'image/*' : 'video/*', function (dataUrl, name) {
+          var virtual = (it.s === 'image' ? 'img/' : 'video/') + 'upload_' + Date.now() + '_' + safeName(name);
+          PB.assets[virtual] = dataUrl;
+          it.url = virtual;
+          touch(); renderInspector();
+        });
+      } }, ['Replace ' + it.s + '…']));
+      return;
+    }
+    if (it.s === 'tabs') {
+      it.tabs = it.tabs || [];
+      box.appendChild(sectionLabel('Tabs (' + it.tabs.length + ')'));
+      renderRepeatable(box, it.tabs, {
+        nameOf: function (t) { return t.label || '(tab)'; },
+        subOf: function (t) { return (t.text || '').slice(0, 60); },
+        open: null,
+        inlineEdit: function (t, wrap) {
+          wrap.appendChild(textField('Tab label', t.label || '', function (v) { t.label = v; touch(); }));
+          wrap.appendChild(textField('Tab content', t.text || '', function (v) { t.text = v; touch(); }, '', true));
+        },
+        addLabel: 'Add tab',
+        make: function () { return { label: 'Tab ' + (it.tabs.length + 1), text: '' }; }
+      });
+      return;
+    }
     box.appendChild(textField('Description', it.blurb || '', function (v) { it.blurb = v; touch(); }, '', true));
     box.appendChild(linkField('Link (URL)', it.url || '', function (v) { it.url = v; touch(); }));
   }
