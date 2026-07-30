@@ -197,6 +197,33 @@
         });
       }, Promise.resolve());
 
+      // Keep a tiny public index of published playbooks up to date, so the
+      // Library hub can list new playbooks automatically (no playbooks.json
+      // editing). Best-effort: a failure here never fails the publish.
+      function updateLibraryIndex() {
+        var idxPublicUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/published/index.json';
+        return fetch(idxPublicUrl + '?t=' + Date.now())
+          .then(function (r) { return r.ok ? r.json() : { playbooks: [] }; })
+          .catch(function () { return { playbooks: [] }; })
+          .then(function (idx) {
+            var list = (idx && Array.isArray(idx.playbooks)) ? idx.playbooks : [];
+            list = list.filter(function (p) { return p && p.slug !== slug; });
+            list.push({
+              slug: slug,
+              title: (pb.meta && pb.meta.title) || slug,
+              department: (pb.meta && pb.meta.department) || '',
+              edition: (pb.meta && pb.meta.edition) || '',
+              description: '',
+              publishedAt: new Date().toISOString()
+            });
+            var blob = new Blob([JSON.stringify({ playbooks: list }, null, 2)], { type: 'application/json' });
+            return sbUpload.storage.from(bucket).upload('published/index.json', blob, {
+              upsert: true, contentType: 'application/json'
+            });
+          })
+          .catch(function (e) { console.warn('[publish] library index update skipped:', e && e.message); });
+      }
+
       return uploadAssets
         .then(function () { return uploadBundled; })
         .then(function () {
@@ -219,6 +246,9 @@
         .then(function (r) {
           if (r.error) throw new Error('Upload failed (version.json): ' + r.error.message);
           tick();
+          return updateLibraryIndex();
+        })
+        .then(function () {
           var contentUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/' + basePath + 'playbook-data.json';
           return { slug: slug, contentUrl: contentUrl, assetCount: assetPaths.length, publishedBy: email };
         });

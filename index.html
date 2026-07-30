@@ -225,7 +225,7 @@ a { color: inherit; }
 (function () {
   'use strict';
 
-  var STORAGE_BASE = 'https://akcypiuealhfqspiwebp.supabase.co/storage/v1/object/public/playbook-content/published/';
+  var STORAGE_BASE = window.LIBRARY_STORAGE_BASE || 'https://akcypiuealhfqspiwebp.supabase.co/storage/v1/object/public/playbook-content/published/';
 
   var state = { departments: [], playbooks: [], dept: null, query: '' };
 
@@ -312,7 +312,7 @@ a { color: inherit; }
       '<span class="book">+</span>' +
       '<span class="body">' +
         '<h3>Create a playbook</h3>' +
-        '<p class="desc">Author a new ' + esc(d.name) + ' playbook in Playbook Studio. Sign-in required; it appears here once published and listed in playbooks.json.</p>' +
+        '<p class="desc">Author a new ' + esc(d.name) + ' playbook in Playbook Studio. Sign-in required; it appears here automatically once published.</p>' +
       '</span>' +
       '<span class="open">Create</span>' +
       '</a>';
@@ -375,6 +375,30 @@ a { color: inherit; }
   });
 
   /* ---- boot ---------------------------------------------------- */
+  function humanizeDept(id) {
+    return String(id || '').split('-').map(function (w) { return w ? w[0].toUpperCase() + w.slice(1) : ''; }).join(' ');
+  }
+
+  // Auto-list anything published from the Studio (the publish flow maintains
+  // published/index.json in the bucket), merged over the static registry.
+  function mergePublishedIndex() {
+    return fetch(STORAGE_BASE + 'index.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (idx) {
+        if (!idx || !Array.isArray(idx.playbooks)) return;
+        idx.playbooks.forEach(function (p) {
+          if (!p || !p.slug) return;
+          if (!state.playbooks.some(function (x) { return x.slug === p.slug; })) {
+            state.playbooks.push(p);
+          }
+          if (p.department && !state.departments.some(function (d) { return d.id === p.department; })) {
+            state.departments.push({ id: p.department, name: humanizeDept(p.department), description: '' });
+          }
+        });
+      })
+      .catch(function () { /* static registry still works */ });
+  }
+
   fetch('playbooks.json', { cache: 'no-store' })
     .then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -389,6 +413,12 @@ a { color: inherit; }
           state.departments.push({ id: p.department, name: p.department, description: '' });
         }
       });
+      document.getElementById('foot-status').textContent =
+        state.playbooks.length + ' playbook' + (state.playbooks.length === 1 ? '' : 's') +
+        ' · ' + state.departments.length + ' departments';
+      return mergePublishedIndex();
+    })
+    .then(function () {
       document.getElementById('foot-status').textContent =
         state.playbooks.length + ' playbook' + (state.playbooks.length === 1 ? '' : 's') +
         ' · ' + state.departments.length + ' departments';
