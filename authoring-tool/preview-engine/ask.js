@@ -250,10 +250,11 @@
   '#mo-ask-entry .opt p{font-size:12.5px;color:#6b625a;margin:0;line-height:1.6}' +
   '#mo-ask-fab{position:fixed;right:22px;bottom:84px;z-index:80;border:1px solid #C9A879;background:#fff;color:#8f6d3f;border-radius:999px;padding:11px 20px;font:600 12px/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;box-shadow:0 6px 20px rgba(13,11,8,.14)}' +
   '#mo-ask-fab:hover{background:#B59060;color:#fff}' +
-  '#mo-ask-panel{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);z-index:95;background:#FAF9F6;border-left:1px solid #E5E2DA;box-shadow:-16px 0 48px rgba(13,11,8,.18);display:flex;flex-direction:column}' +
+  '#mo-ask-backdrop{position:fixed;inset:0;z-index:1400;background:rgba(13,11,8,.35)}' +
+  '#mo-ask-panel{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);z-index:1500;background:#FAF9F6;border-left:1px solid #E5E2DA;box-shadow:-16px 0 48px rgba(13,11,8,.18);display:flex;flex-direction:column}' +
   '#mo-ask-panel .hd{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #E5E2DA}' +
   '#mo-ask-panel .hd b{font-family:Georgia,serif;font-weight:400;font-size:19px;color:#0d0b08}' +
-  '#mo-ask-panel .x{border:0;background:none;font-size:20px;color:#6b625a;cursor:pointer;padding:4px 8px}' +
+  '#mo-ask-panel .x{border:1px solid #E5E2DA;background:#F0EDE6;font-size:20px;line-height:1;color:#4a443f;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}' +
   '#mo-ask-panel .qw{padding:16px 22px;border-bottom:1px solid #E5E2DA;display:flex;gap:8px}' +
   '#mo-ask-panel input{flex:1;border:1px solid #E5E2DA;background:#fff;padding:12px 14px;font:inherit;font-size:14px;border-radius:3px;outline:none}' +
   '#mo-ask-panel input:focus{border-color:#C9A879}' +
@@ -270,7 +271,7 @@
   '#mo-ask-panel .ft{padding:12px 22px;border-top:1px solid #E5E2DA;font-size:11.5px;color:#a89f92;line-height:1.6}' +
   '@media(max-width:640px){#mo-ask-entry .opts{flex-direction:column}#mo-ask-panel{width:100%}}';
 
-  var entryEl = null, panelEl = null, fabEl = null;
+  var entryEl = null, panelEl = null, fabEl = null, backdropEl = null;
 
   function h(html) {
     var d = document.createElement('div');
@@ -322,8 +323,16 @@
     try { global.sessionStorage.setItem('mo_ask_seen', '1'); } catch (e) {}
   }
 
+  function onEscKey(e) {
+    if (e.key === 'Escape') closeAsk();
+  }
+
   function openAsk() {
     if (panelEl) { panelEl.querySelector('input').focus(); return; }
+    backdropEl = h('<div id="mo-ask-backdrop"></div>');
+    backdropEl.addEventListener('click', closeAsk);
+    document.body.appendChild(backdropEl);
+    document.addEventListener('keydown', onEscKey);
     panelEl = h(
       '<div id="mo-ask-panel" role="dialog" aria-label="Query the Playbook">' +
         '<div class="hd"><b>Query the Playbook</b><button class="x" type="button" aria-label="Close">×</button></div>' +
@@ -342,6 +351,8 @@
 
   function closeAsk() {
     if (panelEl) { panelEl.remove(); panelEl = null; }
+    if (backdropEl) { backdropEl.remove(); backdropEl = null; }
+    document.removeEventListener('keydown', onEscKey);
   }
 
   function runQuery(q) {
