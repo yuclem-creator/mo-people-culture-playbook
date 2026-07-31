@@ -1,11 +1,19 @@
 /* ============================================================================
-   publish.js — Supabase login gate + Publish flow for MO Playbook Studio
+   publish.js — Supabase login gate + Publish/Draft flows for MO Playbook Studio
    ----------------------------------------------------------------------------
-   Adds cloud publishing on top of the existing local-only editor without
-   touching storage.js/export.js's existing behaviour. Reuses the exact same
-   asset-decode logic export.js already uses for the offline SCORM export
-   (via window.__scormExportHelpers.externalizeAssets) instead of duplicating
-   it — per REMOTE_SCORM_SPEC.md Part 3.
+   Two lanes over one shared upload pipeline:
+
+     Publish (live)  -> published/<slug>/...   The Remote SCORM shell and the
+                        Library's live entries read from here. This is the
+                        only lane the LMS ever sees.
+
+     Save (draft)    -> drafts/<slug>/...      Work-in-progress. Listed in the
+                        Library with a "Draft" badge and openable in the web
+                        player (?stage=draft), but never touches the LMS.
+
+   A tiny public index (published/index.json) is maintained on every write so
+   the Library hub can list playbooks automatically, with a status flag:
+   'published' | 'draft'. A draft never downgrades an already-published entry.
 
    Public surface (attached to window.PlaybookPublish):
      slugify(title)              -> url-safe kebab-case slug
@@ -15,6 +23,7 @@
      signOut()                   -> Promise
      onAuthChange(fn)            -> subscribe to sign-in/out (fn(session))
      publish(pb, {onProgress})   -> Promise<{slug, contentUrl, assetCount}>
+     saveDraft(pb, {onProgress}) -> Promise<{slug, contentUrl, assetCount}>
    ============================================================================ */
 (function (global) {
   'use strict';
@@ -62,203 +71,202 @@
     sb.auth.onAuthStateChange(function (_event, session) { fn(session); });
   }
 
-  // ---- publish ---------------------------------------------------------------
-  // Uploads playbook-data.json + decoded assets + version.json to
-  // playbook-content/published/<slug>/... using upsert semantics (re-publish
-  // overwrites cleanly, no versioning needed for "auto-update").
-  function publish(pb, opts) {
+  // Resolve a usable authenticated session. In embedded/iframe contexts the
+  // Supabase client often cannot persist its session to browser storage, so
+  // we PREFER a session object passed in directly (opts.session) and only
+  // fall back to the persisted one.
+  function resolveSession(opts) {
     opts = opts || {};
-    var onProgress = opts.onProgress || function () {};
-    if (!sb) return Promise.reject(new Error('Supabase client is not available (check your connection and reload).'));
+    if (opts.session && opts.session.access_token) return Promise.resolve(opts.session);
+    return getSession().then(function (session) {
+      if (!session) return null;
+      var now = Math.floor(Date.now() / 1000);
+      var exp = session.expires_at || 0;
+      if (exp - now < 300) {
+        return sb.auth.refreshSession().then(function (r) {
+          return (r.error || !r.data || !r.data.session) ? null : r.data.session;
+        }).catch(function () { return null; });
+      }
+      return session;
+    });
+  }
 
-    // Resolve a usable authenticated session. In embedded/iframe contexts the
-    // Supabase client often cannot persist its session to browser storage, so
-    // getSession()/refreshSession() come back empty even right after a
-    // successful sign-in. To be robust we PREFER a session object passed in
-    // directly from the sign-in call (opts.session), which always holds a fresh
-    // access_token in memory, and only fall back to the persisted session.
-    function resolveSession() {
-      if (opts.session && opts.session.access_token) return Promise.resolve(opts.session);
-      return getSession().then(function (session) {
-        if (!session) return null;
-        var now = Math.floor(Date.now() / 1000);
-        var exp = session.expires_at || 0;
-        if (exp - now < 300) {
-          return sb.auth.refreshSession().then(function (r) {
-            return (r.error || !r.data || !r.data.session) ? null : r.data.session;
-          }).catch(function () { return null; });
-        }
-        return session;
-      });
+  function uploadClientFor(session) {
+    return (global.supabase && global.supabase.createClient)
+      ? global.supabase.createClient(cfg.url, cfg.anonKey, {
+          auth: { persistSession: false, autoRefreshToken: false },
+          global: { headers: { Authorization: 'Bearer ' + session.access_token } }
+        })
+      : sb;
+  }
+
+  /* ---- shared upload pipeline ---------------------------------------------
+     Uploads playbook-data.json + decoded assets + version.json to
+     <bucket>/<basePath> (e.g. published/<slug>/ or drafts/<slug>/).
+  -------------------------------------------------------------------------- */
+  function uploadPackage(pb, basePath, session, onProgress) {
+    onProgress = onProgress || function () {};
+    var sbUpload = uploadClientFor(session);
+    var email = session.user && session.user.email;
+    var bucket = cfg.bucket || 'playbook-content';
+    var slug = slugFor(pb);
+    var stage = basePath.indexOf('drafts/') === 0 ? 'draft' : 'published';
+
+    var helpers = global.__scormExportHelpers;
+    if (!helpers || !helpers.externalizeAssets) {
+      return Promise.reject(new Error('Internal error: export helpers not loaded.'));
     }
 
-    return resolveSession().then(function (session) {
-      if (!session || !session.access_token) return Promise.reject(new Error('NOT_AUTHENTICATED'));
-      var email = session.user && session.user.email;
+    var ext = helpers.externalizeAssets(pb);
+    var assetPaths = Object.keys(ext.extraFiles); // e.g. "img/foo.jpg"
 
-      // Build a storage client that explicitly carries THIS session's access
-      // token on every request, instead of relying on the shared client reading
-      // a (possibly unpersisted) session back from storage. This is what makes
-      // the upload reliably run as `authenticated` in an iframe.
-      var sbUpload = (global.supabase && global.supabase.createClient)
-        ? global.supabase.createClient(cfg.url, cfg.anonKey, {
-            auth: { persistSession: false, autoRefreshToken: false },
-            global: { headers: { Authorization: 'Bearer ' + session.access_token } }
-          })
-        : sb;
-      var helpers = global.__scormExportHelpers;
-      if (!helpers || !helpers.externalizeAssets) {
-        return Promise.reject(new Error('Internal error: export helpers not loaded.'));
+    // Bundled media referenced by path (e.g. "video/intro.mp4").
+    var bundledRefs = [];
+    (function scan(node) {
+      if (node == null) return;
+      if (typeof node === 'string') {
+        if (/^(img|video)\/[A-Za-z0-9_\-.]+\.(jpg|jpeg|png|webp|gif|svg|mp4|webm)$/.test(node)) bundledRefs.push(node);
+        return;
       }
+      if (Array.isArray(node)) { node.forEach(scan); return; }
+      if (typeof node === 'object') { Object.keys(node).forEach(function (k) { scan(node[k]); }); }
+    })(ext.playbook);
+    var seenRef = {};
+    var bundledPaths = bundledRefs.filter(function (p) {
+      if (seenRef[p] || ext.extraFiles[p]) return false;
+      seenRef[p] = true; return true;
+    });
 
-      var slug = slugFor(pb);
-      var basePath = 'published/' + slug + '/';
-      var bucket = cfg.bucket || 'playbook-content';
+    var total = assetPaths.length + bundledPaths.length + 2; // + playbook-data.json + version.json
+    var done = 0;
+    function tick() { done++; onProgress(done, total); }
 
-      // Reuse export.js's asset-decode logic exactly (no duplication): it
-      // returns a clone of PLAYBOOK with data-URL assets removed and a map of
-      // relative path -> { base64 } for every image/video that needs writing.
-      var ext = helpers.externalizeAssets(pb);
-      var assetPaths = Object.keys(ext.extraFiles); // e.g. "img/foo.jpg"
+    // Rewrite asset references to PUBLIC URLs for this lane's assets/ folder.
+    var publicBase = cfg.url + '/storage/v1/object/public/' + bucket + '/' + basePath + 'assets/';
+    var playbookForUpload = JSON.parse(JSON.stringify(ext.playbook));
+    playbookForUpload.__remoteAssetBase = publicBase;
 
-      // Also collect BUNDLED media referenced by path (e.g. "video/intro.mp4"
-      // from the starter content). The remote shell rewrites such references
-      // to bucket URLs, so the files must exist in the bucket or they 404
-      // (symptom: black video player). Data-URL assets above are uploaded
-      // from memory; bundled files are fetched from preview-engine/ below.
-      var bundledRefs = [];
-      (function scan(node) {
-        if (node == null) return;
-        if (typeof node === 'string') {
-          if (/^(img|video)\/[A-Za-z0-9_\-.]+\.(jpg|jpeg|png|webp|gif|svg|mp4|webm)$/.test(node)) bundledRefs.push(node);
-          return;
-        }
-        if (Array.isArray(node)) { node.forEach(scan); return; }
-        if (typeof node === 'object') { Object.keys(node).forEach(function (k) { scan(node[k]); }); }
-      })(ext.playbook);
-      var seenRef = {};
-      var bundledPaths = bundledRefs.filter(function (p) {
-        if (seenRef[p] || ext.extraFiles[p]) return false; // dedupe + skip data-URL assets
-        seenRef[p] = true; return true;
+    onProgress(0, total);
+
+    var uploadAssets = assetPaths.reduce(function (chain, path) {
+      return chain.then(function () {
+        var info = ext.extraFiles[path];
+        var mime = guessMime(path);
+        var blob = base64ToBlob(info.base64, mime);
+        return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + path.replace(/^(img|video)\//, ''), blob, {
+          upsert: true, contentType: mime
+        }).then(function (r) {
+          if (r.error) throw new Error('Asset upload failed (' + path + '): ' + r.error.message);
+          tick();
+        });
       });
+    }, Promise.resolve());
 
-      var total = assetPaths.length + bundledPaths.length + 2; // + playbook-data.json + version.json
-      var done = 0;
-      function tick() { done++; onProgress(done, total); }
-
-      // Rewrite asset references in playbook-data.json to PUBLIC bucket URLs
-      // so the remote shell can fetch them directly with no auth, per spec.
-      var publicBase = cfg.url + '/storage/v1/object/public/' + bucket + '/' + basePath + 'assets/';
-      var playbookForUpload = JSON.parse(JSON.stringify(ext.playbook));
-      // The externalized clone's `assets` map is already emptied by
-      // externalizeAssets (real files now), and any prose/struct fields were
-      // already rewritten to the new bare filenames. We only need to make
-      // those bare "img/xxx.jpg" / "video/xxx.mp4" references resolvable by
-      // an absolute URL for a shell that has no bundled img/ folder. We do
-      // this the same way the renderer resolves assets: by exposing a base
-      // URL the remote loader prefixes onto bare filenames.
-      playbookForUpload.__remoteAssetBase = publicBase;
-
-      onProgress(0, total);
-
-      // 1. Upload each decoded asset file.
-      var uploadAssets = assetPaths.reduce(function (chain, path) {
-        return chain.then(function () {
-          var info = ext.extraFiles[path];
-          var mime = guessMime(path);
-          var blob = base64ToBlob(info.base64, mime);
-          return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + path.replace(/^(img|video)\//, ''), blob, {
-            upsert: true, contentType: mime
-          }).then(function (r) {
-            if (r.error) throw new Error('Asset upload failed (' + path + '): ' + r.error.message);
-            tick();
-          });
-        });
-      }, Promise.resolve());
-
-      // 1b. Upload bundled media referenced by path (fetched from
-      // preview-engine/, which ships the starter img/ + video/ files).
-      // A missing local file is warned about and skipped — never fails the
-      // publish (the shell simply keeps its previous behaviour for that file).
-      var uploadBundled = bundledPaths.reduce(function (chain, path) {
-        return chain.then(function () {
-          return fetch('preview-engine/' + path).then(function (res) {
-            if (!res.ok) { console.warn('[publish] bundled media not found locally, skipped:', path); return; }
-            return res.blob().then(function (blob) {
-              var mime = guessMime(path);
-              return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + path.replace(/^(img|video)\//, ''), blob, {
-                upsert: true, contentType: mime
-              }).then(function (r) {
-                if (r.error) throw new Error('Asset upload failed (' + path + '): ' + r.error.message);
-                tick();
-              });
+    var uploadBundled = bundledPaths.reduce(function (chain, path) {
+      return chain.then(function () {
+        return fetch('preview-engine/' + path).then(function (res) {
+          if (!res.ok) { console.warn('[publish] bundled media not found locally, skipped:', path); return; }
+          return res.blob().then(function (blob) {
+            var mime = guessMime(path);
+            return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + path.replace(/^(img|video)\//, ''), blob, {
+              upsert: true, contentType: mime
+            }).then(function (r) {
+              if (r.error) throw new Error('Asset upload failed (' + path + '): ' + r.error.message);
+              tick();
             });
           });
         });
-      }, Promise.resolve());
+      });
+    }, Promise.resolve());
 
-      // Keep a tiny public index of published playbooks up to date, so the
-      // Library hub can list new playbooks automatically (no playbooks.json
-      // editing). Best-effort: a failure here never fails the publish.
-      function updateLibraryIndex() {
-        var idxPublicUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/published/index.json';
-        return fetch(idxPublicUrl + '?t=' + Date.now())
-          .then(function (r) { return r.ok ? r.json() : { playbooks: [] }; })
-          .catch(function () { return { playbooks: [] }; })
-          .then(function (idx) {
-            var list = (idx && Array.isArray(idx.playbooks)) ? idx.playbooks : [];
-            list = list.filter(function (p) { return p && p.slug !== slug; });
-            list.push({
-              slug: slug,
-              title: (pb.meta && pb.meta.title) || slug,
-              department: (pb.meta && pb.meta.department) || '',
-              edition: (pb.meta && pb.meta.edition) || '',
-              description: '',
-              publishedAt: new Date().toISOString()
-            });
-            var blob = new Blob([JSON.stringify({ playbooks: list }, null, 2)], { type: 'application/json' });
-            return sbUpload.storage.from(bucket).upload('published/index.json', blob, {
-              upsert: true, contentType: 'application/json'
-            });
-          })
-          .catch(function (e) { console.warn('[publish] library index update skipped:', e && e.message); });
-      }
+    return uploadAssets
+      .then(function () { return uploadBundled; })
+      .then(function () {
+        var blob = new Blob([JSON.stringify(playbookForUpload)], { type: 'application/json' });
+        return sbUpload.storage.from(bucket).upload(basePath + 'playbook-data.json', blob, {
+          upsert: true, contentType: 'application/json'
+        });
+      })
+      .then(function (r) {
+        if (r.error) throw new Error('Upload failed (playbook-data.json): ' + r.error.message);
+        tick();
+        var version = { publishedAt: new Date().toISOString(), publishedBy: email || null, stage: stage };
+        var blob = new Blob([JSON.stringify(version)], { type: 'application/json' });
+        return sbUpload.storage.from(bucket).upload(basePath + 'version.json', blob, {
+          upsert: true, contentType: 'application/json'
+        });
+      })
+      .then(function (r) {
+        if (r.error) throw new Error('Upload failed (version.json): ' + r.error.message);
+        tick();
+        var contentUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/' + basePath + 'playbook-data.json';
+        return { slug: slug, contentUrl: contentUrl, assetCount: assetPaths.length, publishedBy: email };
+      });
+  }
 
-      return uploadAssets
-        .then(function () { return uploadBundled; })
-        .then(function () {
-          // 2. Upload playbook-data.json
-          var blob = new Blob([JSON.stringify(playbookForUpload)], { type: 'application/json' });
-          return sbUpload.storage.from(bucket).upload(basePath + 'playbook-data.json', blob, {
-            upsert: true, contentType: 'application/json'
-          });
-        })
-        .then(function (r) {
-          if (r.error) throw new Error('Upload failed (playbook-data.json): ' + r.error.message);
-          tick();
-          // 3. Upload version.json
-          var version = { publishedAt: new Date().toISOString(), publishedBy: email || null };
-          var blob = new Blob([JSON.stringify(version)], { type: 'application/json' });
-          return sbUpload.storage.from(bucket).upload(basePath + 'version.json', blob, {
-            upsert: true, contentType: 'application/json'
-          });
-        })
-        .then(function (r) {
-          if (r.error) throw new Error('Upload failed (version.json): ' + r.error.message);
-          tick();
-          return updateLibraryIndex();
-        })
-        .then(function () {
-          var contentUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/' + basePath + 'playbook-data.json';
-          return { slug: slug, contentUrl: contentUrl, assetCount: assetPaths.length, publishedBy: email };
+  /* ---- public library index ------------------------------------------------ */
+  function updateLibraryIndex(pb, slug, stage, session) {
+    var sbUpload = uploadClientFor(session);
+    var bucket = cfg.bucket || 'playbook-content';
+    var idxPublicUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/published/index.json';
+    return fetch(idxPublicUrl + '?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : { playbooks: [] }; })
+      .catch(function () { return { playbooks: [] }; })
+      .then(function (idx) {
+        var list = (idx && Array.isArray(idx.playbooks)) ? idx.playbooks : [];
+        var existing = null;
+        list = list.filter(function (p) {
+          if (p && p.slug === slug) { existing = p; return false; }
+          return true;
+        });
+        var status = stage === 'published'
+          ? 'published'
+          : (existing && existing.status === 'published' ? 'published' : 'draft');
+        list.push({
+          slug: slug,
+          title: (pb.meta && pb.meta.title) || slug,
+          department: (pb.meta && pb.meta.department) || (existing && existing.department) || '',
+          edition: (pb.meta && pb.meta.edition) || (existing && existing.edition) || '',
+          description: (existing && existing.description) || '',
+          status: status,
+          updatedAt: new Date().toISOString()
+        });
+        var blob = new Blob([JSON.stringify({ playbooks: list }, null, 2)], { type: 'application/json' });
+        return sbUpload.storage.from(bucket).upload('published/index.json', blob, {
+          upsert: true, contentType: 'application/json'
+        });
+      })
+      .catch(function (e) { console.warn('[publish] library index update skipped:', e && e.message); });
+  }
+
+  /* ---- lanes ----------------------------------------------------------------- */
+  function publish(pb, opts) {
+    opts = opts || {};
+    return runLane(pb, 'published/', opts);
+  }
+
+  function saveDraft(pb, opts) {
+    opts = opts || {};
+    return runLane(pb, 'drafts/', opts);
+  }
+
+  function runLane(pb, lanePrefix, opts) {
+    var onProgress = opts.onProgress || function () {};
+    if (!sb) return Promise.reject(new Error('Supabase client is not available (check your connection and reload).'));
+    return resolveSession(opts).then(function (session) {
+      if (!session || !session.access_token) return Promise.reject(new Error('NOT_AUTHENTICATED'));
+      var slug = slugFor(pb);
+      return uploadPackage(pb, lanePrefix + slug + '/', session, onProgress)
+        .then(function (result) {
+          var stage = lanePrefix === 'drafts/' ? 'draft' : 'published';
+          return updateLibraryIndex(pb, slug, stage, session).then(function () { return result; });
         });
     }).catch(function (e) {
       if (e && e.message === 'NOT_AUTHENTICATED') throw e;
       // A stale/expired session is silently treated as anonymous, so the server
-      // returns an RLS violation. Translate that into a clear, actionable message
-      // instead of the raw Postgres error.
+      // returns an RLS violation. Translate that into a clear, actionable message.
       if (e && /row-level security|Unauthorized|JWT|expired/i.test(e.message || '')) {
-        var friendly = new Error('Your sign-in session expired. Please sign out and sign in again, then Publish.');
+        var friendly = new Error('Your sign-in session expired. Please sign out and sign in again, then try again.');
         friendly.code = 'SESSION_EXPIRED';
         throw friendly;
       }
@@ -288,6 +296,7 @@
     signIn: signIn,
     signOut: signOut,
     onAuthChange: onAuthChange,
-    publish: publish
+    publish: publish,
+    saveDraft: saveDraft
   };
 })(window);

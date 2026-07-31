@@ -1054,7 +1054,7 @@
       return window.PlaybookPublish.getSession().then(function (session) {
         if (!(session && session.access_token)) {
           return downloadJsonFallback().then(function (name) {
-            toast('Saved ' + name + '. Sign in to also save it to the version dashboard.', 'ok');
+            toast('Saved ' + name + '. Sign in to also list it in the Library and dashboard.', 'ok');
           });
         }
         return window.PlaybookVersions.saveSnapshot(PB, {
@@ -1062,8 +1062,20 @@
           session: session,
           publishedBy: (session.user && session.user.email) || null
         }).then(function () {
-          var dept = (PB.meta && PB.meta.department) ? PB.meta.department : null;
-          toast('Saved to the version dashboard' + (dept ? ' · ' + dept : ''), 'ok');
+          // Also bank it as a Draft in the Library (work-in-progress lane —
+          // never touches the published course). Best-effort: the dashboard
+          // save already succeeded, so draft failures only warn.
+          return window.PlaybookPublish.saveDraft(PB, {
+            session: session,
+            onProgress: function () {}
+          }).then(function () {
+            var dept = (PB.meta && PB.meta.department) ? PB.meta.department : null;
+            toast('Saved · listed in the Library as Draft' + (dept ? ' · ' + dept : ''), 'ok');
+          }).catch(function (draftErr) {
+            var dept = (PB.meta && PB.meta.department) ? PB.meta.department : null;
+            toast('Saved to the version dashboard' + (dept ? ' · ' + dept : '') +
+              ' — but the Library draft failed: ' + ((draftErr && draftErr.message) || draftErr), 'err');
+          });
         }).catch(function (err) {
           return downloadJsonFallback().then(function (name) {
             toast('Saved ' + name + ' — but the dashboard version failed: ' + ((err && err.message) || err), 'err');

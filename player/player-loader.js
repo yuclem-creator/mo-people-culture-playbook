@@ -25,15 +25,17 @@
   'use strict';
 
   var CFG = global.PLAYER_CONFIG || {};
-  var CONTENT_BASE = CFG.contentBase ||
-    'https://akcypiuealhfqspiwebp.supabase.co/storage/v1/object/public/playbook-content/published/';
+  var BUCKET_BASE = 'https://akcypiuealhfqspiwebp.supabase.co/storage/v1/object/public/playbook-content/';
   var HUB_URL = CFG.hubUrl || '../index.html';
   var TIMEOUT_MS = 8000;
 
   var params = new URLSearchParams(global.location.search);
   var SLUG = (params.get('slug') || '').trim();
   var SRC = (params.get('src') || '').trim(); // optional full contentUrl override
-  var LS_KEY = 'mo_player_cache_v1_' + (SLUG || SRC);
+  var STAGE = (params.get('stage') || '').trim(); // 'draft' opens the work-in-progress lane
+  var PREFIX = STAGE === 'draft' ? 'drafts/' : 'published/';
+  var CONTENT_BASE = CFG.contentBase || (BUCKET_BASE + PREFIX);
+  var LS_KEY = 'mo_player_cache_v1_' + PREFIX + (SLUG || SRC);
 
   function log(path, detail) {
     try { console.log('[player] source: ' + path + (detail ? ' — ' + detail : '')); } catch (e) {}

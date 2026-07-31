@@ -258,7 +258,9 @@ a { color: inherit; }
 
   function playbookUrl(p) {
     if (p.url) return p.url;
-    return 'player/index.html?slug=' + encodeURIComponent(p.slug);
+    var u = 'player/index.html?slug=' + encodeURIComponent(p.slug);
+    if (p.status === 'draft') u += '&stage=draft';
+    return u;
   }
 
   var FOLDER_SVG = '<svg class="glyph" width="34" height="26" viewBox="0 0 34 26" fill="none" aria-hidden="true">' +
@@ -317,10 +319,13 @@ a { color: inherit; }
       '<span class="open">Create</span>' +
       '</a>';
     books.forEach(function (p) {
+      var badge = p.status === 'draft'
+        ? ' <span style="display:inline-block;vertical-align:middle;margin-left:8px;padding:2px 8px;border:1px solid #B59060;border-radius:20px;color:#8f6d3f;font-size:10px;letter-spacing:.14em;text-transform:uppercase;">Draft</span>'
+        : '';
       html += '<div class="pcard" data-url="' + esc(playbookUrl(p)) + '" role="link" tabindex="0">' +
         '<span class="book">' + BOOK_SVG + '</span>' +
         '<span class="body">' +
-          '<h3>' + esc(p.title || p.slug) + '</h3>' +
+          '<h3>' + esc(p.title || p.slug) + badge + '</h3>' +
           (p.edition ? '<div class="edition">' + esc(p.edition) + '</div>' : '') +
           '<p class="desc">' + esc(p.description || '') + '</p>' +
           '<div class="meta" data-version-for="' + esc(p.slug) + '"></div>' +
