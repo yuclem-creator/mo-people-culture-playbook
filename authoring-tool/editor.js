@@ -519,13 +519,13 @@
     // Body content by type
     if (type === 'lifecycle') {
       box.appendChild(sectionLabel('Lifecycle stages'));
-      box.appendChild(el('div', { class: 'note', text: 'The wheel is a fixed design. Edit each stage’s label and summary below or open a stage in the outline for its policies.' }));
+      box.appendChild(el('div', { class: 'note', text: 'Stages appear on the interactive wheel automatically — hover or tap a slice to preview it. Edit each stage’s letter, label and summary below, or open a stage for its content sections.' }));
       renderRepeatable(box, PB.lifecycle, {
         nameOf: function (s) { return (s.letter ? s.letter + '. ' : '') + s.label; },
         subOf: function (s) { return s.lede || ''; },
         open: function (s) { select({ kind: 'lifecycle-sub', id: s.id, chapter: ch.id, sub: s.id }); },
         addLabel: 'Add lifecycle stage',
-        make: function () { return { id: uid('sub'), letter: '', label: 'New stage', img: '', lede: '' }; },
+        make: function () { return { id: uid('sub'), letter: String.fromCharCode(65 + PB.lifecycle.length), label: 'New stage', img: '', lede: '' }; },
         onChange: function () { renderTree(); }
       });
     } else if (type === 'directory') {

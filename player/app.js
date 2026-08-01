@@ -1846,6 +1846,87 @@ function renderCh3() {
   `;
 }
 
+/* ---- Generic interactive lifecycle wheel (any lifecycle chapter) ----------
+   Same markup contract as the seed wheel (wheel-slice / wheel-caption /
+   data-sub), so the existing hover/tap wiring and showWheelCaption work
+   unchanged — but slice count, palette, labels and captions are all driven
+   by the chapter's own stages. */
+function buildGenericWheelSVG(stages, chapterLabel) {
+  const N = stages.length;
+  if (!N) return '';
+  const cx = 300, cy = 300, rOuter = 250, rInner = 130;
+  const palette = ['#E8DFCC','#DDCDA6','#C8A874','#B08544','#8F6D3F','#B08544','#C8A874','#DDCDA6'];
+  const arcs = stages.map(function (s, i) {
+    const startAngle = (i * 360 / N) - 90 - (360 / N / 2);
+    const endAngle   = ((i + 1) * 360 / N) - 90 - (360 / N / 2);
+    const largeArc = (endAngle - startAngle) > 180 ? 1 : 0;
+    const p1 = polar(cx, cy, rOuter, startAngle);
+    const p2 = polar(cx, cy, rOuter, endAngle);
+    const p3 = polar(cx, cy, rInner, endAngle);
+    const p4 = polar(cx, cy, rInner, startAngle);
+    const d = 'M ' + p1.x + ' ' + p1.y + ' A ' + rOuter + ' ' + rOuter + ' 0 ' + largeArc + ' 1 ' + p2.x + ' ' + p2.y +
+              ' L ' + p3.x + ' ' + p3.y + ' A ' + rInner + ' ' + rInner + ' 0 ' + largeArc + ' 0 ' + p4.x + ' ' + p4.y + ' Z';
+    const mid = (startAngle + endAngle) / 2;
+    return {
+      d: d,
+      fill: palette[i % palette.length],
+      letter: s.letter || String.fromCharCode(65 + i),
+      label: String(s.label || '').split(' ')[0],
+      labelPos: polar(cx, cy, (rOuter + rInner) / 2, mid),
+      letterPos: polar(cx, cy, rOuter - 22, mid),
+      id: s.id,
+      aria: String(s.label || 'Stage')
+    };
+  });
+  return `
+    <svg class="wheel-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        ${arcs.map(function (a) { return `<path class="wheel-slice" d="${a.d}" fill="${a.fill}" stroke="#ffffff" stroke-width="2" data-sub="${a.id}" tabindex="0" role="button" aria-label="${esc(a.aria)} — explore this stage"/>`; }).join('')}
+      </g>
+      ${arcs.map(function (a) { return `
+        <text class="wheel-letter" x="${a.letterPos.x}" y="${a.letterPos.y}" text-anchor="middle" dominant-baseline="middle">${esc(a.letter)}</text>
+        <text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y}" text-anchor="middle" dominant-baseline="middle">${esc(a.label)}</text>`; }).join('')}
+      <circle cx="300" cy="300" r="118" fill="#FAF9F6" stroke="#C9A879" stroke-width="1"/>
+      <text x="300" y="296" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#0d0b08">${esc(chapterLabel || 'Lifecycle')}</text>
+      <text x="300" y="326" text-anchor="middle" font-family="Avenir Next LT Pro, system-ui, sans-serif" font-size="10" letter-spacing="3" fill="#6b625a">${N} STAGE${N === 1 ? '' : 'S'}</text>
+    </svg>`;
+}
+
+function lifecycleWheelHTML(ch) {
+  if (!LIFECYCLE.length) return '';
+  const prefix = ch.id.replace('ch-', 'ch');
+  const eyebrow = T(prefix + '.wheel.eyebrow', 'Process & Lifecycle');
+  const lede = T(prefix + '.wheel.lede', 'Select any stage to explore its guidance.');
+  return `
+    <div class="wheel-spread">
+      <div class="section-eyebrow" style="max-width: 720px; margin: 0 auto 24px;">
+        <span class="num">◈</span>
+        <span class="txt">${eyebrow}</span>
+        <span class="rule"></span>
+      </div>
+      <p class="spread-lede center" style="max-width: 640px; margin: 0 auto 12px;">${lede}</p>
+      <div class="wheel-layout">
+        <div class="wheel-wrap">${buildGenericWheelSVG(LIFECYCLE, ch.label || '')}</div>
+        <div class="wheel-caption" id="wheelCaption-${esc(ch.id)}" aria-live="polite">
+          <div class="wheel-caption-inner wheel-caption--rest" data-state="rest">
+            <div class="wheel-caption-eyebrow">${LIFECYCLE.length} Stage${LIFECYCLE.length === 1 ? '' : 's'}</div>
+            <h3 class="wheel-caption-title">Explore ${esc(ch.label || 'the lifecycle')}</h3>
+            <p class="wheel-caption-desc">Hover over a stage on the wheel to preview it — or tap a stage to see its focus, then open it in full.</p>
+          </div>
+          ${LIFECYCLE.map(function (s, i) { return `
+            <div class="wheel-caption-inner" data-sub="${s.id}" hidden>
+              <div class="wheel-caption-eyebrow">${esc(s.letter || String.fromCharCode(65 + i))} · Stage ${i + 1} · ${esc(ch.label || '')}</div>
+              <h3 class="wheel-caption-title">${esc(s.label || '')}</h3>
+              <p class="wheel-caption-desc">${esc(s.lede || '')}</p>
+              <button class="wheel-caption-cta" data-goto="${esc(ch.id)}" data-sub="${s.id}">Explore this stage
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </button>
+            </div>`; }).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
 function buildWheelSVG() {
   // 8-segment wheel, ordered clockwise from top-right
   // Colors: cream/wheat spectrum matching Behance mockup
@@ -2205,7 +2286,7 @@ function renderGenericChapter(ch, prevId, nextId) {
 
   let body = '';
   if (type === 'lifecycle') {
-    body = LIFECYCLE.map(s => {
+    body = lifecycleWheelHTML(ch) + LIFECYCLE.map(s => {
       const c = PB_LIFECYCLE_CONTENT[s.id] || { sections: [] };
       return `
         <div class="spread tight" id="${esc(s.id)}">
@@ -2493,7 +2574,8 @@ function initProgress() {
 // ---- Global click wiring ------------------------------------------
 // Reveal a stage's description in the wheel caption panel (hover/focus/tap).
 function showWheelCaption(subId) {
-  const cap = document.getElementById('wheelCaption');
+  const cap = (typeof currentChapter !== 'undefined' && document.getElementById('wheelCaption-' + currentChapter)) ||
+              document.getElementById('wheelCaption');
   if (!cap) return;
   cap.querySelectorAll('.wheel-caption-inner').forEach(el => {
     el.hidden = (el.dataset.sub !== subId) && !(subId === null && el.dataset.state === 'rest');
@@ -2593,7 +2675,8 @@ function wireEvents() {
     if (slice && slice.dataset.sub) {
       const noHover = window.matchMedia('(hover: none)').matches;
       if (noHover) { showWheelCaption(slice.dataset.sub); return; }
-      goTo('ch-3', slice.dataset.sub);
+      const sliceChapter = slice.closest('.chapter');
+      goTo(sliceChapter ? sliceChapter.id : 'ch-3', slice.dataset.sub);
       return;
     }
     // any generic data-goto
