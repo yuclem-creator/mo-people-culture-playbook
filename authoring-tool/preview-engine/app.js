@@ -2503,6 +2503,20 @@ function showWheelCaption(subId) {
   });
 }
 
+// In the Studio preview, clicking a menu tile opens that chapter's editor,
+// and clicking the menu header opens the Cover (menu-page) fields — the
+// editor listens for 'studio-select'. Normal navigation still happens.
+if (!window.__menuSelectWired) {
+  window.__menuSelectWired = true;
+  document.addEventListener('click', function (e) {
+    if (!window.__inStudio || window.parent === window) return;
+    var card = e.target && e.target.closest ? e.target.closest('.menu-card') : null;
+    var hdr = e.target && e.target.closest ? e.target.closest('.chapter#menu .spread-header') : null;
+    var id = card ? card.getAttribute('data-goto') : (hdr ? 'cover' : null);
+    if (id) window.parent.postMessage({ type: 'studio-select', id: id }, '*');
+  });
+}
+
 // Tab switching for .policy-tabs components (event delegation, wired once).
 if (!window.__policyTabsWired) {
   window.__policyTabsWired = true;
@@ -2692,6 +2706,7 @@ window.addEventListener('message', function (ev) {
   var d = ev.data || {};
   if (d.type === 'editor-ping') {
     // The editor (re)announces itself — reply so it knows we are listening.
+    window.__inStudio = true;
     if (window.parent !== window) window.parent.postMessage({ type: 'preview-boot' }, '*');
     return;
   }

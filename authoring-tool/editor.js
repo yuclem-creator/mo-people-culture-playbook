@@ -58,6 +58,15 @@
       if (pendingPush) { pendingPush = false; pushPreview(); }
     } else if (d.type === 'preview-error') {
       toast('Preview error: ' + d.message, 'err');
+    } else if (d.type === 'studio-select' && d.id) {
+      // A menu tile (or the menu header) was clicked in the preview — open the
+      // matching chapter's inspector so the editor follows the preview.
+      var ch = PB.chapters.filter(function (c) { return c.id === d.id; })[0];
+      if (ch) {
+        var t = ch.type || (ch.id === 'ch-1' ? 'letter' : ch.id === 'ch-2' ? 'directory' :
+          ch.hasSubs ? 'lifecycle' : ch.id === 'intro' ? 'intro-video' : ch.id === 'cover' ? 'cover' : 'standard');
+        select({ kind: 'chapter', id: ch.id, type: t, chapter: ch.id });
+      }
     }
   });
 
