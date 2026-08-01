@@ -2503,9 +2503,10 @@ function showWheelCaption(subId) {
   });
 }
 
-// In the Studio preview, clicking a menu tile opens that chapter's editor,
-// and clicking the menu header opens the Cover (menu-page) fields — the
-// editor listens for 'studio-select'. Normal navigation still happens.
+// In the Studio preview, clicking a menu tile opens that chapter's editor on
+// the right WITHOUT navigating away from the menu — editing happens in the
+// side panel. The capture phase suppresses the normal data-goto navigation
+// for tiles/header only; every other link still navigates as usual.
 if (!window.__menuSelectWired) {
   window.__menuSelectWired = true;
   document.addEventListener('click', function (e) {
@@ -2513,8 +2514,12 @@ if (!window.__menuSelectWired) {
     var card = e.target && e.target.closest ? e.target.closest('.menu-card') : null;
     var hdr = e.target && e.target.closest ? e.target.closest('.chapter#menu .spread-header') : null;
     var id = card ? card.getAttribute('data-goto') : (hdr ? 'cover' : null);
-    if (id) window.parent.postMessage({ type: 'studio-select', id: id }, '*');
-  });
+    if (id) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.parent.postMessage({ type: 'studio-select', id: id }, '*');
+    }
+  }, true);
 }
 
 // Tab switching for .policy-tabs components (event delegation, wired once).

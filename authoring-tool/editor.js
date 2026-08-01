@@ -65,7 +65,9 @@
       if (ch) {
         var t = ch.type || (ch.id === 'ch-1' ? 'letter' : ch.id === 'ch-2' ? 'directory' :
           ch.hasSubs ? 'lifecycle' : ch.id === 'intro' ? 'intro-video' : ch.id === 'cover' ? 'cover' : 'standard');
-        select({ kind: 'chapter', id: ch.id, type: t, chapter: ch.id });
+        // Open the editor for the chapter WITHOUT navigating the preview —
+        // the user stays on the menu page and edits tiles from the side panel.
+        select({ kind: 'chapter', id: ch.id, type: t, chapter: ch.id }, { noNav: true });
       }
     }
   });
@@ -427,11 +429,12 @@
   // =========================================================================
   // Selection + inspector routing
   // =========================================================================
-  function select(sel) {
+  function select(sel, opts) {
+    opts = opts || {};
     SEL = sel;
     highlightTree();
     renderInspector();
-    if (sel.chapter) gotoPreview(sel.chapter, sel.sub);
+    if (sel.chapter && !opts.noNav) gotoPreview(sel.chapter, sel.sub);
   }
 
   function renderInspector() {
