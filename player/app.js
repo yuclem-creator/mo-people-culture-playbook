@@ -1138,7 +1138,14 @@ function milestoneTimelineHTML(cfg) {
 function renderCover() {
   const bg = T('cover.bg', '');
   const metaTitle = (PB.meta && PB.meta.title) || 'Playbook';
-  const hasIntro = CHAPTERS.some(function (c) { return c.id === 'intro' || chapterTypeOf(c) === 'intro-video'; });
+  // Explore always continues to the NEXT chapter in the outline (Welcome Film
+  // if it comes next, otherwise Chapter I) — never jumps straight to the menu.
+  const nextAfterCover = (function () {
+    const i = CHAPTERS.findIndex(function (c) { return c.id === 'cover'; });
+    const rest = CHAPTERS.slice(i + 1).filter(function (c) { return c.id !== 'menu'; });
+    return rest.length ? rest[0].id : 'menu';
+  })();
+  const hasIntro = nextAfterCover === 'intro';
   return `
     <section class="chapter" id="cover">
       <div class="cover-full"${bg ? ` style="background-image: url('img/${bg}');"` : ' style="background:linear-gradient(160deg,#17150f 0%,#2b2417 100%);"'}>
@@ -1152,7 +1159,7 @@ function renderCover() {
             <div class="cover-eyebrow">${T('cover.eyebrow','The Interactive Playbook')}</div>
             <h1 class="cover-title">${T('cover.titleHtml', esc(metaTitle))}</h1>
             <p class="cover-sub">${T('cover.sub','')}</p>
-            <button class="cover-cta" data-goto="${hasIntro ? 'intro' : 'menu'}">
+            <button class="cover-cta" data-goto="${nextAfterCover}">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 6.2C10 4.8 7.2 4.2 3.5 4.2v13.9c3.7 0 6.5.6 8.5 2 2-1.4 4.8-2 8.5-2V4.2c-3.7 0-6.5.6-8.5 2z"/><path d="M12 6.2v13.9"/></svg>
               ${T('cover.ctaLabel','Explore')}
             </button>
