@@ -467,11 +467,11 @@
     box.appendChild(sectionLabel('Chapter'));
     box.appendChild(textField('Title', ch.label || '', function (v) { ch.label = v; touch(); renderTree(); }, 'Shown in the menu, rail and navigation.'));
     if (ch.id !== 'cover' && ch.id !== 'intro') {
-      box.appendChild(textField('Contents-card description', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'One line under the card on the Contents page.', true));
+      box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
       box.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
       var prefix0 = prosePrefixFor(ch, type);
       if (prefix0 && (type === 'standard' || type === 'sections-list')) {
-        box.appendChild(imageField('Opener image (header)', PB.prose[prefix0 + '.opener.bg'] || '', function (fn) { PB.prose[prefix0 + '.opener.bg'] = fn; touch(); }));
+        box.appendChild(imageField('Opener image (header + menu tile)', PB.prose[prefix0 + '.opener.bg'] || '', function (fn) { PB.prose[prefix0 + '.opener.bg'] = fn; touch(); }));
         var body0 = bodyForChapter(ch);
         box.appendChild(paraArrayField('Opening paragraph(s)', body0.intro || [], function (arr) { body0.intro = arr; touch(); }));
       }
@@ -481,6 +481,10 @@
       box.appendChild(imageField('Cover image', PB.prose['cover.bg'] || '', function (fn) { PB.prose['cover.bg'] = fn; touch(); }));
       box.appendChild(textField('Cover title (HTML allowed)', PB.prose['cover.titleHtml'] || '', function (v) { PB.prose['cover.titleHtml'] = v; touch(); }, 'e.g. Finance<br/><em>Playbook</em>', true));
       box.appendChild(textField('Cover sub-line', PB.prose['cover.sub'] || '', function (v) { PB.prose['cover.sub'] = v; touch(); }, '', true));
+      box.appendChild(sectionLabel('Contents page (menu)'));
+      box.appendChild(textField('Menu eyebrow', PB.prose['menu.running'] || '', function (v) { PB.prose['menu.running'] = v; touch(); }, 'Small line above the menu title. Defaults to the playbook title.'));
+      box.appendChild(textField('Menu title', PB.prose['menu.title'] || '', function (v) { PB.prose['menu.title'] = v; touch(); }, 'e.g. Explore the Playbook'));
+      box.appendChild(textField('Menu intro line', PB.prose['menu.lede'] || '', function (v) { PB.prose['menu.lede'] = v; touch(); }, 'Optional line under the menu title.', true));
     }
     if (ch.id === 'intro' || type === 'intro-video') {
       box.appendChild(sectionLabel('Welcome film'));
