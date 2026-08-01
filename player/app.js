@@ -1136,20 +1136,23 @@ function milestoneTimelineHTML(cfg) {
 
 // ---- COVER ----------------------------------------------------------
 function renderCover() {
+  const bg = T('cover.bg', '');
+  const metaTitle = (PB.meta && PB.meta.title) || 'Playbook';
+  const hasIntro = CHAPTERS.some(function (c) { return c.id === 'intro' || chapterTypeOf(c) === 'intro-video'; });
   return `
     <section class="chapter" id="cover">
-      <div class="cover-full" style="background-image: url('img/${T('cover.bg','cover_colleagues.jpg')}');">
+      <div class="cover-full"${bg ? ` style="background-image: url('img/${bg}');"` : ' style="background:linear-gradient(160deg,#17150f 0%,#2b2417 100%);"'}>
         <div class="cover-veil"></div>
         <div class="cover-inner">
           <div class="cover-top">
-            <div class="cover-wordmark">${T('cover.wordmark','Mandarin Oriental')}</div>
-            <div class="cover-edition">${T('cover.edition','Edition · July 2026')}</div>
+            <div class="cover-wordmark">${T('cover.wordmark',(PB.meta && PB.meta.wordmark) || 'Mandarin Oriental')}</div>
+            <div class="cover-edition">${T('cover.edition',(PB.meta && PB.meta.edition && PB.meta.edition !== 'Edition') ? PB.meta.edition : '')}</div>
           </div>
           <div class="cover-center">
             <div class="cover-eyebrow">${T('cover.eyebrow','The Interactive Playbook')}</div>
-            <h1 class="cover-title">${T('cover.titleHtml','People &amp; Culture<br/><em>Playbook</em>')}</h1>
-            <p class="cover-sub">${T('cover.sub','A living framework for every People &amp; Culture leader — from attracting talent to leaving with connection.')}</p>
-            <button class="cover-cta" data-goto="intro">
+            <h1 class="cover-title">${T('cover.titleHtml', esc(metaTitle))}</h1>
+            <p class="cover-sub">${T('cover.sub','')}</p>
+            <button class="cover-cta" data-goto="${hasIntro ? 'intro' : 'menu'}">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 6.2C10 4.8 7.2 4.2 3.5 4.2v13.9c3.7 0 6.5.6 8.5 2 2-1.4 4.8-2 8.5-2V4.2c-3.7 0-6.5.6-8.5 2z"/><path d="M12 6.2v13.9"/></svg>
               ${T('cover.ctaLabel','Explore')}
             </button>
@@ -1162,14 +1165,18 @@ function renderCover() {
 
 // ---- INTRO VIDEO (welcome interstitial) ----------------------------
 function renderIntro() {
+  const vid = T('intro.video', '');
+  const metaTitle = esc((PB.meta && PB.meta.title) || 'Playbook');
   return `
     <section class="chapter" id="intro">
       <div class="intro-full">
         <div class="intro-inner">
-          <div class="intro-eyebrow">${T('intro.eyebrow','A Message to Colleagues')}</div>
-          <h1 class="intro-title">${T('intro.title','Welcome to our People &amp; Culture (P&amp;C) Playbook')}</h1>
+          <div class="intro-eyebrow">${T('intro.eyebrow','Welcome')}</div>
+          <h1 class="intro-title">${T('intro.title','Welcome to the ' + metaTitle)}</h1>
           <div class="intro-video-wrap">
-            <video class="intro-video" src="${T('intro.video','video/intro.mp4')}" playsinline controls preload="auto"></video>
+            ${vid
+              ? `<video class="intro-video" src="${vid}" playsinline controls preload="auto"></video>`
+              : `<div style="display:flex;align-items:center;justify-content:center;min-height:240px;border:1px dashed var(--rule);color:var(--ink-mute);font-size:14px;padding:40px;text-align:center;">No welcome film yet — upload one in the Studio (Welcome Film chapter) to feature it here.</div>`}
           </div>
           <button class="intro-next" data-goto="menu">
             ${T('intro.nextLabel','Continue to Contents')}
@@ -2095,25 +2102,39 @@ function renderRail() {
 
 // ---- VISUAL CONTENTS MENU ------------------------------------------
 function renderMenu() {
-  const chapterCards = CHAPTERS.filter(c => c.id !== 'cover' && c.id !== 'letter' && c.id !== 'intro').map(c => `
+  // Tile image: prefer the chapter's prose opener background (what the
+  // Studio's Opener image field writes); accept the seed's filename-style
+  // opener only when it actually looks like an image; otherwise a plain
+  // gradient tile (never a broken image).
+  function menuCardImg(c) {
+    const prefix = c.id.replace('ch-', 'ch');
+    let img = T(prefix + '.opener.bg', '');
+    if (!img && /\.(jpe?g|png|webp|gif|svg)$/i.test(c.opener || '')) img = c.opener;
+    return img;
+  }
+  const chapterCards = CHAPTERS.filter(c => c.id !== 'cover' && c.id !== 'letter' && c.id !== 'intro').map(c => {
+    const img = menuCardImg(c);
+    return `
     <button class="menu-card" data-goto="${c.id}">
-      <div class="menu-card-img"><img src="img/${c.opener}" alt="${c.label}" loading="lazy" /></div>
+      ${img
+        ? `<div class="menu-card-img"><img src="img/${img}" alt="${c.label}" loading="lazy" /></div>`
+        : `<div class="menu-card-img" style="background:linear-gradient(135deg,#F4F1EA 0%,#E7DFCE 100%);"></div>`}
       <div class="menu-card-body">
         <div class="menu-card-eyebrow">${ICONS[c.id] ? `<span class="menu-card-icon">${ICONS[c.id]}</span>` : ''}${c.numeral ? 'Chapter ' + c.numeral : (c.isVideo ? 'Welcome Film' : 'Foreword')}</div>
         <div class="menu-card-title">${c.label}</div>
         <div class="menu-card-desc">${MENU_DESC[c.id] || ''}</div>
       </div>
-    </button>
-  `).join('');
+    </button>`;
+  }).join('');
 
   return `
     <section class="chapter" id="menu">
       <div class="spread">
         <div class="spread-header">
-          <div class="running-mini">${T('menu.running','People &amp; Culture')}</div>
+          <div class="running-mini">${T('menu.running', isSeedPlaybook() ? 'People &amp; Culture' : esc((PB.meta && PB.meta.title) || ''))}</div>
           <div class="center-rule"></div>
-          <h2 class="spread-title center">${T('menu.title','Explore our Playbook')}</h2>
-          <p class="spread-lede center">${T('menu.lede','Globally Defined &middot; Regionally Governed &middot; Locally Executed')}</p>
+          <h2 class="spread-title center">${T('menu.title','Explore the Playbook')}</h2>
+          <p class="spread-lede center">${T('menu.lede','')}</p>
         </div>
         <div class="menu-grid">${chapterCards}</div>
       </div>
@@ -2234,13 +2255,27 @@ function renderGenericChapter(ch, prevId, nextId) {
     </section>`;
 }
 
+// True only for the genuine P&C seed (or a duplicate of it) — NOT merely any
+// playbook with prose keys, since the editor writes prose on every upload.
+// The marker key is seed-specific and never written by the generic editor.
+function isSeedPlaybook() {
+  // Seed-bespoke 'band' prose keys are never written by the generic editor,
+  // and meta.fromSeed marks duplicates made from the seed going forward.
+  return !!(PB && ((PB.meta && PB.meta.fromSeed) ||
+    (PB.prose && (PB.prose['ch5.band.img'] || PB.prose['ch4.band.img'] || PB.prose['ch2.band.img']))));
+}
+
 function renderAll() {
   const reader = document.getElementById('reader');
-  const parts = [renderCover(), renderIntro(), renderMenu()];
-  // Bespoke seed renderers are used only when this playbook actually carries
-  // seed prose; blank-authored playbooks take the generic path for every
-  // chapter so no seed wording leaks through.
-  const seedLike = PB.prose && Object.keys(PB.prose).length > 0;
+  const parts = [renderCover()];
+  // The Welcome Film page renders only when the playbook actually has an
+  // intro chapter in its outline — never as a hidden page.
+  const hasIntro = CHAPTERS.some(function (c) { return c.id === 'intro' || chapterTypeOf(c) === 'intro-video'; });
+  if (hasIntro) parts.push(renderIntro());
+  parts.push(renderMenu());
+  // Bespoke seed renderers are used only for the genuine seed playbook, so
+  // no seed wording leaks into authored playbooks.
+  const seedLike = isSeedPlaybook();
   const BESPOKE = { 'ch-1': renderCh1, 'ch-2': renderCh2, 'ch-3': renderCh3, 'ch-4': renderCh4, 'ch-5': renderCh5, 'ch-6': renderCh6 };
   const realChs = CHAPTERS.filter(c => c.id !== 'cover' && c.id !== 'intro' && c.id !== 'menu');
   realChs.forEach((ch, i) => {

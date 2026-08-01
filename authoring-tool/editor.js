@@ -373,8 +373,22 @@
   }
   function deleteChapter(id) {
     if (!window.confirm('Delete this chapter and all its content? This cannot be undone.')) return;
+    var victim = PB.chapters.filter(function (c) { return c.id === id; })[0];
     PB.chapters = PB.chapters.filter(function (c) { return c.id !== id; });
     if (PB.sectionBodies) delete PB.sectionBodies[id];
+    if (PB.menuDesc) delete PB.menuDesc[id];
+    // Clear the chapter's prose keys too, so a NEW chapter that later lands on
+    // this id never inherits leftover wording/images from the deleted one.
+    if (victim) {
+      var t = victim.type || (victim.id === 'ch-1' ? 'letter' : victim.id === 'ch-2' ? 'directory' :
+        victim.hasSubs ? 'lifecycle' : victim.id === 'intro' ? 'intro-video' : victim.id === 'cover' ? 'cover' : 'standard');
+      var pre = prosePrefixFor(victim, t);
+      if (pre && PB.prose) {
+        Object.keys(PB.prose).forEach(function (k) {
+          if (k === pre || k.indexOf(pre + '.') === 0) delete PB.prose[k];
+        });
+      }
+    }
     SEL = null;
     touch(); renderTree(); renderInspector();
     toast('Chapter deleted', 'ok');
@@ -467,6 +481,13 @@
       box.appendChild(imageField('Cover image', PB.prose['cover.bg'] || '', function (fn) { PB.prose['cover.bg'] = fn; touch(); }));
       box.appendChild(textField('Cover title (HTML allowed)', PB.prose['cover.titleHtml'] || '', function (v) { PB.prose['cover.titleHtml'] = v; touch(); }, 'e.g. Finance<br/><em>Playbook</em>', true));
       box.appendChild(textField('Cover sub-line', PB.prose['cover.sub'] || '', function (v) { PB.prose['cover.sub'] = v; touch(); }, '', true));
+    }
+    if (ch.id === 'intro' || type === 'intro-video') {
+      box.appendChild(sectionLabel('Welcome film'));
+      box.appendChild(videoField('Welcome video', PB.prose['intro.video'] || '', function (fn) { PB.prose['intro.video'] = fn; touch(); }));
+      box.appendChild(textField('Eyebrow', PB.prose['intro.eyebrow'] || '', function (v) { PB.prose['intro.eyebrow'] = v; touch(); }));
+      box.appendChild(textField('Title', PB.prose['intro.title'] || '', function (v) { PB.prose['intro.title'] = v; touch(); }));
+      box.appendChild(textField('Button label', PB.prose['intro.nextLabel'] || '', function (v) { PB.prose['intro.nextLabel'] = v; touch(); }, 'e.g. Continue to Contents'));
     }
 
     // Prose group for this chapter (openers, headings, paragraphs, quotes...)
@@ -926,6 +947,42 @@
     box.appendChild(sectionLabel('Completion rule'));
     renderCompletion(box);
 
+    // One-click cleanup for playbooks that were duplicated from the P&C seed:
+    // removes leftover seed wording/images that don't belong to this playbook
+    // (chapter prose for chapters that no longer exist, the P&C welcome film,
+    // and the P&C menu-page text). Cover fields are left untouched.
+    box.appendChild(sectionLabel('Maintenance'));
+    box.appendChild(el('button', { class: 'btn danger', onclick: function () {
+      if (!window.confirm('Remove leftover P&C seed content from this playbook? This clears the old welcome film, old menu text, and content of deleted seed chapters. Your chapters and cover fields are kept. Cannot be undone.')) return;
+      var removed = 0;
+      var chapterPrefixes = {};
+      PB.chapters.forEach(function (c) {
+        var t = c.type || (c.id === 'ch-1' ? 'letter' : c.id === 'ch-2' ? 'directory' :
+          c.hasSubs ? 'lifecycle' : c.id === 'intro' ? 'intro-video' : c.id === 'cover' ? 'cover' : 'standard');
+        var pre = prosePrefixFor(c, t);
+        if (pre) chapterPrefixes[pre] = true;
+      });
+      Object.keys(PB.prose || {}).forEach(function (k) {
+        var top = k.split('.')[0];
+        var keep = !!chapterPrefixes[top] || top === 'cover';
+        if (!keep) { delete PB.prose[k]; removed++; }
+      });
+      // intro + menu leftovers are only seed content if there is no intro chapter
+      var hasIntro = PB.chapters.some(function (c) { return c.id === 'intro'; });
+      if (!hasIntro) {
+        ['intro.eyebrow', 'intro.title', 'intro.video', 'intro.nextLabel'].forEach(function (k) {
+          if (PB.prose[k] !== undefined) { delete PB.prose[k]; removed++; }
+        });
+      }
+      ['menu.running', 'menu.title', 'menu.lede'].forEach(function (k) {
+        if (PB.prose[k] !== undefined) { delete PB.prose[k]; removed++; }
+      });
+      if (PB.meta) delete PB.meta.fromSeed;
+      touch();
+      toast(removed ? ('Cleaned ' + removed + ' leftover item(s). Review the preview, then Save.') : 'Nothing to clean — no leftover seed content found.', 'ok');
+      renderInspector();
+    } }, ['Remove leftover P&C content…']));
+
     box.appendChild(sectionLabel('SCORM manifest inspector'));
     renderManifestInspector(box);
   }
@@ -1130,7 +1187,7 @@
       { label: 'Create & choose PDF', primary: true, onClick: function () {
         var title = ($('#pdfNewTitle') && $('#pdfNewTitle').value) || 'New Playbook';
         closeModal();
-        buildBlank(title, ['cover']);
+        buildBlank(title, ['cover', 'intro-video']);
         openPdfImportFlow();
       } }
     ]);
@@ -1261,6 +1318,7 @@
     fetch('seed-playbook.json').then(function (r) { return r.json(); }).then(function (seed) {
       seed = JSON.parse(JSON.stringify(seed));
       seed.meta = seed.meta || {};
+      seed.meta.fromSeed = true;
       seed.meta.title = 'Copy of ' + (seed.meta.title || 'Playbook');
       applyPendingCreate(seed);
       setPlaybook(seed);
@@ -1278,7 +1336,7 @@
     body.appendChild(el('div', { class: 'note', text: 'Tick the chapters to include. You can add, rename or reorder content later.' }));
     var ul = el('ul', { class: 'check-list' });
     order.forEach(function (t, idx) {
-      var def = t === 'cover' || t === 'standard';
+      var def = t === 'cover' || t === 'intro-video' || t === 'standard';
       picks[t] = def;
       var cb = el('input', { type: 'checkbox', checked: def ? 'checked' : null, onchange: function (e) { picks[t] = e.target.checked; } });
       ul.appendChild(el('li', {}, [cb, CHAPTER_TYPES[t].label]));
