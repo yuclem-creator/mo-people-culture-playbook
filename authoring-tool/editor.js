@@ -161,24 +161,35 @@
   function loadPublishedForEdit(slug) {
     var cfg = window.SUPABASE_CONFIG || {};
     if (!cfg.url) { toast('Supabase is not configured here.', 'err'); pendingEdit = null; return; }
-    var url = String(cfg.url).replace(/\/$/, '') + '/storage/v1/object/public/playbook-content/published/' +
-      encodeURIComponent(slug) + '/playbook-data.json?t=' + Date.now();
-    toast('Loading published playbook\u2026');
-    fetch(url).then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    }).then(function (pb) {
-      pb.meta = pb.meta || {};
-      if (!pb.meta.slug) pb.meta.slug = slug;
-      setPlaybook(pb);
-      markSaved();
-      toast('Loaded \u201C' + ((pb.meta && pb.meta.title) || slug) + '\u201D — you are editing the published version.', 'ok');
-    }).catch(function (err) {
-      toast('Could not load the published playbook: ' + (err.message || err), 'err');
-    }).then(function () {
-      pendingEdit = null;
-      stripLibraryParams();
-    });
+    // Drafts first if the Library flagged stage=draft; always fall back to the
+    // other lane — an entry may only exist in one of them.
+    var params = new URLSearchParams(window.location.search);
+    var preferDraft = params.get('stage') === 'draft';
+    var lanes = preferDraft ? ['drafts', 'published'] : ['published', 'drafts'];
+    toast('Loading playbook\u2026');
+    (function tryLane(i) {
+      if (i >= lanes.length) {
+        toast('Could not load the playbook: not found in published or draft storage.', 'err');
+        pendingEdit = null;
+        stripLibraryParams();
+        return;
+      }
+      var url = String(cfg.url).replace(/\/$/, '') + '/storage/v1/object/public/playbook-content/' + lanes[i] + '/' +
+        encodeURIComponent(slug) + '/playbook-data.json?t=' + Date.now();
+      fetch(url).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).then(function (pb) {
+        pb.meta = pb.meta || {};
+        if (!pb.meta.slug) pb.meta.slug = slug;
+        setPlaybook(pb);
+        markSaved();
+        var lane = lanes[i] === 'drafts' ? 'draft' : 'published version';
+        toast('Loaded \u201C' + ((pb.meta && pb.meta.title) || slug) + '\u201D — you are editing the ' + lane + '.', 'ok');
+        pendingEdit = null;
+        stripLibraryParams();
+      }).catch(function () { tryLane(i + 1); });
+    })(0);
   }
   function applyPendingCreate(pb) {
     if (!pendingCreate) return;

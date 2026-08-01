@@ -331,7 +331,7 @@ a { color: inherit; }
           '<div class="meta" data-version-for="' + esc(p.slug) + '"></div>' +
         '</span>' +
         '<span class="actions">' +
-          '<a class="edit-link" href="authoring-tool/?edit=' + encodeURIComponent(p.slug) + '" title="Edit this playbook in Playbook Studio (sign-in to save and publish)">Edit</a>' +
+          '<a class="edit-link" href="authoring-tool/?edit=' + encodeURIComponent(p.slug) + (p.status === 'draft' ? '&stage=draft' : '') + '" title="Edit this playbook in Playbook Studio (sign-in to save and publish)">Edit</a>' +
           '<a class="open" href="' + esc(playbookUrl(p)) + '">Open Playbook</a>' +
         '</span>' +
         '</div>';
