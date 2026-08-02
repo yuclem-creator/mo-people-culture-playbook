@@ -902,11 +902,38 @@
       field.querySelectorAll('.para-media-row').forEach(function (r) { r.remove(); });
       field.appendChild(paraMediaRow(field.querySelector('textarea')));
     }, 'Each blank line starts a new paragraph.', true);
-    var hint = el('div', { class: 'tip', text: 'Insert an image on its own line: [img:name] for a block under text, [img:left name] or [img:right name] to float text around it. Upload each named image below.' });
+    var hint = el('div', { class: 'tip', text: 'Add images inline with the buttons below (they insert an [img:…] marker at your cursor), or type [img:name], [img:left name], [img:right name] on their own line.' });
     field.appendChild(hint);
     var ta = field.querySelector('textarea');
-    if (ta) field.appendChild(paraMediaRow(ta));
+    if (ta) {
+      field.appendChild(el('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;' }, [
+        el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, ''); } }, ['＋ Image under text']),
+        el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'left'); } }, ['＋ Image left of text']),
+        el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'right'); } }, ['＋ Image right of text'])
+      ]));
+      field.appendChild(paraMediaRow(ta));
+    }
     return field;
+  }
+
+  // One-click inline image: pick a file, then the asset AND the marker land
+  // together at the cursor (block, or floated left/right of the text).
+  function insertInlineImage(ta, side) {
+    if (!ta) return;
+    chooseImage(function (dataUrl, fileName) {
+      var base = safeName(fileName).replace(/\.[a-z0-9]+$/i, '') || 'img';
+      var name = base, i = 2;
+      while (PB.assets['img/' + name]) { name = base + '-' + i; i++; }
+      PB.assets['img/' + name] = dataUrl;
+      var marker = side ? '[img:' + side + ' ' + name + ']' : '[img:' + name + ']';
+      var v = ta.value;
+      var pos = (typeof ta.selectionStart === 'number' && ta.selectionStart >= 0) ? ta.selectionStart : v.length;
+      var before = v.slice(0, pos).replace(/\s+$/, '');
+      var after = v.slice(pos).replace(/^\s+/, '');
+      ta.value = (before ? before + '\n\n' : '') + marker + (after ? '\n\n' + after : '');
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      toast('Image inserted ' + (side ? 'floating ' + side + ' of the text' : 'as a block under the text') + '.', 'ok');
+    });
   }
 
   // Renders upload slots for each [img…] marker found in a paragraph textarea.
