@@ -527,7 +527,11 @@
     // Body content by type
     if (type === 'lifecycle') {
       box.appendChild(sectionLabel('Lifecycle stages'));
-      box.appendChild(el('div', { class: 'note', text: 'Stages appear on the interactive wheel automatically — hover or tap a slice to preview it. Edit each stage’s letter, label and summary below, or open a stage for its content sections.' }));
+      box.appendChild(selectField('Stage pages below the wheel', ch.showStagePages === 'shown' ? 'shown' : 'hidden', [
+        { v: 'hidden', l: 'Hidden (default) — wheel + hover captions only' },
+        { v: 'shown', l: 'Shown — each stage also gets a page at the bottom' }
+      ], function (v) { ch.showStagePages = v === 'shown' ? 'shown' : null; touch(); }));
+      box.appendChild(el('div', { class: 'note', text: 'Stages appear on the interactive wheel automatically — hover or tap a slice to preview it, and link each slice to its chapter. Bottom stage pages are hidden unless you turn them on above.' }));
       renderRepeatable(box, PB.lifecycle, {
         nameOf: function (s) { return (s.letter ? s.letter + '. ' : '') + s.label; },
         subOf: function (s) { return s.lede || ''; },

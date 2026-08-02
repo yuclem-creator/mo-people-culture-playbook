@@ -1958,7 +1958,7 @@ function lifecycleWheelHTML(ch) {
             const hasContent = (c2.sections || []).length || s.lede || s.img || (c2.intro || []).length || c2.tagline;
             const cta = s.link
               ? `<button class="wheel-caption-cta" data-goto="${esc(s.link)}">Open chapter`
-              : (hasContent ? `<button class="wheel-caption-cta" data-goto="${esc(ch.id)}" data-sub="${s.id}">Explore this stage` : '');
+              : (hasContent && ch.showStagePages === 'shown' ? `<button class="wheel-caption-cta" data-goto="${esc(ch.id)}" data-sub="${s.id}">Explore this stage` : '');
             return `
             <div class="wheel-caption-inner" data-sub="${s.id}" hidden>
               <div class="wheel-caption-eyebrow">${esc(s.letter || String.fromCharCode(65 + i))} · Stage ${i + 1} · ${esc(ch.label || '')}</div>
@@ -2333,8 +2333,10 @@ function renderGenericChapter(ch, prevId, nextId) {
   let body = '';
   if (type === 'lifecycle') {
     body = lifecycleWheelHTML(ch) + LIFECYCLE.filter(function (s) {
-      // Bottom spreads exist only for stages that actually have content and
-      // are not redirected to another chapter — no empty auto-sections.
+      // Bottom stage pages are OFF by default and only render when the chapter
+      // explicitly opts in ('shown'), the stage has content, and it is not
+      // redirected to another chapter.
+      if (ch.showStagePages !== 'shown') return false;
       var c = PB_LIFECYCLE_CONTENT[s.id] || {};
       var hasContent = (c.sections || []).length || s.lede || s.img || (c.intro || []).length || c.tagline;
       return hasContent && !s.link;
