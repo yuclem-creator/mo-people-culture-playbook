@@ -1878,7 +1878,7 @@ function buildGenericWheelSVG(stages, chapterLabel) {
       d: d,
       fill: palette[i % palette.length],
       letter: s.letter || String.fromCharCode(65 + i),
-      label: String(s.label || '').split(' ')[0],
+      label: String(s.label || ''),
       labelPos: polar(cx, cy, (rOuter + rInner) / 2, mid),
       letterPos: polar(cx, cy, rOuter - 22, mid),
       id: s.id,
@@ -1890,9 +1890,19 @@ function buildGenericWheelSVG(stages, chapterLabel) {
       <g>
         ${arcs.map(function (a) { return `<path class="wheel-slice" d="${a.d}" fill="${a.fill}" stroke="#ffffff" stroke-width="2" data-sub="${a.id}" tabindex="0" role="button" aria-label="${esc(a.aria)} — explore this stage"/>`; }).join('')}
       </g>
-      ${arcs.map(function (a) { return `
+      ${arcs.map(function (a) {
+        const words = String(a.label).split(/\s+/);
+        let l1 = a.label, l2 = '';
+        if (a.label.length > 12 && words.length > 1) {
+          const mid = Math.ceil(words.length / 2);
+          l1 = words.slice(0, mid).join(' ');
+          l2 = words.slice(mid).join(' ');
+        }
+        const dy = l2 ? -7 : 0;
+        return `
         <text class="wheel-letter" x="${a.letterPos.x}" y="${a.letterPos.y}" text-anchor="middle" dominant-baseline="middle">${esc(a.letter)}</text>
-        <text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y}" text-anchor="middle" dominant-baseline="middle">${esc(a.label)}</text>`; }).join('')}
+        <text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y + dy}" text-anchor="middle" dominant-baseline="middle">${esc(l1)}</text>
+        ${l2 ? `<text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y + dy + 13}" text-anchor="middle" dominant-baseline="middle">${esc(l2)}</text>` : ''}`; }).join('')}
       <circle cx="300" cy="300" r="118" fill="#FAF9F6" stroke="#C9A879" stroke-width="1"/>
       <text x="300" y="296" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#0d0b08">${esc(chapterLabel || 'Lifecycle')}</text>
       <text x="300" y="326" text-anchor="middle" font-family="Avenir Next LT Pro, system-ui, sans-serif" font-size="10" letter-spacing="3" fill="#6b625a">${N} STAGE${N === 1 ? '' : 'S'}</text>
@@ -2295,8 +2305,12 @@ function renderGenericChapter(ch, prevId, nextId) {
   if (type === 'lifecycle') {
     body = lifecycleWheelHTML(ch) + LIFECYCLE.map(s => {
       const c = PB_LIFECYCLE_CONTENT[s.id] || { sections: [] };
+      const hero = s.img
+        ? `<div class="stage-hero" style="margin:0 0 28px;"><img src="img/${esc(s.img)}" alt="${esc(s.label || 'Stage')}" style="width:100%;display:block;border:1px solid var(--rule);border-radius:4px;" /></div>`
+        : '';
       return `
         <div class="spread tight" id="${esc(s.id)}">
+          ${hero}
           <div class="section-eyebrow"><span class="txt">${esc((s.letter ? s.letter + '. ' : '') + (s.label || ''))}</span><span class="rule"></span></div>
           ${s.lede ? `<div class="editorial-body"><p>${esc(s.lede)}</p></div>` : ''}
           ${(c.sections || []).map(sectionHTML).join('')}

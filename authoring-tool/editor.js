@@ -614,7 +614,7 @@
 
     box.appendChild(sectionLabel('Stage'));
     box.appendChild(textField('Letter', sub.letter || '', function (v) { sub.letter = v; touch(); renderTree(); }, 'Single letter on the wheel (e.g. A).'));
-    box.appendChild(textField('Label', sub.label || '', function (v) { sub.label = v; touch(); renderTree(); }));
+    box.appendChild(textField('Label', sub.label || '', function (v) { sub.label = v; touch(); renderTree(); }, 'Shown on the wheel slice and as the stage\u2019s page title.'));
     box.appendChild(textField('Summary (lede)', sub.lede || '', function (v) { sub.lede = v; touch(); }, '', true));
     box.appendChild(imageField('Hero image', sub.img || '', function (fn) { sub.img = fn; touch(); }));
     box.appendChild(textField('Tagline (optional)', content.tagline || '', function (v) { content.tagline = v; touch(); }, 'Overrides the hero tagline.'));
