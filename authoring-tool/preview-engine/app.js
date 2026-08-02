@@ -1878,6 +1878,7 @@ function buildGenericWheelSVG(stages, chapterLabel) {
       d: d,
       fill: palette[i % palette.length],
       letter: s.letter || String.fromCharCode(65 + i),
+      num: ('0' + (i + 1)).slice(-2),
       label: String(s.label || ''),
       labelPos: polar(cx, cy, (rOuter + rInner) / 2, mid),
       letterPos: polar(cx, cy, rOuter - 22, mid),
@@ -1900,7 +1901,7 @@ function buildGenericWheelSVG(stages, chapterLabel) {
         }
         const dy = l2 ? -7 : 0;
         return `
-        <text class="wheel-letter" x="${a.letterPos.x}" y="${a.letterPos.y}" text-anchor="middle" dominant-baseline="middle">${esc(a.letter)}</text>
+        <text x="${a.letterPos.x}" y="${a.letterPos.y}" text-anchor="middle" dominant-baseline="middle" style="font:600 22px 'Avenir Next LT Pro',system-ui,sans-serif;fill:#0d0b08;">${esc(a.num)}</text>
         <text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y + dy}" text-anchor="middle" dominant-baseline="middle">${esc(l1)}</text>
         ${l2 ? `<text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y + dy + 13}" text-anchor="middle" dominant-baseline="middle">${esc(l2)}</text>` : ''}`; }).join('')}
       <circle cx="300" cy="300" r="118" fill="#FAF9F6" stroke="#C9A879" stroke-width="1"/>

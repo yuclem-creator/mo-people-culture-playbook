@@ -490,7 +490,7 @@
       box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
       box.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
       var prefix0 = prosePrefixFor(ch, type);
-      if (prefix0 && (type === 'standard' || type === 'sections-list')) {
+      if (prefix0 && (type === 'standard' || type === 'sections-list' || type === 'lifecycle' || type === 'directory' || type === 'letter')) {
         box.appendChild(imageField('Opener image (header + menu tile)', PB.prose[prefix0 + '.opener.bg'] || '', function (fn) { PB.prose[prefix0 + '.opener.bg'] = fn; touch(); }));
         var body0 = bodyForChapter(ch);
         box.appendChild(paraArrayField('Opening paragraph(s)', body0.intro || [], function (arr) { body0.intro = arr; touch(); }));
