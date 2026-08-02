@@ -1139,6 +1139,16 @@
     $('#btnSettings').addEventListener('click', function () { SEL = { kind: 'settings' }; highlightTree(); renderInspector(); });
     $('#btnNew').addEventListener('click', openNewModal);
     $('#btnOpen').addEventListener('click', doOpen);
+    // Reload the stored version from the cloud on demand — the recovery path
+    // when the local draft is stale (e.g. content was published from a newer
+    // state than the last local save).
+    var cloudBtn = document.getElementById('btnCloudReload');
+    if (cloudBtn) cloudBtn.addEventListener('click', function () {
+      var slug = window.PlaybookPublish ? window.PlaybookPublish.slugFor(PB) : (PB.meta && PB.meta.slug);
+      if (!slug) { toast('Set a Publish slug in Settings first.', 'err'); return; }
+      if (!window.confirm('Replace the local draft with the stored version of “' + slug + '” from the cloud? Local unsaved changes will be lost.')) return;
+      loadPublishedForEdit(slug);
+    });
     $('#btnSave').addEventListener('click', doSave);
     $('#btnExport').addEventListener('click', doExportOffline);
     $('#btnExportMenu').addEventListener('click', toggleExportMenu);
