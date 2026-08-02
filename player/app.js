@@ -442,7 +442,7 @@ function sectionHTML(sec) {
       + blurbChunkHTML(sec.blurb, splitAt, sec.blurb.length);
   } else {
     blurb = (sec.blurb && sec.blurb.length)
-      ? `<div class="policy-section-blurb">${sec.blurb.map(p => `<p>${esc(p)}</p>`).join('')}</div>`
+      ? `<div class="policy-section-blurb">${sec.blurb.map(p => `<p>${inlineImgHTML(p)}</p>`).join('')}</div>`
       : '';
   }
   // The verbatim source "transition" sentence is promoted into an editorial
@@ -458,12 +458,12 @@ function sectionHTML(sec) {
   // Verbatim supporting sentences that PRECEDE the pull-quote — ordinary body
   // text (NOT quoted), so only the key sentence is elevated into a quote.
   const transitionPre = (sec.transition_pre && sec.transition_pre.length)
-    ? `<div class="policy-section-blurb policy-section-blurb--before">${sec.transition_pre.map(p => `<p>${esc(p)}</p>`).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--before">${sec.transition_pre.map(p => `<p>${inlineImgHTML(p)}</p>`).join('')}</div>`
     : '';
   // Verbatim supporting sentences that follow the pull-quote — rendered as
   // ordinary body text (NOT quoted), so only the key sentence stays a quote.
   const transitionBody = (sec.transition_body && sec.transition_body.length)
-    ? `<div class="policy-section-blurb policy-section-blurb--after">${sec.transition_body.map(p => `<p>${esc(p)}</p>`).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--after">${sec.transition_body.map(p => `<p>${inlineImgHTML(p)}</p>`).join('')}</div>`
     : '';
   const numHTML = sec.num ? `<span class="num">${esc(sec.num)}.</span>` : '';
   const iconHTML = `<span class="policy-section-icon" aria-hidden="true">${sectionIcon(sec.title)}</span>`;
@@ -883,6 +883,27 @@ function ch5AuditIntroHTML(c) {
 }
 
 // Sub-chapter intro block: tagline + intro paragraphs (with bullet detection).
+// Inline images in prose: authors drop a marker on its own line —
+//   [img:name]            block image under the text
+//   [img:left name]       floated left, text wraps around it
+//   [img:right name]      floated right
+// The marker maps to PLAYBOOK.assets['img/name']; resolveAssets() turns it
+// into a data-URL (Studio) or the published bucket URL (remote/player).
+function inlineImgHTML(text) {
+  const re = /\[img(?:\s*:\s*(left|right))?(?:\s*[:\s]\s*([A-Za-z0-9_\-.]+))?\s*\]/g;
+  let out = '', last = 0, m;
+  while ((m = re.exec(text))) {
+    out += esc(text.slice(last, m.index));
+    const side = m[1] || '';
+    const name = m[2] || 'inline';
+    const cls = side ? 'inline-img inline-img--' + side : 'inline-img';
+    out += `<figure class="${cls}"><img src="img/${esc(name)}" alt="" /></figure>`;
+    last = m.index + m[0].length;
+  }
+  out += esc(text.slice(last));
+  return out;
+}
+
 function subIntroHTML(c) {
   if (!c) return '';
   const parts = [];
@@ -910,7 +931,7 @@ function subIntroHTML(c) {
       } else {
         flush();
         collecting = false;
-        html += `<p>${esc(p)}</p>`;
+        html += `<p>${inlineImgHTML(p)}</p>`;
       }
     });
     flush();
@@ -2313,7 +2334,7 @@ function renderGenericChapter(ch, prevId, nextId) {
         <div class="spread tight" id="${esc(s.id)}">
           ${hero}
           <div class="section-eyebrow"><span class="txt">${esc((s.letter ? s.letter + '. ' : '') + (s.label || ''))}</span><span class="rule"></span></div>
-          ${s.lede ? `<div class="editorial-body"><p>${esc(s.lede)}</p></div>` : ''}
+          ${s.lede ? `<div class="editorial-body"><p>${inlineImgHTML(s.lede)}</p></div>` : ''}
           ${(c.sections || []).map(sectionHTML).join('')}
         </div>`;
     }).join('');

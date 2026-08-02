@@ -882,9 +882,45 @@
   }
 
   function paraArrayField(label, arr, onChange) {
-    return textField(label, (arr || []).join('\n\n'), function (v) {
+    var field = textField(label, (arr || []).join('\n\n'), function (v) {
       onChange(v.trim() ? v.split(/\n\n+/) : []);
+      field.querySelectorAll('.para-media-row').forEach(function (r) { r.remove(); });
+      field.appendChild(paraMediaRow(field.querySelector('textarea')));
     }, 'Each blank line starts a new paragraph.', true);
+    var hint = el('div', { class: 'tip', text: 'Insert an image on its own line: [img:name] for a block under text, [img:left name] or [img:right name] to float text around it. Upload each named image below.' });
+    field.appendChild(hint);
+    var ta = field.querySelector('textarea');
+    if (ta) field.appendChild(paraMediaRow(ta));
+    return field;
+  }
+
+  // Renders upload slots for each [img…] marker found in a paragraph textarea.
+  function paraMediaRow(textarea) {
+    var row = el('div', { class: 'para-media-row', style: 'margin-top:6px;' });
+    if (!textarea) return row;
+    var text = textarea.value || '';
+    var re = /\[img(?:\s*:\s*(?:left|right))?(?:\s*[:\s]\s*([A-Za-z0-9_\-.]+))?\s*\]/g;
+    var names = [], m;
+    while ((m = re.exec(text))) {
+      var n = m[1] || 'inline';
+      if (names.indexOf(n) < 0) names.push(n);
+    }
+    names.forEach(function (name) {
+      var key = 'img/' + name;
+      var has = !!(PB.assets && PB.assets[key]);
+      var chip = el('div', { style: 'display:flex;align-items:center;gap:10px;margin-top:6px;padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:#FBF9F4;' });
+      if (has) chip.appendChild(el('div', { class: 'thumb', style: 'width:44px;height:30px;background-size:cover;background-position:center;background-image:url(' + cssUrl(PB.assets[key]) + ')' }));
+      chip.appendChild(el('span', { class: 'fn', text: key, style: 'flex:1;' }));
+      chip.appendChild(el('button', { class: 'btn', onclick: function () {
+        chooseImage(function (dataUrl, fileName) {
+          PB.assets[key] = dataUrl;
+          toast('Image "' + name + '" set — it now renders where the marker sits in the text.', 'ok');
+          touch(); renderInspector();
+        });
+      } }, [has ? 'Replace…' : 'Upload…']));
+      row.appendChild(chip);
+    });
+    return row;
   }
 
   function selectField(label, value, opts, onChange) {
