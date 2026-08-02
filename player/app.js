@@ -2383,13 +2383,18 @@ function renderAll() {
 function assetFor(path) {
   var a = PB.assets || {};
   if (a[path]) return a[path];
-  var bare = path.replace(/^img\//, '');
+  var bare = path.replace(/^(img|video)\//, '');
   if (a['img/' + bare]) return a['img/' + bare];
+  if (a['video/' + bare]) return a['video/' + bare];
   if (a[bare]) return a[bare];
+  // Remote shells: anything not embedded lives at the published asset base —
+  // including bare prose filenames (cover.bg, opener.bg, intro.video), which
+  // otherwise 404 against the SCORM package's missing img/ folder.
+  if (PB.__remoteAssetBase && bare) return PB.__remoteAssetBase + bare;
   return null;
 }
 function resolveAssets(root) {
-  if (!PB.assets || !Object.keys(PB.assets).length) return;
+  if ((!PB.assets || !Object.keys(PB.assets).length) && !PB.__remoteAssetBase) return;
   // background-image styles
   root.querySelectorAll('[style*="img/"]').forEach(function (el) {
     var m = el.getAttribute('style');
