@@ -77,6 +77,40 @@
     return (pb && pb.meta && pb.meta.slug) || 'playbook';
   }
 
+  // Snapshots store structure + text + an asset manifest, but NOT the
+  // base64 payloads of images/videos — those already live as files in the
+  // bucket (drafts/published lanes), so embedding them here just bloats the
+  // database. Restore re-resolves refs against the lane (see editor.js).
+  function slimForSnapshot(pb) {
+    var clone = JSON.parse(JSON.stringify(pb || {}));
+    var assets = clone.assets || {};
+    var hasDataUrls = Object.keys(assets).some(function (k) {
+      return typeof assets[k] === 'string' && assets[k].indexOf('data:') === 0;
+    });
+    if (hasDataUrls) {
+      clone.assets = {};
+      clone.__slimAssets = true;
+    }
+    return clone;
+  }
+
+  // Keep at most KEEP_VERSIONS snapshots per slug; prune the oldest beyond
+  // that on every save (fire-and-forget — never blocks or fails a save).
+  var KEEP_VERSIONS = 50;
+  function pruneOldVersions(db, slug, keep) {
+    keep = keep || KEEP_VERSIONS;
+    return db.from(TABLE).select('id').eq('slug', slug)
+      .order('published_at', { ascending: false }).range(keep, keep + 200)
+      .then(function (r) {
+        if (r.error || !r.data || !r.data.length) return;
+        var ids = r.data.map(function (x) { return x.id; });
+        return db.from(TABLE).delete().in('id', ids).then(function () {
+          try { console.log('[versions] pruned ' + ids.length + ' old snapshot(s) for ' + slug); } catch (e) {}
+        });
+      })
+      .catch(function (e) { try { console.warn('[versions] prune skipped:', e && e.message); } catch (_) {} });
+  }
+
   function saveSnapshot(pb, opts) {
     opts = opts || {};
     var db = clientFor(opts.session);
@@ -88,7 +122,7 @@
       slug: slug,
       title: (pb && pb.meta && pb.meta.title) || slug,
       department: (pb && pb.meta && pb.meta.department) || null,
-      data: pb,
+      data: slimForSnapshot(pb),
       asset_manifest: opts.assetManifest || assetManifest(pb),
       storage_prefix: opts.storagePrefix || ('local-json/' + slug + '/' + id + '/'),
       published_by: opts.publishedBy || (opts.session && opts.session.user && opts.session.user.email) || null,
@@ -101,12 +135,13 @@
     // once without it so the version always saves.
     if (!row.department) delete row.department;
     return db.from(TABLE).insert(row).then(function (r) {
-      if (!r.error) return row;
+      if (!r.error) { pruneOldVersions(db, slug); return row; }
       if ('department' in row && isMissingDeptColumn(r.error)) {
         var rowNoDept = {};
         Object.keys(row).forEach(function (k) { if (k !== 'department') rowNoDept[k] = row[k]; });
         return db.from(TABLE).insert(rowNoDept).then(function (r2) {
           if (r2.error) throw friendlyTableError(r2.error);
+          pruneOldVersions(db, slug);
           return row;
         });
       }

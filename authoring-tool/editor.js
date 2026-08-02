@@ -2023,6 +2023,15 @@
     window.PlaybookVersions.getVersion(id, { session: session }).then(function (row) {
       busy(false);
       if (!row || !row.data) throw new Error('That version has no playbook data.');
+      // Slim snapshots carry asset refs only (no base64 payloads) — point the
+      // resolver at the lane that holds the files so images/videos pull
+      // through from the bucket on render.
+      var cfg2 = window.SUPABASE_CONFIG || {};
+      if (row.data.__slimAssets && cfg2.url) {
+        var lane = row.source === 'publish' ? 'published' : 'drafts';
+        row.data.__remoteAssetBase = String(cfg2.url).replace(/\/$/, '') +
+          '/storage/v1/object/public/' + (cfg2.bucket || 'playbook-content') + '/' + lane + '/' + row.slug + '/assets/';
+      }
       setPlaybook(row.data);
       scheduleAutosave();
       closeModal();
