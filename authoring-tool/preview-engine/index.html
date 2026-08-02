@@ -2481,14 +2481,20 @@ body.on-cover .menu-fab { display: none; }
   margin: 0 auto 40px;
 }
 /* Sub-chapter intro body paragraphs */
+#reader {
+  --pb-font-size: 17px;
+  --pb-line-height: 1.8;
+  --pb-text-align: left;
+}
 .sub-intro {
   max-width: 720px;
-  margin: 0 auto 56px;
+  margin: 0 0 56px;
 }
 .sub-intro p {
   font-family: 'Avenir Next LT Pro', sans-serif;
-  font-size: 1rem;
-  line-height: 1.8;
+  font-size: var(--pb-font-size, 1rem);
+  line-height: var(--pb-line-height, 1.8);
+  text-align: var(--pb-text-align, left);
   color: var(--ink-body);
   margin: 0 0 1.1em;
 }
@@ -2506,8 +2512,9 @@ body.on-cover .menu-fab { display: none; }
   position: relative;
   padding: 8px 0 8px 26px;
   font-family: 'Avenir Next LT Pro', sans-serif;
-  font-size: 0.95rem;
-  line-height: 1.65;
+  font-size: var(--pb-font-size, 0.95rem);
+  line-height: var(--pb-line-height, 1.65);
+  text-align: var(--pb-text-align, left);
   color: var(--ink-body);
   border-bottom: 1px solid var(--rule);
 }
@@ -2548,6 +2555,9 @@ body.on-cover .menu-fab { display: none; }
   color: var(--ink-body);
 }
 
+.policy-text-item { font-size: var(--pb-font-size, 17px); text-align: var(--pb-text-align, left); }
+.policy-tab-panel p { font-size: var(--pb-font-size, 14px) !important; text-align: var(--pb-text-align, left) !important; }
+
 /* Section (numbered heading) intro blurb + transition */
 .policy-section-blurb {
   max-width: 720px;
@@ -2555,8 +2565,9 @@ body.on-cover .menu-fab { display: none; }
 }
 .policy-section-blurb p {
   font-family: 'Avenir Next LT Pro', sans-serif;
-  font-size: 0.98rem;
-  line-height: 1.75;
+  font-size: var(--pb-font-size, 0.98rem);
+  line-height: var(--pb-line-height, 1.75);
+  text-align: var(--pb-text-align, left);
   color: var(--ink-body);
   margin: 0 0 0.9em;
 }

@@ -1001,6 +1001,16 @@
     box.appendChild(textField('Course title (LMS)', m.scorm.title || '', function (v) { m.scorm.title = v; touch(); }));
     box.appendChild(textField('Mastery score', String(m.scorm.masteryScore != null ? m.scorm.masteryScore : 100), function (v) { m.scorm.masteryScore = parseInt(v, 10) || 0; touch(); }));
 
+    box.appendChild(sectionLabel('Typography'));
+    m.typography = m.typography || {};
+    box.appendChild(selectField('Body font size', String(m.typography.fontSize || 17), [
+      { v: '15', l: '15px — compact' }, { v: '16', l: '16px' }, { v: '17', l: '17px — default' },
+      { v: '18', l: '18px — large' }, { v: '19', l: '19px — extra large' }
+    ], function (v) { m.typography.fontSize = parseInt(v, 10); touch(); }));
+    box.appendChild(selectField('Text alignment', m.typography.align || 'left', [
+      { v: 'left', l: 'Left' }, { v: 'justify', l: 'Justified' }, { v: 'center', l: 'Centered' }
+    ], function (v) { m.typography.align = v; touch(); }));
+
     box.appendChild(sectionLabel('Completion rule'));
     renderCompletion(box);
 

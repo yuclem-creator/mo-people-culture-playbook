@@ -2778,6 +2778,17 @@ function updateRailAbout() {
     (edition ? ' All wording is drawn verbatim from the ' + edition + ' edition.' : '');
 }
 
+// Body typography follows the playbook's Settings (font size / alignment),
+// applied as CSS variables on the reader root.
+function applyTypography() {
+  var ty = (PB && PB.meta && PB.meta.typography) || {};
+  var r = document.getElementById('reader');
+  if (!r) return;
+  r.style.setProperty('--pb-font-size', (ty.fontSize || 17) + 'px');
+  r.style.setProperty('--pb-line-height', ty.lineHeight || 1.8);
+  r.style.setProperty('--pb-text-align', ty.align || 'left');
+}
+
 // Masthead bar follows the loaded playbook (wordmark + title + edition),
 // so non-P&C playbooks no longer carry P&C branding.
 function updateMasthead() {
@@ -2796,6 +2807,7 @@ function applyPlaybook(next, opts) {
   refreshDerived();
   updateRailAbout();
   updateMasthead();
+  applyTypography();
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
   try {
