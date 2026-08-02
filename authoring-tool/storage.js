@@ -37,75 +37,113 @@
   }
 
   /* ---- LocalFileAdapter --------------------------------------------------
-     - "current" document + autosnapshot live in localStorage so a page reload
-       restores work-in-progress.
-     - The authoritative, portable copy is the .json file the author saves to
-       disk (with images embedded as data URLs) via exportFile()/importFile().
-     - Falls back to in-memory storage if localStorage is blocked (sandboxed
-       iframe), so editing/Publish still work within the session.
+     - "current" document + autosnapshot live in IndexedDB (hundreds of MB of
+       quota — localStorage's ~5MB cap silently dropped saves for any
+       playbook carrying a real video), so a page reload always restores
+       work-in-progress, video included. One-time migration moves any
+       existing localStorage copies across.
+     - The authoritative, portable copy is still the .json file the author
+       saves to disk via exportFile()/importFile().
+     - Falls back to in-memory storage if IndexedDB is unavailable (sandboxed
+       iframe), so editing/Publish keep working within the session.
      ---------------------------------------------------------------------- */
+  var IDB_NAME = 'mo_playbook_store';
+  var IDB_STORE = 'kv';
+  var dbPromise = null;
+
+  function db() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
+      var req;
+      try { req = indexedDB.open(IDB_NAME, 1); }
+      catch (e) { reject(e); return; }
+      req.onupgradeneeded = function (e) { e.target.result.createObjectStore(IDB_STORE); };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+    return dbPromise;
+  }
+
+  function idbGet(key) {
+    return db().then(function (d) {
+      return new Promise(function (resolve, reject) {
+        var rq = d.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(key);
+        rq.onsuccess = function () { resolve(rq.result || null); };
+        rq.onerror = function () { reject(rq.error); };
+      });
+    });
+  }
+
+  function idbSet(key, val) {
+    return db().then(function (d) {
+      return new Promise(function (resolve, reject) {
+        var rq = d.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(val, key);
+        rq.onsuccess = function () { resolve(); };
+        rq.onerror = function () { reject(rq.error); };
+      });
+    });
+  }
+
+  function idbDel(key) {
+    return db().then(function (d) {
+      return new Promise(function (resolve) {
+        var rq = d.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).delete(key);
+        rq.onsuccess = function () { resolve(); };
+        rq.onerror = function () { resolve(); };
+      });
+    });
+  }
+
+  // One-time migration: move a legacy localStorage value into IndexedDB,
+  // then free the localStorage quota.
+  function migrate(legacyKey, idbKey, parse) {
+    return idbGet(idbKey).then(function (val) {
+      if (val) return val;
+      var raw = null;
+      try { raw = global.localStorage.getItem(legacyKey); } catch (e) { /* blocked */ }
+      if (!raw) return null;
+      var parsed = null;
+      try { parsed = parse ? JSON.parse(raw) : raw; } catch (e) { return null; }
+      return idbSet(idbKey, parsed).then(function () {
+        try { global.localStorage.removeItem(legacyKey); } catch (e) {}
+        return parsed;
+      });
+    });
+  }
+
   function LocalFileAdapter() {}
 
   LocalFileAdapter.prototype.storageBlocked = function () { return memFallback.blocked; };
 
   LocalFileAdapter.prototype.load = function () {
-    return new Promise(function (resolve) {
-      try {
-        var raw = global.localStorage.getItem(CURRENT_KEY);
-        resolve(raw ? JSON.parse(raw) : null);
-      } catch (e) {
-        if (isBlockedStorageError(e)) memFallback.blocked = true;
-        resolve(memFallback.current);
-      }
-    });
+    return migrate(CURRENT_KEY, 'current', true)
+      .then(function (val) { return val; })
+      .catch(function () { memFallback.blocked = true; return memFallback.current; });
   };
 
   LocalFileAdapter.prototype.save = function (playbook) {
-    return new Promise(function (resolve) {
-      try {
-        global.localStorage.setItem(CURRENT_KEY, JSON.stringify(playbook));
-        resolve({ persisted: true });
-      } catch (e) {
-        // Keep the doc safe in memory instead of failing the save outright.
-        memFallback.current = playbook;
-        memFallback.blocked = isBlockedStorageError(e) || memFallback.blocked;
-        resolve({ persisted: false, blocked: memFallback.blocked });
-      }
-    });
+    memFallback.current = playbook;
+    return idbSet('current', playbook)
+      .then(function () { return { persisted: true }; })
+      .catch(function () { memFallback.blocked = true; return { persisted: false, blocked: true }; });
   };
 
   LocalFileAdapter.prototype.saveAutosnapshot = function (playbook) {
-    return new Promise(function (resolve) {
-      try {
-        global.localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
-          at: Date.now(), playbook: playbook
-        }));
-      } catch (e) {
-        // quota, or blocked storage — keep best-effort in-memory snapshot instead.
-        memFallback.autosave = { at: Date.now(), playbook: playbook };
-        memFallback.blocked = isBlockedStorageError(e) || memFallback.blocked;
-      }
-      resolve();
-    });
+    var rec = { at: Date.now(), playbook: playbook };
+    memFallback.autosave = rec;
+    return idbSet('autosave', rec).catch(function () { memFallback.blocked = true; });
   };
 
   LocalFileAdapter.prototype.loadAutosnapshot = function () {
-    return new Promise(function (resolve) {
-      try {
-        var raw = global.localStorage.getItem(AUTOSAVE_KEY);
-        resolve(raw ? JSON.parse(raw) : null);
-      } catch (e) {
-        if (isBlockedStorageError(e)) memFallback.blocked = true;
-        resolve(memFallback.autosave);
-      }
-    });
+    return migrate(AUTOSAVE_KEY, 'autosave', true)
+      .then(function (val) { return val; })
+      .catch(function () { memFallback.blocked = true; return memFallback.autosave; });
   };
 
   LocalFileAdapter.prototype.clearAutosnapshot = function () {
-    return new Promise(function (resolve) {
+    memFallback.autosave = null;
+    return idbDel('autosave').then(function () {
       try { global.localStorage.removeItem(AUTOSAVE_KEY); } catch (e) {}
-      memFallback.autosave = null;
-      resolve();
     });
   };
 
