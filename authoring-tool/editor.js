@@ -818,6 +818,18 @@
       opts.subOf ? el('div', { class: 'rep-sub', text: opts.subOf(item) }) : null
     ]);
     var right = [];
+    // Move up/down on every list — same affordance as chapters have, applied
+    // to sections, items, lifecycle stages, tabs, highlights and people.
+    right.push(el('button', { class: 'icon-btn', title: 'Move up', disabled: i === 0 ? 'disabled' : null, onclick: function () {
+      if (i === 0) return;
+      var t = arr[i - 1]; arr[i - 1] = arr[i]; arr[i] = t;
+      touch(); if (opts.onChange) opts.onChange(); renderInspector();
+    } }, ['↑']));
+    right.push(el('button', { class: 'icon-btn', title: 'Move down', disabled: i === arr.length - 1 ? 'disabled' : null, onclick: function () {
+      if (i >= arr.length - 1) return;
+      var t = arr[i + 1]; arr[i + 1] = arr[i]; arr[i] = t;
+      touch(); if (opts.onChange) opts.onChange(); renderInspector();
+    } }, ['↓']));
     if (opts.open) {
       right.push(el('button', { class: 'btn ghost rep-open', title: 'Edit', onclick: function () { opts.open(item, i); } }, ['Edit ›']));
     }
