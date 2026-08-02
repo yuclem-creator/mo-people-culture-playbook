@@ -2592,6 +2592,24 @@ function showWheelCaption(subId) {
   });
 }
 
+// Video codec hint: if a video element fails to load (typically iPhone HEVC,
+// which browsers cannot decode), say so under the frame instead of leaving a
+// greyed 0:00 player with no explanation.
+if (!window.__videoErrorHintWired) {
+  window.__videoErrorHintWired = true;
+  document.addEventListener('error', function (e) {
+    var v = e.target;
+    if (!v || (v.tagName !== 'VIDEO' && v.tagName !== 'SOURCE')) return;
+    var fig = v.closest('figure');
+    if (!fig || fig.querySelector('.video-codec-hint')) return;
+    var hint = document.createElement('div');
+    hint.className = 'video-codec-hint';
+    hint.style.cssText = 'margin-top:8px;padding:10px 14px;border:1px solid #C9A879;border-radius:4px;background:#FBF7EE;color:#8f6d3f;font-size:12.5px;line-height:1.5;';
+    hint.textContent = 'This video can\u2019t be played in the browser — it was likely recorded in HEVC (e.g. on an iPhone). Convert it to H.264 MP4 and it will play everywhere.';
+    fig.appendChild(hint);
+  }, true);
+}
+
 // Tab switching for .policy-tabs components (event delegation, wired once).
 if (!window.__policyTabsWired) {
   window.__policyTabsWired = true;

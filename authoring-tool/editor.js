@@ -157,6 +157,14 @@
   function maybeLoadEditParam() {
     var slug = pendingEdit;
     var curSlug = window.PlaybookPublish ? window.PlaybookPublish.slugFor(PB) : (PB.meta && PB.meta.slug);
+    if (curSlug && curSlug === slug) {
+      // The restored local draft IS this playbook and is always the freshest
+      // copy (autosave runs on every edit) — never re-fetch from storage on a
+      // refresh, or newer unsaved/pending changes would be silently lost.
+      pendingEdit = null;
+      stripLibraryParams();
+      return;
+    }
     if (curSlug && curSlug !== slug) {
       var body = el('div', {}, [
         el('div', { class: 'form-note', text: 'Load the published \u201C' + slug + '\u201D for editing? Your current draft \u201C' + curSlug + '\u201D will be replaced — Save it first if you need a copy.' })
@@ -680,6 +688,7 @@
       PB.assets[virtual] = dataUrl;
       sec.items = sec.items || [];
       sec.items.push({ s: kind, name: name.replace(/\.[a-z0-9]+$/i, ''), url: virtual });
+      if (kind === 'video') probeVideo(dataUrl, name);
       touch(); renderInspector();
     });
   }
@@ -917,6 +926,7 @@
       PB.assets[virtual] = dataUrl;
       onPick(virtual.replace(/^video\//, ''));
       fn.textContent = virtual;
+      probeVideo(dataUrl, name);
       touch();
     }); } }, ['Upload video…']);
     return el('div', { class: 'field' }, [
@@ -946,6 +956,25 @@
       r.readAsDataURL(f);
     };
     input.click();
+  }
+
+  // Probe a picked video for browser-decodability (iPhone HEVC .mp4/.mov
+  // files render as a greyed 0:00 player in Chrome). Non-blocking: warns so
+  // the author can convert instead of discovering it later in the LMS.
+  function probeVideo(dataUrl, name) {
+    try {
+      var v = document.createElement('video');
+      var done = false;
+      function finish(bad) {
+        if (done) return; done = true;
+        if (bad) toast('Heads up: “' + (name || 'This video') + '” can’t be played by browsers (likely iPhone HEVC). Convert it to H.264 MP4 (HandBrake/VLC/Photos export) — it will show as 0:00 otherwise.', 'err');
+      }
+      v.addEventListener('loadedmetadata', function () { finish(!(v.duration > 0)); });
+      v.addEventListener('error', function () { finish(true); });
+      setTimeout(function () { finish(!(v.duration > 0)); }, 4000);
+      v.preload = 'metadata';
+      v.src = dataUrl;
+    } catch (e) { /* probing is best-effort */ }
   }
 
   // =========================================================================
