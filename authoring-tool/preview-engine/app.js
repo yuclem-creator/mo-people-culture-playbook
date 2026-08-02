@@ -1920,11 +1920,12 @@ function buildGenericWheelSVG(stages, chapterLabel) {
           l1 = words.slice(0, mid).join(' ');
           l2 = words.slice(mid).join(' ');
         }
-        const dy = l2 ? -7 : 0;
+        // Number + label stacked as one group in the middle of the wedge —
+        // no radial collision, whatever the slice angle.
         return `
-        <text x="${a.letterPos.x}" y="${a.letterPos.y}" text-anchor="middle" dominant-baseline="middle" style="font:600 22px 'Avenir Next LT Pro',system-ui,sans-serif;fill:#0d0b08;">${esc(a.num)}</text>
-        <text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y + dy}" text-anchor="middle" dominant-baseline="middle">${esc(l1)}</text>
-        ${l2 ? `<text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y + dy + 13}" text-anchor="middle" dominant-baseline="middle">${esc(l2)}</text>` : ''}`; }).join('')}
+        <text x="${a.labelPos.x}" y="${a.labelPos.y - 12}" text-anchor="middle" dominant-baseline="middle" style="font:600 21px 'Avenir Next LT Pro',system-ui,sans-serif;fill:#0d0b08;">${esc(a.num)}</text>
+        <text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y + 6}" text-anchor="middle" dominant-baseline="middle">${esc(l1)}</text>
+        ${l2 ? `<text class="wheel-label" x="${a.labelPos.x}" y="${a.labelPos.y + 19}" text-anchor="middle" dominant-baseline="middle">${esc(l2)}</text>` : ''}`; }).join('')}
       <circle cx="300" cy="300" r="118" fill="#FAF9F6" stroke="#C9A879" stroke-width="1"/>
       <text x="300" y="296" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#0d0b08">${esc(chapterLabel || 'Lifecycle')}</text>
       <text x="300" y="326" text-anchor="middle" font-family="Avenir Next LT Pro, system-ui, sans-serif" font-size="10" letter-spacing="3" fill="#6b625a">${N} STAGE${N === 1 ? '' : 'S'}</text>
