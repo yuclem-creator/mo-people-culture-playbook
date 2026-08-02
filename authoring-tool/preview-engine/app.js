@@ -1953,14 +1953,20 @@ function lifecycleWheelHTML(ch) {
             <h3 class="wheel-caption-title">Explore ${esc(ch.label || 'the lifecycle')}</h3>
             <p class="wheel-caption-desc">Hover over a stage on the wheel to preview it — or tap a stage to see its focus, then open it in full.</p>
           </div>
-          ${LIFECYCLE.map(function (s, i) { return `
+          ${LIFECYCLE.map(function (s, i) {
+            const c2 = PB_LIFECYCLE_CONTENT[s.id] || {};
+            const hasContent = (c2.sections || []).length || s.lede || s.img || (c2.intro || []).length || c2.tagline;
+            const cta = s.link
+              ? `<button class="wheel-caption-cta" data-goto="${esc(s.link)}">Open chapter`
+              : (hasContent ? `<button class="wheel-caption-cta" data-goto="${esc(ch.id)}" data-sub="${s.id}">Explore this stage` : '');
+            return `
             <div class="wheel-caption-inner" data-sub="${s.id}" hidden>
               <div class="wheel-caption-eyebrow">${esc(s.letter || String.fromCharCode(65 + i))} · Stage ${i + 1} · ${esc(ch.label || '')}</div>
               <h3 class="wheel-caption-title">${esc(s.label || '')}</h3>
               <p class="wheel-caption-desc">${esc(s.lede || '')}</p>
-              <button class="wheel-caption-cta" data-goto="${esc(ch.id)}" data-sub="${s.id}">Explore this stage
+              ${cta ? cta + `
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              </button>
+              </button>` : ''}
             </div>`; }).join('')}
         </div>
       </div>
@@ -2326,7 +2332,13 @@ function renderGenericChapter(ch, prevId, nextId) {
 
   let body = '';
   if (type === 'lifecycle') {
-    body = lifecycleWheelHTML(ch) + LIFECYCLE.map(s => {
+    body = lifecycleWheelHTML(ch) + LIFECYCLE.filter(function (s) {
+      // Bottom spreads exist only for stages that actually have content and
+      // are not redirected to another chapter — no empty auto-sections.
+      var c = PB_LIFECYCLE_CONTENT[s.id] || {};
+      var hasContent = (c.sections || []).length || s.lede || s.img || (c.intro || []).length || c.tagline;
+      return hasContent && !s.link;
+    }).map(s => {
       const c = PB_LIFECYCLE_CONTENT[s.id] || { sections: [] };
       const hero = s.img
         ? `<div class="stage-hero" style="margin:0 0 28px;"><img src="img/${esc(s.img)}" alt="${esc(s.label || 'Stage')}" style="width:100%;display:block;border:1px solid var(--rule);border-radius:4px;" /></div>`
@@ -2762,6 +2774,8 @@ function wireEvents() {
       const noHover = window.matchMedia('(hover: none)').matches;
       if (noHover) { showWheelCaption(slice.dataset.sub); return; }
       const sliceChapter = slice.closest('.chapter');
+      const linkedStage = (typeof LIFECYCLE !== 'undefined' ? LIFECYCLE : []).filter(function (s) { return s.id === slice.dataset.sub; })[0];
+      if (linkedStage && linkedStage.link) { goTo(linkedStage.link); return; }
       goTo(sliceChapter ? sliceChapter.id : 'ch-3', slice.dataset.sub);
       return;
     }
