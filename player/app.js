@@ -304,11 +304,33 @@ function policyItemHTML(it) {
       ${tabs.map((t, i) => `<div class="policy-tab-panel" data-tab-p="${i}" style="display:${i === 0 ? 'block' : 'none'};padding:18px 22px;background:#fff;"><p style="margin:0;font-size:14px;color:#4a443f;line-height:1.7;">${esc(t.text || '')}</p></div>`).join('')}
     </div>`;
   }
-  // Embedded figure carried over from an imported document.
+  // Embedded figure carried over from an imported document — optionally with
+  // interactive hotspots (numbered pins revealing popup text on click).
   if (it && it.s === 'image') {
-    return `<figure class="policy-image" style="margin:16px 0;">
-      <img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;display:block;" />
-      ${it.name ? `<figcaption style="font-size:12px;color:var(--ink-mute);margin-top:8px;">${esc(it.name)}</figcaption>` : ''}
+    const hs = Array.isArray(it.hotspots) ? it.hotspots : [];
+    const imgHtml = `<img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;display:block;" />`;
+    if (!hs.length) {
+      return `<figure class="policy-image" style="margin:16px 0;">${imgHtml}
+        ${it.name ? `<figcaption style="font-size:12px;color:var(--ink-mute);margin-top:8px;">${esc(it.name)}</figcaption>` : ''}
+      </figure>`;
+    }
+    const showAll = it.hotspotsMode === 'show';
+    return `<figure class="policy-image hotspot-figure" data-hotspots-mode="${showAll ? 'show' : 'reveal'}" style="margin:16px 0;">
+      <div class="hotspot-wrap" style="position:relative;display:inline-block;max-width:100%;">
+        ${imgHtml}
+        ${hs.map(function (h, i) {
+          return `
+          <button type="button" class="hotspot-dot${showAll ? ' on' : ''}" data-hotspot="${i}" style="position:absolute;left:${h.x}%;top:${h.y}%;">${i + 1}</button>
+          <div class="hotspot-pop${showAll ? ' show' : ''}" data-hotspot-pop="${i}" style="left:${h.x}%;top:${h.y}%;">
+            ${h.label ? `<div class="hotspot-pop-title">${esc(h.label)}</div>` : ''}
+            <div class="hotspot-pop-text">${esc(h.text || '')}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="hotspot-tools">
+        <button type="button" class="hotspot-toggle">${showAll ? 'Click to reveal' : 'Display all hotspots'}</button>
+        ${it.name ? `<span class="hotspot-cap">${esc(it.name)}</span>` : ''}
+      </div>
     </figure>`;
   }
   // Plain text bullet (e.g. imported list items): simple row, no resource chrome.
@@ -442,7 +464,7 @@ function sectionHTML(sec) {
       + blurbChunkHTML(sec.blurb, splitAt, sec.blurb.length);
   } else {
     blurb = (sec.blurb && sec.blurb.length)
-      ? `<div class="policy-section-blurb">${sec.blurb.map(p => `<p>${inlineImgHTML(p)}</p>`).join('')}</div>`
+      ? `<div class="policy-section-blurb">${sec.blurb.map(p => `<p>${inlineVideoHTML(inlineImgHTML(p))}</p>`).join('')}</div>`
       : '';
   }
   // The verbatim source "transition" sentence is promoted into an editorial
@@ -458,12 +480,12 @@ function sectionHTML(sec) {
   // Verbatim supporting sentences that PRECEDE the pull-quote — ordinary body
   // text (NOT quoted), so only the key sentence is elevated into a quote.
   const transitionPre = (sec.transition_pre && sec.transition_pre.length)
-    ? `<div class="policy-section-blurb policy-section-blurb--before">${sec.transition_pre.map(p => `<p>${inlineImgHTML(p)}</p>`).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--before">${sec.transition_pre.map(p => `<p>${inlineVideoHTML(inlineImgHTML(p))}</p>`).join('')}</div>`
     : '';
   // Verbatim supporting sentences that follow the pull-quote — rendered as
   // ordinary body text (NOT quoted), so only the key sentence stays a quote.
   const transitionBody = (sec.transition_body && sec.transition_body.length)
-    ? `<div class="policy-section-blurb policy-section-blurb--after">${sec.transition_body.map(p => `<p>${inlineImgHTML(p)}</p>`).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--after">${sec.transition_body.map(p => `<p>${inlineVideoHTML(inlineImgHTML(p))}</p>`).join('')}</div>`
     : '';
   const numHTML = sec.num ? `<span class="num">${esc(sec.num)}.</span>` : '';
   const iconHTML = `<span class="policy-section-icon" aria-hidden="true">${sectionIcon(sec.title)}</span>`;
@@ -889,6 +911,21 @@ function ch5AuditIntroHTML(c) {
 //   [img:right name]      floated right
 // The marker maps to PLAYBOOK.assets['img/name']; resolveAssets() turns it
 // into a data-URL (Studio) or the published bucket URL (remote/player).
+function inlineVideoHTML(text) {
+  const re = /\[vid(?:\s*:\s*(left|right))?(?:\s*[:\s]\s*([A-Za-z0-9_\-.]+))?\s*\]/g;
+  let out = '', last = 0, m;
+  while ((m = re.exec(text))) {
+    out += esc(text.slice(last, m.index));
+    const side = m[1] || '';
+    const name = m[2] || 'inline';
+    const cls = side ? 'inline-img inline-img--' + side : 'inline-img';
+    out += `<figure class="${cls} inline-vid"><video controls playsinline preload="metadata"><source src="video/${esc(name)}" /></video></figure>`;
+    last = m.index + m[0].length;
+  }
+  out += esc(text.slice(last));
+  return out;
+}
+
 function inlineImgHTML(text) {
   const re = /\[img(?:\s*:\s*(left|right))?(?:\s*[:\s]\s*([A-Za-z0-9_\-.]+))?\s*\]/g;
   let out = '', last = 0, m;
@@ -931,7 +968,7 @@ function subIntroHTML(c) {
       } else {
         flush();
         collecting = false;
-        html += `<p>${inlineImgHTML(p)}</p>`;
+        html += `<p>${inlineVideoHTML(inlineImgHTML(p))}</p>`;
       }
     });
     flush();
@@ -2349,7 +2386,7 @@ function renderGenericChapter(ch, prevId, nextId) {
         <div class="spread tight" id="${esc(s.id)}">
           ${hero}
           <div class="section-eyebrow"><span class="txt">${esc((s.letter ? s.letter + '. ' : '') + (s.label || ''))}</span><span class="rule"></span></div>
-          ${s.lede ? `<div class="editorial-body"><p>${inlineImgHTML(s.lede)}</p></div>` : ''}
+          ${s.lede ? `<div class="editorial-body"><p>${inlineVideoHTML(inlineImgHTML(s.lede))}</p></div>` : ''}
           ${(c.sections || []).map(sectionHTML).join('')}
         </div>`;
     }).join('');
@@ -2664,6 +2701,42 @@ if (!window.__videoErrorHintWired) {
     hint.textContent = 'This video can\u2019t be played in the browser — it was likely recorded in HEVC (e.g. on an iPhone). Convert it to H.264 MP4 and it will play everywhere.';
     fig.appendChild(hint);
   }, true);
+}
+
+// Hotspot interactions: dots reveal their popup (one at a time), the toggle
+// chip switches between display-all and click-to-reveal.
+if (!window.__hotspotsWired) {
+  window.__hotspotsWired = true;
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var dot = t.closest('.hotspot-dot');
+    if (dot) {
+      var wrap = dot.closest('.hotspot-wrap');
+      var idx = dot.getAttribute('data-hotspot');
+      var pop = wrap.querySelector('[data-hotspot-pop="' + idx + '"]');
+      var wasOpen = pop && pop.classList.contains('show');
+      wrap.querySelectorAll('.hotspot-pop.show').forEach(function (p) { p.classList.remove('show'); });
+      wrap.querySelectorAll('.hotspot-dot.on').forEach(function (d) { d.classList.remove('on'); });
+      if (!wasOpen && pop) { pop.classList.add('show'); dot.classList.add('on'); }
+      e.stopPropagation();
+      return;
+    }
+    var tog = t.closest('.hotspot-toggle');
+    if (tog) {
+      var fig = tog.closest('.hotspot-figure');
+      var showing = fig.getAttribute('data-hotspots-mode') === 'show';
+      fig.setAttribute('data-hotspots-mode', showing ? 'reveal' : 'show');
+      fig.querySelectorAll('.hotspot-pop').forEach(function (p) { p.classList.toggle('show', !showing); });
+      fig.querySelectorAll('.hotspot-dot').forEach(function (d) { d.classList.toggle('on', !showing); });
+      tog.textContent = showing ? 'Display all hotspots' : 'Click to reveal';
+      e.stopPropagation();
+      return;
+    }
+    // Click anywhere else closes open popups.
+    document.querySelectorAll('.hotspot-pop.show').forEach(function (p) { p.classList.remove('show'); });
+    document.querySelectorAll('.hotspot-dot.on').forEach(function (d) { d.classList.remove('on'); });
+  });
 }
 
 // Tab switching for .policy-tabs components (event delegation, wired once).

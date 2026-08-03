@@ -92,8 +92,15 @@
     armPreviewHandshake();
     pendingCreate = readCreateParam();
     pendingEdit = readEditParam();
-    // Restore: autosnapshot > saved current > seed
-    STORE.loadAutosnapshot().then(function (snap) {
+    // Per-slug drafts: open the slot for the playbook being entered (edit
+    // link), or the last one used; restore autosnapshot > saved current >
+    // published (edit link) > seed.
+    var bootSlugPromise = pendingEdit
+      ? STORE.setSlug(pendingEdit)
+      : STORE.getSlug().then(function (s) { return STORE.setSlug(s || ''); });
+    bootSlugPromise.then(function () {
+      return STORE.loadAutosnapshot();
+    }).then(function (snap) {
       if (snap && snap.playbook) {
         setPlaybook(snap.playbook);
         toast('Restored your last autosaved work', 'ok');
@@ -102,6 +109,7 @@
       }
       STORE.load().then(function (cur) {
         if (cur) { setPlaybook(cur); maybeEnterFromLibrary(); return; }
+        if (pendingEdit) { var editSlug = pendingEdit; pendingEdit = null; loadPublishedForEdit(editSlug); stripLibraryParams(); return; }
         loadSeed().then(maybeEnterFromLibrary);
       });
     });
@@ -165,17 +173,19 @@
       stripLibraryParams();
       return;
     }
-    if (curSlug && curSlug !== slug) {
-      var body = el('div', {}, [
-        el('div', { class: 'form-note', text: 'Load the published \u201C' + slug + '\u201D for editing? Your current draft \u201C' + curSlug + '\u201D will be replaced — Save it first if you need a copy.' })
-      ]);
-      showModal('Edit published playbook', body, [
-        { label: 'Load published version', primary: true, onClick: function () { closeModal(); loadPublishedForEdit(slug); } },
-        { label: 'Cancel', onClick: function () { closeModal(); pendingEdit = null; stripLibraryParams(); } }
-      ]);
-      return;
-    }
-    loadPublishedForEdit(slug);
+    // Different playbook: drafts live in per-slug slots, so switching is
+    // always safe and silent — no 'will be replaced' prompt, ever. If this
+    // slug has a draft, use it; otherwise load the published/draft copy.
+    STORE.setSlug(slug).then(function () { return STORE.loadAutosnapshot(); }).then(function (snap) {
+      if (snap && snap.playbook) {
+        setPlaybook(snap.playbook);
+        toast('Opened \u201C' + ((snap.playbook.meta && snap.playbook.meta.title) || slug) + '\u201D — your other drafts are kept per playbook.', 'ok');
+      } else {
+        loadPublishedForEdit(slug);
+      }
+      pendingEdit = null;
+      stripLibraryParams();
+    });
   }
   function loadPublishedForEdit(slug) {
     var cfg = window.SUPABASE_CONFIG || {};
@@ -223,6 +233,11 @@
     PB = normalize(pb);
     SEL = null;
     $('#docName').value = (PB.meta && PB.meta.title) || 'Untitled Playbook';
+    // Keep the draft slot pointed at THIS playbook (per-slug drafts — each
+    // playbook keeps its own draft, so switching never replaces anything).
+    if (window.PlaybookPublish && window.PlaybookStorage && window.PlaybookStorage.adapter) {
+      window.PlaybookStorage.adapter.setSlug(window.PlaybookPublish.slugFor(PB));
+    }
     renderTree();
     renderInspector();
     pushPreview();
@@ -737,6 +752,7 @@
           touch(); renderInspector();
         });
       } }, ['Replace ' + it.s + '…']));
+      if (it.s === 'image') renderHotspotEditor(box, it);
       return;
     }
     if (it.s === 'tabs') {
@@ -762,6 +778,67 @@
   function symbolLabel(s) {
     var m = ITEM_SYMBOLS.filter(function (x) { return x.v === s; })[0];
     return m ? m.l : (s || 'Item');
+  }
+
+  // ---- Hotspot editor (image items) --------------------------------------
+  // Authors drop numbered pins on an image; readers click pins to reveal
+  // popup text. A figure-level toggle displays all hotspots at once.
+  var hotspotArm = null; // { item } when placement mode is armed
+
+  function renderHotspotEditor(box, it) {
+    it.hotspots = it.hotspots || [];
+    box.appendChild(sectionLabel('Hotspots (' + it.hotspots.length + ')'));
+    box.appendChild(el('div', { class: 'note', text: 'Numbered pins on the image. Readers click a pin to reveal its text, or use "Display all hotspots".' }));
+
+    // Default display mode for readers.
+    box.appendChild(selectField('Default display', it.hotspotsMode === 'show' ? 'show' : 'reveal', [
+      { v: 'reveal', l: 'Click to reveal (one at a time)' },
+      { v: 'show', l: 'Display all hotspots' }
+    ], function (v) { it.hotspotsMode = v; touch(); }));
+
+    // Placement surface: click on the image to drop a pin.
+    var url = assetPreview(it.url) || '';
+    var surface = el('div', {
+      class: 'hotspot-surface',
+      style: 'position:relative;display:inline-block;max-width:100%;border:1px solid var(--line);' +
+        (hotspotArm && hotspotArm.item === it ? 'cursor:crosshair;outline:2px solid #B59060;' : '')
+    });
+    var img = el('img', { src: url, style: 'max-width:100%;display:block;' });
+    surface.appendChild(img);
+    it.hotspots.forEach(function (h, i) {
+      surface.appendChild(el('span', {
+        style: 'position:absolute;left:' + h.x + '%;top:' + h.y + '%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#B59060;color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:600 11px system-ui;box-shadow:0 2px 6px rgba(13,11,8,.3);'
+      }, [String(i + 1)]));
+    });
+    surface.addEventListener('click', function (e) {
+      if (!hotspotArm || hotspotArm.item !== it) return;
+      var r = surface.getBoundingClientRect();
+      var x = Math.round(((e.clientX - r.left) / r.width) * 1000) / 10;
+      var y = Math.round(((e.clientY - r.top) / r.height) * 1000) / 10;
+      it.hotspots.push({ x: Math.max(2, Math.min(98, x)), y: Math.max(3, Math.min(97, y)), label: 'Point ' + (it.hotspots.length + 1), text: '' });
+      hotspotArm = null;
+      touch(); renderInspector();
+    });
+    box.appendChild(surface);
+
+    box.appendChild(el('div', { style: 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;' }, [
+      el('button', { class: 'btn ghost', onclick: function () {
+        hotspotArm = hotspotArm && hotspotArm.item === it ? null : { item: it };
+        renderInspector();
+      } }, [hotspotArm && hotspotArm.item === it ? 'Cancel placement' : '＋ Add hotspot (click on the image)'])
+    ]));
+
+    renderRepeatable(box, it.hotspots, {
+      nameOf: function (h, i) { return (i + 1) + '. ' + (h.label || '(point)'); },
+      subOf: function (h) { return (h.text || '').slice(0, 60); },
+      open: null,
+      inlineEdit: function (h, wrap) {
+        wrap.appendChild(textField('Label', h.label || '', function (v) { h.label = v; touch(); }));
+        wrap.appendChild(textField('Popup text', h.text || '', function (v) { h.text = v; touch(); }, 'Shown when a reader clicks this pin.', true));
+      },
+      addLabel: '',
+      make: null
+    });
   }
 
   // =========================================================================
@@ -909,7 +986,10 @@
       field.appendChild(el('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;' }, [
         el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, ''); } }, ['＋ Image under text']),
         el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'left'); } }, ['＋ Image left of text']),
-        el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'right'); } }, ['＋ Image right of text'])
+        el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'right'); } }, ['＋ Image right of text']),
+        el('button', { class: 'btn ghost', onclick: function () { insertInlineVideo(ta, ''); } }, ['＋ Video under text']),
+        el('button', { class: 'btn ghost', onclick: function () { insertInlineVideo(ta, 'left'); } }, ['＋ Video left of text']),
+        el('button', { class: 'btn ghost', onclick: function () { insertInlineVideo(ta, 'right'); } }, ['＋ Video right of text'])
       ]));
       field.appendChild(paraMediaRow(ta));
     }
@@ -936,27 +1016,51 @@
     });
   }
 
-  // Renders upload slots for each [img…] marker found in a paragraph textarea.
+  // One-click inline video: pick a file, then the asset AND the [vid:…]
+  // marker land together at the cursor.
+  function insertInlineVideo(ta, side) {
+    if (!ta) return;
+    chooseFile('video/*', function (dataUrl, fileName) {
+      probeVideo(dataUrl, fileName);
+      var base = safeName(fileName).replace(/\.[a-z0-9]+$/i, '') || 'vid';
+      var name = base, i = 2;
+      while (PB.assets['video/' + name]) { name = base + '-' + i; i++; }
+      PB.assets['video/' + name] = dataUrl;
+      var marker = side ? '[vid:' + side + ' ' + name + ']' : '[vid:' + name + ']';
+      var v = ta.value;
+      var pos = (typeof ta.selectionStart === 'number' && ta.selectionStart >= 0) ? ta.selectionStart : v.length;
+      var before = v.slice(0, pos).replace(/\s+$/, '');
+      var after = v.slice(pos).replace(/^\s+/, '');
+      ta.value = (before ? before + '\n\n' : '') + marker + (after ? '\n\n' + after : '');
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      toast('Video inserted ' + (side ? 'floating ' + side + ' of the text' : 'as a block under the text') + '.', 'ok');
+    });
+  }
+
+  // Renders upload slots for each [img…] / [vid…] marker found in a paragraph textarea.
   function paraMediaRow(textarea) {
     var row = el('div', { class: 'para-media-row', style: 'margin-top:6px;' });
     if (!textarea) return row;
     var text = textarea.value || '';
-    var re = /\[img(?:\s*:\s*(?:left|right))?(?:\s*[:\s]\s*([A-Za-z0-9_\-.]+))?\s*\]/g;
-    var names = [], m;
+    var markers = [], m;
+    var re = /\[(img|vid)(?:\s*:\s*(?:left|right))?(?:\s*[:\s]\s*([A-Za-z0-9_\-.]+))?\s*\]/g;
     while ((m = re.exec(text))) {
-      var n = m[1] || 'inline';
-      if (names.indexOf(n) < 0) names.push(n);
+      var entry = { kind: m[1], name: m[2] || 'inline' };
+      if (!markers.some(function (x) { return x.kind === entry.kind && x.name === entry.name; })) markers.push(entry);
     }
-    names.forEach(function (name) {
-      var key = 'img/' + name;
+    markers.forEach(function (mk) {
+      var key = mk.kind + '/' + mk.name;
+      var name = mk.name;
       var has = !!(PB.assets && PB.assets[key]);
+      var isVid = mk.kind === 'vid';
       var chip = el('div', { style: 'display:flex;align-items:center;gap:10px;margin-top:6px;padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:#FBF9F4;' });
-      if (has) chip.appendChild(el('div', { class: 'thumb', style: 'width:44px;height:30px;background-size:cover;background-position:center;background-image:url(' + cssUrl(PB.assets[key]) + ')' }));
+      if (has && !isVid) chip.appendChild(el('div', { class: 'thumb', style: 'width:44px;height:30px;background-size:cover;background-position:center;background-image:url(' + cssUrl(PB.assets[key]) + ')' }));
       chip.appendChild(el('span', { class: 'fn', text: key, style: 'flex:1;' }));
       chip.appendChild(el('button', { class: 'btn', onclick: function () {
-        chooseImage(function (dataUrl, fileName) {
+        chooseFile(isVid ? 'video/*' : 'image/*', function (dataUrl, fileName) {
           PB.assets[key] = dataUrl;
-          toast('Image "' + name + '" set — it now renders where the marker sits in the text.', 'ok');
+          if (isVid) probeVideo(dataUrl, fileName);
+          toast((isVid ? 'Video' : 'Image') + ' "' + name + '" set — it now renders where the marker sits in the text.', 'ok');
           touch(); renderInspector();
         });
       } }, [has ? 'Replace…' : 'Upload…']));

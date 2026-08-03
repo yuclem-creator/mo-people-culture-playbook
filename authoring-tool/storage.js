@@ -111,19 +111,43 @@
     });
   }
 
+  // Drafts are namespaced per playbook slug ('current:<slug>' /
+  // 'autosave:<slug>'), so switching between playbooks never replaces
+  // another playbook's draft. Legacy single-slot records migrate forward.
+  var currentSlug = null;
+
+  function keyFor(base) { return currentSlug ? base + ':' + currentSlug : base; }
+
+  function namespacedGet(base, parse) {
+    return idbGet(keyFor(base)).then(function (val) {
+      if (val) return val;
+      // Namespace miss: fall back to the bare legacy key (single-slot era).
+      return migrate(base === 'current' ? CURRENT_KEY : AUTOSAVE_KEY, base, parse);
+    });
+  }
+
   function LocalFileAdapter() {}
 
   LocalFileAdapter.prototype.storageBlocked = function () { return memFallback.blocked; };
 
+  LocalFileAdapter.prototype.setSlug = function (slug) {
+    currentSlug = slug || null;
+    return idbSet('last_slug', currentSlug || '').catch(function () {});
+  };
+
+  LocalFileAdapter.prototype.getSlug = function () {
+    if (currentSlug) return Promise.resolve(currentSlug);
+    return idbGet('last_slug').then(function (v) { currentSlug = v || null; return currentSlug; });
+  };
+
   LocalFileAdapter.prototype.load = function () {
-    return migrate(CURRENT_KEY, 'current', true)
-      .then(function (val) { return val; })
+    return namespacedGet('current', true)
       .catch(function () { memFallback.blocked = true; return memFallback.current; });
   };
 
   LocalFileAdapter.prototype.save = function (playbook) {
     memFallback.current = playbook;
-    return idbSet('current', playbook)
+    return idbSet(keyFor('current'), playbook)
       .then(function () { return { persisted: true }; })
       .catch(function () { memFallback.blocked = true; return { persisted: false, blocked: true }; });
   };
@@ -131,12 +155,11 @@
   LocalFileAdapter.prototype.saveAutosnapshot = function (playbook) {
     var rec = { at: Date.now(), playbook: playbook };
     memFallback.autosave = rec;
-    return idbSet('autosave', rec).catch(function () { memFallback.blocked = true; });
+    return idbSet(keyFor('autosave'), rec).catch(function () { memFallback.blocked = true; });
   };
 
   LocalFileAdapter.prototype.loadAutosnapshot = function () {
-    return migrate(AUTOSAVE_KEY, 'autosave', true)
-      .then(function (val) { return val; })
+    return namespacedGet('autosave', true)
       .catch(function () { memFallback.blocked = true; return memFallback.autosave; });
   };
 
