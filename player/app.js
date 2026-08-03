@@ -289,7 +289,7 @@ function policyItemHTML(it) {
   // Video frame (uploaded or linked).
   if (it && it.s === 'video') {
     return `<figure class="policy-video" style="margin:16px 0;">
-      <video controls playsinline style="width:100%;border:1px solid var(--rule);border-radius:4px;display:block;background:#0d0b08;"><source src="${esc(it.url)}" /></video>
+      <video controls playsinline style="width:100%;display:block;background:#0d0b08;"><source src="${esc(it.url)}" /></video>
       ${it.name ? `<figcaption style="font-size:12px;color:var(--ink-mute);margin-top:8px;">${esc(it.name)}</figcaption>` : ''}
     </figure>`;
   }
@@ -307,7 +307,7 @@ function policyItemHTML(it) {
   // Embedded figure carried over from an imported document.
   if (it && it.s === 'image') {
     return `<figure class="policy-image" style="margin:16px 0;">
-      <img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;border:1px solid var(--rule);border-radius:4px;display:block;" />
+      <img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;display:block;" />
       ${it.name ? `<figcaption style="font-size:12px;color:var(--ink-mute);margin-top:8px;">${esc(it.name)}</figcaption>` : ''}
     </figure>`;
   }
@@ -2343,7 +2343,7 @@ function renderGenericChapter(ch, prevId, nextId) {
     }).map(s => {
       const c = PB_LIFECYCLE_CONTENT[s.id] || { sections: [] };
       const hero = s.img
-        ? `<div class="stage-hero" style="margin:0 0 28px;"><img src="img/${esc(s.img)}" alt="${esc(s.label || 'Stage')}" style="width:100%;display:block;border:1px solid var(--rule);border-radius:4px;" /></div>`
+        ? `<div class="stage-hero" style="margin:0 0 28px;"><img src="img/${esc(s.img)}" alt="${esc(s.label || 'Stage')}" style="width:100%;display:block;" /></div>`
         : '';
       return `
         <div class="spread tight" id="${esc(s.id)}">
