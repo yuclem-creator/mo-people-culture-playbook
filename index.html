@@ -221,6 +221,8 @@ a { color: inherit; }
   <span id="foot-status">Internal colleague resource</span>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="authoring-tool/supabase-config.js"></script>
 <script>
 (function () {
   'use strict';
@@ -288,8 +290,18 @@ a { color: inherit; }
         '<a class="folder-create" href="' + esc(createUrl) + '" title="Create a new ' + esc(d.name) + ' playbook in Playbook Studio">+ Create</a></div>' +
         '</div>';
     });
+    if (!q) {
+      html += '<div class="folder folder-add" role="button" tabindex="0" title="Add a new department to the Library">' +
+        '<span class="folder-tab"></span>' + FOLDER_SVG +
+        '<h2>+ Department</h2>' +
+        '<p class="desc">Create a new department folder for future playbooks</p>' +
+        '<div class="count"><span>&nbsp;</span><span class="folder-create">+ Add</span></div>' +
+        '</div>';
+    }
     grid.className = 'grid';
     grid.innerHTML = html || '<div class="empty">No departments match your search.</div>';
+    var addCard = grid.querySelector('.folder-add');
+    if (addCard) addCard.addEventListener('click', openDeptModal);
     Array.prototype.forEach.call(grid.querySelectorAll('.folder'), function (card) {
       card.addEventListener('click', function (e) {
         if (e.target.closest && e.target.closest('.folder-create')) return; // let the create link navigate
@@ -384,6 +396,26 @@ a { color: inherit; }
     return String(id || '').split('-').map(function (w) { return w ? w[0].toUpperCase() + w.slice(1) : ''; }).join(' ');
   }
 
+  // Self-service departments created from this page live in
+  // published/departments.json — merged over the static registry on boot.
+  function mergeDepartmentsJson() {
+    return fetch(STORAGE_BASE + 'departments.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.departments)) return;
+        data.departments.forEach(function (d) {
+          if (d && d.id && !state.departments.some(function (x) { return x.id === d.id; })) {
+            state.departments.push({ id: d.id, name: d.name || humanizeDept(d.id), description: d.description || '' });
+          }
+        });
+      })
+      .catch(function () { /* static registry still works */ });
+  }
+
+  function slugifyDept(s) {
+    return String(s || '').toLowerCase().trim().replace(/['"]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+  }
+
   // Auto-list anything published from the Studio (the publish flow maintains
   // published/index.json in the bucket), merged over the static registry.
   function mergePublishedIndex() {
@@ -402,6 +434,120 @@ a { color: inherit; }
         });
       })
       .catch(function () { /* static registry still works */ });
+  }
+
+  /* ---- Add department (self-service) ---------------------------------- */
+  var modalEl = null;
+
+  function openDeptModal() {
+    closeDeptModal();
+    modalEl = document.createElement('div');
+    modalEl.style.cssText = 'position:fixed;inset:0;background:rgba(13,11,8,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:#FAF9F6;border:1px solid #E5E2DA;border-radius:6px;max-width:440px;width:100%;padding:26px 28px;box-shadow:0 18px 60px rgba(13,11,8,.25);';
+    box.innerHTML =
+      '<h3 style="font-family:Georgia,serif;font-weight:400;font-size:22px;color:#0d0b08;margin:0 0 16px;">Add a department</h3>' +
+      '<label style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b625a;margin:12px 0 5px;">Name</label>' +
+      '<input id="deptName" type="text" placeholder="e.g. Commercial and Revenue" style="width:100%;box-sizing:border-box;border:1px solid #E5E2DA;background:#fff;padding:11px 13px;font:inherit;font-size:14px;border-radius:3px;outline:none;" />' +
+      '<label style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b625a;margin:12px 0 5px;">Description (optional)</label>' +
+      '<input id="deptDesc" type="text" placeholder="What this department covers" style="width:100%;box-sizing:border-box;border:1px solid #E5E2DA;background:#fff;padding:11px 13px;font:inherit;font-size:14px;border-radius:3px;outline:none;" />' +
+      '<div id="deptSlug" style="font-size:12px;color:#a89f92;margin-top:6px;"></div>' +
+      '<div id="deptAuth" style="display:none;">' +
+        '<div style="font-size:12.5px;color:#6b625a;margin:14px 0 6px;line-height:1.5;">Sign in with your author account to save it to the Library.</div>' +
+        '<input id="deptEmail" type="email" placeholder="Email" autocomplete="username" style="width:100%;box-sizing:border-box;border:1px solid #E5E2DA;background:#fff;padding:11px 13px;font:inherit;font-size:14px;border-radius:3px;outline:none;margin-bottom:8px;" />' +
+        '<input id="deptPass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;box-sizing:border-box;border:1px solid #E5E2DA;background:#fff;padding:11px 13px;font:inherit;font-size:14px;border-radius:3px;outline:none;" />' +
+      '</div>' +
+      '<div id="deptErr" style="display:none;color:#9a3b2e;font-size:13px;margin-top:10px;line-height:1.5;"></div>' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">' +
+        '<button id="deptCancel" class="btn" type="button">Cancel</button>' +
+        '<button id="deptCreate" class="btn primary" type="button">Create department</button>' +
+      '</div>';
+    modalEl.appendChild(box);
+    modalEl.addEventListener('click', function (e) { if (e.target === modalEl) closeDeptModal(); });
+    document.body.appendChild(modalEl);
+    var nameInput = box.querySelector('#deptName');
+    nameInput.focus();
+    nameInput.addEventListener('input', function () {
+      box.querySelector('#deptSlug').textContent = nameInput.value.trim() ? 'Folder id: ' + slugifyDept(nameInput.value) : '';
+    });
+    box.querySelector('#deptCancel').addEventListener('click', closeDeptModal);
+    box.querySelector('#deptCreate').addEventListener('click', function () { submitDept(box); });
+    // Show sign-in fields only if no live session.
+    if (window.SUPABASE && window.SUPABASE.auth) {
+      window.SUPABASE.auth.getSession().then(function (r) {
+        var has = !!(r.data && r.data.session);
+        if (!has) box.querySelector('#deptAuth').style.display = 'block';
+      }).catch(function () { box.querySelector('#deptAuth').style.display = 'block'; });
+    } else {
+      box.querySelector('#deptAuth').style.display = 'block';
+    }
+  }
+
+  function closeDeptModal() {
+    if (modalEl) { modalEl.remove(); modalEl = null; }
+  }
+
+  function deptError(box, msg) {
+    var err = box.querySelector('#deptErr');
+    err.textContent = msg;
+    err.style.display = 'block';
+  }
+
+  function submitDept(box) {
+    var name = box.querySelector('#deptName').value.trim();
+    var desc = box.querySelector('#deptDesc').value.trim();
+    if (!name) return deptError(box, 'Enter a department name.');
+    var id = slugifyDept(name);
+    if (state.departments.some(function (d) { return d.id === id; })) {
+      return deptError(box, 'A department called "' + name + '" already exists.');
+    }
+    function proceed(session) {
+      var bucket = window.SUPABASE_CONFIG.bucket || 'playbook-content';
+      var url = SUPABASE_CONFIG.url + '/storage/v1/object/public/' + bucket + '/published/departments.json';
+      var client = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: { headers: { Authorization: 'Bearer ' + session.access_token } }
+      });
+      box.querySelector('#deptCreate').disabled = true;
+      return fetch(url + '?t=' + Date.now())
+        .then(function (r) { return r.ok ? r.json() : { departments: [] }; })
+        .catch(function () { return { departments: [] }; })
+        .then(function (data) {
+          var list = Array.isArray(data.departments) ? data.departments : [];
+          if (list.some(function (d) { return d.id === id; })) throw new Error('That department already exists.');
+          list.push({ id: id, name: name, description: desc });
+          var blob = new Blob([JSON.stringify({ departments: list }, null, 2)], { type: 'application/json' });
+          return client.storage.from(bucket).upload('published/departments.json', blob, { upsert: true, contentType: 'application/json' });
+        })
+        .then(function (r) {
+          if (r.error) throw new Error(r.error.message);
+          state.departments.push({ id: id, name: name, description: desc });
+          closeDeptModal();
+          renderFolders();
+          state.dept = id;
+          renderDepartment();
+        })
+        .catch(function (e) {
+          box.querySelector('#deptCreate').disabled = false;
+          deptError(box, (e && e.message) || 'Could not save the department.');
+        });
+    }
+    var email = box.querySelector('#deptEmail') && box.querySelector('#deptEmail').value.trim();
+    var pass = box.querySelector('#deptPass') && box.querySelector('#deptPass').value;
+    if (box.querySelector('#deptAuth').style.display !== 'none') {
+      if (!email || !pass) return deptError(box, 'Enter your author email and password.');
+      window.SUPABASE.auth.signInWithPassword({ email: email, password: pass })
+        .then(function (r) {
+          if (r.error) throw new Error(r.error.message || 'Sign-in failed.');
+          return proceed(r.data.session);
+        })
+        .catch(function (e) { deptError(box, (e && e.message) || 'Sign-in failed.'); });
+      return;
+    }
+    window.SUPABASE.auth.getSession().then(function (r) {
+      if (!(r.data && r.data.session)) return deptError(box, 'Your sign-in expired — enter your password again.');
+      return proceed(r.data.session);
+    }).catch(function (e) { deptError(box, (e && e.message) || 'Sign-in check failed.'); });
   }
 
   fetch('playbooks.json', { cache: 'no-store' })
@@ -423,6 +569,7 @@ a { color: inherit; }
         ' · ' + state.departments.length + ' departments';
       return mergePublishedIndex();
     })
+    .then(function () { return mergeDepartmentsJson(); })
     .then(function () {
       document.getElementById('foot-status').textContent =
         state.playbooks.length + ' playbook' + (state.playbooks.length === 1 ? '' : 's') +
