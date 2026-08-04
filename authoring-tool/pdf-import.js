@@ -24,7 +24,7 @@
 
   var PDFJS_VERSION = '3.11.174';
   var PDFJS_CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@' + PDFJS_VERSION + '/build/';
-  var MAX_PAGES = 50;
+  var MAX_PAGES = 80;
   var MAX_CHARS = 200000;
   var MAX_IMG_WIDTH = 1400;
 
@@ -129,28 +129,95 @@
     }
     var threshold = Math.ceil(pages.length * 0.6);
 
-    var paragraphs = []; // {text, heading, bullet, page}
+    // Secondary boilerplate tier: SHORT lines (≤4 words) repeated on many
+    // pages (≥20%, min 3) are table side-labels / running headers that the
+    // 60% masthead rule misses — e.g. "DoRM" role labels in the Commercial
+    // playbooks, or repeated column captions. Numbered-heading-shaped lines
+    // are exempt (real section numbers repeat legitimately across a TOC-free
+    // document only via the heading itself).
+    var looseThreshold = Math.max(3, Math.ceil(pages.length * 0.2));
+
+    // TOC / cross-reference pages: pages dominated by number-like lines
+    // ("0.1", "2.7 – 2.11", "3.2.1 · 3.2.4 · 3.3") contain no content — only
+    // entries that would be misdetected as headings.
+    var NUMLINE_RE = /^\d+(\.\d+)*(\s|$|[–—·])/;
+    var isTocPage = pages.map(function (lines) {
+      if (lines.length < 6) return false;
+      var numLines = lines.filter(function (l) { return NUMLINE_RE.test(l.text.trim()); }).length;
+      return numLines >= 6 && numLines >= lines.length * 0.5;
+    });
+
+    var paragraphs = []; // {text, heading, bullet, page, size, bold}
     var charCount = 0;
     var truncated = false;
 
     for (var p = 0; p < pages.length && !truncated; p++) {
+      if (isTocPage[p]) continue;
       var lines = pages[p];
       for (var i = 0; i < lines.length; i++) {
         var l = lines[i];
         var n = normLine(l.text);
         if (counts[n] >= threshold) continue; // repeated masthead/footer line
+        // Running-header format "4 · Section title" (chapter mastheads).
+        if (/^\d+\s+·\s+\S/.test(l.text)) continue;
+        // Short line repeated across many pages (table side-label etc.).
+        if (counts[n] >= looseThreshold && l.text.split(/\s+/).length <= 4 &&
+            !/^(?:\d+\.\s+\S|\d+(?:\.\d+)+\s+\S)/.test(l.text)) continue;
 
-        // Heading signals, strongest first: larger font, bold face, or a short
-        // punctuation-less line isolated by vertical gaps. Lines ending with
-        // ':' are sub-headings (kept as body lines) and lines containing
-        // <...> are exhibit references, not headings.
+        // Heading signals, strongest first. Everything is measured against the
+        // median line size so table-cell text (SMALLER than body prose) can
+        // never become a heading. Lines that are clearly NOT headings:
+        //  - sentence-like (internal '? ', terminal punctuation, >9 words, comma)
+        //  - continuations (start lowercase, or with a quote mark)
+        //  - table rows (a digit mid-line without leading number, trailing '•')
+        //  - pure number/letter sequences from stepper graphics ("01 02 03", "A B C")
         var gapBefore = i === 0 || Math.abs(lines[i - 1].y - l.y) > median * 1.6;
         var gapAfter = i === lines.length - 1 || Math.abs(l.y - lines[i + 1].y) > median * 1.6;
-        var isShort = l.text.length > 2 && l.text.length <= 60 && !/[.,;:]$/.test(l.text);
-        var isNumberedHeading = /^\s*\d+\.\s+\S/.test(l.text) && l.text.length <= 80 && gapBefore;
-        var isHeading = ((l.size > median * 1.18) || (l.bold && l.text.length <= 90) ||
-          (isShort && gapBefore && gapAfter) || isNumberedHeading) && l.text.length <= 120 &&
-          !/[<>]/.test(l.text) && !/:$/.test(l.text);
+        var wordCount = l.text.split(/\s+/).length;
+        // "4. Director of Finance" (single level, trailing dot), "1.4 What…"
+        // and "3.2.1 Packages…" (multi-level) — but not "4 weeks" or "0.1".
+        var numberedShape = /^(?:\d+\.\s+\S|\d+(?:\.\d+)+\s+\S)/.test(l.text);
+        // Numbered titles ("2.11 Room type, country of residence …") may carry
+        // commas and run long — they are exempt from the sentence tests, which
+        // exist to stop bold BODY lines and table rows becoming headings.
+        var sentenceLike = numberedShape
+          ? (/[.;:]$/.test(l.text) || wordCount > 12)
+          : (/\?\s+\S/.test(l.text) || /[.;:,]$/.test(l.text) || /,/.test(l.text) || wordCount > 9);
+        var startsLowerOrQuote = /^[a-z"'‘“]/.test(l.text);
+        var midLineDigit = /\d/.test(l.text) && !numberedShape;
+        var trailingBullet = /[•·]\s*$/.test(l.text);
+        var glyphSequence = /^\d[\d\s·.\-–—]*$/.test(l.text) || /^([A-Z]\s+){1,}[A-Z]$/.test(l.text);
+        // "60-70% offers · 30-40% packages" — but NOT step-numbered titles
+        // like "01 Front Office" (digits, space, capitalised word).
+        var metricCallout = /^\d/.test(l.text) && !numberedShape && !/^\d+\s+[A-Z]/.test(l.text);
+        var notHeadingShape = sentenceLike || startsLowerOrQuote || midLineDigit || trailingBullet || glyphSequence || metricCallout;
+        var isShort = l.text.length > 2 && l.text.length <= 60 && !notHeadingShape;
+        // Numbered headings carry no size floor — an SOP's "1. Front Office"
+        // sits slightly BELOW body size and is still the section title. The
+        // numbered lookalikes to exclude are progress-stepper labels on
+        // summary pages ("8.2 ASSESS", "6.4 TEST & ROLLOUT"): small, ALL-CAPS
+        // duplicates of a real heading that exists on the following page.
+        var numberTitle = numberedShape ? l.text.replace(/^(?:\d+\.\s+|\d+(?:\.\d+)+\s+)/, '') : '';
+        var capsLetters = (numberTitle.match(/[A-Z]/g) || []).length;
+        var stepperLabel = numberedShape && capsLetters >= 3 && !/[a-z]/.test(numberTitle) && l.size < median;
+        var isNumberedHeading = numberedShape && l.text.length <= 90 &&
+          gapBefore && !sentenceLike && !trailingBullet && !midLineDigit && !stepperLabel;
+        // Display-font size overrides case: a 30pt lowercase line can still be
+        // a heading continuation ("events" on a divider page). Unmerged
+        // lowercase fragments are demoted to body in a later pass, so there is
+        // no front-matter block here — SOP department headings are big-font
+        // lines on pages 2-3 and must survive.
+        var isBigFont = l.size > median * 1.18 &&
+          !(sentenceLike || trailingBullet || glyphSequence || metricCallout || midLineDigit || /^["'‘“]/.test(l.text));
+        // Plain bold short line: no size floor and no gap requirement — in
+        // SOP documents the bold heading is the SAME size as (or slightly
+        // smaller than) body text and tightly spaced ("Front Office" 11pt
+        // bold among 12pt prose). The notHeadingShape filters are what keep
+        // table rows and sentence-like bold lines out.
+        var isBoldShort = l.bold && l.text.length <= 60 && !notHeadingShape;
+        var isIsolatedShort = isShort && gapBefore && gapAfter && l.size >= median;
+        var isHeading = (isBigFont || isBoldShort || isIsolatedShort || isNumberedHeading) &&
+          l.text.length <= 120 && !/[<>]/.test(l.text) && !/:$/.test(l.text) && !/[.!?]["'”’]?$/.test(l.text);
 
         var bullet = false;
         var text = l.text;
@@ -162,7 +229,7 @@
         var prev = paragraphs[paragraphs.length - 1];
         var gap = prev && prev.page === p ? Math.abs(prev.y - l.y) : Infinity;
         if (isHeading || bullet || !prev || prev.page !== p || prev.bullet || prev.heading || gap > median * 1.7) {
-          paragraphs.push({ page: p, y: l.y, text: text, heading: isHeading, bullet: bullet });
+          paragraphs.push({ page: p, y: l.y, text: text, heading: isHeading, bullet: bullet, size: l.size, bold: l.bold });
         } else {
           prev.text += ' ' + text;
           prev.y = l.y;
@@ -171,6 +238,58 @@
         if (charCount > MAX_CHARS) { truncated = true; break; }
       }
     }
+
+    // Merge multi-line headings: a display-font title that wraps onto the next
+    // line ("Special" / "events" on a divider page, or a long numbered title)
+    // must become ONE heading, not a heading per fragment. Merges adjacent
+    // heading paragraphs of matching size/weight when the first has no
+    // terminal punctuation and the continuation isn't itself numbered.
+    function canMerge(cur, nxt, median) {
+      if (!cur || !nxt || !cur.heading || !nxt.heading) return false;
+      if (cur.page !== nxt.page) return false;
+      // Size match is the strong signal; mixed-font lines ("Test &" set in two
+      // faces) may disagree on the bold flag, so it is not required.
+      if (Math.abs(cur.size - nxt.size) > 0.6) return false;
+      // Gap tolerance scales with the heading size: display-font titles have
+      // large leading ("Special"/"events" at 30pt are ~36pt apart).
+      if (Math.abs(cur.y - nxt.y) > Math.max(median * 2.4, cur.size * 2.4)) return false;
+      if (/[.!?;:]$/.test(cur.text)) return false;
+      if (/^(?:\d+\.\s+\S|\d+(?:\.\d+)+\s+\S)/.test(nxt.text)) return false;
+      // Never merge two identical label lines ("Assess" + "Assess" repeats are
+      // separate page headers, not one wrapped title).
+      if (cur.text.trim().toLowerCase() === nxt.text.trim().toLowerCase()) return false;
+      if ((cur.text + ' ' + nxt.text).length > 120) return false;
+      return true;
+    }
+    for (var mi = 0; mi < paragraphs.length - 1; mi++) {
+      var cur = paragraphs[mi];
+      if (!cur.heading) continue;
+      if (canMerge(cur, paragraphs[mi + 1], median)) {
+        cur.text += ' ' + paragraphs[mi + 1].text;
+        paragraphs.splice(mi + 1, 1);
+        mi--; // the merged heading may continue onto a third line
+        continue;
+      }
+      // Two-column layouts interleave a body line between the two halves of a
+      // wrapped display title ("Test &" … "rollout"). Merge across at most
+      // ONE intervening body paragraph, which stays right after the heading.
+      var mid = paragraphs[mi + 1], far = paragraphs[mi + 2];
+      if (mid && !mid.heading && far && canMerge(cur, far, median)) {
+        cur.text += ' ' + far.text;
+        paragraphs.splice(mi + 2, 1);
+        mi--;
+        continue;
+      }
+    }
+
+    // Orphan fragments: any heading still starting with a lowercase letter
+    // after merging is the second half of a wrapped title whose first half
+    // was absorbed elsewhere (e.g. into the numbered heading line). Real
+    // headings in these documents always start uppercase — demote the
+    // fragment to body so it folds into the preceding section.
+    paragraphs.forEach(function (pp) {
+      if (pp.heading && /^[a-z]/.test(pp.text)) pp.heading = false;
+    });
 
     return { paragraphs: paragraphs, pageCount: pages.length, totalPages: totalPages,
       truncated: truncated || (totalPages > MAX_PAGES), images: [], counts: counts, threshold: threshold };
