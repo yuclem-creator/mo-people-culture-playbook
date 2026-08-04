@@ -69,6 +69,15 @@
 .pb-check-text a:hover { color: var(--gold); border-bottom-color: var(--gold); }
 .pb-check.done .pb-check-text { color: var(--ink-fade); text-decoration: line-through; text-decoration-color: var(--rule-strong); }
 .pb-check.done .pb-check-text a { color: var(--ink-fade); border-bottom-color: transparent; }
+
+/* ---- Image lightbox (click any inline image to enlarge) ---- */
+.inline-img img { cursor: zoom-in; }
+.hotspot-wrap img { cursor: default; }
+#pb-lightbox { position: fixed; inset: 0; z-index: 4000; background: rgba(13,11,8,0.88); display: flex; align-items: center; justify-content: center; cursor: zoom-out; animation: pbLightboxIn .18s ease; }
+@keyframes pbLightboxIn { from { opacity: 0; } to { opacity: 1; } }
+#pb-lightbox img { max-width: 94vw; max-height: 92vh; object-fit: contain; background: #fff; box-shadow: 0 24px 80px rgba(0,0,0,.45); }
+.pb-lightbox-close { position: absolute; top: 18px; right: 22px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.08); color: #fff; font-size: 16px; line-height: 1; cursor: pointer; transition: background .15s; }
+.pb-lightbox-close:hover { background: rgba(255,255,255,.22); }
 html, body {
   margin: 0; padding: 0;
   background: var(--paper);

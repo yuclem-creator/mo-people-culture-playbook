@@ -2820,6 +2820,40 @@ if (!window.__pbStepsWired) {
   });
 }
 
+// Image lightbox: click any inline content image to enlarge it full-screen;
+// click anywhere, ✕, or Esc to close. Hotspot images are excluded — their
+// pins own the click.
+if (!window.__lightboxWired) {
+  window.__lightboxWired = true;
+  document.addEventListener('click', function (e) {
+    var open = document.getElementById('pb-lightbox');
+    if (open) { open.remove(); return; }
+    var img = e.target && e.target.closest ? e.target.closest('.inline-img img') : null;
+    if (!img || img.closest('.hotspot-wrap')) return;
+    var ov = document.createElement('div');
+    ov.id = 'pb-lightbox';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-label', 'Enlarged image');
+    var big = document.createElement('img');
+    big.src = img.currentSrc || img.src;
+    big.alt = img.alt || '';
+    var x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'pb-lightbox-close';
+    x.textContent = '✕';
+    x.setAttribute('aria-label', 'Close');
+    ov.appendChild(big);
+    ov.appendChild(x);
+    document.body.appendChild(ov);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var open = document.getElementById('pb-lightbox');
+      if (open) open.remove();
+    }
+  });
+}
+
 // Hotspot interactions: dots reveal their popup (one at a time), the toggle
 // chip switches between display-all and click-to-reveal.
 if (!window.__hotspotsWired) {
