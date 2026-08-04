@@ -121,8 +121,20 @@
   function namespacedGet(base, parse) {
     return idbGet(keyFor(base)).then(function (val) {
       if (val) return val;
-      // Namespace miss: fall back to the bare legacy key (single-slot era).
-      return migrate(base === 'current' ? CURRENT_KEY : AUTOSAVE_KEY, base, parse);
+      // Namespace miss for a specific slug: migrate a legacy bare record ONLY
+      // if it actually belongs to this playbook (by its own slug) — never
+      // serve another playbook's content as this one's draft.
+      if (!currentSlug) return migrate(base === 'current' ? CURRENT_KEY : AUTOSAVE_KEY, base, parse);
+      var legacyKey = base === 'current' ? CURRENT_KEY : AUTOSAVE_KEY;
+      return migrate(legacyKey, base, parse).then(function (migrated) {
+        if (!migrated) return null;
+        var recSlug = parse
+          ? (base === 'current'
+              ? (migrated.meta && migrated.meta.slug)
+              : (migrated.playbook && migrated.playbook.meta && migrated.playbook.meta.slug))
+          : null;
+        return recSlug === currentSlug ? migrated : null;
+      });
     });
   }
 
@@ -165,7 +177,7 @@
 
   LocalFileAdapter.prototype.clearAutosnapshot = function () {
     memFallback.autosave = null;
-    return idbDel('autosave').then(function () {
+    return idbDel(keyFor('autosave')).then(function () {
       try { global.localStorage.removeItem(AUTOSAVE_KEY); } catch (e) {}
     });
   };
