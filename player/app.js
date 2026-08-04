@@ -2367,6 +2367,13 @@ function renderGenericChapter(ch, prevId, nextId) {
         </div>
       </div>`;
 
+  // Opener video: renders between the chapter header and the body text,
+  // aligned to the same 720px text column.
+  const openerVid = T(prefix + '.opener.video', '');
+  const openerVideoHTML = openerVid
+    ? `<div class="opener-video" style="max-width:720px;margin:28px 0;"><video controls playsinline preload="metadata" style="width:100%;display:block;background:#0d0b08;"><source src="video/${esc(openerVid)}" /></video></div>`
+    : '';
+
   let body = '';
   if (type === 'lifecycle') {
     body = lifecycleWheelHTML(ch) + LIFECYCLE.filter(function (s) {
@@ -2418,6 +2425,7 @@ function renderGenericChapter(ch, prevId, nextId) {
   } else {
     const b = chapterBodyFor(ch);
     body = `<div class="spread">
+      ${openerVideoHTML}
       ${b.intro && b.intro.length ? subIntroHTML({ intro: b.intro }) : ''}
       ${(b.sections || []).map(sectionHTML).join('')}
     </div>`;
