@@ -304,6 +304,43 @@ function policyItemHTML(it) {
       ${tabs.map((t, i) => `<div class="policy-tab-panel" data-tab-p="${i}" style="display:${i === 0 ? 'block' : 'none'};padding:18px 22px;background:#fff;"><p style="margin:0;font-size:14px;color:#4a443f;line-height:1.7;">${esc(t.text || '')}</p></div>`).join('')}
     </div>`;
   }
+  // Vertical timeline: numbered steps on a rail, show-all or click-to-reveal.
+  if (it && it.s === 'timeline') {
+    const steps = Array.isArray(it.steps) ? it.steps : [];
+    const reveal = it.mode === 'reveal';
+    return `<div class="pb-timeline" data-mode="${reveal ? 'reveal' : 'all'}">
+      ${steps.map(function (s, i) {
+        return `
+        <div class="pb-step${reveal ? '' : ' open'}" data-step="${i}">
+          <button type="button" class="pb-step-head">
+            <span class="pb-step-num">${i + 1}</span>
+            <span class="pb-step-label">${esc(s.label || ('Step ' + (i + 1)))}</span>
+          </button>
+          <div class="pb-step-body">
+            ${inlineRichHTML(s.text || '')}
+            ${s.url ? `<a class="pb-step-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">Open resource →</a>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  // Checklist: tickable items with optional links (state kept per page session).
+  if (it && it.s === 'checklist') {
+    const items = Array.isArray(it.items) ? it.items : [];
+    const cid = id;
+    return `<div class="pb-checklist" data-checklist="${cid}">
+      ${items.map(function (c, i) {
+        const inner = c.url
+          ? `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label || '')}</a>`
+          : `<span>${esc(c.label || '')}</span>`;
+        return `
+        <div class="pb-check" data-check="${cid}-${i}">
+          <button type="button" class="pb-check-box" aria-label="Toggle item ${i + 1}"><span>✓</span></button>
+          <span class="pb-check-text">${inner}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
   // Embedded figure carried over from an imported document — optionally with
   // interactive hotspots (numbered pins revealing popup text on click).
   if (it && it.s === 'image') {
@@ -335,7 +372,7 @@ function policyItemHTML(it) {
   }
   // Plain text bullet (e.g. imported list items): simple row, no resource chrome.
   if (typeof it === 'string') {
-    return `<div class="policy-text-item" style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule);line-height:1.55;"><span style="color:#B59060;flex:none;">•</span><span>${esc(it)}</span></div>`;
+    return `<div class="policy-text-item" style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule);line-height:1.55;"><span style="color:#B59060;flex:none;">•</span><span>${inlineRichHTML(it)}</span></div>`;
   }
   // Group heading row (not a resource): a titled band that introduces the
   // resources beneath it. Renders name + descriptive blurb, no kind tag.
@@ -464,7 +501,7 @@ function sectionHTML(sec) {
       + blurbChunkHTML(sec.blurb, splitAt, sec.blurb.length);
   } else {
     blurb = (sec.blurb && sec.blurb.length)
-      ? `<div class="policy-section-blurb">${sec.blurb.map(p => `<p>${inlineVideoHTML(inlineImgHTML(p))}</p>`).join('')}</div>`
+      ? `<div class="policy-section-blurb">${sec.blurb.map(p => `<p>${inlineRichHTML(p)}</p>`).join('')}</div>`
       : '';
   }
   // The verbatim source "transition" sentence is promoted into an editorial
@@ -480,12 +517,12 @@ function sectionHTML(sec) {
   // Verbatim supporting sentences that PRECEDE the pull-quote — ordinary body
   // text (NOT quoted), so only the key sentence is elevated into a quote.
   const transitionPre = (sec.transition_pre && sec.transition_pre.length)
-    ? `<div class="policy-section-blurb policy-section-blurb--before">${sec.transition_pre.map(p => `<p>${inlineVideoHTML(inlineImgHTML(p))}</p>`).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--before">${sec.transition_pre.map(p => `<p>${inlineRichHTML(p)}</p>`).join('')}</div>`
     : '';
   // Verbatim supporting sentences that follow the pull-quote — rendered as
   // ordinary body text (NOT quoted), so only the key sentence stays a quote.
   const transitionBody = (sec.transition_body && sec.transition_body.length)
-    ? `<div class="policy-section-blurb policy-section-blurb--after">${sec.transition_body.map(p => `<p>${inlineVideoHTML(inlineImgHTML(p))}</p>`).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--after">${sec.transition_body.map(p => `<p>${inlineRichHTML(p)}</p>`).join('')}</div>`
     : '';
   const numHTML = sec.num ? `<span class="num">${esc(sec.num)}.</span>` : '';
   const iconHTML = `<span class="policy-section-icon" aria-hidden="true">${sectionIcon(sec.title)}</span>`;
@@ -926,6 +963,48 @@ function inlineVideoHTML(text) {
   return out;
 }
 
+// Unified inline processor: one pass over the text, replacing author markers
+// with rich elements and escaping everything else exactly once.
+//   [img:name]  [img:left name]  [img:right name]   inline image (block / floated)
+//   [vid:name]  [vid:left name]  [vid:right name]   inline video
+//   [link text](https://url)                        hyperlink
+// Legacy inline media: earlier editor builds and the PDF importer wrote raw
+// <figure class="inline-img">…</figure> HTML straight into paragraph text,
+// which the escaping pass then displayed as literal text. Normalise those
+// blocks back into [img:name] / [vid:name] markers so old content renders
+// as media again without any data migration. Tolerates the closing tag on
+// the next line (as seen in real drafts).
+function normalizeLegacyFigures(text) {
+  if (!text || text.indexOf('<figure') === -1) return text;
+  return String(text)
+    .replace(/<figure\s+class="inline-img(?:\s+inline-img--(left|right))?(?:\s+inline-vid)?"\s*>\s*<video[^>]*>\s*<source\s+src="video\/([^"]+)"[^>]*>\s*(?:<\/video>)?\s*(?:<\/figure>)?/g,
+      function (m, side, name) { return '[vid:' + (side ? side + ' ' : '') + name + ']'; })
+    .replace(/<figure\s+class="inline-img(?:\s+inline-img--(left|right))?"\s*>\s*<img\s+src="img\/([^"]+)"[^>]*>\s*(?:<\/figure>)?/g,
+      function (m, side, name) { return '[img:' + (side ? side + ' ' : '') + name + ']'; });
+}
+
+function inlineRichHTML(text) {
+  text = normalizeLegacyFigures(text);
+  const re = /\[(img|vid)(?:\s*:\s*(left|right))?(?:\s*[:\s]\s*([A-Za-z0-9_\-.]+))?\s*\]|\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g;
+  let out = '', last = 0, m;
+  while ((m = re.exec(text))) {
+    out += esc(text.slice(last, m.index));
+    if (m[4]) {
+      out += `<a href="${esc(m[5])}" target="_blank" rel="noopener noreferrer" style="color:#8f6d3f;text-decoration:underline;text-underline-offset:2px;">${esc(m[4])}</a>`;
+    } else {
+      const side = m[2] || '';
+      const name = m[3] || 'inline';
+      const cls = side ? 'inline-img inline-img--' + side : 'inline-img';
+      out += m[1] === 'vid'
+        ? `<figure class="${cls} inline-vid"><video controls playsinline preload="metadata"><source src="video/${esc(name)}" /></video></figure>`
+        : `<figure class="${cls}"><img src="img/${esc(name)}" alt="" /></figure>`;
+    }
+    last = m.index + m[0].length;
+  }
+  out += esc(text.slice(last));
+  return out;
+}
+
 function inlineImgHTML(text) {
   const re = /\[img(?:\s*:\s*(left|right))?(?:\s*[:\s]\s*([A-Za-z0-9_\-.]+))?\s*\]/g;
   let out = '', last = 0, m;
@@ -968,7 +1047,7 @@ function subIntroHTML(c) {
       } else {
         flush();
         collecting = false;
-        html += `<p>${inlineVideoHTML(inlineImgHTML(p))}</p>`;
+        html += `<p>${inlineRichHTML(p)}</p>`;
       }
     });
     flush();
@@ -2393,7 +2472,7 @@ function renderGenericChapter(ch, prevId, nextId) {
         <div class="spread tight" id="${esc(s.id)}">
           ${hero}
           <div class="section-eyebrow"><span class="txt">${esc((s.letter ? s.letter + '. ' : '') + (s.label || ''))}</span><span class="rule"></span></div>
-          ${s.lede ? `<div class="editorial-body"><p>${inlineVideoHTML(inlineImgHTML(s.lede))}</p></div>` : ''}
+          ${s.lede ? `<div class="editorial-body"><p>${inlineRichHTML(s.lede)}</p></div>` : ''}
           ${(c.sections || []).map(sectionHTML).join('')}
         </div>`;
     }).join('');
@@ -2711,6 +2790,36 @@ if (!window.__videoErrorHintWired) {
   }, true);
 }
 
+// Timeline + checklist interactions.
+if (!window.__pbStepsWired) {
+  window.__pbStepsWired = true;
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var head = t.closest('.pb-step-head');
+    if (head) {
+      var step = head.closest('.pb-step');
+      var tl = step.closest('.pb-timeline');
+      if (tl.getAttribute('data-mode') === 'reveal') {
+        var wasOpen = step.classList.contains('open');
+        tl.querySelectorAll('.pb-step.open').forEach(function (s) { s.classList.remove('open'); });
+        if (!wasOpen) step.classList.add('open');
+      }
+      return;
+    }
+    var box = t.closest('.pb-check-box');
+    if (box) {
+      var chk = box.closest('.pb-check');
+      chk.classList.toggle('done');
+      try {
+        var k = 'pbcheck-' + chk.getAttribute('data-check');
+        if (chk.classList.contains('done')) sessionStorage.setItem(k, '1');
+        else sessionStorage.removeItem(k);
+      } catch (err) {}
+    }
+  });
+}
+
 // Hotspot interactions: dots reveal their popup (one at a time), the toggle
 // chip switches between display-all and click-to-reveal.
 if (!window.__hotspotsWired) {
@@ -2928,6 +3037,12 @@ function applyPlaybook(next, opts) {
   updateRailAbout();
   updateMasthead();
   applyTypography();
+  try {
+    document.querySelectorAll('.pb-check').forEach(function (chk) {
+      var k = 'pbcheck-' + chk.getAttribute('data-check');
+      if (sessionStorage.getItem(k)) chk.classList.add('done');
+    });
+  } catch (e) {}
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
   try {

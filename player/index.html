@@ -38,6 +38,37 @@
 }
 
 * { box-sizing: border-box; }
+
+/* ---- Vertical timeline (numbered steps on a gold rail) ---- */
+.pb-timeline { position: relative; margin: 22px 0 10px; }
+.pb-timeline::before { content: ""; position: absolute; left: 21px; top: 18px; bottom: 18px; width: 1px; background: var(--gold-hair); }
+.pb-step { position: relative; padding: 4px 0 10px 62px; }
+.pb-step-head { display: flex; align-items: center; width: 100%; background: none; border: 0; padding: 8px 0; cursor: pointer; text-align: left; }
+.pb-timeline[data-mode="all"] .pb-step-head { cursor: default; }
+.pb-step-num { position: absolute; left: 0; top: 4px; width: 43px; height: 43px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: "MO Exceptional", "Times New Roman", serif; font-size: 19px; color: var(--gold-deep); background: var(--paper); border: 1px solid var(--gold-hair); transition: background .25s, color .25s, border-color .25s; z-index: 1; }
+.pb-step.open .pb-step-num { background: var(--gold); border-color: var(--gold); color: #fff; }
+.pb-timeline[data-mode="all"] .pb-step.open .pb-step-num { background: var(--paper); border-color: var(--gold-hair); color: var(--gold-deep); }
+.pb-step-label { font-size: 13px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ink); }
+.pb-step-body { font-size: 14.5px; line-height: 1.7; color: var(--ink-body); padding: 2px 0 14px; }
+.pb-step-body p { margin: 0 0 8px; }
+.pb-timeline[data-mode="reveal"] .pb-step-body { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; transition: max-height .35s ease, opacity .25s ease, padding .3s ease; }
+.pb-timeline[data-mode="reveal"] .pb-step.open .pb-step-body { max-height: 800px; opacity: 1; padding: 2px 0 14px; }
+.pb-step-link { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--gold-deep); text-decoration: none; border-bottom: 1px solid var(--gold-hair); padding-bottom: 2px; }
+.pb-step-link:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* ---- Checklist (tickable resource list) ---- */
+.pb-checklist { margin: 18px 0; border-top: 1px solid var(--rule); }
+.pb-check { display: flex; align-items: flex-start; gap: 14px; padding: 13px 6px; border-bottom: 1px solid var(--rule); transition: background .2s; }
+.pb-check:hover { background: var(--paper-warm); }
+.pb-check-box { flex: none; width: 22px; height: 22px; margin-top: 1px; padding: 0; border: 1px solid var(--rule-strong); border-radius: 3px; background: var(--paper); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s, border-color .2s; }
+.pb-check-box span { font-size: 13px; line-height: 1; color: transparent; transform: scale(.5); transition: color .15s, transform .2s; }
+.pb-check.done .pb-check-box { background: var(--celadon-deep); border-color: var(--celadon-deep); }
+.pb-check.done .pb-check-box span { color: #fff; transform: scale(1); }
+.pb-check-text { font-size: 14.5px; line-height: 1.6; color: var(--ink-body); transition: color .2s; }
+.pb-check-text a { color: var(--gold-deep); text-decoration: none; border-bottom: 1px solid var(--gold-hair); }
+.pb-check-text a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+.pb-check.done .pb-check-text { color: var(--ink-fade); text-decoration: line-through; text-decoration-color: var(--rule-strong); }
+.pb-check.done .pb-check-text a { color: var(--ink-fade); border-bottom-color: transparent; }
 html, body {
   margin: 0; padding: 0;
   background: var(--paper);

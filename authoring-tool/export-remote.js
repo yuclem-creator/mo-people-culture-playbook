@@ -41,9 +41,28 @@
 
     // Fallback snapshot is built from the CURRENT in-memory project — decoded
     // via the exact same externalizeAssets() used for the offline export.
-    var ext = helpers.externalizeAssets(pb);
+    // Autocompress first: large images are re-encoded for the package, and
+    // media the playbook never references is left out of the zip entirely.
+    // Oversized fallback VIDEOS (>20MB) are skipped too — at launch the
+    // remote shell streams them from Supabase anyway; the fallback stays a
+    // lightweight safety net, not a second copy of the whole library.
+    var FALLBACK_VIDEO_CAP = 20 * 1024 * 1024;
+    var skippedVideos = [];
+    var ext = null, pbJson = '';
+    helpers.compressImagesForExport(pb).then(function (pbSlim) {
+      ext = helpers.externalizeAssets(pbSlim);
+      pbJson = JSON.stringify(ext.playbook);
+      ext.extraFiles = helpers.filterUnreferenced(ext.extraFiles, pbJson);
+      Object.keys(ext.extraFiles).forEach(function (path) {
+        if (path.indexOf('video/') !== 0) return;
+        var approx = Math.floor((ext.extraFiles[path].base64 || '').length * 3 / 4);
+        if (approx > FALLBACK_VIDEO_CAP) {
+          skippedVideos.push(path.replace(/^video\//, ''));
+          delete ext.extraFiles[path];
+        }
+      });
 
-    Promise.all(TEXT_SHELL.map(function (f) { return helpers.textFile(f).then(function (t) { return { f: f, t: t }; }); }))
+      return Promise.all(TEXT_SHELL.map(function (f) { return helpers.textFile(f).then(function (t) { return { f: f, t: t }; }); }))
       .then(function (res) {
         var texts = {};
         res.forEach(function (o) { texts[o.f] = o.t; });
@@ -109,7 +128,13 @@
       .then(function (bundledAssets) {
         var replaced = {};
         Object.keys(ext.uploaded).forEach(function (k) { replaced[ext.uploaded[k]] = true; });
-        var needed = bundledAssets.filter(function (p) { return !replaced[p]; });
+        // Skip replaced AND unreferenced bundled originals — an imported
+        // playbook (e.g. Finance) doesn't use the seed media library, so
+        // bundling it only inflates the zip.
+        var needed = bundledAssets.filter(function (p) {
+          if (replaced[p]) return false;
+          return pbJson.indexOf(p.replace(/^(img|video)\//, '')) !== -1;
+        });
         return Promise.all(needed.map(function (p) {
           return helpers.binFile(p).then(function (blob) {
             // p is already "img/foo.jpg" or "video/foo.mp4" from asset-manifest.json.
@@ -121,16 +146,20 @@
         return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
       })
       .then(function (blob) {
+        var sizeMb = (blob.size / 1048576).toFixed(1);
         var name = (pb.meta && pb.meta.title ? pb.meta.title : 'playbook')
           .toLowerCase().replace(/[^\w]+/g, '-').replace(/^-|-$/g, '') + '-scorm12-remote.zip';
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
-        (cb.toast || function () {})('Exported ' + name + ' (fetches content from ' + contentUrl + ')', 'ok');
-        (cb.done || function () {})();
+        var note = 'Exported ' + name + ' (' + sizeMb + ' MB — fetches content from the cloud at launch)';
+        if (skippedVideos.length) note += '. ' + skippedVideos.length + ' large video(s) (' + skippedVideos.slice(0, 3).join(', ').slice(0, 80) + (skippedVideos.length > 3 || skippedVideos.join('').length > 80 ? '…' : '') + ') stream from the cloud instead of being bundled';
+        (cb.toast || function () {})(note, 'ok');
+        (cb.done || function () {})(blob);
       })
       .catch(function (e) { (cb.fail || function () {})(e); });
+    });
   };
 
   // The playbook JSON only ever stores BARE filenames (e.g. "cover_hero.jpg"

@@ -122,6 +122,69 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // ---- Export-time image compression ----------------------------------------
+  // Re-encode large embedded images for the PACKAGE copy (the author's saved
+  // draft is untouched): downscale to 1600px max, JPEG q0.82 on a white
+  // matte (safe for alpha PNGs). SVG / animated GIF pass through.
+  var IMG_COMPRESS_ABOVE = 700 * 1024;
+  var IMG_MAX_DIM = 1600;
+  function compressImageDataUrl(dataUrl) {
+    return new Promise(function (resolve) {
+      try {
+        var parts = /^data:([^;,]+)?;base64,(.*)$/.exec(dataUrl);
+        if (!parts) return resolve(dataUrl);
+        if (parts[1] === 'image/svg+xml' || parts[1] === 'image/gif') return resolve(dataUrl);
+        var approxBytes = Math.floor(parts[2].length * 3 / 4);
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var w = img.naturalWidth, h = img.naturalHeight;
+            if (approxBytes <= IMG_COMPRESS_ABOVE && Math.max(w, h) <= IMG_MAX_DIM) return resolve(dataUrl);
+            var scale = Math.min(1, IMG_MAX_DIM / Math.max(w, h));
+            var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+            var c = document.createElement('canvas');
+            c.width = cw; c.height = ch;
+            var g = c.getContext('2d');
+            g.fillStyle = '#ffffff'; g.fillRect(0, 0, cw, ch);
+            g.drawImage(img, 0, 0, cw, ch);
+            var out = c.toDataURL('image/jpeg', 0.82);
+            resolve(out.length < dataUrl.length ? out : dataUrl);
+          } catch (e) { resolve(dataUrl); }
+        };
+        img.onerror = function () { resolve(dataUrl); };
+        img.src = dataUrl;
+      } catch (e) { resolve(dataUrl); }
+    });
+  }
+
+  // Returns a Promise of a pb clone whose large img/* data URLs are compressed.
+  function compressImagesForExport(pb) {
+    var clone = JSON.parse(JSON.stringify(pb));
+    var assets = clone.assets || {};
+    var keys = Object.keys(assets).filter(function (k) {
+      return k.indexOf('img/') === 0 && typeof assets[k] === 'string' && assets[k].indexOf('data:') === 0;
+    });
+    var chain = Promise.resolve();
+    keys.forEach(function (k) {
+      chain = chain.then(function () {
+        return compressImageDataUrl(assets[k]).then(function (out) { assets[k] = out; });
+      });
+    });
+    return chain.then(function () { return clone; });
+  }
+
+  // Drop decoded/bundled asset files that the playbook JSON never references
+  // (leftover uploads, or seed library media irrelevant to this playbook) —
+  // the single biggest SCORM size win for imported playbooks.
+  function filterUnreferenced(extraFiles, playbookJson) {
+    var keep = {};
+    Object.keys(extraFiles || {}).forEach(function (path) {
+      var bare = path.replace(/^(img|video)\//, '');
+      if (playbookJson.indexOf(bare) !== -1) keep[path] = extraFiles[path];
+    });
+    return keep;
+  }
+
   // Expose shared helpers so publish.js and export-remote.js can reuse the
   // exact same data-URL decode logic instead of duplicating/rewriting it.
   window.__scormExportHelpers = {
@@ -133,6 +196,9 @@
     buildIndexHtml: buildIndexHtml,
     textFile: textFile,
     binFile: binFile,
+    compressImageDataUrl: compressImageDataUrl,
+    compressImagesForExport: compressImagesForExport,
+    filterUnreferenced: filterUnreferenced,
     BASE: BASE
   };
 
@@ -140,16 +206,22 @@
     cb = cb || {};
     if (!window.JSZip) { (cb.fail || function(){})(new Error('JSZip not loaded')); return; }
     var zip = new JSZip();
-    var ext = externalizeAssets(pb);
 
     var TEXT = ['index.html', 'app.js', 'ask.js', 'playbook-content.js', 'mo-brand.css',
       'scorm_api.js', 'scorm_hook.js', 'imsmanifest.xml',
       'adlcp_rootv1p2.xsd', 'ims_xml.xsd', 'imscp_rootv1p1p2.xsd', 'imsmd_rootv1p2p1.xsd'];
 
-    Promise.all([
-      Promise.all(TEXT.map(function (f) { return textFile(f).then(function (t) { return { f: f, t: t }; }); })),
-      fetch(BASE + 'asset-manifest.json').then(function (r) { return r.json(); })
-    ]).then(function (res) {
+    // Autocompress: large images are re-encoded for the package, and media
+    // the playbook never references is left out of the zip entirely.
+    compressImagesForExport(pb).then(function (pbSlim) {
+      var ext = externalizeAssets(pbSlim);
+      var pbJson = JSON.stringify(ext.playbook);
+      ext.extraFiles = filterUnreferenced(ext.extraFiles, pbJson);
+
+      return Promise.all([
+        Promise.all(TEXT.map(function (f) { return textFile(f).then(function (t) { return { f: f, t: t }; }); })),
+        fetch(BASE + 'asset-manifest.json').then(function (r) { return r.json(); })
+      ]).then(function (res) {
       var texts = {};
       res[0].forEach(function (o) { texts[o.f] = o.t; });
       var bundledAssets = res[1];   // list of img/* and video/*
@@ -173,24 +245,31 @@
         zip.file(path, ext.extraFiles[path].base64, { base64: true });
       });
 
-      // 5. Bundled original assets (skip any that an upload already replaced)
+      // 5. Bundled original assets (skip any that an upload already replaced,
+      //    and any the playbook JSON never references — e.g. the seed media
+      //    library inside an imported Finance playbook)
       var replaced = {};
       Object.keys(ext.uploaded).forEach(function (k) { replaced[ext.uploaded[k]] = true; });
-      var needed = bundledAssets.filter(function (p) { return !replaced[p]; });
+      var needed = bundledAssets.filter(function (p) {
+        if (replaced[p]) return false;
+        return pbJson.indexOf(p.replace(/^(img|video)\//, '')) !== -1;
+      });
 
       return Promise.all(needed.map(function (p) {
         return binFile(p).then(function (blob) { zip.file(p, blob); }).catch(function () {/* skip missing */});
       })).then(function () { return zip; });
+      });
     }).then(function (zip) {
       return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
     }).then(function (blob) {
+      var sizeMb = (blob.size / 1048576).toFixed(1);
       var name = (pb.meta && pb.meta.title ? pb.meta.title : 'playbook')
         .toLowerCase().replace(/[^\w]+/g, '-').replace(/^-|-$/g, '') + '-scorm12.zip';
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
-      (cb.toast || function(){})('Exported ' + name, 'ok');
+      (cb.toast || function(){})('Exported ' + name + ' (' + sizeMb + ' MB)', 'ok');
       (cb.done || function(){})();
     }).catch(function (e) { (cb.fail || function(){})(e); });
   };

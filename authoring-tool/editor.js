@@ -45,7 +45,8 @@
   var ITEM_SYMBOLS = [
     { v: 'policy', l: 'Policy' }, { v: 'guide', l: 'Guideline' },
     { v: 'kit', l: 'Toolkit' }, { v: 'xref', l: 'Cross-reference' },
-    { v: 'image', l: 'Image' }, { v: 'video', l: 'Video' }, { v: 'tabs', l: 'Tabbed group' }
+    { v: 'image', l: 'Image' }, { v: 'video', l: 'Video' }, { v: 'tabs', l: 'Tabbed group' },
+    { v: 'timeline', l: 'Timeline' }, { v: 'checklist', l: 'Checklist' }
   ];
 
   // =========================================================================
@@ -709,18 +710,37 @@
       el('button', { class: 'btn ghost', onclick: function () {
         sec.items.push({ s: 'tabs', name: 'Tabbed group', tabs: [{ label: 'Tab 1', text: '' }] });
         touch(); renderInspector();
-      } }, ['+ Add tabs'])
+      } }, ['+ Add tabs']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        sec.items.push({ s: 'timeline', name: 'Timeline', mode: 'all', steps: [{ label: 'Step 1', text: '', url: '' }] });
+        touch(); renderInspector();
+      } }, ['+ Add timeline']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        sec.items.push({ s: 'checklist', name: 'Checklist', items: [{ label: 'New item', url: '' }] });
+        touch(); renderInspector();
+      } }, ['+ Add checklist'])
     ]));
   }
 
   function addMediaItem(sec, kind) {
-    chooseFile(kind === 'image' ? 'image/*' : 'video/*', function (dataUrl, name) {
-      var virtual = (kind === 'image' ? 'img/' : 'video/') + 'upload_' + Date.now() + '_' + safeName(name);
-      PB.assets[virtual] = dataUrl;
-      sec.items = sec.items || [];
-      sec.items.push({ s: kind, name: name.replace(/\.[a-z0-9]+$/i, ''), url: virtual });
-      if (kind === 'video') probeVideo(dataUrl, name);
-      touch(); renderInspector();
+    chooseFile(kind === 'image' ? 'image/*' : 'video/*', function (dataUrl, name, file) {
+      function finish(dataUrl2, compressed) {
+        if (!dataUrl2) return;
+        var virtual = (kind === 'image' ? 'img/' : 'video/') + 'upload_' + Date.now() + '_' + safeName(name);
+        PB.assets[virtual] = dataUrl2;
+        sec.items = sec.items || [];
+        sec.items.push({ s: kind, name: name.replace(/\.[a-z0-9]+$/i, ''), url: virtual });
+        if (kind === 'video') probeVideo(dataUrl2, name);
+        touch(); renderInspector();
+        if (compressed) toast('Video compressed automatically (720p H.264) so it fits the cloud limit.', 'ok');
+      }
+      if (kind === 'video' && file && file.size >= COMPRESS_ABOVE) {
+        return processVideoUpload(name, file, finish);
+      }
+      if (kind === 'image') {
+        return withCompressedImage(dataUrl, name, function (dataUrl2) { finish(dataUrl2, false); });
+      }
+      finish(dataUrl, false);
     });
   }
 
@@ -746,11 +766,23 @@
     if (it.s === 'image' || it.s === 'video') {
       box.appendChild(el('div', { class: 'note', text: 'File: ' + (it.url || '(none)') }));
       box.appendChild(el('button', { class: 'btn', onclick: function () {
-        chooseFile(it.s === 'image' ? 'image/*' : 'video/*', function (dataUrl, name) {
-          var virtual = (it.s === 'image' ? 'img/' : 'video/') + 'upload_' + Date.now() + '_' + safeName(name);
-          PB.assets[virtual] = dataUrl;
-          it.url = virtual;
-          touch(); renderInspector();
+        chooseFile(it.s === 'image' ? 'image/*' : 'video/*', function (dataUrl, name, file) {
+          function finish(dataUrl2, compressed) {
+            if (!dataUrl2) return;
+            var virtual = (it.s === 'image' ? 'img/' : 'video/') + 'upload_' + Date.now() + '_' + safeName(name);
+            PB.assets[virtual] = dataUrl2;
+            it.url = virtual;
+            if (it.s === 'video') probeVideo(dataUrl2, name);
+            touch(); renderInspector();
+            if (compressed) toast('Video compressed automatically (720p H.264) so it fits the cloud limit.', 'ok');
+          }
+          if (it.s === 'video' && file && file.size >= COMPRESS_ABOVE) {
+            return processVideoUpload(name, file, finish);
+          }
+          if (it.s === 'image') {
+            return withCompressedImage(dataUrl, name, function (dataUrl2) { finish(dataUrl2, false); });
+          }
+          finish(dataUrl, false);
         });
       } }, ['Replace ' + it.s + '…']));
       if (it.s === 'image') renderHotspotEditor(box, it);
@@ -769,6 +801,43 @@
         },
         addLabel: 'Add tab',
         make: function () { return { label: 'Tab ' + (it.tabs.length + 1), text: '' }; }
+      });
+      return;
+    }
+    if (it.s === 'timeline') {
+      box.appendChild(selectField('Display', it.mode === 'reveal' ? 'reveal' : 'all', [
+        { v: 'all', l: 'Show all steps' },
+        { v: 'reveal', l: 'Click to reveal each step' }
+      ], function (v) { it.mode = v; touch(); }));
+      it.steps = it.steps || [];
+      box.appendChild(sectionLabel('Steps (' + it.steps.length + ')'));
+      renderRepeatable(box, it.steps, {
+        nameOf: function (s) { return s.label || '(step)'; },
+        subOf: function (s) { return (s.text || '').slice(0, 60); },
+        open: null,
+        inlineEdit: function (s, wrap) {
+          wrap.appendChild(textField('Step label', s.label || '', function (v) { s.label = v; touch(); }));
+          wrap.appendChild(textField('Step text', s.text || '', function (v) { s.text = v; touch(); }, '', true));
+          wrap.appendChild(linkField('Link (optional)', s.url || '', function (v) { s.url = v; touch(); }));
+        },
+        addLabel: 'Add step',
+        make: function () { return { label: 'Step ' + (it.steps.length + 1), text: '', url: '' }; }
+      });
+      return;
+    }
+    if (it.s === 'checklist') {
+      it.items = it.items || [];
+      box.appendChild(sectionLabel('Checklist items (' + it.items.length + ')'));
+      renderRepeatable(box, it.items, {
+        nameOf: function (c) { return c.label || '(item)'; },
+        subOf: function (c) { return c.url || ''; },
+        open: null,
+        inlineEdit: function (c, wrap) {
+          wrap.appendChild(textField('Item text', c.label || '', function (v) { c.label = v; touch(); }));
+          wrap.appendChild(linkField('Link (optional)', c.url || '', function (v) { c.url = v; touch(); }));
+        },
+        addLabel: 'Add checklist item',
+        make: function () { return { label: 'New item', url: '' }; }
       });
       return;
     }
@@ -990,7 +1059,19 @@
         el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'right'); } }, ['＋ Image right of text']),
         el('button', { class: 'btn ghost', onclick: function () { insertInlineVideo(ta, ''); } }, ['＋ Video under text']),
         el('button', { class: 'btn ghost', onclick: function () { insertInlineVideo(ta, 'left'); } }, ['＋ Video left of text']),
-        el('button', { class: 'btn ghost', onclick: function () { insertInlineVideo(ta, 'right'); } }, ['＋ Video right of text'])
+        el('button', { class: 'btn ghost', onclick: function () { insertInlineVideo(ta, 'right'); } }, ['＋ Video right of text']),
+        el('button', { class: 'btn ghost', onclick: function () {
+          var start = ta.selectionStart, end = ta.selectionEnd;
+          if (start == null || start === end) { toast('Select some text in the field first, then click Link.', 'err'); return; }
+          var url = window.prompt('Link URL (https://…)');
+          if (!url) return;
+          url = url.trim();
+          if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+          var text = ta.value.slice(start, end);
+          ta.value = ta.value.slice(0, start) + '[' + text + '](' + url + ')' + ta.value.slice(end);
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+          toast('Link added to "' + text.slice(0, 30) + (text.length > 30 ? '…' : '') + '"', 'ok');
+        } }, ['＋ Link selected text'])
       ]));
       field.appendChild(paraMediaRow(ta));
     }
@@ -1001,7 +1082,8 @@
   // together at the cursor (block, or floated left/right of the text).
   function insertInlineImage(ta, side) {
     if (!ta) return;
-    chooseImage(function (dataUrl, fileName) {
+    chooseImage(function (dataUrlRaw, fileName) {
+      withCompressedImage(dataUrlRaw, fileName, function (dataUrl) {
       var base = safeName(fileName).replace(/\.[a-z0-9]+$/i, '') || 'img';
       var name = base, i = 2;
       while (PB.assets['img/' + name]) { name = base + '-' + i; i++; }
@@ -1014,6 +1096,7 @@
       ta.value = (before ? before + '\n\n' : '') + marker + (after ? '\n\n' + after : '');
       ta.dispatchEvent(new Event('input', { bubbles: true }));
       toast('Image inserted ' + (side ? 'floating ' + side + ' of the text' : 'as a block under the text') + '.', 'ok');
+      });
     });
   }
 
@@ -1021,12 +1104,14 @@
   // marker land together at the cursor.
   function insertInlineVideo(ta, side) {
     if (!ta) return;
-    chooseFile('video/*', function (dataUrl, fileName) {
-      probeVideo(dataUrl, fileName);
-      var base = safeName(fileName).replace(/\.[a-z0-9]+$/i, '') || 'vid';
-      var name = base, i = 2;
-      while (PB.assets['video/' + name]) { name = base + '-' + i; i++; }
-      PB.assets['video/' + name] = dataUrl;
+    chooseFile('video/*', function (dataUrl, fileName, file) {
+      processVideoUpload(fileName, file, function (dataUrl2, compressed) {
+        if (!dataUrl2) return;
+        probeVideo(dataUrl2, fileName);
+        var base = safeName(fileName).replace(/\.[a-z0-9]+$/i, '') || 'vid';
+        var name = base, i = 2;
+        while (PB.assets['video/' + name]) { name = base + '-' + i; i++; }
+        PB.assets['video/' + name] = dataUrl2;
       var marker = side ? '[vid:' + side + ' ' + name + ']' : '[vid:' + name + ']';
       var v = ta.value;
       var pos = (typeof ta.selectionStart === 'number' && ta.selectionStart >= 0) ? ta.selectionStart : v.length;
@@ -1034,21 +1119,61 @@
       var after = v.slice(pos).replace(/^\s+/, '');
       ta.value = (before ? before + '\n\n' : '') + marker + (after ? '\n\n' + after : '');
       ta.dispatchEvent(new Event('input', { bubbles: true }));
-      toast('Video inserted ' + (side ? 'floating ' + side + ' of the text' : 'as a block under the text') + '.', 'ok');
+      toast('Video inserted ' + (side ? 'floating ' + side + ' of the text' : 'as a block under the text') + '.');
+      if (compressed) toast('Video compressed automatically (720p H.264) so it fits the cloud limit.', 'ok');
+      });
     });
   }
 
-  // Renders upload slots for each [img…] / [vid…] marker found in a paragraph textarea.
-  function paraMediaRow(textarea) {
-    var row = el('div', { class: 'para-media-row', style: 'margin-top:6px;' });
-    if (!textarea) return row;
-    var text = textarea.value || '';
+  // Renders upload slots for each [img…] / [vid…] marker found in a paragraph
+  // textarea — including LEGACY raw <figure class="inline-img">…</figure> HTML
+  // blocks (written by earlier builds), so those images can also be replaced
+  // or deleted here.
+  function paraMediaEntries(text) {
     var markers = [], m;
     var re = /\[(img|vid)(?:\s*:\s*(?:left|right))?(?:\s*[:\s]\s*([A-Za-z0-9_\-.]+))?\s*\]/g;
     while ((m = re.exec(text))) {
       var entry = { kind: m[1], name: m[2] || 'inline' };
       if (!markers.some(function (x) { return x.kind === entry.kind && x.name === entry.name; })) markers.push(entry);
     }
+    var figVid = /<figure\s+class="inline-img[^"]*"\s*>\s*<video[^>]*>\s*<source\s+src="video\/([^"]+)"/g;
+    while ((m = figVid.exec(text))) {
+      if (!markers.some(function (x) { return x.kind === 'vid' && x.name === m[1]; })) markers.push({ kind: 'vid', name: m[1] });
+    }
+    var figImg = /<figure\s+class="inline-img[^"]*"\s*>\s*<img\s+src="img\/([^"]+)"/g;
+    while ((m = figImg.exec(text))) {
+      if (!markers.some(function (x) { return x.kind === 'img' && x.name === m[1]; })) markers.push({ kind: 'img', name: m[1] });
+    }
+    return markers;
+  }
+
+  // Remove every reference to kind/name from a text value: modern markers
+  // ([img:name], [img:left name], …) and legacy raw figure HTML, then tidy
+  // any blank-line buildup left behind.
+  function stripMediaReferences(text, kind, name) {
+    var escName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var out = String(text || '')
+      .replace(new RegExp('\\[' + kind + '(?:\\s*:\\s*(?:left|right))?(?:\\s*[:\\s]\\s*' + escName + ')\\s*\\]', 'g'), '')
+      .replace(new RegExp('<figure\\s+class="inline-img[^"]*"\\s*>\\s*<video[^>]*>\\s*<source\\s+src="video\\/' + escName + '"[^>]*>\\s*(?:<\\/video>)?\\s*(?:<\\/figure>)?', 'g'), '')
+      .replace(new RegExp('<figure\\s+class="inline-img[^"]*"\\s*>\\s*<img\\s+src="img\\/' + escName + '"[^>]*>\\s*(?:<\\/figure>)?', 'g'), '');
+    return out.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  // True if kind/name is still referenced anywhere else in the playbook
+  // (prose, chapter bodies, menu, lifecycle, bare filename fields).
+  function assetReferencedElsewhere(kind, name) {
+    var hay = JSON.stringify([PB.prose || {}, PB.sectionBodies || {}, PB.lifecycleContent || {},
+      PB.menuDesc || {}, PB.chapters || [], PB.lifecycle || []]);
+    var pats = [kind + '/' + name, '[' + kind + ':' + name + ']', '[' + kind + ': ' + name + ']',
+      '[' + kind + ':left ' + name + ']', '[' + kind + ':right ' + name + ']',
+      '[' + kind + ': left ' + name + ']', '[' + kind + ': right ' + name + ']', '"' + name + '"'];
+    return pats.some(function (p) { return hay.indexOf(p) !== -1; });
+  }
+
+  function paraMediaRow(textarea) {
+    var row = el('div', { class: 'para-media-row', style: 'margin-top:6px;' });
+    if (!textarea) return row;
+    var markers = paraMediaEntries(textarea.value || '');
     markers.forEach(function (mk) {
       var key = mk.kind + '/' + mk.name;
       var name = mk.name;
@@ -1058,13 +1183,31 @@
       if (has && !isVid) chip.appendChild(el('div', { class: 'thumb', style: 'width:44px;height:30px;background-size:cover;background-position:center;background-image:url(' + cssUrl(PB.assets[key]) + ')' }));
       chip.appendChild(el('span', { class: 'fn', text: key, style: 'flex:1;' }));
       chip.appendChild(el('button', { class: 'btn', onclick: function () {
-        chooseFile(isVid ? 'video/*' : 'image/*', function (dataUrl, fileName) {
-          PB.assets[key] = dataUrl;
-          if (isVid) probeVideo(dataUrl, fileName);
-          toast((isVid ? 'Video' : 'Image') + ' "' + name + '" set — it now renders where the marker sits in the text.', 'ok');
-          touch(); renderInspector();
+        chooseFile(isVid ? 'video/*' : 'image/*', function (dataUrl, fileName, file) {
+          function place(dataUrl2) {
+            PB.assets[key] = dataUrl2;
+            if (isVid) probeVideo(dataUrl2, fileName);
+            toast((isVid ? 'Video' : 'Image') + ' "' + name + '" set — it now renders where the marker sits in the text.', 'ok');
+            touch(); renderInspector();
+          }
+          if (isVid && file && file.size >= COMPRESS_ABOVE) {
+            return processVideoUpload(fileName, file, function (d2) { if (d2) place(d2); });
+          }
+          if (!isVid) return withCompressedImage(dataUrl, fileName, place);
+          place(dataUrl);
         });
       } }, [has ? 'Replace…' : 'Upload…']));
+      // Delete: strip the reference(s) from this text, and drop the stored
+      // asset entirely when nothing else in the playbook uses it.
+      chip.appendChild(el('button', { class: 'btn ghost', title: 'Remove this ' + (isVid ? 'video' : 'image') + ' from the text' + (has ? ' and delete the stored file if unused elsewhere' : ''), onclick: function () {
+        if (!confirm('Remove "' + name + '" from this text' + (has ? ' (the stored file is deleted too when nothing else uses it)' : '') + '?')) return;
+        textarea.value = stripMediaReferences(textarea.value, mk.kind, name);
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        var stillUsed = has && assetReferencedElsewhere(mk.kind, name);
+        if (has && !stillUsed) delete PB.assets[key];
+        toast('"' + name + '" removed from the text' + (has ? (stillUsed ? ' — the file is kept because other parts of the playbook still use it.' : ' — stored file deleted.') : '.'), 'ok');
+        touch(); renderInspector();
+      } }, ['✕']));
       row.appendChild(chip);
     });
     return row;
@@ -1089,12 +1232,14 @@
     var thumb = el('div', { class: 'thumb', style: url ? 'background-image:url(' + cssUrl(url) + ')' : '' });
     var fn = el('div', { class: 'fn', text: current || '(none)' });
     var pick = el('button', { class: 'btn', onclick: function () { chooseImage(function (dataUrl, name) {
-      var virtual = 'img/upload_' + Date.now() + '_' + safeName(name);
-      PB.assets[virtual] = dataUrl;
-      onPick(virtual.replace(/^img\//, ''));   // renderer prefixes img/
-      thumb.style.backgroundImage = 'url(' + cssUrl(dataUrl) + ')';
-      fn.textContent = virtual;
-      touch();
+      withCompressedImage(dataUrl, name, function (dataUrl2) {
+        var virtual = 'img/upload_' + Date.now() + '_' + safeName(name);
+        PB.assets[virtual] = dataUrl2;
+        onPick(virtual.replace(/^img\//, ''));   // renderer prefixes img/
+        thumb.style.backgroundImage = 'url(' + cssUrl(dataUrl2) + ')';
+        fn.textContent = virtual;
+        touch();
+      });
     }); } }, ['Upload…']);
     return el('div', { class: 'field' }, [
       el('label', {}, [label]),
@@ -1104,13 +1249,17 @@
 
   function videoField(label, current, onPick) {
     var fn = el('div', { class: 'fn', text: current || '(none)' });
-    var pick = el('button', { class: 'btn', onclick: function () { chooseFile('video/*', function (dataUrl, name) {
-      var virtual = 'video/upload_' + Date.now() + '_' + safeName(name);
-      PB.assets[virtual] = dataUrl;
-      onPick(virtual.replace(/^video\//, ''));
-      fn.textContent = virtual;
-      probeVideo(dataUrl, name);
-      touch();
+    var pick = el('button', { class: 'btn', onclick: function () { chooseFile('video/*', function (dataUrl, name, file) {
+      processVideoUpload(name, file, function (dataUrl2, compressed) {
+        if (!dataUrl2) return;
+        var virtual = 'video/upload_' + Date.now() + '_' + safeName(name);
+        PB.assets[virtual] = dataUrl2;
+        onPick(virtual.replace(/^video\//, ''));
+        fn.textContent = virtual;
+        probeVideo(dataUrl2, name);
+        touch();
+        if (compressed) toast('Video compressed automatically (720p H.264) so it fits the cloud limit.', 'ok');
+      });
     }); } }, ['Upload video…']);
     return el('div', { class: 'field' }, [
       el('label', {}, [label]),
@@ -1129,16 +1278,201 @@
   function safeName(n) { return (n || 'file').replace(/[^\w.\-]+/g, '_'); }
 
   function chooseImage(cb) { chooseFile('image/*', cb); }
+
+  // ---- Image compression (canvas — no downloads needed) --------------------
+  // Large images (hi-res photos, PDF figure captures) are downscaled to
+  // 1600px max and re-encoded as JPEG q0.82 on a white matte (safe for alpha
+  // PNGs on the paper-white page). Keeps SCORM packages and cloud content
+  // lean; SVG and animated GIF pass through untouched.
+  var IMG_COMPRESS_ABOVE = 700 * 1024;
+  var IMG_MAX_DIM = 1600;
+  function compressImageDataUrl(dataUrl) {
+    return new Promise(function (resolve) {
+      try {
+        var parts = /^data:([^;,]+)?;base64,(.*)$/.exec(dataUrl);
+        if (!parts) return resolve(dataUrl);
+        if (parts[1] === 'image/svg+xml' || parts[1] === 'image/gif') return resolve(dataUrl);
+        var approxBytes = Math.floor(parts[2].length * 3 / 4);
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var w = img.naturalWidth, h = img.naturalHeight;
+            if (approxBytes <= IMG_COMPRESS_ABOVE && Math.max(w, h) <= IMG_MAX_DIM) return resolve(dataUrl);
+            var scale = Math.min(1, IMG_MAX_DIM / Math.max(w, h));
+            var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+            var c = document.createElement('canvas');
+            c.width = cw; c.height = ch;
+            var g = c.getContext('2d');
+            g.fillStyle = '#ffffff'; g.fillRect(0, 0, cw, ch);
+            g.drawImage(img, 0, 0, cw, ch);
+            var out = c.toDataURL('image/jpeg', 0.82);
+            resolve(out.length < dataUrl.length ? out : dataUrl);
+          } catch (e) { resolve(dataUrl); }
+        };
+        img.onerror = function () { resolve(dataUrl); };
+        img.src = dataUrl;
+      } catch (e) { resolve(dataUrl); }
+    });
+  }
+  function withCompressedImage(dataUrl, name, done) {
+    compressImageDataUrl(dataUrl).then(function (out) {
+      if (out !== dataUrl) toast('Image "' + (name || 'upload') + '" optimised automatically (' + Math.round(dataUrl.length / 1370) + 'KB → ' + Math.round(out.length / 1370) + 'KB).', 'ok');
+      done(out);
+    });
+  }
   function chooseFile(accept, cb) {
     var input = el('input', { type: 'file', accept: accept });
     input.onchange = function () {
       var f = input.files && input.files[0];
       if (!f) return;
       var r = new FileReader();
-      r.onload = function () { cb(r.result, f.name); };
+      r.onload = function () { cb(r.result, f.name, f); };
       r.readAsDataURL(f);
     };
     input.click();
+  }
+
+  // Run a picked video through the compressor when needed, then continue.
+  function processVideoUpload(name, file, done) {
+    if (!file) return done(null, false);
+    busy(true, 'Checking video size…');
+    compressVideoIfNeeded(file, function (ratio, msg) { busy(true, msg); }).then(function (r) {
+      return blobToDataUrl(r.blob).then(function (dataUrl) {
+        busy(false);
+        done(dataUrl, r.compressed);
+      });
+    }).catch(function (e) {
+      busy(false);
+      toast('Video upload failed: ' + ((e && e.message) || e), 'err');
+    });
+  }
+
+  // ---- Video compression (ffmpeg.wasm, loaded lazily from CDN) ------------
+  // Videos over ~15MB are transcoded to 720p H.264 before upload — typically
+  // 60-80% smaller. The cloud limit is 50MB/object; anything still over ~48MB
+  // after compression is rejected with clear guidance.
+  var COMPRESS_ABOVE = 15 * 1024 * 1024;
+  var HARD_LIMIT = 48 * 1024 * 1024;
+  var ffmpegLib = null, ffmpegLoading = null;
+
+  function withTimeout(p, ms, label) {
+    return new Promise(function (resolve, reject) {
+      var t = setTimeout(function () {
+        reject(new Error(label + ' is taking too long — check your connection and try again, or compress the video first (HandBrake, 720p MP4).'));
+      }, ms);
+      p.then(function (v) { clearTimeout(t); resolve(v); }, function (e) { clearTimeout(t); reject(e); });
+    });
+  }
+
+  function loadVideoCompressor() {
+    if (ffmpegLib) return Promise.resolve(ffmpegLib);
+    if (ffmpegLoading) return ffmpegLoading;
+    function addScript(src) {
+      return new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = function () { reject(new Error('Could not load the video compressor (check your connection).')); };
+        document.head.appendChild(s);
+      });
+    }
+    // ffmpeg.wasm 0.12 with the SINGLE-THREADED @ffmpeg/core: the multi-thread
+    // build (@ffmpeg/core-mt, and every 0.11 core) needs SharedArrayBuffer,
+    // which browsers only expose with COOP/COEP response headers — impossible
+    // on GitHub Pages. The 0.12 single-thread core runs everywhere.
+    //
+    // The ~32MB core+wasm are vendored same-origin under authoring-tool/vendor/
+    // (reliable on corporate / mainland-China hotel networks where jsdelivr is
+    // slow or blocked); the CDN copy is kept as a fallback only.
+    // Core/wasm URLs must be ABSOLUTE: ff.load() runs them through import()
+    // inside a module worker, where a bare relative path is treated as an
+    // unresolvable module specifier. new URL() also handles the GitHub Pages
+    // repo subpath automatically.
+    function abs(rel) { return new URL(rel, window.location.href).href; }
+    var LOCAL = {
+      ffmpeg: 'vendor/ffmpeg/ffmpeg.min.js',
+      util: 'vendor/ffmpeg/util.min.js',
+      core: abs('vendor/ffmpeg/ffmpeg-core.js'),
+      wasm: abs('vendor/ffmpeg/ffmpeg-core.wasm'),
+      blob: false
+    };
+    var CDN = {
+      ffmpeg: 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js',
+      util: 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.min.js',
+      core: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js',
+      wasm: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm',
+      blob: true
+    };
+    function attempt(src) {
+      return addScript(src.ffmpeg).then(function () {
+        return addScript(src.util);
+      }).then(function () {
+        var FF = window.FFmpegWASM && window.FFmpegWASM.FFmpeg;
+        var U = window.FFmpegUtil;
+        if (!FF || !U) throw new Error('The video compressor failed to initialise.');
+        var ff = new FF();
+        var urls = src.blob
+          ? Promise.all([U.toBlobURL(src.core, 'text/javascript'), U.toBlobURL(src.wasm, 'application/wasm')])
+          : Promise.resolve([src.core, src.wasm]);
+        return urls.then(function (u) {
+          return withTimeout(ff.load({ coreURL: u[0], wasmURL: u[1] }), 300000, 'Loading the video compressor');
+        }).then(function () { ffmpegLib = ff; return ff; });
+      });
+    }
+    ffmpegLoading = attempt(LOCAL).catch(function () {
+      return attempt(CDN);
+    }).catch(function (e) { ffmpegLoading = null; throw e; });
+    return ffmpegLoading;
+  }
+
+  function compressVideoIfNeeded(file, onProgress) {
+    if (!file || file.size < COMPRESS_ABOVE) return Promise.resolve({ blob: file, compressed: false, originalSize: file ? file.size : 0 });
+    onProgress = onProgress || function () {};
+    onProgress(0.02, 'Loading video compressor…');
+    return loadVideoCompressor().then(function (ffmpeg) {
+      var ratio = 0;
+      try {
+        ffmpeg.on('progress', function (p) {
+          var r = p && typeof p.progress === 'number' ? p.progress : 0;
+          if (r > ratio) {
+            ratio = r;
+            onProgress(0.05 + ratio * 0.85, 'Compressing video… ' + Math.round(ratio * 100) + '%');
+          }
+        });
+      } catch (e) { /* progress is best-effort */ }
+      // Keep the source extension so ffmpeg probes the right demuxer.
+      var ext = (/\.[a-z0-9]+$/i.exec(file.name || '') || ['.mp4'])[0].toLowerCase();
+      var inName = 'input' + ext;
+      return window.FFmpegUtil.fetchFile(file).then(function (buf) {
+        return ffmpeg.writeFile(inName, buf);
+      }).then(function () {
+        return withTimeout(
+          ffmpeg.exec(['-i', inName, '-vf', 'scale=-2:720', '-c:v', 'libx264',
+            '-preset', 'veryfast', '-crf', '26', '-c:a', 'aac', '-b:a', '96k',
+            '-movflags', '+faststart', 'output.mp4']),
+          10 * 60 * 1000, 'Compressing the video');
+      }).then(function () {
+        return ffmpeg.readFile('output.mp4');
+      }).then(function (data) {
+        var blob = new Blob([data], { type: 'video/mp4' });
+        try { ffmpeg.deleteFile(inName); ffmpeg.deleteFile('output.mp4'); } catch (e) {}
+        onProgress(1, 'Compression complete');
+        return { blob: blob, compressed: true, originalSize: file.size };
+      });
+    }).then(function (r) {
+      if (r.blob.size > HARD_LIMIT) {
+        throw new Error('"' + file.name + '" is ' + Math.round(r.blob.size / 1048576) + 'MB even after compression — the cloud limit is 50MB. Please split it or compress it further (HandBrake, 720p).');
+      }
+      return r;
+    });
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise(function (resolve) {
+      var r = new FileReader();
+      r.onload = function () { resolve(r.result); };
+      r.readAsDataURL(blob);
+    });
   }
 
   // Probe a picked video for browser-decodability (iPhone HEVC .mp4/.mov
@@ -1232,6 +1566,63 @@
       toast(removed ? ('Cleaned ' + removed + ' leftover item(s). Review the preview, then Save.') : 'Nothing to clean — no leftover seed content found.', 'ok');
       renderInspector();
     } }, ['Remove leftover P&C content…']));
+
+    // Media optimizer: shrinks every oversized stored asset in one pass —
+    // images via canvas (1600px JPEG), videos via the ffmpeg compressor
+    // (720p H.264). Fixes playbooks whose media was uploaded before
+    // autocompression existed, which also shrinks SCORM exports and the
+    // cloud draft/published copies at the next Save/Publish.
+    box.appendChild(el('button', { class: 'btn', style: 'margin-top:8px;', onclick: function () {
+      var assets = PB.assets || {};
+      var imgKeys = Object.keys(assets).filter(function (k) {
+        return k.indexOf('img/') === 0 && typeof assets[k] === 'string' && assets[k].indexOf('data:') === 0 && assets[k].length > IMG_COMPRESS_ABOVE * 1.4;
+      });
+      var vidKeys = Object.keys(assets).filter(function (k) {
+        return k.indexOf('video/') === 0 && typeof assets[k] === 'string' && assets[k].indexOf('data:') === 0 && assets[k].length > COMPRESS_ABOVE * 1.4;
+      });
+      if (!imgKeys.length && !vidKeys.length) { toast('Nothing to optimise — all stored media is already lean.', 'ok'); return; }
+      if (!window.confirm('Optimise ' + imgKeys.length + ' image(s) and ' + vidKeys.length + ' video(s)? Images are resized to 1600px JPEG; videos are re-compressed to 720p H.264. This cannot be undone — Save afterwards to keep the smaller versions.')) return;
+      var beforeTotal = imgKeys.concat(vidKeys).reduce(function (s, k) { return s + assets[k].length; }, 0);
+      var doneCount = 0, shrunk = 0;
+      function stepImg() {
+        if (!imgKeys.length) return stepVid();
+        var k = imgKeys.shift();
+        busy(true, 'Optimising images… ' + (++doneCount) + ' (' + k.replace(/^img\//, '').slice(0, 40) + ')');
+        compressImageDataUrl(assets[k]).then(function (out) {
+          if (out !== assets[k]) { assets[k] = out; shrunk++; }
+          stepImg();
+        });
+      }
+      function stepVid() {
+        if (!vidKeys.length) return finish();
+        var k = vidKeys.shift();
+        var name = k.replace(/^video\//, '');
+        busy(true, 'Optimising video ' + name.slice(0, 40) + '…');
+        fetch(assets[k]).then(function (r) { return r.blob(); }).then(function (blob) {
+          var file = new File([blob], name, { type: blob.type || 'video/mp4' });
+          return compressVideoIfNeeded(file, function (p, msg) { busy(true, msg); });
+        }).then(function (r) {
+          return blobToDataUrl(r.blob).then(function (d) {
+            if (d.length < assets[k].length) { assets[k] = d; shrunk++; }
+            stepVid();
+          });
+        }).catch(function (e) {
+          busy(false);
+          toast('Video optimisation stopped: ' + ((e && e.message) || e), 'err');
+          finish();
+        });
+      }
+      function finish() {
+        busy(false);
+        var afterTotal = Object.keys(assets).reduce(function (s, k) { return s + (typeof assets[k] === 'string' ? assets[k].length : 0); }, 0);
+        touch();
+        toast(shrunk
+          ? 'Optimised ' + shrunk + ' asset(s) — media is now ~' + Math.round(afterTotal / 1370 / 1024) + 'MB (was ~' + Math.round(beforeTotal / 1370 / 1024) + 'MB). Press Save to keep the smaller versions.'
+          : 'No further savings found.', 'ok');
+        renderInspector();
+      }
+      stepImg();
+    } }, ['Optimise media (shrink images & videos)…']));
 
     box.appendChild(sectionLabel('SCORM manifest inspector'));
     renderManifestInspector(box);
@@ -1702,9 +2093,15 @@
   function busy(on, msg) {
     var ex = $('#busy');
     if (on) {
-      if (ex) return;
+      if (ex) {
+        // Already visible — update the message so long jobs (e.g. video
+        // compression) show live progress instead of a stale first message.
+        var m = ex.querySelector('.busy-msg');
+        if (m && msg) m.textContent = msg;
+        return;
+      }
       document.body.appendChild(el('div', { class: 'busy', id: 'busy' }, [
-        el('div', { class: 'spinner' }), el('div', { text: msg || 'Working…' })
+        el('div', { class: 'spinner' }), el('div', { class: 'busy-msg', text: msg || 'Working…' })
       ]));
     } else if (ex) { ex.remove(); }
   }
