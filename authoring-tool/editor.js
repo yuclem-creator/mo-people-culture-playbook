@@ -251,7 +251,15 @@
     pb.meta = pb.meta || {};
     pb.meta.scorm = pb.meta.scorm || { identifier: 'MO_PLAYBOOK_MANIFEST', title: pb.meta.title || 'Playbook', masteryScore: 100 };
     pb.meta.completion = pb.meta.completion || { mode: 'open-each-chapter', requiredChapterIds: [] };
-    if (!pb.meta.slug) pb.meta.slug = window.PlaybookPublish ? window.PlaybookPublish.slugify(pb.meta.title) : '';
+    var hadSlug = !!pb.meta.slug;
+    if (!hadSlug) pb.meta.slug = window.PlaybookPublish ? window.PlaybookPublish.slugify(pb.meta.title) : '';
+    // Slug ownership: derived slugs are "auto" — they follow the title on
+    // renames — until the author edits the Publish slug field by hand. This
+    // is what stops a renamed playbook keeping a stale slug that collides
+    // with another playbook's lane (a renamed duplicate once saved "Masters
+    // of Craft" over the People & Culture slug).
+    if (pb.meta.slugAuto === undefined) pb.meta.slugAuto = !hadSlug;
+    if (!pb.meta.lastSlug) pb.meta.lastSlug = pb.meta.slug;
     pb.chapters = pb.chapters || [];
     pb.sectionBodies = pb.sectionBodies || {};
     pb.lifecycle = pb.lifecycle || [];
@@ -1577,13 +1585,19 @@
     inspTitle(box, 'Playbook settings', 'Metadata · completion · SCORM');
     var m = PB.meta;
     box.appendChild(sectionLabel('General'));
-    box.appendChild(textField('Playbook title', m.title || '', function (v) { m.title = v; $('#docName').value = v; touch(); }));
+    box.appendChild(textField('Playbook title', m.title || '', function (v) {
+      m.title = v;
+      $('#docName').value = v;
+      if (m.slugAuto && window.PlaybookPublish) m.slug = window.PlaybookPublish.slugify(v);
+      touch();
+    }));
     box.appendChild(textField('Wordmark (cover)', m.wordmark || '', function (v) { m.wordmark = v; touch(); }));
     box.appendChild(textField('Edition line', m.edition || '', function (v) { m.edition = v; touch(); }));
     box.appendChild(textField('Publish slug', m.slug || '', function (v) {
       m.slug = window.PlaybookPublish ? window.PlaybookPublish.slugify(v) : v;
+      m.slugAuto = false; // a hand-set slug is respected from now on
       touch(); renderInspector();
-    }, 'URL-safe id used for the published bucket path. Defaults from the title if left blank.'));
+    }, 'URL-safe id used for the published bucket path. Auto-follows the title unless you edit it here.'));
     box.appendChild(textField('Department (library folder)', m.department || '', function (v) {
       m.department = v.trim(); touch();
     }, 'Folder id from playbooks.json — files this playbook under that department in the Playbook Library.'));
@@ -1804,7 +1818,13 @@
   // Topbar actions: New / Open / Save / Export
   // =========================================================================
   function wireTopbar() {
-    $('#docName').addEventListener('input', function (e) { PB.meta.title = e.target.value; touch(); });
+    $('#docName').addEventListener('input', function (e) {
+      PB.meta.title = e.target.value;
+      // Auto slugs track the title — renaming re-derives the slug, so the
+      // library lane and version history follow the playbook's real name.
+      if (PB.meta.slugAuto && window.PlaybookPublish) PB.meta.slug = window.PlaybookPublish.slugify(e.target.value);
+      touch();
+    });
     $('#btnSettings').addEventListener('click', function () { SEL = { kind: 'settings' }; highlightTree(); renderInspector(); });
     $('#btnNew').addEventListener('click', openNewModal);
     $('#btnOpen').addEventListener('click', doOpen);
@@ -1849,7 +1869,61 @@
   // Supabase dashboard, filed under the playbook's department. The .json
   // download is now just the fallback for when you're not signed in or the
   // version write fails.
+  // Collision guard: the slug decides the cloud lane (drafts/published) and
+  // the version history — it must be UNIQUE to this playbook. Checks the
+  // static library list and the published index; if the current slug belongs
+  // to a different-titled playbook, re-derive from this playbook's title
+  // (suffixing -2, -3… as needed). Remembers the previous slug so the stale
+  // library entry can be cleaned up after the save.
+  function ensureUniqueSlug(next) {
+    if (!PB.meta || !window.PlaybookPublish) return next();
+    var prevSlug = PB.meta.slug || window.PlaybookPublish.slugify(PB.meta.title);
+    var cfg = window.SUPABASE_CONFIG || { url: '', bucket: 'playbook-content' };
+    var idxUrl = cfg.url + '/storage/v1/object/public/' + (cfg.bucket || 'playbook-content') + '/published/index.json';
+    Promise.all([
+      fetch('../playbooks.json?t=' + Date.now()).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }),
+      fetch(idxUrl + '?t=' + Date.now()).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })
+    ]).then(function (res) {
+      // Track ALL titles holding each slug — a slug is taken when ANY holder
+      // has a different title (a stale entry from this playbook's own earlier
+      // save must not mask a collision with someone else's playbook).
+      var taken = {};
+      function note(list) {
+        (list || []).forEach(function (p) {
+          if (!p || !p.slug) return;
+          taken[p.slug] = taken[p.slug] || {};
+          taken[p.slug][p.title || ''] = true;
+        });
+      }
+      note(res[0].playbooks);
+      note(res[1] && res[1].playbooks);
+      function isTaken(s, myTitle) {
+        var titles = taken[s];
+        if (!titles) return false;
+        return Object.keys(titles).some(function (t) { return t !== myTitle; });
+      }
+      var title = PB.meta.title || '';
+      var candidate = prevSlug;
+      if (isTaken(candidate, title)) {
+        candidate = window.PlaybookPublish.slugify(title) || candidate;
+      }
+      var root = candidate, i = 2;
+      while (isTaken(candidate, title)) {
+        candidate = root + '-' + i; i++;
+      }
+      if (candidate !== prevSlug) {
+        PB.meta.lastSlug = prevSlug; // stale entry cleanup after the save
+        PB.meta.slug = candidate;
+        PB.meta.slugAuto = true;
+        touch();
+        toast('Playbook slug corrected to "' + candidate + '" (the previous one belonged to another playbook).', 'ok');
+      }
+      next();
+    }).catch(function () { next(); }); // offline guard: never block a save
+  }
+
   function doSave() {
+    ensureUniqueSlug(function () {
     STORE.save(PB).then(function () {
       markSaved(); STORE.clearAutosnapshot();
       if (!(window.PlaybookPublish && window.PlaybookPublish.getSession && window.PlaybookVersions)) {
@@ -1876,6 +1950,13 @@
             var dept = (PB.meta && PB.meta.department) ? PB.meta.department : null;
             toast('Saved · listed in the Library as Draft' + (dept ? ' · ' + dept : ''), 'ok');
             reportFailedAssets(res);
+            // Slug changed on this save (collision guard)? Remove the stale
+            // library entry the old slug left behind — but only when its title
+            // matches THIS playbook, proving it was ours and not someone else's.
+            if (PB.meta.lastSlug && PB.meta.lastSlug !== PB.meta.slug && window.PlaybookPublish.removeIndexEntry) {
+              window.PlaybookPublish.removeIndexEntry(PB.meta.lastSlug, PB.meta.title, session);
+              PB.meta.lastSlug = PB.meta.slug;
+            }
           }).catch(function (draftErr) {
             var dept = (PB.meta && PB.meta.department) ? PB.meta.department : null;
             toast('Saved to the version dashboard' + (dept ? ' · ' + dept : '') +
@@ -1888,6 +1969,7 @@
         });
       });
     }).catch(function (e) { toast('Save failed: ' + (e.message || e), 'err'); });
+    }); // end ensureUniqueSlug
   }
 
   // ---- New playbook flows -------------------------------------------------
@@ -2343,6 +2425,7 @@
   }
 
   function runPublish(session) {
+    ensureUniqueSlug(function () {
     var slug = window.PlaybookPublish.slugFor(PB);
     if (!PB.meta.slug) { PB.meta.slug = slug; touch(); }
     busy(true, 'Publishing… (0 files)');
@@ -2356,6 +2439,10 @@
       busy(false);
       toast('Published “' + (PB.meta.title || slug) + '” · ' + result.assetCount + ' asset(s) uploaded', 'ok');
       reportFailedAssets(result);
+      if (PB.meta.lastSlug && PB.meta.lastSlug !== PB.meta.slug && window.PlaybookPublish.removeIndexEntry) {
+        window.PlaybookPublish.removeIndexEntry(PB.meta.lastSlug, PB.meta.title, session);
+        PB.meta.lastSlug = PB.meta.slug;
+      }
       showPublishSuccessModal(result);
       recordPublishedVersion(result, session);
     }).catch(function (e) {
@@ -2367,6 +2454,7 @@
       }
       toast('Publish failed: ' + ((e && e.message) || e), 'err');
     });
+    }); // end ensureUniqueSlug
   }
 
   function showPublishSuccessModal(result) {

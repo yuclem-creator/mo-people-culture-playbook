@@ -274,6 +274,32 @@
     return runLane(pb, 'drafts/', opts);
   }
 
+  // Remove a stale library-index entry left behind when a playbook's slug
+  // changes (e.g. after the collision guard re-derives it). Safety: the entry
+  // is only removed when its stored TITLE matches — proving it belonged to
+  // this playbook and not to someone else's lane.
+  function removeIndexEntry(slug, expectedTitle, session) {
+    var sbUpload = uploadClientFor(session);
+    var bucket = cfg.bucket || 'playbook-content';
+    var idxPublicUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/published/index.json';
+    return fetch(idxPublicUrl + '?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : { playbooks: [] }; })
+      .catch(function () { return { playbooks: [] }; })
+      .then(function (idx) {
+        var list = (idx && Array.isArray(idx.playbooks)) ? idx.playbooks : [];
+        var kept = list.filter(function (p) {
+          if (!p || p.slug !== slug) return true;
+          return (p.title || '') !== (expectedTitle || ''); // remove only ours
+        });
+        if (kept.length === list.length) return;
+        var blob = new Blob([JSON.stringify({ playbooks: kept }, null, 2)], { type: 'application/json' });
+        return sbUpload.storage.from(bucket).upload('published/index.json', blob, {
+          upsert: true, contentType: 'application/json'
+        });
+      })
+      .catch(function (e) { console.warn('[publish] stale index entry cleanup skipped:', e && e.message); });
+  }
+
   function runLane(pb, lanePrefix, opts) {
     var onProgress = opts.onProgress || function () {};
     if (!sb) return Promise.reject(new Error('Supabase client is not available (check your connection and reload).'));
@@ -321,6 +347,7 @@
     signOut: signOut,
     onAuthChange: onAuthChange,
     publish: publish,
-    saveDraft: saveDraft
+    saveDraft: saveDraft,
+    removeIndexEntry: removeIndexEntry
   };
 })(window);
