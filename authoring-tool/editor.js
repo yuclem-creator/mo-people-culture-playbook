@@ -1787,9 +1787,10 @@
           return window.PlaybookPublish.saveDraft(PB, {
             session: session,
             onProgress: function () {}
-          }).then(function () {
+          }).then(function (res) {
             var dept = (PB.meta && PB.meta.department) ? PB.meta.department : null;
             toast('Saved · listed in the Library as Draft' + (dept ? ' · ' + dept : ''), 'ok');
+            reportFailedAssets(res);
           }).catch(function (draftErr) {
             var dept = (PB.meta && PB.meta.department) ? PB.meta.department : null;
             toast('Saved to the version dashboard' + (dept ? ' · ' + dept : '') +
@@ -2090,6 +2091,26 @@
     setTimeout(function () { t.classList.remove('show'); setTimeout(function () { t.remove(); }, 250); }, 3200);
   }
 
+  // After a save/publish, surface any media files that could not be uploaded
+  // (collected by publish.js's isolated per-asset uploads). These are the
+  // files that would otherwise show as broken players / torn images in the
+  // playbook and the LMS.
+  function reportFailedAssets(result) {
+    var failed = (result && result.failedAssets) || [];
+    if (!failed.length) return;
+    toast(failed.length + ' media file(s) did NOT upload — they will show as unavailable in the playbook:', 'err');
+    failed.slice(0, 4).forEach(function (f) {
+      setTimeout(function () {
+        toast('✕ ' + f.path.replace(/^(img|video)\//, '').slice(0, 60) + ' — ' + f.reason, 'err');
+      }, 350);
+    });
+    if (failed.length > 4) {
+      setTimeout(function () { toast('…and ' + (failed.length - 4) + ' more. Run Settings → Optimise media, then save again.', 'err'); }, 700);
+    } else {
+      setTimeout(function () { toast('Fix: Settings → Optimise media, then save again.', 'err'); }, 700);
+    }
+  }
+
   function busy(on, msg) {
     var ex = $('#busy');
     if (on) {
@@ -2249,6 +2270,7 @@
     }).then(function (result) {
       busy(false);
       toast('Published “' + (PB.meta.title || slug) + '” · ' + result.assetCount + ' asset(s) uploaded', 'ok');
+      reportFailedAssets(result);
       showPublishSuccessModal(result);
       recordPublishedVersion(result, session);
     }).catch(function (e) {

@@ -148,15 +148,31 @@
 
     onProgress(0, total);
 
+    // Media uploads are ISOLATED per file: one failure (e.g. a video over the
+    // storage limit) never blocks the rest of the package — that was how a
+    // published playbook once ended up with every image and video silently
+    // 404-ing. Failures are collected and reported at the end so the author
+    // can repair (Settings → Optimise media) and save again.
+    var failedAssets = [];
+    var ASSET_HARD_LIMIT = 48 * 1024 * 1024;
+
     var uploadAssets = assetPaths.reduce(function (chain, path) {
       return chain.then(function () {
         var info = ext.extraFiles[path];
         var mime = guessMime(path);
         var blob = base64ToBlob(info.base64, mime);
+        if (blob.size > ASSET_HARD_LIMIT) {
+          failedAssets.push({ path: path, reason: Math.round(blob.size / 1048576) + 'MB — over the 50MB cloud limit. Run Settings → Optimise media, then save again.' });
+          tick();
+          return;
+        }
         return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + path.replace(/^(img|video)\//, ''), blob, {
           upsert: true, contentType: mime
         }).then(function (r) {
-          if (r.error) throw new Error('Asset upload failed (' + path + '): ' + r.error.message);
+          if (r.error) failedAssets.push({ path: path, reason: r.error.message });
+          tick();
+        }, function (e) {
+          failedAssets.push({ path: path, reason: (e && e.message) || String(e) });
           tick();
         });
       });
@@ -167,11 +183,19 @@
         return fetch('preview-engine/' + path).then(function (res) {
           if (!res.ok) { console.warn('[publish] bundled media not found locally, skipped:', path); return; }
           return res.blob().then(function (blob) {
+            if (blob.size > ASSET_HARD_LIMIT) {
+              failedAssets.push({ path: path, reason: Math.round(blob.size / 1048576) + 'MB — over the 50MB cloud limit. Run Settings → Optimise media, then save again.' });
+              tick();
+              return;
+            }
             var mime = guessMime(path);
             return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + path.replace(/^(img|video)\//, ''), blob, {
               upsert: true, contentType: mime
             }).then(function (r) {
-              if (r.error) throw new Error('Asset upload failed (' + path + '): ' + r.error.message);
+              if (r.error) failedAssets.push({ path: path, reason: r.error.message });
+              tick();
+            }, function (e) {
+              failedAssets.push({ path: path, reason: (e && e.message) || String(e) });
               tick();
             });
           });
@@ -200,7 +224,7 @@
         if (r.error) throw new Error('Upload failed (version.json): ' + r.error.message);
         tick();
         var contentUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/' + basePath + 'playbook-data.json';
-        return { slug: slug, contentUrl: contentUrl, assetCount: assetPaths.length, publishedBy: email };
+        return { slug: slug, contentUrl: contentUrl, assetCount: assetPaths.length, publishedBy: email, failedAssets: failedAssets };
       });
   }
 

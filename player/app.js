@@ -2820,6 +2820,35 @@ if (!window.__pbStepsWired) {
   });
 }
 
+// Broken-media rescue: a video or image that fails to load (e.g. its file
+// never finished uploading to the cloud) is replaced with a quiet placeholder
+// instead of a black 0:00 player or a torn-image icon. Media errors do not
+// bubble, so this listens in the capture phase.
+if (!window.__mediaRescueWired) {
+  window.__mediaRescueWired = true;
+  document.addEventListener('error', function (e) {
+    var t = e.target;
+    if (!t || !t.tagName) return;
+    if (t.tagName === 'SOURCE') t = t.closest('video') || t;
+    if (t.tagName === 'VIDEO') {
+      if (t.__rescued) return;
+      t.__rescued = true;
+      var ph = document.createElement('div');
+      ph.className = 'pb-media-missing';
+      ph.textContent = 'This video is not available yet — it may still need to be uploaded by the playbook author.';
+      if (t.parentNode) t.parentNode.replaceChild(ph, t);
+    } else if (t.tagName === 'IMG') {
+      if (t.__rescued) return;
+      t.__rescued = true;
+      var fig = t.closest('figure') || t;
+      var ph2 = document.createElement('div');
+      ph2.className = 'pb-media-missing pb-media-missing--img';
+      ph2.textContent = 'Image unavailable';
+      if (fig.parentNode) fig.parentNode.replaceChild(ph2, fig);
+    }
+  }, true);
+}
+
 // Image lightbox: click any inline content image to enlarge it full-screen;
 // click anywhere, ✕, or Esc to close. Hotspot images are excluded — their
 // pins own the click.
