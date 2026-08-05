@@ -82,6 +82,34 @@
 /* ---- Broken-media placeholder ---- */
 .pb-media-missing { display: flex; align-items: center; justify-content: center; min-height: 150px; margin: 16px 0; padding: 24px; background: var(--paper-tint); border: 1px dashed var(--rule-strong); border-radius: 4px; color: var(--ink-mute); font-size: 13px; line-height: 1.6; text-align: center; }
 .pb-media-missing--img { min-height: 90px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+
+/* ---- Heading scale (Studio typography setting) ---- */
+#reader .opener-title { font-size: clamp(calc(3rem * var(--pb-heading-scale, 1)), calc(6vw * var(--pb-heading-scale, 1)), calc(5rem * var(--pb-heading-scale, 1))) !important; }
+#reader .spread-title { font-size: clamp(calc(2.2rem * var(--pb-heading-scale, 1)), calc(3.2vw * var(--pb-heading-scale, 1)), calc(3rem * var(--pb-heading-scale, 1))) !important; }
+#reader .policy-section-header h3 { font-size: calc(1.35rem * var(--pb-heading-scale, 1)) !important; }
+
+/* ---- Heritage history timeline (year spine + text + image) ---- */
+.pb-history { position: relative; margin: 26px 0 10px; padding-left: 118px; }
+.pb-history::before { content: ""; position: absolute; left: 96px; top: 12px; bottom: 12px; width: 1px; background: var(--gold-hair); }
+.pb-h-event { position: relative; display: flex; gap: 28px; align-items: flex-start; padding: 0 0 44px; }
+.pb-h-event:last-child { padding-bottom: 12px; }
+.pb-h-year { position: absolute; left: -118px; top: 0; width: 96px; text-align: right; padding-right: 26px; }
+.pb-h-year-num { font-family: "MO Exceptional", "Times New Roman", serif; font-size: 34px; line-height: 1; color: var(--ink); }
+.pb-h-dot { position: absolute; right: -7px; top: 10px; width: 13px; height: 13px; border-radius: 50%; background: var(--paper); border: 2px solid var(--gold); }
+.pb-h-body { flex: 1 1 52%; min-width: 0; }
+.pb-h-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-deep); margin: 4px 0 10px; white-space: pre-line; }
+.pb-h-text { font-size: var(--pb-font-size, 15px); line-height: var(--pb-line-height, 1.75); color: var(--ink-body); font-style: italic; }
+.pb-h-text p { margin: 0 0 8px; }
+.pb-h-img { flex: 1 1 44%; margin: 0; max-width: 420px; }
+.pb-h-img img { width: 100%; display: block; box-shadow: var(--shadow-card); cursor: zoom-in; }
+@media (max-width: 900px) {
+  .pb-history { padding-left: 86px; }
+  .pb-history::before { left: 66px; }
+  .pb-h-year { left: -86px; width: 66px; padding-right: 20px; }
+  .pb-h-year-num { font-size: 24px; }
+  .pb-h-event { flex-direction: column; gap: 14px; }
+  .pb-h-img { max-width: 100%; }
+}
 html, body {
   margin: 0; padding: 0;
   background: var(--paper);

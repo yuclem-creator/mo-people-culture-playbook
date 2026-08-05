@@ -304,9 +304,27 @@ function policyItemHTML(it) {
       ${tabs.map((t, i) => `<div class="policy-tab-panel" data-tab-p="${i}" style="display:${i === 0 ? 'block' : 'none'};padding:18px 22px;background:#fff;"><p style="margin:0;font-size:14px;color:#4a443f;line-height:1.7;">${esc(t.text || '')}</p></div>`).join('')}
     </div>`;
   }
-  // Vertical timeline: numbered steps on a rail, show-all or click-to-reveal.
+  // Vertical timeline, two styles: numbered steps on a gold rail (show-all or
+  // click-to-reveal), or a HERITAGE history timeline — year markers on a
+  // spine with eyebrow label, body text and an optional image per event.
   if (it && it.s === 'timeline') {
     const steps = Array.isArray(it.steps) ? it.steps : [];
+    if (it.variant === 'history') {
+      return `<div class="pb-history">
+        ${steps.map(function (s) {
+          return `
+          <div class="pb-h-event">
+            <div class="pb-h-year"><span class="pb-h-dot" aria-hidden="true"></span><span class="pb-h-year-num">${esc(s.label || '')}</span></div>
+            <div class="pb-h-body">
+              ${s.sub ? `<div class="pb-h-eyebrow">${esc(s.sub)}</div>` : ''}
+              <div class="pb-h-text">${inlineRichHTML(s.text || '')}</div>
+              ${s.url ? `<a class="pb-step-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">Open resource →</a>` : ''}
+            </div>
+            ${s.img ? `<figure class="pb-h-img"><img src="img/${esc(s.img)}" alt="${esc(s.label || '')}" loading="lazy" /></figure>` : ''}
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
     const reveal = it.mode === 'reveal';
     return `<div class="pb-timeline" data-mode="${reveal ? 'reveal' : 'all'}">
       ${steps.map(function (s, i) {
@@ -2412,6 +2430,31 @@ function chapterBodyFor(ch) {
 
 // Generic magazine-style chapter page, used for any chapter that has no
 // bespoke (seed) renderer — i.e. everything authored from a blank playbook.
+// Tile-menu chapter: a grid of cards (same visual language as the root
+// Contents page), each linking to another chapter. Authored in the Studio as
+// an ordered list of {title, text, img, target} tiles.
+function tileMenuChapterHTML(ch) {
+  var tiles = ch.tiles || [];
+  var b = chapterBodyFor(ch);
+  var intro = b.intro && b.intro.length ? subIntroHTML({ intro: b.intro }) : '';
+  if (!tiles.length) {
+    return '<div class="spread">' + intro + '<p style="color:var(--ink-mute);max-width:560px;">This menu has no tiles yet — add some in the Studio. Each tile links to a chapter.</p></div>';
+  }
+  return '<div class="spread">' + intro + '<div class="menu-grid">' + tiles.map(function (t, i) {
+    var img = t.img || '';
+    return '<button class="menu-card" data-goto="' + esc(t.target || 'menu') + '">' +
+      (img
+        ? '<div class="menu-card-img"><img src="img/' + esc(img) + '" alt="' + esc(t.title || '') + '" loading="lazy" /></div>'
+        : '<div class="menu-card-img" style="background:linear-gradient(135deg,#F4F1EA 0%,#E7DFCE 100%);"></div>') +
+      '<div class="menu-card-body">' +
+        '<div class="menu-card-eyebrow">' + ('0' + (i + 1)).slice(-2) + '</div>' +
+        '<div class="menu-card-title">' + esc(t.title || 'Tile') + '</div>' +
+        '<div class="menu-card-desc">' + esc(t.text || '') + '</div>' +
+      '</div>' +
+    '</button>';
+  }).join('') + '</div></div>';
+}
+
 function renderGenericChapter(ch, prevId, nextId) {
   const type = chapterTypeOf(ch);
   const prefix = ch.id.replace('ch-', 'ch'); // prose key convention: ch-7 -> ch7
@@ -2420,7 +2463,10 @@ function renderGenericChapter(ch, prevId, nextId) {
   const sub = T(prefix + '.opener.sub', ch.opener || '');
   const eyebrow = T(prefix + '.opener.eyebrow', '');
   const backBtn = '<button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button>';
-  const numeral = ch.numeral ? 'Chapter ' + esc(ch.numeral) : '';
+  // Chapter label on the opener: default "Chapter N"; a custom label replaces
+  // it verbatim (e.g. "Section 3 · Opportunity 5"); hideLabel or a blank
+  // numeral removes it entirely.
+  const numeral = ch.hideLabel ? '' : (ch.labelText ? esc(ch.labelText) : (ch.numeral ? 'Chapter ' + esc(ch.numeral) : ''));
 
   const opener = bg
     ? `<div class="opener">
@@ -2501,6 +2547,8 @@ function renderGenericChapter(ch, prevId, nextId) {
         </div>
       </div>
       ${BELIEFS && BELIEFS.length ? `<div class="spread tight">${beliefsTabsHTML()}</div>` : ''}`;
+  } else if (type === 'tile-menu') {
+    body = tileMenuChapterHTML(ch);
   } else {
     const b = chapterBodyFor(ch);
     body = `<div class="spread">
@@ -3091,6 +3139,19 @@ function updateRailAbout() {
 
 // Body typography follows the playbook's Settings (font size / alignment),
 // applied as CSS variables on the reader root.
+// Lighten (pct > 0) or darken (pct < 0) a #rrggbb colour — used to derive the
+// accent's deep/hair variants when an author overrides the accent colour.
+function shadeHex(hex, pct) {
+  var m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return hex;
+  var n = parseInt(m[1], 16);
+  function adj(c) {
+    c = pct < 0 ? c * (100 + pct) / 100 : c + (255 - c) * pct / 100;
+    return Math.max(0, Math.min(255, Math.round(c)));
+  }
+  return '#' + ((1 << 24) + (adj(n >> 16) << 16) + (adj((n >> 8) & 255) << 8) + adj(n & 255)).toString(16).slice(1);
+}
+
 function applyTypography() {
   var ty = (PB && PB.meta && PB.meta.typography) || {};
   var r = document.getElementById('reader');
@@ -3098,6 +3159,16 @@ function applyTypography() {
   r.style.setProperty('--pb-font-size', (ty.fontSize || 17) + 'px');
   r.style.setProperty('--pb-line-height', ty.lineHeight || 1.8);
   r.style.setProperty('--pb-text-align', ty.align || 'left');
+  r.style.setProperty('--pb-heading-scale', ty.headingScale || 1);
+  // Per-playbook colour overrides: accent, heading ink, body ink. Empty means
+  // "brand default" — the property must be REMOVED (not set empty) so the
+  // :root brand tokens keep applying.
+  function setOrClear(name, val) { if (val) r.style.setProperty(name, val); else r.style.removeProperty(name); }
+  setOrClear('--gold', ty.accent || '');
+  setOrClear('--gold-deep', ty.accent ? shadeHex(ty.accent, -20) : '');
+  setOrClear('--gold-hair', ty.accent ? shadeHex(ty.accent, 25) : '');
+  setOrClear('--ink', ty.headingInk || '');
+  setOrClear('--ink-body', ty.bodyInk || '');
 }
 
 // Masthead bar follows the loaded playbook (wordmark + title + edition),

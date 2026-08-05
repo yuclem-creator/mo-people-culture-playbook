@@ -39,7 +39,8 @@
     'standard':    { label: 'Standard chapter',   prose: null,     body: 'sections' },
     'lifecycle':   { label: 'Lifecycle (wheel)',  prose: null,     body: 'lifecycle' },
     'directory':   { label: 'People directory',   prose: null,     body: 'people' },
-    'sections-list':{label: 'Sections list',      prose: null,     body: 'sections' }
+    'sections-list':{label: 'Sections list',      prose: null,     body: 'sections' },
+    'tile-menu':   { label: 'Tile menu',          prose: null,     body: 'tilemenu' }
   };
 
   var ITEM_SYMBOLS = [
@@ -349,13 +350,14 @@
     return 'ch-' + (max + 1);
   }
   function openAddChapterModal() {
-    var order = ['standard', 'sections-list', 'lifecycle', 'directory', 'letter'];
+    var order = ['standard', 'sections-list', 'lifecycle', 'directory', 'letter', 'tile-menu'];
     var descs = {
       'standard': 'Opener plus numbered policy sections with items.',
       'sections-list': 'A simple list of sections — good for toolkits and resources.',
       'lifecycle': 'Stages with their own policy sections (the wheel model).',
       'directory': 'People grids: senior management, leaders and beliefs.',
-      'letter': 'Foreword-style editorial chapter.'
+      'letter': 'Foreword-style editorial chapter.',
+      'tile-menu': 'A grid of image tiles, each linking to a chapter — like the Contents page, placed anywhere.'
     };
     var body = el('div', {});
     body.appendChild(el('div', { class: 'note', text: 'Pick the kind of chapter to add. It is appended to the outline — use Move up / Move down in the chapter panel to reorder.' }));
@@ -386,6 +388,10 @@
     }
     if (type === 'standard' || type === 'sections-list') {
       PB.sectionBodies[id] = { intro: [], sections: [] };
+    }
+    if (type === 'tile-menu') {
+      PB.sectionBodies[id] = { intro: [], sections: [] };
+      ch.tiles = [{ title: 'First tile', text: '', img: '', target: 'menu' }];
     }
     PB.chapters.push(ch);
     touch(); renderTree();
@@ -503,6 +509,12 @@
     box.appendChild(sectionLabel('Chapter'));
     box.appendChild(textField('Title', ch.label || '', function (v) { ch.label = v; touch(); renderTree(); }, 'Shown in the menu, rail and navigation.'));
     if (ch.id !== 'cover' && ch.id !== 'intro') {
+      // Chapter number / label: the numeral drives the default "Chapter N"
+      // opener label, the rail number and the Contents-tile eyebrow. A custom
+      // label replaces the opener label verbatim; blank numeral hides all.
+      box.appendChild(textField('Chapter number (e.g. 04 or XI — blank hides it)', ch.numeral || '', function (v) { ch.numeral = v.trim(); touch(); renderTree(); }, 'Shown on the opener as “Chapter N”, in the rail and on the Contents tile.'));
+      box.appendChild(textField('Custom chapter label (optional)', ch.labelText || '', function (v) { ch.labelText = v.trim(); touch(); }, 'Replaces “Chapter N” on the opener, e.g. “Section 3 · Opportunity 5”.'));
+      box.appendChild(checkField('Hide the chapter label on the opener', !!ch.hideLabel, function (v) { ch.hideLabel = v; touch(); }));
       box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
       box.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
       var prefix0 = prosePrefixFor(ch, type);
@@ -511,6 +523,33 @@
         box.appendChild(videoField('Opener video (above the text)', PB.prose[prefix0 + '.opener.video'] || '', function (fn) { PB.prose[prefix0 + '.opener.video'] = fn; touch(); }));
         var body0 = bodyForChapter(ch);
         box.appendChild(paraArrayField('Opening paragraph(s)', body0.intro || [], function (arr) { body0.intro = arr; touch(); }));
+      }
+      // Tile-menu chapters: the tiles are the whole point — title, text,
+      // optional image and the chapter each tile links to.
+      if (type === 'tile-menu') {
+        box.appendChild(sectionLabel('Tiles (' + (ch.tiles || []).length + ')'));
+        var tileTargets = [{ v: 'menu', l: 'Contents page' }].concat(PB.chapters.map(function (c) {
+          return { v: c.id, l: (c.numeral ? c.numeral + ' · ' : '') + (c.label || c.id) };
+        }));
+        ch.tiles = ch.tiles || [];
+        renderRepeatable(box, ch.tiles, {
+          nameOf: function (t) { return t.title || '(tile)'; },
+          subOf: function (t) {
+            var tgt = tileTargets.filter(function (x) { return x.v === t.target; })[0];
+            return '→ ' + (tgt ? tgt.l : 'Contents page');
+          },
+          open: null,
+          inlineEdit: function (t, wrap) {
+            wrap.appendChild(textField('Tile title', t.title || '', function (v) { t.title = v; touch(); }));
+            wrap.appendChild(textField('Tile text', t.text || '', function (v) { t.text = v; touch(); }, '', true));
+            wrap.appendChild(imageField('Tile image (optional)', t.img || '', function (fn) { t.img = fn; touch(); }));
+            wrap.appendChild(selectField('Links to', t.target || 'menu', tileTargets, function (v) { t.target = v; touch(); }));
+          },
+          addLabel: 'Add tile',
+          make: function () { return { title: 'New tile', text: '', img: '', target: 'menu' }; }
+        });
+        var bodyT = bodyForChapter(ch);
+        box.appendChild(paraArrayField('Intro paragraph(s) above the tiles (optional)', bodyT.intro || [], function (arr) { bodyT.intro = arr; touch(); }));
       }
     }
     if (ch.id === 'cover') {
@@ -805,23 +844,32 @@
       return;
     }
     if (it.s === 'timeline') {
-      box.appendChild(selectField('Display', it.mode === 'reveal' ? 'reveal' : 'all', [
-        { v: 'all', l: 'Show all steps' },
-        { v: 'reveal', l: 'Click to reveal each step' }
-      ], function (v) { it.mode = v; touch(); }));
+      box.appendChild(selectField('Style', it.variant === 'history' ? 'history' : 'steps', [
+        { v: 'steps', l: 'Numbered steps (gold rail)' },
+        { v: 'history', l: 'History timeline (years + images)' }
+      ], function (v) { it.variant = v; touch(); renderInspector(); }));
+      if (it.variant !== 'history') {
+        box.appendChild(selectField('Display', it.mode === 'reveal' ? 'reveal' : 'all', [
+          { v: 'all', l: 'Show all steps' },
+          { v: 'reveal', l: 'Click to reveal each step' }
+        ], function (v) { it.mode = v; touch(); }));
+      }
       it.steps = it.steps || [];
-      box.appendChild(sectionLabel('Steps (' + it.steps.length + ')'));
+      var hist = it.variant === 'history';
+      box.appendChild(sectionLabel((hist ? 'Events' : 'Steps') + ' (' + it.steps.length + ')'));
       renderRepeatable(box, it.steps, {
-        nameOf: function (s) { return s.label || '(step)'; },
+        nameOf: function (s) { return s.label || (hist ? '(event)' : '(step)'); },
         subOf: function (s) { return (s.text || '').slice(0, 60); },
         open: null,
         inlineEdit: function (s, wrap) {
-          wrap.appendChild(textField('Step label', s.label || '', function (v) { s.label = v; touch(); }));
-          wrap.appendChild(textField('Step text', s.text || '', function (v) { s.text = v; touch(); }, '', true));
+          wrap.appendChild(textField(hist ? 'Year / marker' : 'Step label', s.label || '', function (v) { s.label = v; touch(); }));
+          if (hist) wrap.appendChild(textField('Eyebrow line (optional)', s.sub || '', function (v) { s.sub = v; touch(); }, 'Small caps line under the year, e.g. “The Oriental · Bangkok”.'));
+          wrap.appendChild(textField(hist ? 'Event text' : 'Step text', s.text || '', function (v) { s.text = v; touch(); }, '', true));
+          if (hist) wrap.appendChild(imageField('Event image (optional)', s.img || '', function (fn) { s.img = fn; touch(); }));
           wrap.appendChild(linkField('Link (optional)', s.url || '', function (v) { s.url = v; touch(); }));
         },
-        addLabel: 'Add step',
-        make: function () { return { label: 'Step ' + (it.steps.length + 1), text: '', url: '' }; }
+        addLabel: hist ? 'Add event' : 'Add step',
+        make: function () { return hist ? { label: String(1900 + it.steps.length), sub: '', text: '', img: '', url: '' } : { label: 'Step ' + (it.steps.length + 1), text: '', url: '' }; }
       });
       return;
     }
@@ -1227,6 +1275,34 @@
     ]);
   }
 
+  function checkField(label, checked, onChange) {
+    return el('div', { class: 'field' }, [
+      el('label', { style: 'display:flex;align-items:center;gap:8px;cursor:pointer;' }, [
+        el('input', { type: 'checkbox', checked: checked ? 'checked' : null,
+          onchange: function (e) { onChange(e.target.checked); } }),
+        el('span', { text: label })
+      ])
+    ]);
+  }
+
+  // Colour picker + hex field + Reset (empty = brand default).
+  function colourField(label, value, onChange) {
+    var inp = el('input', { type: 'color', value: value || '#B59060',
+      style: 'width:44px;height:32px;padding:2px;border:1px solid var(--line);background:#fff;cursor:pointer;border-radius:3px;' });
+    var txt = el('input', { type: 'text', value: value || '', placeholder: 'Brand default', style: 'flex:1;' });
+    inp.addEventListener('input', function () { txt.value = inp.value; onChange(inp.value); });
+    txt.addEventListener('input', function () {
+      var v = txt.value.trim();
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) { inp.value = v; onChange(v); }
+      else if (!v) onChange('');
+    });
+    var reset = el('button', { class: 'btn ghost', onclick: function () { txt.value = ''; onChange(''); } }, ['Reset']);
+    return el('div', { class: 'field' }, [
+      el('label', {}, [label]),
+      el('div', { style: 'display:flex;gap:8px;align-items:center;' }, [inp, txt, reset])
+    ]);
+  }
+
   function imageField(label, current, onPick) {
     var url = assetPreview(current);
     var thumb = el('div', { class: 'thumb', style: url ? 'background-image:url(' + cssUrl(url) + ')' : '' });
@@ -1524,9 +1600,18 @@
       { v: '15', l: '15px — compact' }, { v: '16', l: '16px' }, { v: '17', l: '17px — default' },
       { v: '18', l: '18px — large' }, { v: '19', l: '19px — extra large' }
     ], function (v) { m.typography.fontSize = parseInt(v, 10); touch(); }));
+    box.appendChild(selectField('Heading size', String(m.typography.headingScale || 1), [
+      { v: '0.9', l: '90% — smaller' }, { v: '1', l: '100% — default' },
+      { v: '1.15', l: '115% — larger' }, { v: '1.3', l: '130% — extra large' }
+    ], function (v) { m.typography.headingScale = parseFloat(v); touch(); }, 'Scales chapter titles and section headings.'));
     box.appendChild(selectField('Text alignment', m.typography.align || 'left', [
       { v: 'left', l: 'Left' }, { v: 'justify', l: 'Justified' }, { v: 'center', l: 'Centered' }
     ], function (v) { m.typography.align = v; touch(); }));
+
+    box.appendChild(sectionLabel('Colours'));
+    box.appendChild(colourField('Accent colour (gold details, links, timeline)', m.typography.accent || '', function (v) { m.typography.accent = v; touch(); }));
+    box.appendChild(colourField('Heading colour', m.typography.headingInk || '', function (v) { m.typography.headingInk = v; touch(); }));
+    box.appendChild(colourField('Body text colour', m.typography.bodyInk || '', function (v) { m.typography.bodyInk = v; touch(); }));
 
     box.appendChild(sectionLabel('Completion rule'));
     renderCompletion(box);
