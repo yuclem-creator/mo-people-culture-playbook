@@ -275,9 +275,11 @@
   }
 
   // Remove a stale library-index entry left behind when a playbook's slug
-  // changes (e.g. after the collision guard re-derives it). Safety: the entry
-  // is only removed when its stored TITLE matches — proving it belonged to
-  // this playbook and not to someone else's lane.
+  // changes (e.g. after the collision guard re-derives it), AND the orphaned
+  // DRAFT lane at the old slug — otherwise the other playbook that rightfully
+  // owns that slug would load this playbook's draft when opened. Safety: both
+  // the index entry and the draft content are only touched when their stored
+  // TITLE matches — proving they belonged to this playbook.
   function removeIndexEntry(slug, expectedTitle, session) {
     var sbUpload = uploadClientFor(session);
     var bucket = cfg.bucket || 'playbook-content';
@@ -296,6 +298,24 @@
         return sbUpload.storage.from(bucket).upload('published/index.json', blob, {
           upsert: true, contentType: 'application/json'
         });
+      })
+      .then(function () {
+        // Orphaned draft lane at the old slug: remove only if its content is
+        // this playbook's (title match) — never another playbook's draft.
+        var draftUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/drafts/' + slug + '/playbook-data.json';
+        return fetch(draftUrl + '?t=' + Date.now()).then(function (r) {
+          if (!r.ok) return;
+          return r.json().then(function (pb) {
+            var t = pb && pb.meta && pb.meta.title;
+            if (t !== expectedTitle) return;
+            return sbUpload.storage.from(bucket).remove([
+              'drafts/' + slug + '/playbook-data.json',
+              'drafts/' + slug + '/version.json'
+            ]).then(function () {
+              console.log('[publish] removed orphaned draft lane at old slug:', slug);
+            });
+          });
+        }).catch(function () { /* no orphaned draft — fine */ });
       })
       .catch(function (e) { console.warn('[publish] stale index entry cleanup skipped:', e && e.message); });
   }
