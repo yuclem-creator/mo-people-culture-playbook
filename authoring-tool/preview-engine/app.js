@@ -986,6 +986,30 @@ function inlineVideoHTML(text) {
 //   [img:name]  [img:left name]  [img:right name]   inline image (block / floated)
 //   [vid:name]  [vid:left name]  [vid:right name]   inline video
 //   [link text](https://url)                        hyperlink
+// Asset-level hotspots: pins authored against an uploaded image (by asset
+// key) render wherever that image appears inline. Same markup and behaviour
+// as item-level hotspot figures.
+function assetHotspotsFor(kind, name) {
+  var rec = PB && PB.assetHotspots && PB.assetHotspots[kind + '/' + name];
+  return rec && Array.isArray(rec.hotspots) && rec.hotspots.length ? rec : null;
+}
+function hotspotFigureHTML(imgSrc, rec, caption, extraCls) {
+  var hs = rec.hotspots;
+  var showAll = rec.hotspotsMode === 'show';
+  return '<figure class="policy-image hotspot-figure' + (extraCls ? ' ' + extraCls : '') + '" data-hotspots-mode="' + (showAll ? 'show' : 'reveal') + '" style="margin:16px 0;">'
+    + '<div class="hotspot-wrap" style="position:relative;display:inline-block;max-width:100%;">'
+    + '<img src="' + imgSrc + '" alt="' + esc(caption || '') + '" style="max-width:100%;display:block;" />'
+    + hs.map(function (h, i) {
+        return '<button type="button" class="hotspot-dot' + (showAll ? ' on' : '') + '" data-hotspot="' + i + '" style="position:absolute;left:' + h.x + '%;top:' + h.y + '%;">' + (i + 1) + '</button>'
+          + '<div class="hotspot-pop' + (showAll ? ' show' : '') + '" data-hotspot-pop="' + i + '" style="left:' + h.x + '%;top:' + h.y + '%;">'
+          + (h.label ? '<div class="hotspot-pop-title">' + esc(h.label) + '</div>' : '')
+          + '<div class="hotspot-pop-text">' + esc(h.text || '') + '</div></div>';
+      }).join('')
+    + '</div>'
+    + '<div class="hotspot-tools"><button type="button" class="hotspot-toggle">' + (showAll ? 'Click to reveal' : 'Display all hotspots') + '</button>'
+    + (caption ? '<span class="hotspot-cap">' + esc(caption) + '</span>' : '') + '</div></figure>';
+}
+
 // Legacy inline media: earlier editor builds and the PDF importer wrote raw
 // <figure class="inline-img">…</figure> HTML straight into paragraph text,
 // which the escaping pass then displayed as literal text. Normalise those
@@ -1013,9 +1037,12 @@ function inlineRichHTML(text) {
       const side = m[2] || '';
       const name = m[3] || 'inline';
       const cls = side ? 'inline-img inline-img--' + side : 'inline-img';
+      const hsRec = m[1] === 'img' ? assetHotspotsFor('img', name) : null;
       out += m[1] === 'vid'
         ? `<figure class="${cls} inline-vid"><video controls playsinline preload="metadata"><source src="video/${esc(name)}" /></video></figure>`
-        : `<figure class="${cls}"><img src="img/${esc(name)}" alt="" /></figure>`;
+        : (hsRec
+            ? hotspotFigureHTML('img/' + esc(name), hsRec, '', cls)
+            : `<figure class="${cls}"><img src="img/${esc(name)}" alt="" /></figure>`);
     }
     last = m.index + m[0].length;
   }

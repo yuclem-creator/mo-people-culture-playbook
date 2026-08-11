@@ -273,6 +273,7 @@
     pb.ch5 = pb.ch5 || { sections: [] };
     pb.prose = pb.prose || {};
     pb.assets = pb.assets || {};
+    pb.assetHotspots = pb.assetHotspots || {}; // asset-keyed pin sets for inline images
     return pb;
   }
 
@@ -955,7 +956,7 @@
     ]));
 
     renderRepeatable(box, it.hotspots, {
-      nameOf: function (h, i) { return (i + 1) + '. ' + (h.label || '(point)'); },
+      nameOf: function (h) { return h.label || '(point)'; },
       subOf: function (h) { return (h.text || '').slice(0, 60); },
       open: null,
       inlineEdit: function (h, wrap) {
@@ -1226,6 +1227,9 @@
     return pats.some(function (p) { return hay.indexOf(p) !== -1; });
   }
 
+  // Which asset's hotspot editor is expanded in a media chip (inline images).
+  var openHotspotKey = null;
+
   function paraMediaRow(textarea) {
     var row = el('div', { class: 'para-media-row', style: 'margin-top:6px;' });
     if (!textarea) return row;
@@ -1253,6 +1257,13 @@
           place(dataUrl);
         });
       } }, [has ? 'Replace…' : 'Upload…']));
+      // Hotspots: add/edit numbered pins on this image (inline images included).
+      if (!isVid && has) {
+        chip.appendChild(el('button', { class: 'btn ghost', title: 'Add or edit hotspots on this image', onclick: function () {
+          openHotspotKey = openHotspotKey === key ? null : key;
+          renderInspector();
+        } }, [openHotspotKey === key ? 'Hotspots ▴' : 'Hotspots…']));
+      }
       // Delete: strip the reference(s) from this text, and drop the stored
       // asset entirely when nothing else in the playbook uses it.
       chip.appendChild(el('button', { class: 'btn ghost', title: 'Remove this ' + (isVid ? 'video' : 'image') + ' from the text' + (has ? ' and delete the stored file if unused elsewhere' : ''), onclick: function () {
@@ -1260,11 +1271,24 @@
         textarea.value = stripMediaReferences(textarea.value, mk.kind, name);
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
         var stillUsed = has && assetReferencedElsewhere(mk.kind, name);
-        if (has && !stillUsed) delete PB.assets[key];
+        if (has && !stillUsed) {
+          delete PB.assets[key];
+          if (PB.assetHotspots && PB.assetHotspots[key]) delete PB.assetHotspots[key];
+          if (openHotspotKey === key) openHotspotKey = null;
+        }
         toast('"' + name + '" removed from the text' + (has ? (stillUsed ? ' — the file is kept because other parts of the playbook still use it.' : ' — stored file deleted.') : '.'), 'ok');
         touch(); renderInspector();
       } }, ['✕']));
       row.appendChild(chip);
+      // Expanded hotspot editor for this chip's image (asset-keyed record, so
+      // the pins render wherever this image appears inline).
+      if (!isVid && has && openHotspotKey === key) {
+        PB.assetHotspots = PB.assetHotspots || {};
+        var rec = PB.assetHotspots[key] || (PB.assetHotspots[key] = { url: key, hotspots: [], hotspotsMode: 'reveal' });
+        var hsBox = el('div', { style: 'margin:2px 0 10px;padding:10px;border:1px solid var(--line);border-radius:4px;background:#fff;' });
+        renderHotspotEditor(hsBox, rec);
+        row.appendChild(hsBox);
+      }
     });
     return row;
   }
