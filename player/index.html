@@ -770,6 +770,11 @@ body.on-cover .layout { grid-template-columns: 1fr; min-height: 100vh; margin: 0
 body.on-cover .reader { margin: 0; padding: 0; max-width: none; }
 body.on-cover .menu-fab { display: none; }
 
+/* Menu-type pages (root Contents + tile-menu chapters): the left rail
+   duplicates the tiles, so it hides; content spans the full width. */
+body.on-menu .rail { display: none; }
+body.on-menu .layout { grid-template-columns: 1fr; }
+
 @media (max-width: 700px) {
   .cover-inner { padding: 26px 22px 30px; }
   .cover-wordmark { letter-spacing: 0.24em; }

@@ -2673,6 +2673,13 @@ function goTo(chapterId, subId) {
   // moment you continue into the Contents.
   document.body.classList.toggle('on-cover', chapterId === 'cover' || chapterId === 'intro');
 
+  // Menu-type pages (the root Contents page and tile-menu chapters): hide the
+  // left rail — it duplicates the tiles on screen. The rail returns when you
+  // visit a content chapter, and the floating Contents button stays available.
+  var chObj = (typeof CHAPTERS !== 'undefined' ? CHAPTERS : []).filter(function (c) { return c.id === chapterId; })[0];
+  var isMenuPage = chapterId === 'menu' || !!(chObj && chapterTypeOf(chObj) === 'tile-menu');
+  document.body.classList.toggle('on-menu', isMenuPage);
+
   // Manage the intro video: autoplay WITH SOUND when arriving (arriving here is
   // always via a user click on “Explore”, which satisfies browser autoplay
   // policies). If a browser still blocks audio, fall back to muted playback so
