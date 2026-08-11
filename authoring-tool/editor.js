@@ -1239,10 +1239,11 @@
       var name = mk.name;
       var has = !!(PB.assets && PB.assets[key]);
       var isVid = mk.kind === 'vid';
-      var chip = el('div', { style: 'display:flex;align-items:center;gap:10px;margin-top:6px;padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:#FBF9F4;' });
-      if (has && !isVid) chip.appendChild(el('div', { class: 'thumb', style: 'width:44px;height:30px;background-size:cover;background-position:center;background-image:url(' + cssUrl(PB.assets[key]) + ')' }));
-      chip.appendChild(el('span', { class: 'fn', text: key, style: 'flex:1;' }));
-      chip.appendChild(el('button', { class: 'btn', onclick: function () {
+      var chip = el('div', { style: 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:#FBF9F4;' });
+      if (has && !isVid) chip.appendChild(el('div', { class: 'thumb', style: 'flex:none;width:44px;height:30px;background-size:cover;background-position:center;background-image:url(' + cssUrl(PB.assets[key]) + ')' }));
+      // Filename ellipsizes instead of pushing the action buttons off-panel.
+      chip.appendChild(el('span', { class: 'fn', text: key, style: 'flex:1 1 120px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;' }));
+      chip.appendChild(el('button', { class: 'btn', style: 'flex:none;', onclick: function () {
         chooseFile(isVid ? 'video/*' : 'image/*', function (dataUrl, fileName, file) {
           function place(dataUrl2) {
             PB.assets[key] = dataUrl2;
@@ -1259,14 +1260,14 @@
       } }, [has ? 'Replace…' : 'Upload…']));
       // Hotspots: add/edit numbered pins on this image (inline images included).
       if (!isVid && has) {
-        chip.appendChild(el('button', { class: 'btn ghost', title: 'Add or edit hotspots on this image', onclick: function () {
+        chip.appendChild(el('button', { class: 'btn ghost', style: 'flex:none;', title: 'Add or edit hotspots on this image', onclick: function () {
           openHotspotKey = openHotspotKey === key ? null : key;
           renderInspector();
         } }, [openHotspotKey === key ? 'Hotspots ▴' : 'Hotspots…']));
       }
       // Delete: strip the reference(s) from this text, and drop the stored
       // asset entirely when nothing else in the playbook uses it.
-      chip.appendChild(el('button', { class: 'btn ghost', title: 'Remove this ' + (isVid ? 'video' : 'image') + ' from the text' + (has ? ' and delete the stored file if unused elsewhere' : ''), onclick: function () {
+      chip.appendChild(el('button', { class: 'btn ghost', style: 'flex:none;', title: 'Remove this ' + (isVid ? 'video' : 'image') + ' from the text' + (has ? ' and delete the stored file if unused elsewhere' : ''), onclick: function () {
         if (!confirm('Remove "' + name + '" from this text' + (has ? ' (the stored file is deleted too when nothing else uses it)' : '') + '?')) return;
         textarea.value = stripMediaReferences(textarea.value, mk.kind, name);
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
