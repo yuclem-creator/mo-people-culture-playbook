@@ -2400,7 +2400,7 @@ function renderRail() {
       </button>
       ${c.hasSubs || (chapterTypeOf(c) === 'part' && (c.subs || []).length) ? `
         <ul class="rail-sub" data-parent="${c.id}">
-          ${(chapterTypeOf(c) === 'part' ? (c.subs || []) : LIFECYCLE).map(s => `<li><button data-goto="${c.id}" data-sub="${s.id}" data-letter="${s.letter || ''}"><span>${s.label}</span></button></li>`).join('')}
+          ${(chapterTypeOf(c) === 'part' ? (c.subs || []) : LIFECYCLE).map(s => `<li${s.depth === 2 ? ' class="lvl2"' : ''}><button data-goto="${c.id}" data-sub="${s.id}" data-letter="${s.letter || ''}"><span>${s.label}</span></button></li>`).join('')}
         </ul>
       ` : ''}
     </li>
@@ -2506,6 +2506,39 @@ function tileMenuChapterHTML(ch) {
   }).join('') + '</div></div>';
 }
 
+// Card-track diagram: a horizontal track of linked cards on a spine (an
+// opportunity/section map). Each card carries number, eyebrow, title, pill
+// and inner link chips that navigate to chapters. Stacks vertically on
+// mobile (CSS).
+function cardTrackHTML(ch) {
+  var cards = ch.track || [];
+  var b = chapterBodyFor(ch);
+  var intro = b.intro && b.intro.length ? subIntroHTML({ intro: b.intro }) : '';
+  if (!cards.length) {
+    return '<div class="spread">' + intro + '<p style="color:var(--ink-mute);max-width:560px;">No cards yet — add some in the Studio. Each card can link to chapters.</p></div>';
+  }
+  return '<div class="spread">' + intro + '<div class="pb-track">' +
+    cards.map(function (c) {
+      return '<div class="pb-track-card">' +
+        '<span class="pb-track-dot" aria-hidden="true"></span>' +
+        (c.num ? '<div class="pb-track-num">' + esc(c.num) + '</div>' : '') +
+        (c.icon ? '<div class="pb-track-icon">' + esc(c.icon) + '</div>' : '') +
+        (c.label ? '<div class="pb-track-label">' + esc(c.label) + '</div>' : '') +
+        '<div class="pb-track-title">' + esc(c.title || 'Card') + '</div>' +
+        (c.pill ? '<div class="pb-track-pill">' + esc(c.pill) + '</div>' : '') +
+        ((c.links || []).length
+          ? '<div class="pb-track-links">' + c.links.map(function (l) {
+              return '<button type="button" class="pb-track-link" data-goto="' + esc(l.target || 'menu') + '">' +
+                (l.num ? '<span class="pb-track-link-num">' + esc(l.num) + '</span>' : '') +
+                '<span class="pb-track-link-name">' + esc(l.name || 'Link') + '</span>' +
+                '<span class="pb-track-arrow">→</span></button>';
+            }).join('') + '</div>'
+          : '') +
+      '</div>';
+    }).join('') +
+  '</div></div>';
+}
+
 function renderGenericChapter(ch, prevId, nextId) {
   const type = chapterTypeOf(ch);
   const prefix = ch.id.replace('ch-', 'ch'); // prose key convention: ch-7 -> ch7
@@ -2600,6 +2633,8 @@ function renderGenericChapter(ch, prevId, nextId) {
       ${BELIEFS && BELIEFS.length ? `<div class="spread tight">${beliefsTabsHTML()}</div>` : ''}`;
   } else if (type === 'tile-menu') {
     body = tileMenuChapterHTML(ch);
+  } else if (type === 'card-track') {
+    body = '<div class="spread">' + openerVideoHTML + '</div>' + cardTrackHTML(ch);
   } else if (type === 'part') {
     // Part chapter: opener + part intro, then each sub-topic as its own
     // anchored block (rail links scroll to them). No wheel — this is the
@@ -2611,9 +2646,10 @@ function renderGenericChapter(ch, prevId, nextId) {
       ${(pb.sections || []).map(sectionHTML).join('')}
       ${(ch.subs || []).map(function (sub) {
         const sb = chapterBodyFor({ id: sub.id });
+        const isTopic = sub.depth === 2;
         return `
-        <div class="spread tight" id="${esc(sub.id)}">
-          <div class="section-eyebrow"><span class="txt">${esc(sub.label || '')}</span><span class="rule"></span></div>
+        <div class="spread tight part-${isTopic ? 'topic' : 'section'}" id="${esc(sub.id)}">
+          <div class="section-eyebrow${isTopic ? ' part-topic-eyebrow' : ''}"><span class="txt">${esc(sub.label || '')}</span><span class="rule"></span></div>
           ${sb.intro && sb.intro.length ? subIntroHTML({ intro: sb.intro }) : ''}
           ${(sb.sections || []).map(sectionHTML).join('')}
         </div>`;

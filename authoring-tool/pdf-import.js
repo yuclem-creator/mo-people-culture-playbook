@@ -724,6 +724,25 @@
       else s.level = 'chapter';
     });
 
+    // Second pass — split the big unnumbered titles into three roles using
+    // structural lookahead (this is what makes the outline follow the
+    // Contents page):
+    //   'opptitle' — an opportunity name page ("Leverage dynamic steering"),
+    //     always immediately followed by its "N.1 Opportunity summary"
+    //   'section'  — a § divider ("Package pricing / yielding"), followed by
+    //     an opptitle
+    //   'part'     — everything else big ("Opportunities", "Track")
+    function isOppSummary(s2) {
+      return s2 && /^\d+\.1\b/.test(s2.title) && /opportunity summary/i.test(s2.title);
+    }
+    for (var li = 0; li < sections.length; li++) {
+      var ls = sections[li];
+      if (ls.level !== 'part') continue;
+      var n1 = sections[li + 1], n2 = sections[li + 2];
+      if (n1 && isOppSummary(n1)) ls.level = 'opptitle';
+      else if (n1 && n1.level === 'part' && isOppSummary(n2)) ls.level = 'section';
+    }
+
     // Attach images to the section covering their page.
     return sections;
   }
