@@ -94,9 +94,22 @@
   // "STEP 1", "R E S U LT" -> "RESULT". Word boundaries are unrecoverable
   // once pdf.js flattens tracking to plain spaces, so the two formulaic
   // two-word headers in this document family are restored explicitly.
-  var KNOWN_CAPS = { 'SOWE': 'SO WE', 'SOTHAT': 'SO THAT' };
+  var KNOWN_CAPS = { 'SOWE': 'SO WE', 'SOTHAT': 'SO THAT', 'DEEPDIVE': 'DEEP DIVE' };
   function despace(t) {
-    var out = String(t || '').replace(/(?:\b[A-Z] )+[A-Z]{1,3}\b/g, function (m) { return m.replace(/ /g, ''); });
+    var out = String(t || ''), prev;
+    // pure tracked runs: "W H Y" / "S T E P" / "R E S U LT" (repeat for cascades)
+    do {
+      prev = out;
+      out = out.replace(/(?:\b[A-Z] )+[A-Z]{1,4}\b/g, function (m) { return m.replace(/ /g, ''); });
+    } while (out !== prev);
+    // whole-line tracking (v8 splits irregularly: "S ECTI O N", "PA RT 3"):
+    // a single-letter token proves tracking; if every token is then a short
+    // caps chunk (or digit/dot), join the lot.
+    var toks = out.split(' ');
+    if (toks.length > 1 && toks.some(function (tk) { return /^[A-Z]$/.test(tk); }) &&
+        toks.every(function (tk) { return /^[A-Z]{1,4}$/.test(tk) || /^[\d.]$/.test(tk); })) {
+      out = toks.join('');
+    }
     return KNOWN_CAPS[out] || out;
   }
 
@@ -132,7 +145,9 @@
         var l2 = lines[k];
         if (used[k]) { k++; continue; }
         var dy = Math.abs(lastY - l2.y);
-        if (dy > median * 2.6) break;
+        // Row baselines in banded tables sit ~24-26px apart regardless of the
+        // page's text density, so the tolerance has an absolute floor.
+        if (dy > Math.max(median * 2.6, 30)) break;
         var sg = segsMerged(l2);
         if (!sg.length) { k++; continue; }
         var firstCol = Math.abs(sg[0].x - colX[0]) <= 8;
@@ -219,7 +234,25 @@
     }
 
     // --- stage spec-cards: STAGE/OBJECTIVE/TIMING/OWNER label->value pairs --
-    var SPEC = { STAGE: 1, OBJECTIVE: 1, TIMING: 1, OWNER: 1 };
+    var SPEC = { STAGE: 1, OBJECTIVE: 1, TIMING: 1, OWNER: 1, STAGES: 1 };
+    // v8 layout: label and value are INLINE on one line ("OWNER | DoRM") —
+    // two segments, label letter-spaced caps at a fixed left x, value right.
+    for (i = 0; i < lines.length; i++) {
+      if (used[i]) continue;
+      var sg0 = segsMerged(lines[i]);
+      if (sg0.length !== 2 || !SPEC[despace(sg0[0].text)]) continue;
+      var labX = sg0[0].x, valX = sg0[1].x, irows = [];
+      k = i;
+      while (k < lines.length && !used[k]) {
+        var sgi = segsMerged(lines[k]);
+        if (sgi.length !== 2 || !SPEC[despace(sgi[0].text)]) break;
+        if (Math.abs(sgi[0].x - labX) > 8 || Math.abs(sgi[1].x - valX) > 12) break;
+        irows.push([despace(sgi[0].text), sgi[1].text]);
+        used[k] = true; k++;
+      }
+      if (irows.length >= 2) blocks.push({ kind: 'table', y: lines[i].y, head: [], rows: irows });
+    }
+    // v7 layout: label above value (stacked)
     for (i = 0; i < lines.length; i++) {
       if (used[i] || !SPEC[despace(lines[i].text.trim())]) continue;
       var pairs = [];
@@ -350,11 +383,14 @@
     // TOC / cross-reference pages: pages dominated by number-like lines
     // ("0.1", "2.7 – 2.11", "3.2.1 · 3.2.4 · 3.3") contain no content — only
     // entries that would be misdetected as headings.
-    var NUMLINE_RE = /^\d+(\.\d+)*(\s|$|[–—·])/;
+    // TOC-shaped lines: numbered entries, § section markers, or bare numerals.
+    // 40% threshold: the v8 two-column contents page mixes number entries with
+    // § entries and wrapped continuations.
+    var NUMLINE_RE = /^\d+(\.\d+)*(\s|$|[–—·])|^§/;
     var isTocPage = pages.map(function (lines) {
       if (lines.length < 6) return false;
       var numLines = lines.filter(function (l) { return NUMLINE_RE.test(l.text.trim()); }).length;
-      return numLines >= 6 && numLines >= lines.length * 0.5;
+      return numLines >= 6 && numLines >= lines.length * 0.4;
     });
 
     var paragraphs = []; // {text, heading, bullet, page, size, bold}
@@ -407,10 +443,13 @@
         var midLineDigit = /\d/.test(l.text) && !numberedShape;
         var trailingBullet = /[•·]\s*$/.test(l.text);
         var glyphSequence = /^\d[\d\s·.\-–—]*$/.test(l.text) || /^([A-Z]\s+){1,}[A-Z]$/.test(l.text);
+        // A line of 3+ separate column segments is a table row, never a title
+        // ("Location Local partnership Segment choice", "Base rates Tactical…").
+        var multiColumn = segsMerged(l).length >= 3 && !numberedShape;
         // "60-70% offers · 30-40% packages" — but NOT step-numbered titles
         // like "01 Front Office" (digits, space, capitalised word).
         var metricCallout = /^\d/.test(l.text) && !numberedShape && !/^\d+\s+[A-Z]/.test(l.text);
-        var notHeadingShape = sentenceLike || startsLowerOrQuote || midLineDigit || trailingBullet || glyphSequence || metricCallout;
+        var notHeadingShape = sentenceLike || startsLowerOrQuote || midLineDigit || trailingBullet || glyphSequence || metricCallout || multiColumn;
         var isShort = l.text.length > 2 && l.text.length <= 60 && !notHeadingShape;
         // Numbered headings carry no size floor — an SOP's "1. Front Office"
         // sits slightly BELOW body size and is still the section title. The
@@ -625,12 +664,41 @@
   // ("Procedures", "Process", "Steps", "Workflow") and bodiless unnumbered
   // headings into the first substantive section that follows — a wrapper is
   // always viewable together with its first step.
+  function stripNumber(t) {
+    return String(t || '').replace(/^\d+(?:\.\d+)*\.?\s+/, '').trim().toLowerCase();
+  }
+
   function segment(paragraphs) {
+    // Divider/topic duplicates: a display-font divider page ("The
+    // transformative journey") followed by the numbered heading of the same
+    // name ("1.2 The transformative journey") — drop the divider heading and
+    // move any paragraphs between them so they land inside the numbered
+    // section instead of a duplicate section.
+    var folded = [];
+    for (var fi = 0; fi < paragraphs.length; fi++) {
+      var fp = paragraphs[fi];
+      if (fp.heading) {
+        // scan ahead past non-heading paragraphs to the next heading
+        var fj = fi + 1;
+        while (fj < paragraphs.length && !paragraphs[fj].heading) fj++;
+        var nx = paragraphs[fj];
+        if (nx && /^\d+(?:\.\d+)+/.test(nx.text) &&
+            stripNumber(nx.text) === fp.text.trim().toLowerCase()) {
+          // move the in-between paragraphs to just after the numbered heading
+          for (var ck = fi + 1; ck < fj; ck++) paragraphs[ck].__carry = true;
+          paragraphs.splice(fj + 1, 0, ...paragraphs.slice(fi + 1, fj));
+          continue; // divider heading dropped
+        }
+      }
+      if (!fp.__carry) folded.push(fp);
+    }
+    paragraphs = folded;
+
     var sections = [];
     var cur = null;
     paragraphs.forEach(function (p) {
       if (p.heading) {
-        cur = { title: p.text, paragraphs: [], bullets: [], images: [], blocks: [], mixed: [], startPage: p.page };
+        cur = { title: p.text, paragraphs: [], bullets: [], images: [], blocks: [], mixed: [], startPage: p.page, headSize: p.size || 0 };
         sections.push(cur);
         return;
       }
@@ -641,6 +709,19 @@
       if (p.block) { cur.blocks.push(p.block); cur.mixed.push({ block: p.block }); }
       else if (p.bullet) { cur.bullets.push(p.text); cur.mixed.push({ bullet: p.text }); }
       else cur.paragraphs.push(p.text);
+    });
+
+    // Hierarchy levels for the import mapping: part dividers (big display
+    // titles like "Opportunities", "Package design process") vs numbered
+    // topics (3.2) vs sub-sections (3.2.1). Threshold is relative to the
+    // median heading size so plain documents (SOPs) stay flat.
+    var hSizes = sections.map(function (s) { return s.headSize || 0; }).filter(Boolean).sort(function (a, b) { return a - b; });
+    var medH = hSizes.length ? hSizes[Math.floor(hSizes.length / 2)] : 10;
+    sections.forEach(function (s) {
+      if (/^\d+\.\d+\.\d+/.test(s.title)) s.level = 'sub';
+      else if (/^\d+\.\d+/.test(s.title)) s.level = 'topic';
+      else if ((s.headSize || 0) >= medH * 1.35 && s.title.split(/\s+/).length <= 5) s.level = 'part';
+      else s.level = 'chapter';
     });
 
     // Attach images to the section covering their page.
@@ -763,6 +844,8 @@
 
   global.PdfImport = {
     supported: supported,
+    _detectBlocks: detectBlocks,
+    _pageLines: pageLines,
     extractPdf: extractPdf,
     buildResult: buildResult,
     toSectionsBody: toSectionsBody,

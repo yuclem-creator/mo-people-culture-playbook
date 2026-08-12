@@ -2398,9 +2398,9 @@ function renderRail() {
         <span class="rail-numeral">${c.numeral || ''}</span>
         <span>${c.label}</span>
       </button>
-      ${c.hasSubs ? `
+      ${c.hasSubs || (chapterTypeOf(c) === 'part' && (c.subs || []).length) ? `
         <ul class="rail-sub" data-parent="${c.id}">
-          ${LIFECYCLE.map(s => `<li><button data-goto="${c.id}" data-sub="${s.id}" data-letter="${s.letter}"><span>${s.label}</span></button></li>`).join('')}
+          ${(chapterTypeOf(c) === 'part' ? (c.subs || []) : LIFECYCLE).map(s => `<li><button data-goto="${c.id}" data-sub="${s.id}" data-letter="${s.letter || ''}"><span>${s.label}</span></button></li>`).join('')}
         </ul>
       ` : ''}
     </li>
@@ -2600,6 +2600,25 @@ function renderGenericChapter(ch, prevId, nextId) {
       ${BELIEFS && BELIEFS.length ? `<div class="spread tight">${beliefsTabsHTML()}</div>` : ''}`;
   } else if (type === 'tile-menu') {
     body = tileMenuChapterHTML(ch);
+  } else if (type === 'part') {
+    // Part chapter: opener + part intro, then each sub-topic as its own
+    // anchored block (rail links scroll to them). No wheel — this is the
+    // document-hierarchy model, not the lifecycle model.
+    const pb = chapterBodyFor(ch);
+    body = `<div class="spread">
+      ${openerVideoHTML}
+      ${pb.intro && pb.intro.length ? subIntroHTML({ intro: pb.intro }) : ''}
+      ${(pb.sections || []).map(sectionHTML).join('')}
+      ${(ch.subs || []).map(function (sub) {
+        const sb = chapterBodyFor({ id: sub.id });
+        return `
+        <div class="spread tight" id="${esc(sub.id)}">
+          <div class="section-eyebrow"><span class="txt">${esc(sub.label || '')}</span><span class="rule"></span></div>
+          ${sb.intro && sb.intro.length ? subIntroHTML({ intro: sb.intro }) : ''}
+          ${(sb.sections || []).map(sectionHTML).join('')}
+        </div>`;
+      }).join('')}
+    </div>`;
   } else {
     const b = chapterBodyFor(ch);
     body = `<div class="spread">

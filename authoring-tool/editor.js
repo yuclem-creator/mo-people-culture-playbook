@@ -40,7 +40,8 @@
     'lifecycle':   { label: 'Lifecycle (wheel)',  prose: null,     body: 'lifecycle' },
     'directory':   { label: 'People directory',   prose: null,     body: 'people' },
     'sections-list':{label: 'Sections list',      prose: null,     body: 'sections' },
-    'tile-menu':   { label: 'Tile menu',          prose: null,     body: 'tilemenu' }
+    'tile-menu':   { label: 'Tile menu',          prose: null,     body: 'tilemenu' },
+    'part':        { label: 'Part with sub-topics', prose: null,   body: 'part' }
   };
 
   var ITEM_SYMBOLS = [
@@ -290,6 +291,7 @@
       } else {
         c.type = c.hasSubs ? 'lifecycle' : 'standard';
       }
+      if (c.type === 'part') c.subs = c.subs || [];
     });
     return pb;
   }
@@ -335,7 +337,7 @@
     PB.chapters.forEach(function (ch) {
       var type = chapterType(ch);
       var key = 'ch:' + ch.id;
-      var hasKids = type === 'lifecycle';
+      var hasKids = type === 'lifecycle' || (type === 'part' && (ch.subs || []).length);
       var row = treeNode({
         key: key, label: ch.label, num: ch.numeral || '',
         badge: CHAPTER_TYPES[type] ? CHAPTER_TYPES[type].label : type,
@@ -346,10 +348,12 @@
       tree.appendChild(row);
       if (hasKids) {
         var kids = el('div', { class: 'kids' + (collapsed[key] ? ' collapsed' : '') });
-        PB.lifecycle.forEach(function (sub) {
+        var kidList = type === 'lifecycle' ? PB.lifecycle : (ch.subs || []);
+        var kidKind = type === 'lifecycle' ? 'lifecycle-sub' : 'part-sub';
+        kidList.forEach(function (sub) {
           kids.appendChild(treeNode({
             key: 'sub:' + sub.id, label: (sub.letter ? sub.letter + '. ' : '') + sub.label,
-            onSelect: function () { select({ kind: 'lifecycle-sub', id: sub.id, chapter: ch.id, sub: sub.id }); }
+            onSelect: function () { select({ kind: kidKind, id: sub.id, chapter: ch.id, sub: sub.id }); }
           }));
         });
         tree.appendChild(kids);
@@ -376,14 +380,15 @@
     return 'ch-' + (max + 1);
   }
   function openAddChapterModal() {
-    var order = ['standard', 'sections-list', 'lifecycle', 'directory', 'letter', 'tile-menu'];
+    var order = ['standard', 'sections-list', 'lifecycle', 'directory', 'letter', 'tile-menu', 'part'];
     var descs = {
       'standard': 'Opener plus numbered policy sections with items.',
       'sections-list': 'A simple list of sections — good for toolkits and resources.',
       'lifecycle': 'Stages with their own policy sections (the wheel model).',
       'directory': 'People grids: senior management, leaders and beliefs.',
       'letter': 'Foreword-style editorial chapter.',
-      'tile-menu': 'A grid of image tiles, each linking to a chapter — like the Contents page, placed anywhere.'
+      'tile-menu': 'A grid of image tiles, each linking to a chapter — like the Contents page, placed anywhere.',
+      'part': 'A part that groups sub-topics — sub-topics show indented in the outline and rail (e.g. “Introduction” with 1.1–1.7 under it).'
     };
     var body = el('div', {});
     body.appendChild(el('div', { class: 'note', text: 'Pick the kind of chapter to add. It is appended to the outline — use Move up / Move down in the chapter panel to reorder.' }));
@@ -418,6 +423,12 @@
     if (type === 'tile-menu') {
       PB.sectionBodies[id] = { intro: [], sections: [] };
       ch.tiles = [{ title: 'First tile', text: '', img: '', target: 'menu' }];
+    }
+    if (type === 'part') {
+      PB.sectionBodies[id] = { intro: [], sections: [] };
+      var sub0 = { id: uid('top'), label: 'First sub-topic' };
+      ch.subs = [sub0];
+      PB.sectionBodies[sub0.id] = { intro: [], sections: [] };
     }
     PB.chapters.push(ch);
     touch(); renderTree();
@@ -475,7 +486,7 @@
   }
 
   function highlightTree() {
-    var key = SEL.kind === 'lifecycle-sub' ? 'sub:' + SEL.id
+    var key = (SEL.kind === 'lifecycle-sub' || SEL.kind === 'part-sub') ? 'sub:' + SEL.id
       : SEL.kind === 'chapter' ? 'ch:' + SEL.id : null;
     document.querySelectorAll('.tree .node').forEach(function (n) {
       n.classList.toggle('sel', n.getAttribute('data-key') === key);
@@ -503,6 +514,7 @@
     if (SEL.kind === 'settings') return renderSettings(box);
     if (SEL.kind === 'chapter') return renderChapterInspector(box, SEL);
     if (SEL.kind === 'lifecycle-sub') return renderLifecycleSub(box, SEL);
+    if (SEL.kind === 'part-sub') return renderPartSub(box, SEL);
     if (SEL.kind === 'section') return renderSection(box, SEL);
     if (SEL.kind === 'item') return renderItem(box, SEL);
   }
@@ -552,6 +564,23 @@
       }
       // Tile-menu chapters: the tiles are the whole point — title, text,
       // optional image and the chapter each tile links to.
+      if (type === 'part') {
+        ch.subs = ch.subs || [];
+        box.appendChild(sectionLabel('Sub-topics (' + ch.subs.length + ')'));
+        renderRepeatable(box, ch.subs, {
+          nameOf: function (s) { return s.label || '(sub-topic)'; },
+          subOf: function () { return 'Indented under this part'; },
+          open: function (s) { select({ kind: 'part-sub', id: s.id, chapter: ch.id, sub: s.id }); },
+          addLabel: 'Add sub-topic',
+          make: function () {
+            var ns = { id: uid('top'), label: 'New sub-topic' };
+            PB.sectionBodies[ns.id] = { intro: [], sections: [] };
+            return ns;
+          }
+        });
+        var bodyP = bodyForChapter(ch);
+        box.appendChild(paraArrayField('Part intro paragraph(s) (optional)', bodyP.intro || [], function (arr) { bodyP.intro = arr; touch(); }));
+      }
       if (type === 'tile-menu') {
         box.appendChild(sectionLabel('Tiles (' + (ch.tiles || []).length + ')'));
         var tileTargets = [{ v: 'menu', l: 'Contents page' }].concat(PB.chapters.map(function (c) {
@@ -718,6 +747,22 @@
     box.appendChild(paraArrayField('Intro paragraphs', content.intro || [], function (arr) { content.intro = arr; touch(); }));
 
     box.appendChild(sectionLabel('Policy sections'));
+    renderSectionsList(box, content, null, sel.id);
+  }
+
+  // Part sub-topic inspector: label + intro + sections. Bodies live in
+  // sectionBodies[subId] — the same container as chapter bodies.
+  function renderPartSub(box, sel) {
+    var ch = PB.chapters.filter(function (c) { return c.id === sel.chapter; })[0];
+    var sub = (ch && ch.subs || []).filter(function (s) { return s.id === sel.id; })[0];
+    if (!sub) return;
+    var content = PB.sectionBodies[sel.id] || (PB.sectionBodies[sel.id] = { intro: [], sections: [] });
+    inspTitle(box, sub.label || 'Sub-topic', 'Sub-topic of “' + (ch.label || ch.id) + '”',
+      function () { select({ kind: 'chapter', id: sel.chapter, type: 'part', chapter: sel.chapter }); });
+    box.appendChild(sectionLabel('Sub-topic'));
+    box.appendChild(textField('Label', sub.label || '', function (v) { sub.label = v; touch(); renderTree(); }, 'Shown indented under the part, in the outline and the rail.'));
+    box.appendChild(paraArrayField('Intro paragraphs', content.intro || [], function (arr) { content.intro = arr; touch(); }));
+    box.appendChild(sectionLabel('Sections'));
     renderSectionsList(box, content, null, sel.id);
   }
 
@@ -2137,8 +2182,14 @@
     body.appendChild(el('div', { class: 'section-label', text: 'Sections found (' + result.sections.length + ')' }));
     var list = el('ul', { class: 'check-list' });
     result.sections.forEach(function (s) {
-      list.appendChild(el('li', {}, [(s.title || '(untitled)') + ' — ' + s.paragraphs.length + ' paragraph(s)' +
-        (s.bullets.length ? ', ' + s.bullets.length + ' bullet(s)' : '')]));
+      // Show the detected hierarchy: parts flush-left, topics indented,
+      // sub-sections double-indented.
+      var lvl = s.level || 'chapter';
+      var pad = lvl === 'part' ? '' : (lvl === 'topic' ? '\u2003\u21b3 ' : (lvl === 'sub' ? '\u2003\u2003\u21b3 ' : ''));
+      list.appendChild(el('li', { style: pad ? 'padding-left:' + (lvl === 'sub' ? '44px' : '22px') + ';' : '' },
+        [(s.title || '(untitled)') + ' — ' + s.paragraphs.length + ' paragraph(s)' +
+        (s.bullets.length ? ', ' + s.bullets.length + ' bullet(s)' : '') +
+        ((s.blocks || []).length ? ', ' + s.blocks.length + ' table/callout/steps' : '')]));
     });
     body.appendChild(list);
     showModal('Import preview', body, [
@@ -2158,9 +2209,12 @@
     ]);
   }
 
-  // One chapter per document heading: each section becomes its own outline
-  // entry / Contents card (its paragraphs as the opening prose, its bullets
-  // as a closing list). The document title's blurb opens the first chapter.
+  // Document headings map onto the outline respecting the detected hierarchy:
+  // part dividers (big display titles) become PART chapters, numbered topics
+  // (3.2) become indented sub-topics under them, sub-sections (3.2.1) become
+  // sections inside the current topic, and anything unnumbered mid-part rides
+  // along as a sub-topic. Documents with no hierarchy (SOPs) stay flat — one
+  // chapter per heading, exactly as before.
   function insertPdfChaptersSplit(result) {
     PB.sectionBodies = PB.sectionBodies || {};
     var lastId = null;
@@ -2168,29 +2222,64 @@
     // no empty standalone chapter is created; one-chapter mode keeps them
     // visible as grouping headings instead.
     var sections = window.PdfImport.foldWrappers(result.sections);
-    sections.forEach(function (s, i) {
-      var id = nextChapterId();
-      var ch = {
-        id: id,
-        numeral: ROMANS[realChapterCount()] || String(realChapterCount() + 1),
-        label: s.title || (result.chapter.title + ' — part ' + (i + 1)),
-        type: 'standard',
-        opener: ''
-      };
+    var curPart = null, curTopicId = null, first = true;
+
+    function makeBody(s, withBlurb) {
       var bodySec = { intro: [], sections: [] };
-      if (i === 0 && result.chapter.blurb) bodySec.intro.push(result.chapter.blurb);
-      (s.paragraphs || []).forEach(function (p) { bodySec.intro.push(p); });
+      if (withBlurb && result.chapter.blurb) bodySec.intro.push(result.chapter.blurb);
+      (s.paragraphs || []).forEach(function (p2) { bodySec.intro.push(p2); });
       var items = window.PdfImport.sectionItems(s);
-      if (items.length) {
-        bodySec.sections.push({ num: '', title: '', blurb: [], items: items });
+      if (items.length) bodySec.sections.push({ num: '', title: '', blurb: [], items: items });
+      return bodySec;
+    }
+    function newId() { return nextChapterId(); }
+    function numeral() { return ROMANS[realChapterCount()] || String(realChapterCount() + 1); }
+
+    sections.forEach(function (s, i) {
+      var lvl = s.level || 'chapter';
+      if (lvl === 'part') {
+        // Adjacent dividers ("Package design process" + "Streamline package
+        // building process") merge: first title wins, the rest fold into the
+        // part's intro so no content is lost.
+        if (curPart && !(curPart.subs || []).length) {
+          var pb0 = PB.sectionBodies[curPart.id];
+          (s.paragraphs || []).forEach(function (p3) { pb0.intro.push(p3); });
+          var it0 = window.PdfImport.sectionItems(s);
+          if (it0.length) pb0.sections.push({ num: '', title: s.title, blurb: [], items: it0 });
+          return;
+        }
+        var id = newId();
+        var ch = { id: id, numeral: numeral(), label: s.title || 'Part', type: 'part', opener: '', subs: [] };
+        PB.sectionBodies[id] = makeBody(s, first);
+        PB.chapters.push(ch);
+        curPart = ch; curTopicId = null; lastId = id; first = false;
+        return;
       }
-      PB.sectionBodies[id] = bodySec;
-      PB.chapters.push(ch);
-      lastId = id;
+      if (lvl === 'topic' || (lvl === 'chapter' && curPart)) {
+        if (curPart) {
+          var sub = { id: uid('top'), label: s.title || 'Sub-topic' };
+          curPart.subs.push(sub);
+          PB.sectionBodies[sub.id] = makeBody(s, first);
+          curTopicId = sub.id; lastId = curPart.id; first = false;
+          return;
+        }
+        // no active part: a topic with no divider becomes a flat chapter
+      }
+      if (lvl === 'sub' && curTopicId) {
+        var tb = PB.sectionBodies[curTopicId];
+        tb.sections.push({ num: '', title: s.title, blurb: s.paragraphs || [], items: window.PdfImport.sectionItems(s) });
+        return;
+      }
+      var id2 = newId();
+      var ch2 = { id: id2, numeral: numeral(), label: s.title || (result.chapter.title + ' — part ' + (i + 1)), type: 'standard', opener: '' };
+      PB.sectionBodies[id2] = makeBody(s, first);
+      PB.chapters.push(ch2);
+      lastId = id2; first = false;
     });
     touch(); renderTree();
     if (lastId) select({ kind: 'chapter', id: lastId, type: 'standard', chapter: lastId });
-    toast(sections.length + ' chapters added from PDF — review and edit in the inspector.', 'ok');
+    var partCount = PB.chapters.filter(function (c) { return c.type === 'part'; }).length;
+    toast(sections.length + ' section(s) imported' + (partCount ? ' — parts and sub-topics are indented in the outline' : ' — one chapter per heading') + '. Review and edit in the inspector.', 'ok');
   }
 
   function insertPdfChapter(result) {
