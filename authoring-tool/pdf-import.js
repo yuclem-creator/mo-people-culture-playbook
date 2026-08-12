@@ -51,18 +51,228 @@
       var y = Math.round(it.transform[5] / 2) * 2;
       var size = Math.abs(it.transform[3]) || it.height || 10;
       var key = String(y);
-      if (!lines[key]) lines[key] = { y: y, size: 0, bold: false, parts: [] };
+      if (!lines[key]) lines[key] = { y: y, size: 0, bold: false, parts: [], segs: [] };
       lines[key].size = Math.max(lines[key].size, size);
       if (/bold|black|semibold|demi/i.test(it.fontName || '')) lines[key].bold = true;
       lines[key].parts.push(it.str);
+      // Keep per-item geometry for table/step/callout detection (x = left edge).
+      lines[key].segs.push({ x: it.transform[4] || 0, w: it.width || 0, text: it.str });
     });
     return Object.keys(lines).map(function (k) {
       var l = lines[k];
-      return { y: l.y, size: l.size, bold: l.bold, text: l.parts.join(' ').replace(/\s+/g, ' ').trim() };
+      l.segs.sort(function (a, b) { return a.x - b.x; });
+      return { y: l.y, size: l.size, bold: l.bold, text: l.parts.join(' ').replace(/\s+/g, ' ').trim(), segs: l.segs };
     }).sort(function (a, b) { return b.y - a.y; }); // pdf y grows upward
   }
 
   var BULLET_RE = /^[\u2022\u00b7\u25aa\u25e6\u2023\-\u2013\u2014*]\s+/;
+
+  /* ---- 1b. structured blocks (tables / circled steps / callouts) ----------
+     Works on per-line geometry (segs carry x + width per text item) so
+     table-heavy pages (the Commercial playbooks) become real structured
+     elements instead of flattened text. Emits blocks in page order and marks
+     consumed lines so the paragraph pass skips them. */
+
+  function segsMerged(l) {
+    // merge segments separated by a small gap (same cell, wrapped words)
+    var s = (l.segs || []).slice().sort(function (a, b) { return a.x - b.x; });
+    var out = [];
+    for (var i = 0; i < s.length; i++) {
+      var prev = out[out.length - 1];
+      if (prev && s[i].x - (prev.x + prev.w) < 10) {
+        prev.text += ' ' + s[i].text;
+        prev.w = s[i].x + s[i].w - prev.x;
+      } else out.push({ x: s[i].x, w: s[i].w, text: s[i].text.trim() });
+    }
+    return out.filter(function (x) { return x.text; });
+  }
+  function isAllCapsLine(t) {
+    var letters = String(t).replace(/[^A-Za-z]/g, '');
+    return letters.length >= 2 && !/[a-z]/.test(letters);
+  }
+  // Collapse letter-spaced tracked caps: "W H Y" -> "WHY", "S T E P 1" ->
+  // "STEP 1", "R E S U LT" -> "RESULT". Word boundaries are unrecoverable
+  // once pdf.js flattens tracking to plain spaces, so the two formulaic
+  // two-word headers in this document family are restored explicitly.
+  var KNOWN_CAPS = { 'SOWE': 'SO WE', 'SOTHAT': 'SO THAT' };
+  function despace(t) {
+    var out = String(t || '').replace(/(?:\b[A-Z] )+[A-Z]{1,3}\b/g, function (m) { return m.replace(/ /g, ''); });
+    return KNOWN_CAPS[out] || out;
+  }
+
+  function detectBlocks(lines, median) {
+    var used = new Array(lines.length).fill(false);
+    var blocks = [];
+    var i, k;
+
+    // --- tables: an ALL-CAPS multi-column header line + >=2 aligned rows ---
+    for (i = 0; i < lines.length; i++) {
+      if (used[i]) continue;
+      var headSegs = segsMerged(lines[i]);
+      if (headSegs.length < 2 || !headSegs.every(function (s) { return isAllCapsLine(s.text); })) continue;
+      var colX = headSegs.map(function (s) { return s.x; });
+      var headText = headSegs.map(function (s) { return s.text; });
+      // Wrapped header cell just ABOVE the header line (a cell wrapped
+      // mid-word, e.g. "CANCELLATIO" over "N") merges into that column.
+      if (i > 0 && !used[i - 1]) {
+        var upSegs = segsMerged(lines[i - 1]);
+        if (upSegs.length === 1 && isAllCapsLine(upSegs[0].text) && Math.abs(lines[i - 1].y - lines[i].y) <= median * 2.2) {
+          for (var hc = 1; hc < colX.length; hc++) {
+            if (Math.abs(upSegs[0].x - colX[hc]) <= 8) {
+              headText[hc] = upSegs[0].text + headText[hc];
+              used[i - 1] = true;
+              break;
+            }
+          }
+        }
+      }
+      var rows = [], lastY = lines[i].y;
+      k = i + 1;
+      while (k < lines.length) {
+        var l2 = lines[k];
+        if (used[k]) { k++; continue; }
+        var dy = Math.abs(lastY - l2.y);
+        if (dy > median * 2.6) break;
+        var sg = segsMerged(l2);
+        if (!sg.length) { k++; continue; }
+        var firstCol = Math.abs(sg[0].x - colX[0]) <= 8;
+        var alignsBeyond = sg.some(function (s) {
+          return colX.some(function (cx, ci) { return ci > 0 && Math.abs(s.x - cx) <= 8; });
+        });
+        if (!alignsBeyond && !(firstCol && sg.length > 1)) break;
+        if (sg.length === 1 && !firstCol && rows.length) {
+          // continuation of the previous row's cell (wrapped cell text)
+          var ci2 = -1;
+          for (var c2 = colX.length - 1; c2 >= 1; c2--) { if (sg[0].x >= colX[c2] - 8) { ci2 = c2; break; } }
+          if (ci2 > 0) {
+            var last = rows[rows.length - 1];
+            last.cells[ci2] = (last.cells[ci2] ? last.cells[ci2] + ' ' : '') + sg[0].text;
+            used[k] = true; lastY = l2.y; k++; continue;
+          }
+        }
+        var cells = colX.map(function () { return ''; });
+        sg.forEach(function (s) {
+          var ci = 0;
+          for (var c = colX.length - 1; c >= 0; c--) { if (s.x >= colX[c] - 8) { ci = c; break; } }
+          cells[ci] = cells[ci] ? cells[ci] + ' ' + s.text : s.text;
+        });
+        rows.push({ cells: cells });
+        used[k] = true; lastY = l2.y; k++;
+      }
+      if (rows.length >= 2) {
+        used[i] = true;
+        blocks.push({ kind: 'table', y: lines[i].y,
+          head: headText.map(despace),
+          rows: rows.map(function (r) { return r.cells.map(despace); }) });
+      }
+    }
+
+    // --- circled-number steps: bare digit line, text indented to its right -
+    for (i = 0; i < lines.length; i++) {
+      if (used[i]) continue;
+      if (!/^\d{1,2}$/.test(lines[i].text.trim())) continue;
+      var numX = (lines[i].segs && lines[i].segs.length) ? lines[i].segs[0].x : 0;
+      var steps = [];
+      k = i;
+      while (k < lines.length) {
+        var ln = lines[k];
+        if (used[k]) { k++; continue; }
+        var tt = ln.text.trim();
+        if (!/^\d{1,2}$/.test(tt)) { k++; continue; }
+        var nx = (ln.segs && ln.segs.length) ? ln.segs[0].x : 0;
+        if (Math.abs(nx - numX) > 20) break; // a different column of numbers
+        var parts = [], m = k + 1, lastStepY = ln.y;
+        // backward: the number circle is vertically centred on its text, so
+        // the step's first line can sit just above the number
+        var m0 = k - 1;
+        while (m0 >= 0 && !used[m0]) {
+          var lv0 = lines[m0];
+          if (/^\d{1,2}$/.test(lv0.text.trim())) break;
+          var vx0 = (lv0.segs && lv0.segs.length) ? lv0.segs[0].x : 0;
+          if (vx0 < numX + 15) break;
+          if (Math.abs(lastStepY - lv0.y) > median * 1.3) break;
+          if (lv0.size > median * 1.18) break;
+          parts.unshift(lv0.text);
+          used[m0] = true;
+          lastStepY = lv0.y; m0--;
+        }
+        while (m < lines.length && !used[m]) {
+          var lv = lines[m];
+          if (/^\d{1,2}$/.test(lv.text.trim())) break;
+          var vx = (lv.segs && lv.segs.length) ? lv.segs[0].x : 0;
+          if (vx < numX + 15) break;                       // left column (spec card) — not ours
+          if (Math.abs(lastStepY - lv.y) > median * 2.4) break;
+          if (lv.size > median * 1.18) break;              // a heading
+          parts.push(lv.text);
+          lastStepY = lv.y; m++;
+        }
+        if (parts.length) {
+          used[k] = true;
+          for (var u = k + 1; u < m; u++) used[u] = true;
+          steps.push(despace(parts.join(' ')));
+          k = m;
+        } else break;
+      }
+      if (steps.length >= 2) {
+        blocks.push({ kind: 'steps', y: lines[i].y, steps: steps });
+      }
+    }
+
+    // --- stage spec-cards: STAGE/OBJECTIVE/TIMING/OWNER label->value pairs --
+    var SPEC = { STAGE: 1, OBJECTIVE: 1, TIMING: 1, OWNER: 1 };
+    for (i = 0; i < lines.length; i++) {
+      if (used[i] || !SPEC[despace(lines[i].text.trim())]) continue;
+      var pairs = [];
+      k = i;
+      while (k < lines.length && !used[k] && SPEC[despace(lines[k].text.trim())]) {
+        var lab = despace(lines[k].text.trim());
+        var val = [], m2 = k + 1, lastPairY = lines[k].y;
+        while (m2 < lines.length && !used[m2]) {
+          var lv2 = lines[m2];
+          if (/^\d{1,2}$/.test(lv2.text.trim())) break;   // a circled step number — not ours
+          if (SPEC[despace(lv2.text.trim())] || isAllCapsLine(lv2.text.trim())) break;
+          if (Math.abs(lastPairY - lv2.y) > median * 2.2) break;
+          val.push(lv2.text);
+          lastPairY = lv2.y; m2++;
+        }
+        if (!val.length) break;
+        used[k] = true;
+        for (var u2 = k + 1; u2 < m2; u2++) used[u2] = true;
+        pairs.push([lab, val.join(' ')]);
+        k = m2;
+      }
+      if (pairs.length >= 2) blocks.push({ kind: 'table', y: lines[i].y, head: [], rows: pairs.map(function (pr) { return [pr[0], despace(pr[1])]; }) });
+    }
+
+    // --- callouts: an ALL-CAPS label line + body ----------------------------
+    for (i = 0; i < lines.length; i++) {
+      if (used[i]) continue;
+      var lt = lines[i].text.trim();
+      if (!isAllCapsLine(lt) || lt.length > 70 || /[.!?]$/.test(lt)) continue;
+      if (/^DEEP DIVE/.test(lt)) continue; // cross-reference pills stay inline
+      var body = [];
+      k = i + 1;
+      var lastCY = lines[i].y;
+      while (k < lines.length && !used[k]) {
+        var lb = lines[k];
+        if (/^\d{1,2}$/.test(lb.text.trim())) break;      // a circled step number
+        if (Math.abs(lastCY - lb.y) > median * 2.2) break;
+        if (isAllCapsLine(lb.text.trim()) && lb.text.trim().length <= 70) break;
+        if (lb.size < lines[i].size - 1) break;
+        body.push(lb.text);
+        lastCY = lb.y; k++;
+      }
+      if (!body.length) continue;
+      used[i] = true;
+      for (var u3 = i + 1; u3 < k; u3++) used[u3] = true;
+      var tone = /CONTROL|DO NOT|NOT REPLICATE|CONSTRAINT|WARNING|CAUTION|IMPORTANT/.test(lt) ? 'warning' : 'note';
+      blocks.push({ kind: 'callout', y: lines[i].y, label: despace(lt), text: despace(body.join(' ')), tone: tone });
+    }
+
+    blocks.sort(function (a, b) { return b.y - a.y; }); // same top-first order as lines
+    return { used: used, blocks: blocks };
+  }
+
 
   function extractPdf(file) {
     if (!supported()) return Promise.reject(new Error('PDF engine failed to load (pdf.js). Check your connection and reload.'));
@@ -154,7 +364,17 @@
     for (var p = 0; p < pages.length && !truncated; p++) {
       if (isTocPage[p]) continue;
       var lines = pages[p];
+      // Structured blocks (tables / circled steps / callouts) are lifted out
+      // first; their lines are skipped by the paragraph pass and the blocks
+      // are interleaved back into the stream in page order.
+      var blk = detectBlocks(lines, median);
+      var blkPtr = 0;
       for (var i = 0; i < lines.length; i++) {
+        while (blkPtr < blk.blocks.length && blk.blocks[blkPtr].y > lines[i].y) {
+          paragraphs.push({ page: p, y: blk.blocks[blkPtr].y, block: blk.blocks[blkPtr] });
+          blkPtr++;
+        }
+        if (blk.used[i]) continue;
         var l = lines[i];
         var n = normLine(l.text);
         if (counts[n] >= threshold) continue; // repeated masthead/footer line
@@ -236,6 +456,10 @@
         }
         charCount += text.length;
         if (charCount > MAX_CHARS) { truncated = true; break; }
+      }
+      while (blkPtr < blk.blocks.length) {
+        paragraphs.push({ page: p, y: blk.blocks[blkPtr].y, block: blk.blocks[blkPtr] });
+        blkPtr++;
       }
     }
 
@@ -406,15 +630,16 @@
     var cur = null;
     paragraphs.forEach(function (p) {
       if (p.heading) {
-        cur = { title: p.text, paragraphs: [], bullets: [], images: [], startPage: p.page };
+        cur = { title: p.text, paragraphs: [], bullets: [], images: [], blocks: [], mixed: [], startPage: p.page };
         sections.push(cur);
         return;
       }
       if (!cur) { // content before the first heading (rare after boilerplate strip)
-        cur = { title: '', paragraphs: [], bullets: [], images: [], startPage: p.page };
+        cur = { title: '', paragraphs: [], bullets: [], images: [], blocks: [], mixed: [], startPage: p.page };
         sections.push(cur);
       }
-      if (p.bullet) cur.bullets.push(p.text);
+      if (p.block) { cur.blocks.push(p.block); cur.mixed.push({ block: p.block }); }
+      else if (p.bullet) { cur.bullets.push(p.text); cur.mixed.push({ bullet: p.text }); }
       else cur.paragraphs.push(p.text);
     });
 
@@ -490,8 +715,32 @@
 
   /* ---- 4. schema mapping (shared by both insert modes) ------------------------- */
 
+  function blockToItem(b) {
+    if (b.kind === 'table') {
+      return { s: 'table', name: (b.head && b.head.length ? b.head.join(' \u00b7 ') : 'Details'), head: b.head || [], rows: b.rows || [] };
+    }
+    if (b.kind === 'callout') {
+      return { s: 'callout', name: b.label, label: b.label, text: b.text, tone: b.tone || 'note' };
+    }
+    if (b.kind === 'steps') {
+      return { s: 'timeline', variant: 'steps', mode: 'all', name: 'Steps',
+        steps: (b.steps || []).map(function (t, i) { return { label: 'Step ' + (i + 1), text: t, url: '' }; }) };
+    }
+    return null;
+  }
+
   function sectionItems(s) {
-    var items = (s.bullets || []).slice();
+    var items = [];
+    if ((s.mixed || []).length) {
+      // stream order: bullets and structured blocks interleaved as extracted
+      s.mixed.forEach(function (en) {
+        if (en.bullet) { items.push(en.bullet); return; }
+        var it = blockToItem(en.block);
+        if (it) items.push(it);
+      });
+    } else {
+      items = (s.bullets || []).slice();
+    }
     (s.images || []).forEach(function (img) {
       items.push({ s: 'image', name: img.caption, url: img.dataUrl });
     });

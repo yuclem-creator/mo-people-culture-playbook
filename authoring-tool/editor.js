@@ -47,7 +47,8 @@
     { v: 'policy', l: 'Policy' }, { v: 'guide', l: 'Guideline' },
     { v: 'kit', l: 'Toolkit' }, { v: 'xref', l: 'Cross-reference' },
     { v: 'image', l: 'Image' }, { v: 'video', l: 'Video' }, { v: 'tabs', l: 'Tabbed group' },
-    { v: 'timeline', l: 'Timeline' }, { v: 'checklist', l: 'Checklist' }
+    { v: 'timeline', l: 'Timeline' }, { v: 'checklist', l: 'Checklist' },
+    { v: 'table', l: 'Table' }, { v: 'callout', l: 'Callout' }
   ];
 
   // =========================================================================
@@ -912,6 +913,41 @@
         addLabel: 'Add checklist item',
         make: function () { return { label: 'New item', url: '' }; }
       });
+      return;
+    }
+    if (it.s === 'table') {
+      // Rows are edited as text: one row per line, cells separated by |.
+      // headFirst tracks the header intent independently of current content,
+      // so checking it on an empty table then typing still yields a header.
+      if (it.headFirst === undefined) it.headFirst = !!(it.head && it.head.length);
+      function tableToText() {
+        var lines = [];
+        if (it.head && it.head.length) lines.push(it.head.join(' | '));
+        (it.rows || []).forEach(function (r) { lines.push((Array.isArray(r) ? r : [r]).join(' | ')); });
+        return lines.join('\n');
+      }
+      box.appendChild(checkField('First row is the header', !!it.headFirst, function (v) {
+        it.headFirst = v;
+        if (!v && it.head && it.head.length) { it.rows = [it.head].concat(it.rows || []); it.head = []; }
+        if (v && !(it.head && it.head.length) && it.rows && it.rows.length) { it.head = it.rows.shift(); }
+        touch(); renderInspector();
+      }));
+      box.appendChild(textField('Rows (one per line, cells separated by |)', tableToText(), function (v) {
+        var lines = v.split(/\n+/).map(function (l) { return l.trim(); }).filter(Boolean);
+        var grid = lines.map(function (l) { return l.split('|').map(function (c) { return c.trim(); }); });
+        if (it.headFirst) { it.head = grid.shift() || []; it.rows = grid; }
+        else { it.rows = grid; }
+        touch();
+      }, 'e.g. Strong fence | One More Night | Increase minimum stay to 4 nights', true));
+      return;
+    }
+    if (it.s === 'callout') {
+      box.appendChild(textField('Label', it.label || '', function (v) { it.label = v; it.name = v; touch(); }, 'Small caps line, e.g. INSTRUCTION or CONTROL 1.'));
+      box.appendChild(textField('Text', it.text || '', function (v) { it.text = v; touch(); }, '', true));
+      box.appendChild(selectField('Tone', it.tone === 'warning' ? 'warning' : 'note', [
+        { v: 'note', l: 'Note (warm neutral, gold bar)' },
+        { v: 'warning', l: 'Warning (red — controls and constraints)' }
+      ], function (v) { it.tone = v; touch(); }));
       return;
     }
     box.appendChild(textField('Description', it.blurb || '', function (v) { it.blurb = v; touch(); }, '', true));

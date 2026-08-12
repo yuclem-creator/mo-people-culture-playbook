@@ -304,6 +304,25 @@ function policyItemHTML(it) {
       ${tabs.map((t, i) => `<div class="policy-tab-panel" data-tab-p="${i}" style="display:${i === 0 ? 'block' : 'none'};padding:18px 22px;background:#fff;"><p style="margin:0;font-size:14px;color:#4a443f;line-height:1.7;">${esc(t.text || '')}</p></div>`).join('')}
     </div>`;
   }
+  // Table: branded data table lifted from an imported document or authored
+  // in the Studio (rows of pipe-separated cells there).
+  if (it && it.s === 'table') {
+    const head = Array.isArray(it.head) ? it.head : [];
+    const rows = Array.isArray(it.rows) ? it.rows : [];
+    return `<div class="pb-tablewrap"><table class="pb-table">
+      ${head.length ? `<thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>` : ''}
+      <tbody>${rows.map(r => `<tr>${(Array.isArray(r) ? r : [r]).map(c => `<td>${inlineRichHTML(String(c || ''))}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table></div>`;
+  }
+  // Callout: a labelled panel — note (warm neutral, gold bar) or warning
+  // (red-tinted, for controls and constraints).
+  if (it && it.s === 'callout') {
+    const tone = it.tone === 'warning' ? 'warning' : 'note';
+    return `<div class="pb-callout pb-callout--${tone}">
+      ${it.label ? `<div class="pb-callout-label">${esc(it.label)}</div>` : ''}
+      <div class="pb-callout-text">${inlineRichHTML(it.text || '')}</div>
+    </div>`;
+  }
   // Vertical timeline, two styles: numbered steps on a gold rail (show-all or
   // click-to-reveal), or a HERITAGE history timeline — year markers on a
   // spine with eyebrow label, body text and an optional image per event.

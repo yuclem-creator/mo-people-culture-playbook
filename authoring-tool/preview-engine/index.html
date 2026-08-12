@@ -69,6 +69,21 @@
 .pb-check-text a:hover { color: var(--gold); border-bottom-color: var(--gold); }
 .pb-check.done .pb-check-text { color: var(--ink-fade); text-decoration: line-through; text-decoration-color: var(--rule-strong); }
 .pb-check.done .pb-check-text a { color: var(--ink-fade); border-bottom-color: transparent; }
+/* ---- Data tables (imported or authored) ---- */
+.pb-tablewrap { margin: 18px 0; overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; }
+.pb-table { width: 100%; border-collapse: collapse; font-size: 13.5px; line-height: 1.55; color: var(--ink-body); background: var(--paper); }
+.pb-table thead th { background: var(--ink); color: #fff; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; padding: 12px 14px; }
+.pb-table tbody td { padding: 11px 14px; border-top: 1px solid var(--rule); vertical-align: top; }
+.pb-table tbody tr:nth-child(even) td { background: var(--paper-warm); }
+.pb-table tbody td:first-child { font-weight: 600; color: var(--ink); }
+
+/* ---- Callout panels ---- */
+.pb-callout { margin: 18px 0; padding: 14px 18px 14px 16px; border-left: 3px solid var(--gold); background: var(--paper-tint); border-radius: 0 4px 4px 0; }
+.pb-callout--warning { border-left-color: var(--mo-red); background: #F8EFEA; }
+.pb-callout-label { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-deep); margin-bottom: 6px; }
+.pb-callout--warning .pb-callout-label { color: var(--mo-red); }
+.pb-callout-text { font-size: 14px; line-height: 1.65; color: var(--ink-body); }
+
 
 /* ---- Image lightbox (click any inline image to enlarge) ---- */
 .inline-img img { cursor: zoom-in; }
