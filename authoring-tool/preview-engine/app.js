@@ -2436,6 +2436,11 @@ function chapterTypeOf(ch) {
   if (ch.type) return ch.type;
   if (ch.id === 'cover') return 'cover';
   if (ch.id === 'intro') return 'intro-video';
+  // The id-based legacy mapping only applies to the genuine P&C seed — an
+  // authored playbook's "ch-1" is just its first chapter (e.g. Purpose), not
+  // the seed's foreword set-piece. Without this guard, authored ch-1 content
+  // (sections, videos) renders as the letter layout and its body vanishes.
+  if (!isSeedPlaybook()) return ch.hasSubs ? 'lifecycle' : 'standard';
   if (ch.id === 'ch-1') return 'letter';
   if (ch.hasSubs) return 'lifecycle';
   if (ch.id === 'ch-2') return 'directory';
@@ -3134,6 +3139,14 @@ function wireEvents() {
 
 // ---- Init -----------------------------------------------------------
 function init() {
+  // Remote boots (Remote SCORM / library player) never call applyPlaybook, so
+  // content-derived chrome — masthead title, rail blurb, typography, colour
+  // overrides — would otherwise stay at the shell's bundled defaults even
+  // though window.PLAYBOOK is already the fetched playbook. Apply it here.
+  if (window.PLAYBOOK && PB !== window.PLAYBOOK) PB = window.PLAYBOOK;
+  updateMasthead();
+  updateRailAbout();
+  applyTypography();
   renderRail();
   renderAll();
   const h = location.hash.replace('#', '');

@@ -274,6 +274,22 @@
     pb.prose = pb.prose || {};
     pb.assets = pb.assets || {};
     pb.assetHotspots = pb.assetHotspots || {}; // asset-keyed pin sets for inline images
+    // Stamp explicit chapter types. Without one, renderers fall back to the
+    // legacy id map (ch-1 = foreword letter …) — correct only for the genuine
+    // P&C seed. An authored playbook's ch-1 (e.g. Finance "Purpose") would
+    // otherwise render as the letter layout and its sections/videos vanish.
+    var seedLike = !!(pb.meta && pb.meta.fromSeed) ||
+      !!(pb.prose && (pb.prose['ch5.band.img'] || pb.prose['ch4.band.img'] || pb.prose['ch2.band.img']));
+    pb.chapters.forEach(function (c) {
+      if (c.type) return;
+      if (c.id === 'cover') { c.type = 'cover'; return; }
+      if (c.id === 'intro') { c.type = 'intro-video'; return; }
+      if (seedLike) {
+        c.type = c.id === 'ch-1' ? 'letter' : c.hasSubs ? 'lifecycle' : c.id === 'ch-2' ? 'directory' : 'standard';
+      } else {
+        c.type = c.hasSubs ? 'lifecycle' : 'standard';
+      }
+    });
     return pb;
   }
 
