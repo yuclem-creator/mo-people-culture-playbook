@@ -616,6 +616,22 @@
 .pb-callout-label { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-deep); margin-bottom: 6px; }
 .pb-callout--warning .pb-callout-label { color: var(--mo-red); }
 .pb-callout-text { font-size: 14px; line-height: 1.65; color: var(--ink-body); }
+/* ---- Checklist progress bar + expandable notes + completion ---- */
+.pb-check-progress { display: flex; align-items: center; gap: 14px; padding: 4px 6px 14px; }
+.pb-check-bar { flex: 1; height: 3px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+.pb-check-fill { height: 100%; width: 0%; background: var(--celadon-deep); transition: width .35s ease; }
+.pb-check-count { flex: none; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-mute); }
+.pb-check.has-note { flex-wrap: wrap; }
+.pb-check-more { display: inline-block; margin-left: 10px; font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-deep); cursor: pointer; }
+.pb-check-note { display: none; flex: 1 0 100%; padding: 4px 4px 10px 36px; font-size: 13px; line-height: 1.65; color: var(--ink-mute); }
+.pb-check.note-open .pb-check-note { display: block; }
+.pb-check-done { display: none; margin-top: 14px; padding: 13px 18px; border: 1px solid var(--celadon-hair); background: var(--celadon-tint); color: var(--celadon-deep); border-radius: 4px; font-size: 13.5px; font-weight: 600; }
+.pb-checklist.all-done .pb-check-done { display: block; }
+
+/* ---- Callout: recap tone (celadon) ---- */
+.pb-callout--recap { border-left-color: var(--celadon-deep); background: var(--celadon-tint); }
+.pb-callout--recap .pb-callout-label { color: var(--celadon-deep); }
+
 
 
 /* ---- Image lightbox (click any inline image to enlarge) ---- */

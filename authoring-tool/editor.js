@@ -1005,7 +1005,15 @@
       el('button', { class: 'btn ghost', onclick: function () {
         sec.items.push({ s: 'checklist', name: 'Checklist', items: [{ label: 'New item', url: '' }] });
         touch(); renderInspector();
-      } }, ['+ Add checklist'])
+      } }, ['+ Add checklist']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        sec.items.push({ s: 'table', name: 'Table', headFirst: true, head: ['Column 1', 'Column 2'], rows: [['', '']] });
+        touch(); renderInspector();
+      } }, ['+ Add table']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        sec.items.push({ s: 'callout', name: 'Quick recap', label: 'Quick recap', text: '', tone: 'recap' });
+        touch(); renderInspector();
+      } }, ['+ Add note box'])
     ]));
   }
 
@@ -1123,50 +1131,85 @@
     }
     if (it.s === 'checklist') {
       it.items = it.items || [];
+      box.appendChild(checkField('Show progress bar ("N of M complete")', !!it.showProgress, function (v) { it.showProgress = v; touch(); }));
+      box.appendChild(textField('Completion message (shown when all are ticked)', it.doneText || '', function (v) { it.doneText = v; touch(); }, 'e.g. All complete — ready for sign-off. Blank hides the banner.'));
       box.appendChild(sectionLabel('Checklist items (' + it.items.length + ')'));
       renderRepeatable(box, it.items, {
         nameOf: function (c) { return c.label || '(item)'; },
-        subOf: function (c) { return c.url || ''; },
+        subOf: function (c) { return (c.url || '') + (c.note ? (c.url ? ' · ' : '') + 'has details' : ''); },
         open: null,
         inlineEdit: function (c, wrap) {
           wrap.appendChild(textField('Item text', c.label || '', function (v) { c.label = v; touch(); }));
           wrap.appendChild(linkField('Link (optional)', c.url || '', function (v) { c.url = v; touch(); }));
+          wrap.appendChild(textField('Details note (optional — readers tap the row to expand)', c.note || '', function (v) { c.note = v; touch(); }, '', true));
         },
         addLabel: 'Add checklist item',
-        make: function () { return { label: 'New item', url: '' }; }
+        make: function () { return { label: 'New item', url: '', note: '' }; }
       });
       return;
     }
     if (it.s === 'table') {
-      // Rows are edited as text: one row per line, cells separated by |.
-      // headFirst tracks the header intent independently of current content,
-      // so checking it on an empty table then typing still yields a header.
+      // Visual grid editor: one input per cell, header row toggle, and
+      // add/remove row/column — no pipe-separated text syntax.
       if (it.headFirst === undefined) it.headFirst = !!(it.head && it.head.length);
-      function tableToText() {
-        var lines = [];
-        if (it.head && it.head.length) lines.push(it.head.join(' | '));
-        (it.rows || []).forEach(function (r) { lines.push((Array.isArray(r) ? r : [r]).join(' | ')); });
-        return lines.join('\n');
-      }
+      it.rows = it.rows || [];
+      it.head = it.head || [];
+      var colCount = it.head.length || 1;
+      it.rows.forEach(function (r) { colCount = Math.max(colCount, Array.isArray(r) ? r.length : 1); });
+
       box.appendChild(checkField('First row is the header', !!it.headFirst, function (v) {
         it.headFirst = v;
-        if (!v && it.head && it.head.length) { it.rows = [it.head].concat(it.rows || []); it.head = []; }
-        if (v && !(it.head && it.head.length) && it.rows && it.rows.length) { it.head = it.rows.shift(); }
+        if (!v && it.head.length) { it.rows = [it.head].concat(it.rows); it.head = []; }
+        if (v && !it.head.length && it.rows.length) { it.head = it.rows.shift(); }
         touch(); renderInspector();
       }));
-      box.appendChild(textField('Rows (one per line, cells separated by |)', tableToText(), function (v) {
-        var lines = v.split(/\n+/).map(function (l) { return l.trim(); }).filter(Boolean);
-        var grid = lines.map(function (l) { return l.split('|').map(function (c) { return c.trim(); }); });
-        if (it.headFirst) { it.head = grid.shift() || []; it.rows = grid; }
-        else { it.rows = grid; }
-        touch();
-      }, 'e.g. Strong fence | One More Night | Increase minimum stay to 4 nights', true));
+
+      function cellInput(get, set, isHead) {
+        var inp = el('input', { type: 'text', value: get(),
+          style: 'width:100%;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 9px;font-size:12.5px;outline:none;box-sizing:border-box;' +
+            (isHead ? 'background:#262220;color:#fff;font-weight:600;letter-spacing:.04em;' : 'background:#fff;') });
+        inp.addEventListener('input', function () { set(inp.value); touch(); });
+        return inp;
+      }
+      var wrapG = el('div', { style: 'border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-top:8px;' });
+      var grid = el('div', { style: 'display:grid;grid-template-columns:repeat(' + colCount + ',minmax(0,1fr));' });
+      if (it.headFirst) {
+        for (var hc = 0; hc < colCount; hc++) {
+          (function (ci) { grid.appendChild(cellInput(function () { return it.head[ci] || ''; }, function (v) { it.head[ci] = v; }, true)); })(hc);
+        }
+      }
+      it.rows.forEach(function (row, ri) {
+        row = Array.isArray(row) ? row : [row];
+        it.rows[ri] = row;
+        while (row.length < colCount) row.push('');
+        for (var cc = 0; cc < colCount; cc++) {
+          (function (ci) { grid.appendChild(cellInput(function () { return row[ci]; }, function (v) { row[ci] = v; }, false)); })(cc);
+        }
+      });
+      wrapG.appendChild(grid);
+      box.appendChild(wrapG);
+      box.appendChild(el('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;' }, [
+        el('button', { class: 'btn ghost', onclick: function () { it.rows.push(new Array(colCount).fill('')); touch(); renderInspector(); } }, ['＋ Row']),
+        el('button', { class: 'btn ghost', onclick: function () {
+          if (it.headFirst) it.head.push('');
+          it.rows.forEach(function (r) { r.push(''); });
+          touch(); renderInspector();
+        } }, ['＋ Column']),
+        el('button', { class: 'btn ghost', onclick: function () { if (it.rows.length) { it.rows.pop(); touch(); renderInspector(); } } }, ['− Last row']),
+        el('button', { class: 'btn ghost', onclick: function () {
+          if (colCount <= 1) return;
+          if (it.headFirst && it.head.length) it.head.pop();
+          it.rows.forEach(function (r) { r.pop(); });
+          touch(); renderInspector();
+        } }, ['− Last column'])
+      ]));
       return;
     }
     if (it.s === 'callout') {
       box.appendChild(textField('Label', it.label || '', function (v) { it.label = v; it.name = v; touch(); }, 'Small caps line, e.g. INSTRUCTION or CONTROL 1.'));
       box.appendChild(textField('Text', it.text || '', function (v) { it.text = v; touch(); }, '', true));
-      box.appendChild(selectField('Tone', it.tone === 'warning' ? 'warning' : 'note', [
+      box.appendChild(selectField('Tone', it.tone === 'warning' ? 'warning' : (it.tone === 'recap' ? 'recap' : 'note'), [
+        { v: 'recap', l: 'Quick recap (celadon green)' },
         { v: 'note', l: 'Note (warm neutral, gold bar)' },
         { v: 'warning', l: 'Warning (red — controls and constraints)' }
       ], function (v) { it.tone = v; touch(); }));

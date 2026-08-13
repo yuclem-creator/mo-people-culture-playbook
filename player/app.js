@@ -317,7 +317,7 @@ function policyItemHTML(it) {
   // Callout: a labelled panel — note (warm neutral, gold bar) or warning
   // (red-tinted, for controls and constraints).
   if (it && it.s === 'callout') {
-    const tone = it.tone === 'warning' ? 'warning' : 'note';
+    const tone = it.tone === 'warning' ? 'warning' : (it.tone === 'recap' ? 'recap' : 'note');
     return `<div class="pb-callout pb-callout--${tone}">
       ${it.label ? `<div class="pb-callout-label">${esc(it.label)}</div>` : ''}
       <div class="pb-callout-text">${inlineRichHTML(it.text || '')}</div>
@@ -365,17 +365,21 @@ function policyItemHTML(it) {
   if (it && it.s === 'checklist') {
     const items = Array.isArray(it.items) ? it.items : [];
     const cid = id;
-    return `<div class="pb-checklist" data-checklist="${cid}">
+    const showProgress = !!it.showProgress;
+    return `<div class="pb-checklist" data-checklist="${cid}" data-done-text="${esc(it.doneText || '')}">
+      ${showProgress ? `<div class="pb-check-progress"><div class="pb-check-bar"><div class="pb-check-fill" style="width:0%"></div></div><div class="pb-check-count">0 of ${items.length} complete</div></div>` : ''}
       ${items.map(function (c, i) {
         const inner = c.url
           ? `<a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.label || '')}</a>`
           : `<span>${esc(c.label || '')}</span>`;
         return `
-        <div class="pb-check" data-check="${cid}-${i}">
+        <div class="pb-check${c.note ? ' has-note' : ''}" data-check="${cid}-${i}">
           <button type="button" class="pb-check-box" aria-label="Toggle item ${i + 1}"><span>✓</span></button>
-          <span class="pb-check-text">${inner}</span>
+          <span class="pb-check-text">${inner}${c.note ? '<span class="pb-check-more">details +</span>' : ''}</span>
+          ${c.note ? `<div class="pb-check-note">${inlineRichHTML(c.note)}</div>` : ''}
         </div>`;
       }).join('')}
+      ${it.doneText ? `<div class="pb-check-done">${esc(it.doneText)}</div>` : ''}
     </div>`;
   }
   // Embedded figure carried over from an imported document — optionally with
@@ -3062,7 +3066,38 @@ if (!window.__pbStepsWired) {
         if (chk.classList.contains('done')) sessionStorage.setItem(k, '1');
         else sessionStorage.removeItem(k);
       } catch (err) {}
+      // progress bar + completion banner
+      var list = chk.closest('.pb-checklist');
+      if (list) {
+        var total = list.querySelectorAll('.pb-check').length;
+        var doneN = list.querySelectorAll('.pb-check.done').length;
+        var fill = list.querySelector('.pb-check-fill');
+        var count = list.querySelector('.pb-check-count');
+        if (fill) fill.style.width = Math.round(doneN / total * 100) + '%';
+        if (count) count.textContent = doneN + ' of ' + total + ' complete';
+        list.classList.toggle('all-done', total > 0 && doneN === total);
+      }
+      return;
     }
+    // expandable note rows (tap the text, not the tick box or a link)
+    var ctxt = t.closest('.pb-check-text');
+    if (ctxt && !t.closest('a')) {
+      var row = ctxt.closest('.pb-check.has-note');
+      if (row) row.classList.toggle('note-open');
+    }
+  });
+}
+
+// Recompute checklist progress after ticks are restored from sessionStorage.
+function refreshChecklistProgress() {
+  document.querySelectorAll('.pb-checklist').forEach(function (list) {
+    var total = list.querySelectorAll('.pb-check').length;
+    var doneN = list.querySelectorAll('.pb-check.done').length;
+    var fill = list.querySelector('.pb-check-fill');
+    var count = list.querySelector('.pb-check-count');
+    if (fill) fill.style.width = (total ? Math.round(doneN / total * 100) : 0) + '%';
+    if (count) count.textContent = doneN + ' of ' + total + ' complete';
+    list.classList.toggle('all-done', total > 0 && doneN === total);
   });
 }
 
@@ -3383,6 +3418,7 @@ function applyPlaybook(next, opts) {
       if (sessionStorage.getItem(k)) chk.classList.add('done');
     });
   } catch (e) {}
+    refreshChecklistProgress();
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
   try {
