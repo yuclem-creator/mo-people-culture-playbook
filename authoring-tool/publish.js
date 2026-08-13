@@ -274,6 +274,39 @@
     return runLane(pb, 'drafts/', opts);
   }
 
+  // Light draft-lane refresh: playbook-data.json + version.json only, no asset
+  // uploads. Used by the Studio's periodic cloud autosave when no new media
+  // has been added since the last full save (assets are upserted there).
+  function saveDraftJson(pb, opts) {
+    opts = opts || {};
+    if (!sb) return Promise.reject(new Error('Supabase client is not available (check your connection and reload).'));
+    return resolveSession(opts).then(function (session) {
+      if (!session || !session.access_token) return Promise.reject(new Error('NOT_AUTHENTICATED'));
+      var slug = slugFor(pb);
+      var sbUpload = uploadClientFor(session);
+      var bucket = cfg.bucket || 'playbook-content';
+      var helpers = global.__scormExportHelpers;
+      if (!helpers || !helpers.externalizeAssets) return Promise.reject(new Error('export helpers not loaded'));
+      var ext = helpers.externalizeAssets(pb);
+      var playbookForUpload = JSON.parse(JSON.stringify(ext.playbook));
+      playbookForUpload.__remoteAssetBase = cfg.url + '/storage/v1/object/public/' + bucket + '/drafts/' + slug + '/assets/';
+      var blob = new Blob([JSON.stringify(playbookForUpload)], { type: 'application/json' });
+      return sbUpload.storage.from(bucket).upload('drafts/' + slug + '/playbook-data.json', blob, {
+        upsert: true, contentType: 'application/json'
+      }).then(function (r) {
+        if (r.error) throw new Error(r.error.message);
+        var version = { publishedAt: new Date().toISOString(),
+          publishedBy: (session.user && session.user.email) || null, stage: 'draft', autosave: true };
+        return sbUpload.storage.from(bucket).upload('drafts/' + slug + '/version.json',
+          new Blob([JSON.stringify(version)], { type: 'application/json' }),
+          { upsert: true, contentType: 'application/json' });
+      }).then(function (r) {
+        if (r.error) throw new Error(r.error.message);
+        return { slug: slug, failedAssets: [] };
+      });
+    });
+  }
+
   // Remove a stale library-index entry left behind when a playbook's slug
   // changes (e.g. after the collision guard re-derives it), AND the orphaned
   // DRAFT lane at the old slug — otherwise the other playbook that rightfully
@@ -368,6 +401,7 @@
     onAuthChange: onAuthChange,
     publish: publish,
     saveDraft: saveDraft,
+    saveDraftJson: saveDraftJson,
     removeIndexEntry: removeIndexEntry
   };
 })(window);

@@ -100,12 +100,17 @@
     pendingCreate = readCreateParam();
     pendingEdit = readEditParam();
     // Per-slug drafts: open the slot for the playbook being entered (edit
-    // link), or the last one used; restore autosnapshot > saved current >
-    // published (edit link) > seed.
+    // link), or the last one used. When signed in, the CLOUD draft wins by
+    // default (newest timestamp vs the local autosnapshot) — reopening the
+    // Studio always shows the latest synced version; unsaved local work is
+    // never overwritten (local newer → local stays, with a note).
     var bootSlugPromise = pendingEdit
       ? STORE.setSlug(pendingEdit)
       : STORE.getSlug().then(function (s) { return STORE.setSlug(s || ''); });
     bootSlugPromise.then(function () {
+      return maybeLoadCloudDraft();
+    }).then(function (cloudPb) {
+      if (cloudPb) { maybeEnterFromLibrary(); return null; }
       return STORE.loadAutosnapshot();
     }).then(function (snap) {
       if (snap && snap.playbook) {
@@ -121,6 +126,77 @@
       });
     });
   }
+
+  // Cloud-first boot: when signed in and this slug exists in the cloud, load
+  // the newer of (cloud draft/published) vs the local autosnapshot. Returns
+  // the playbook when the cloud copy was loaded, else null.
+  function maybeLoadCloudDraft() {
+    if (pendingEdit || pendingCreate) return Promise.resolve(null);
+    if (!(window.PlaybookPublish && window.PlaybookPublish.getSession)) return Promise.resolve(null);
+    var cfg = window.SUPABASE_CONFIG || { url: '', bucket: 'playbook-content' };
+    if (!cfg.url) return Promise.resolve(null);
+    var base = cfg.url + '/storage/v1/object/public/' + (cfg.bucket || 'playbook-content') + '/';
+    return STORE.getSlug().then(function (slug) {
+      if (!slug) return null;
+      return window.PlaybookPublish.getSession().then(function (session) {
+        if (!(session && session.access_token)) return null;
+        function probe(lane) {
+          return fetch(base + lane + '/' + slug + '/version.json?t=' + Date.now())
+            .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+        }
+        return Promise.all([probe('drafts'), probe('published')]).then(function (v) {
+          var cloudAt = 0, lane = null;
+          ['drafts', 'published'].forEach(function (ln, i) {
+            var at = v[i] && v[i].publishedAt ? Date.parse(v[i].publishedAt) : 0;
+            if (at > cloudAt) { cloudAt = at; lane = ln; }
+          });
+          if (!lane) return null;
+          return STORE.loadAutosnapshot().then(function (snap) {
+            var localAt = snap && snap.at ? snap.at : 0;
+            if (localAt && localAt > cloudAt) {
+              toast('Your local edits are newer than the cloud copy — press Save to sync them up.', 'ok');
+              return null;
+            }
+            return fetch(base + lane + '/' + slug + '/playbook-data.json?t=' + Date.now())
+              .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+              .then(function (pb) {
+                pb.meta = pb.meta || {};
+                if (!pb.meta.slug) pb.meta.slug = slug;
+                setPlaybook(pb);
+                STORE.save(pb);
+                lastAssetSig = assetSig();
+                toast('Loaded the latest cloud version of "' + (pb.meta.title || slug) + '".', 'ok');
+                return pb;
+              })
+              .catch(function () { return null; });
+          });
+        });
+      });
+    });
+  }
+
+  // Periodic cloud autosave: every 45s, when there are unsynced edits and a
+  // sign-in session, sync the draft lane quietly — JSON-only when no new media
+  // was added since the last full save, full upload otherwise.
+  var cloudAutosaveTimer = setInterval(function () {
+    if (!PB || !cloudDirty) return;
+    if (document.querySelector('#busy')) return; // an export/publish is running
+    if (!(window.PlaybookPublish && window.PlaybookPublish.saveDraftJson)) return;
+    window.PlaybookPublish.getSession().then(function (session) {
+      if (!(session && session.access_token)) return;
+      var slug = window.PlaybookPublish.slugFor(PB);
+      if (!slug) return;
+      var sig = assetSig();
+      var p = (sig === lastAssetSig)
+        ? window.PlaybookPublish.saveDraftJson(PB, { session: session })
+        : window.PlaybookPublish.saveDraft(PB, { session: session, onProgress: function () {} });
+      p.then(function () {
+        lastAssetSig = sig;
+        cloudDirty = false; dirty = false;
+        setAutosave('saved', 'Autosaved to cloud · ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      }).catch(function () { /* stays dirty — next tick retries */ });
+    });
+  }, 45000);
 
   function loadSeed() {
     return fetch('seed-playbook.json').then(function (r) { return r.json(); }).then(function (seed) {
@@ -740,6 +816,10 @@
         });
         var bodyP = bodyForChapter(ch);
         box.appendChild(paraArrayField('Part intro paragraph(s) (optional)', bodyP.intro || [], function (arr) { bodyP.intro = arr; touch(); }));
+        // The part's own sections (imported content sitting directly under
+        // the part) — editable and deletable like any chapter's sections.
+        box.appendChild(sectionLabel('Sections in this part (' + (bodyP.sections || []).length + ')'));
+        renderSectionsList(box, bodyP, ch.id, null);
       }
       if (type === 'tile-menu') {
         box.appendChild(sectionLabel('Tiles (' + (ch.tiles || []).length + ')'));
@@ -941,6 +1021,9 @@
     if (isSection) {
       // a § section lists its topics (depth 2; their depth-3 subs ride along)
       var myTopics = childRun(sub, 1).filter(function (t) { return t.depth === 2; });
+      // the § section's own imported sections — editable and deletable
+      box.appendChild(sectionLabel('Sections in this section (' + (content.sections || []).length + ')'));
+      renderSectionsList(box, content, ch.id, sel.id);
       box.appendChild(sectionLabel('Sub-topics (' + myTopics.length + ')'));
       renderRepeatable(box, myTopics, {
         nameOf: function (t) { return t.label || '(sub-topic)'; },
@@ -2418,6 +2501,8 @@
           }).then(function (res) {
             var dept = (PB.meta && PB.meta.department) ? PB.meta.department : null;
             toast('Saved · listed in the Library as Draft' + (dept ? ' · ' + dept : ''), 'ok');
+            lastAssetSig = assetSig();
+            cloudDirty = false;
             reportFailedAssets(res);
             // Slug changed on this save (collision guard)? Remove the stale
             // library entry the old slug left behind — but only when its title
@@ -2758,7 +2843,9 @@
   // Dirty / autosave
   // =========================================================================
   function touch() { pushPreviewDebounced(); }
-  function markDirty() { dirty = true; setAutosave('dirty', 'Editing…'); }
+  var cloudDirty = false, lastAssetSig = '';
+  function markDirty() { dirty = true; cloudDirty = true; setAutosave('dirty', 'Editing…'); }
+  function assetSig() { return Object.keys(PB.assets || {}).sort().join('|'); }
   function markSaved() { dirty = false; setAutosave('saved', 'All changes saved'); }
   function setAutosave(cls, txt) {
     var a = $('#autosave'); a.className = 'autosave ' + cls; $('.txt', a).textContent = txt;
