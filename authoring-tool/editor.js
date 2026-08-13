@@ -51,7 +51,8 @@
     { v: 'kit', l: 'Toolkit' }, { v: 'xref', l: 'Cross-reference' },
     { v: 'image', l: 'Image' }, { v: 'video', l: 'Video' }, { v: 'tabs', l: 'Tabbed group' },
     { v: 'timeline', l: 'Timeline' }, { v: 'checklist', l: 'Checklist' },
-    { v: 'table', l: 'Table' }, { v: 'callout', l: 'Callout' }
+    { v: 'table', l: 'Table' }, { v: 'callout', l: 'Callout' },
+    { v: 'tasklist', l: 'Task list (gated)' }
   ];
 
   // =========================================================================
@@ -581,6 +582,19 @@
         box.appendChild(videoField('Opener video (above the text)', PB.prose[prefix0 + '.opener.video'] || '', function (fn) { PB.prose[prefix0 + '.opener.video'] = fn; touch(); }));
         var body0 = bodyForChapter(ch);
         box.appendChild(paraArrayField('Opening paragraph(s)', body0.intro || [], function (arr) { body0.intro = arr; touch(); }));
+        // Chapter-level content elements (tables, knowledge tips, timelines,
+        // checklists, task lists, media) — render under the opening
+        // paragraphs, above the sections.
+        body0.items = body0.items || [];
+        box.appendChild(sectionLabel('Content elements (' + body0.items.length + ')'));
+        renderRepeatable(box, body0.items, {
+          nameOf: function (it) { return typeof it === 'string' ? (it.slice(0, 60) || '(empty)') : (it.name || '(item)'); },
+          subOf: function (it) { return typeof it === 'string' ? 'Text' : symbolLabel(it.s); },
+          open: function (it, i) { select({ kind: 'item', ref: { arr: body0.items, index: i }, chapter: ch.id, backSel: SEL }); },
+          addLabel: 'Add item',
+          make: function () { return { s: 'policy', name: 'New item', blurb: '', url: '' }; }
+        });
+        box.appendChild(mediaActionsRow(body0.items));
       }
       // Tile-menu chapters: the tiles are the whole point — title, text,
       // optional image and the chapter each tile links to.
@@ -991,31 +1005,54 @@
       make: function () { return { s: 'policy', name: 'New item', blurb: '', url: '' }; }
     });
     // Rich frames: image / video / tabbed interaction
-    box.appendChild(el('div', { class: 'media-actions', style: 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;' }, [
-      el('button', { class: 'btn ghost', onclick: function () { addMediaItem(sec, 'image'); } }, ['+ Add image']),
-      el('button', { class: 'btn ghost', onclick: function () { addMediaItem(sec, 'video'); } }, ['+ Add video']),
+    box.appendChild(mediaActionsRow(sec.items));
+  }
+
+  // Shared quick-add row for content elements — used by the section editor
+  // (section items) and the chapter editor (chapter-level items). Every
+  // button appends a new item to the given array.
+  function mediaActionsRow(itemsArr) {
+    return el('div', { class: 'media-actions', style: 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;' }, [
+      el('button', { class: 'btn ghost', onclick: function () { addMediaItemTo(itemsArr, 'image'); } }, ['+ Add image']),
+      el('button', { class: 'btn ghost', onclick: function () { addMediaItemTo(itemsArr, 'video'); } }, ['+ Add video']),
       el('button', { class: 'btn ghost', onclick: function () {
-        sec.items.push({ s: 'tabs', name: 'Tabbed group', tabs: [{ label: 'Tab 1', text: '' }] });
+        itemsArr.push({ s: 'tabs', name: 'Tabbed group', tabs: [{ label: 'Tab 1', text: '' }] });
         touch(); renderInspector();
       } }, ['+ Add tabs']),
       el('button', { class: 'btn ghost', onclick: function () {
-        sec.items.push({ s: 'timeline', name: 'Timeline', mode: 'all', steps: [{ label: 'Step 1', text: '', url: '' }] });
+        itemsArr.push({ s: 'timeline', name: 'Timeline', mode: 'all', steps: [{ label: 'Step 1', text: '', url: '' }] });
         touch(); renderInspector();
       } }, ['+ Add timeline']),
       el('button', { class: 'btn ghost', onclick: function () {
-        sec.items.push({ s: 'checklist', name: 'Checklist', items: [{ label: 'New item', url: '' }] });
+        itemsArr.push({ s: 'checklist', name: 'Checklist', items: [{ label: 'New item', url: '' }] });
         touch(); renderInspector();
       } }, ['+ Add checklist']),
       el('button', { class: 'btn ghost', onclick: function () {
-        sec.items.push({ s: 'table', name: 'Table', headFirst: true, head: ['Column 1', 'Column 2'], rows: [['', '']] });
+        itemsArr.push({ s: 'table', name: 'Table', headFirst: true, head: ['Column 1', 'Column 2'], rows: [['', '']] });
         touch(); renderInspector();
       } }, ['+ Add table']),
       el('button', { class: 'btn ghost', onclick: function () {
-        sec.items.push({ s: 'callout', name: 'Quick recap', label: 'Quick recap', text: '', tone: 'recap' });
+        itemsArr.push({ s: 'callout', name: 'Knowledge tip', label: 'Knowledge tip', text: '', tone: 'tip' });
         touch(); renderInspector();
-      } }, ['+ Add note box'])
-    ]));
+      } }, ['+ Add knowledge tip']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'callout', name: 'Quick recap', label: 'Quick recap', text: '', tone: 'recap' });
+        touch(); renderInspector();
+      } }, ['+ Add note box']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'tasklist', name: 'Task list', cid: uid('tl'), showProgress: true, gateText: '', items: [{ text: 'New task', note: '', pills: [] }] });
+        touch(); renderInspector();
+      } }, ['+ Add task list'])
+    ]);
   }
+
+  // addMediaItem with an explicit target array (chapter-level and section-level
+  // uploads share the same flow).
+  function addMediaItemTo(itemsArr, kind) {
+    var fakeSec = { items: itemsArr };
+    addMediaItem(fakeSec, kind);
+  }
+
 
   function addMediaItem(sec, kind) {
     chooseFile(kind === 'image' ? 'image/*' : 'video/*', function (dataUrl, name, file) {
@@ -1148,6 +1185,56 @@
       });
       return;
     }
+    if (it.s === 'tasklist') {
+      if (!it.cid) it.cid = uid('tl');
+      box.appendChild(checkField('Show progress bar ("N of M complete")', it.showProgress !== false, function (v) { it.showProgress = v; touch(); }));
+      box.appendChild(textField('Gate text (sign-off row — optional)', it.gateText || '', function (v) {
+        var had = !!it.gateText;
+        it.gateText = v;
+        touch();
+        if (!!v !== had) renderInspector(); // reveal/hide the gate note fields
+      }, 'e.g. Discuss with your regional RM lead and ask them to sign off.'));
+      if (it.gateText) {
+        box.appendChild(textField('Gate locked note', it.gateLocked || '', function (v) { it.gateLocked = v; touch(); }, 'e.g. Gate — complete all actions first.'));
+        box.appendChild(textField('Gate unlocked note', it.gateOpen || '', function (v) { it.gateOpen = v; touch(); }, 'e.g. Gate passed — signed off.'));
+      }
+      it.items = it.items || [];
+      box.appendChild(sectionLabel('Tasks (' + it.items.length + ')'));
+      var tlTargets = [{ v: '', l: '(no link)' }, { v: 'menu', l: 'Contents page' }].concat(PB.chapters.map(function (c) {
+        return { v: c.id, l: (c.numeral ? c.numeral + ' · ' : '') + (c.label || c.id) };
+      }));
+      renderRepeatable(box, it.items, {
+        nameOf: function (c) { return c.text || '(task)'; },
+        subOf: function (c) { return (c.pills || []).map(function (p2) { return p2.text; }).join(' · ') + (c.note ? ' · has note' : ''); },
+        open: null,
+        inlineEdit: function (c, wrap) {
+          wrap.appendChild(textField('Task text', c.text || '', function (v) { c.text = v; touch(); }, '', true));
+          wrap.appendChild(textField('Details note (optional — readers tap the row to expand)', c.note || '', function (v) { c.note = v; touch(); }, '', true));
+          c.pills = c.pills || [];
+          wrap.appendChild(sectionLabel('Reference pills (' + c.pills.length + ')'));
+          renderRepeatable(wrap, c.pills, {
+            nameOf: function (p2) { return p2.text || '(pill)'; },
+            subOf: function (p2) {
+              var t = tlTargets.filter(function (x) { return x.v === p2.target; })[0];
+              return p2.target ? ('→ ' + (t ? t.l : p2.target)) : 'display only';
+            },
+            open: null,
+            inlineEdit: function (p2, wrap2) {
+              wrap2.appendChild(textField('Pill text', p2.text || '', function (v) { p2.text = v; touch(); }, 'e.g. See 2.2'));
+              wrap2.appendChild(selectField('Colour', p2.tone || 'gold', [
+                { v: 'gold', l: 'Gold (cross-reference)' }, { v: 'teal', l: 'Celadon (workbook/resource)' }
+              ], function (v) { p2.tone = v; touch(); }));
+              wrap2.appendChild(selectField('Links to (optional)', p2.target || '', tlTargets, function (v) { p2.target = v; touch(); }));
+            },
+            addLabel: 'Add pill',
+            make: function () { return { text: 'See …', tone: 'gold', target: '' }; }
+          });
+        },
+        addLabel: 'Add task',
+        make: function () { return { text: 'New task', note: '', pills: [] }; }
+      });
+      return;
+    }
     if (it.s === 'table') {
       // Visual grid editor: one input per cell, header row toggle, and
       // add/remove row/column — no pipe-separated text syntax.
@@ -1208,7 +1295,8 @@
     if (it.s === 'callout') {
       box.appendChild(textField('Label', it.label || '', function (v) { it.label = v; it.name = v; touch(); }, 'Small caps line, e.g. INSTRUCTION or CONTROL 1.'));
       box.appendChild(textField('Text', it.text || '', function (v) { it.text = v; touch(); }, '', true));
-      box.appendChild(selectField('Tone', it.tone === 'warning' ? 'warning' : (it.tone === 'recap' ? 'recap' : 'note'), [
+      box.appendChild(selectField('Tone', ['note', 'recap', 'warning', 'tip'].indexOf(it.tone) !== -1 ? it.tone : 'note', [
+        { v: 'tip', l: 'Knowledge tip (warm beige)' },
         { v: 'recap', l: 'Quick recap (celadon green)' },
         { v: 'note', l: 'Note (warm neutral, gold bar)' },
         { v: 'warning', l: 'Warning (red — controls and constraints)' }

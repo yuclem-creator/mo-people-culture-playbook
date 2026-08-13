@@ -627,10 +627,51 @@
 .pb-check.note-open .pb-check-note { display: block; }
 .pb-check-done { display: none; margin-top: 14px; padding: 13px 18px; border: 1px solid var(--celadon-hair); background: var(--celadon-tint); color: var(--celadon-deep); border-radius: 4px; font-size: 13.5px; font-weight: 600; }
 .pb-checklist.all-done .pb-check-done { display: block; }
+/* ---- Gated task list (V5 pattern) ---- */
+.pb-tasklist { margin: 18px 0; }
+.pb-tl-progress { display: flex; align-items: center; gap: 14px; padding: 4px 6px 14px; }
+.pb-tl-bar { flex: 1; height: 3px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+.pb-tl-fill { height: 100%; width: 0%; background: var(--celadon-deep); transition: width .35s ease; }
+.pb-tl-count { flex: none; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-mute); }
+.pb-task { display: flex; align-items: flex-start; gap: 14px; padding: 14px 14px 14px 6px; border-bottom: 1px solid var(--rule); transition: background .2s; }
+.pb-task:hover { background: var(--paper-warm); }
+.pb-task-num { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--gold); color: var(--gold-deep); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; }
+.pb-task.done .pb-task-num { background: var(--celadon-deep); border-color: var(--celadon-deep); color: #fff; }
+.pb-task-body { flex: 1; min-width: 0; }
+.pb-task-act { font-size: 14.5px; line-height: 1.55; color: var(--ink-body); font-weight: 600; }
+.pb-task.done .pb-task-act { color: var(--ink-fade); text-decoration: line-through; text-decoration-color: var(--rule-strong); }
+.pb-task-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.pb-task-pill { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; border-radius: 999px; padding: 4px 11px; border: 1px solid var(--gold-hair); background: none; color: var(--gold-deep); cursor: pointer; font-family: inherit; transition: background .15s; }
+.pb-task-pill:hover { background: #FBF7EE; }
+.pb-task-pill.teal { border-color: var(--celadon-hair); color: var(--celadon-deep); }
+.pb-task-pill.teal:hover { background: var(--celadon-tint); }
+span.pb-task-pill { cursor: default; }
+span.pb-task-pill:hover { background: none; }
+.pb-task-note { display: none; margin-top: 8px; font-size: 13px; line-height: 1.65; color: var(--ink-mute); font-weight: 400; }
+.pb-task.open .pb-task-note { display: block; }
+.pb-task .pb-task-note p { margin: 0 0 6px; }
+.pb-task-check { flex: none; width: 24px; height: 24px; margin-top: 2px; border: 1px solid var(--rule-strong); border-radius: 4px; background: var(--paper); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; transition: background .2s, border-color .2s; }
+.pb-task-check span { font-size: 13px; color: transparent; transform: scale(.5); transition: color .15s, transform .2s; }
+.pb-task.done .pb-task-check, .pb-task-gate.unlocked .pb-task-check { background: var(--celadon-deep); border-color: var(--celadon-deep); }
+.pb-task.done .pb-task-check span, .pb-task-gate.unlocked .pb-task-check span { color: #fff; transform: scale(1); }
+.pb-task-gate { border: 1px dashed var(--rule-strong); border-radius: 6px; margin-top: 12px; padding: 14px; }
+.pb-task-gate.unlocked { border-style: solid; border-color: var(--celadon-hair); background: var(--celadon-tint); }
+.pb-task-gate-num { border-style: dashed; color: var(--ink-mute); border-color: var(--rule-strong); }
+.pb-task-gate.unlocked .pb-task-gate-num { border-style: solid; background: var(--celadon-deep); border-color: var(--celadon-deep); color: #fff; }
+.pb-task-gatenote { margin-top: 4px; font-size: 12px; color: var(--ink-mute); }
+.pb-task-gate.nudge { animation: pbTlNudge .35s ease; }
+@keyframes pbTlNudge { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.pb-tl-saved { margin-top: 12px; font-size: 12px; color: var(--ink-fade); }
+.pb-tl-reset { background: none; border: 0; color: var(--gold-deep); font: inherit; text-decoration: underline; cursor: pointer; padding: 0 2px; }
+
 
 /* ---- Callout: recap tone (celadon) ---- */
 .pb-callout--recap { border-left-color: var(--celadon-deep); background: var(--celadon-tint); }
 .pb-callout--recap .pb-callout-label { color: var(--celadon-deep); }
+/* ---- Callout: knowledge tip tone (warm beige) ---- */
+.pb-callout--tip { border-left-color: var(--gold); background: #F7F0E1; }
+.pb-callout--tip .pb-callout-label { color: var(--gold-deep); }
+
 
 
 

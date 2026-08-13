@@ -317,7 +317,7 @@ function policyItemHTML(it) {
   // Callout: a labelled panel — note (warm neutral, gold bar) or warning
   // (red-tinted, for controls and constraints).
   if (it && it.s === 'callout') {
-    const tone = it.tone === 'warning' ? 'warning' : (it.tone === 'recap' ? 'recap' : 'note');
+    const tone = ['warning', 'recap', 'tip'].indexOf(it.tone) !== -1 ? it.tone : 'note';
     return `<div class="pb-callout pb-callout--${tone}">
       ${it.label ? `<div class="pb-callout-label">${esc(it.label)}</div>` : ''}
       <div class="pb-callout-text">${inlineRichHTML(it.text || '')}</div>
@@ -380,6 +380,46 @@ function policyItemHTML(it) {
         </div>`;
       }).join('')}
       ${it.doneText ? `<div class="pb-check-done">${esc(it.doneText)}</div>` : ''}
+    </div>`;
+  }
+  // Gated task list (V5 Baselining pattern): numbered task rows with
+  // reference pills and tap-to-expand notes, a gate row that only unlocks
+  // when every task is ticked, a progress bar, and on-device persistence
+  // (localStorage) with a reset link.
+  if (it && it.s === 'tasklist') {
+    const items = Array.isArray(it.items) ? it.items : [];
+    const cid = it.cid || ('tl-' + String(it.name || 'list').replace(/[^\w]+/g, '-'));
+    const total = items.length + (it.gateText ? 1 : 0);
+    return `<div class="pb-tasklist" data-tasklist="${esc(cid)}" data-count="${items.length}"
+      data-gate-locked="${esc(it.gateLocked || 'Complete all actions first.')}"
+      data-gate-open="${esc(it.gateOpen || 'Gate passed.')}">
+      ${it.showProgress !== false ? `<div class="pb-tl-progress"><div class="pb-tl-bar"><div class="pb-tl-fill" style="width:0%"></div></div><div class="pb-tl-count">0 of ${total} complete</div></div>` : ''}
+      ${items.map(function (c, i) {
+        return `
+        <div class="pb-task" data-task="${cid}-${i}">
+          <span class="pb-task-num">${i + 1}</span>
+          <div class="pb-task-body">
+            <div class="pb-task-act">${inlineRichHTML(c.text || '')}</div>
+            ${(c.pills || []).length ? `<div class="pb-task-pills">${c.pills.map(function (p2) {
+              return p2.target
+                ? `<button type="button" class="pb-task-pill ${esc(p2.tone || 'gold')}" data-goto="${esc(p2.target)}">${esc(p2.text || 'See')}</button>`
+                : `<span class="pb-task-pill ${esc(p2.tone || 'gold')}">${esc(p2.text || '')}</span>`;
+            }).join('')}</div>` : ''}
+            ${c.note ? `<div class="pb-task-note">${inlineRichHTML(c.note)}</div>` : ''}
+          </div>
+          <button type="button" class="pb-task-check" aria-label="Mark task ${i + 1} done"><span>✓</span></button>
+        </div>`;
+      }).join('')}
+      ${it.gateText ? `
+      <div class="pb-task pb-task-gate" data-gate-row="1">
+        <span class="pb-task-num pb-task-gate-num">◌</span>
+        <div class="pb-task-body">
+          <div class="pb-task-act">${esc(it.gateText)}</div>
+          <div class="pb-task-gatenote">${esc(it.gateLocked || 'Complete all actions first.')}</div>
+        </div>
+        <button type="button" class="pb-task-check" aria-label="Sign off"><span>✓</span></button>
+      </div>` : ''}
+      <div class="pb-tl-saved">Your ticks are saved on this device — pick up where you left off. <button type="button" class="pb-tl-reset">Reset</button></div>
     </div>`;
   }
   // Embedded figure carried over from an imported document — optionally with
@@ -2718,6 +2758,7 @@ function renderGenericChapter(ch, prevId, nextId) {
     body = `<div class="spread">
       ${openerVideoHTML}
       ${pb.intro && pb.intro.length ? subIntroHTML({ intro: pb.intro }) : ''}
+      ${(pb.items || []).map(policyItemHTML).join('')}
       ${(pb.sections || []).map(sectionHTML).join('')}
       ${(ch.subs || []).map(function (sub) {
         const sb = chapterBodyFor({ id: sub.id });
@@ -2735,6 +2776,7 @@ function renderGenericChapter(ch, prevId, nextId) {
     body = `<div class="spread">
       ${openerVideoHTML}
       ${b.intro && b.intro.length ? subIntroHTML({ intro: b.intro }) : ''}
+      ${(b.items || []).map(policyItemHTML).join('')}
       ${(b.sections || []).map(sectionHTML).join('')}
     </div>`;
   }
@@ -3037,6 +3079,103 @@ if (!window.__moOppWired) {
     var section = head.closest('.mo-opp__section');
     var open = section.classList.toggle('open');
     head.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+}
+
+
+// Gated task lists: tick tasks, expand notes, gate sign-off, persistence.
+if (!window.__pbTasksWired) {
+  window.__pbTasksWired = true;
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var tl = t.closest('.pb-tasklist');
+    if (!tl) return;
+    var cid = tl.getAttribute('data-tasklist');
+    var total = parseInt(tl.getAttribute('data-count') || '0', 10);
+    var hasGate = !!tl.querySelector('.pb-task-gate');
+
+    function readState() {
+      try { return JSON.parse(localStorage.getItem('motask-' + cid)) || { done: [], gate: false }; }
+      catch (err) { return { done: [], gate: false }; }
+    }
+    function writeState(st) { try { localStorage.setItem('motask-' + cid, JSON.stringify(st)); } catch (err) {} }
+    function doneCount() { return tl.querySelectorAll('.pb-task.done:not(.pb-task-gate)').length; }
+    function updateProgress() {
+      var n = doneCount() + (tl.querySelector('.pb-task-gate.unlocked') ? 1 : 0);
+      var fill = tl.querySelector('.pb-tl-fill');
+      var count = tl.querySelector('.pb-tl-count');
+      var full = total + (hasGate ? 1 : 0) || 1;
+      if (fill) fill.style.width = Math.round(n / full * 100) + '%';
+      if (count) count.textContent = n + ' of ' + full + ' complete';
+    }
+
+    var reset = t.closest('.pb-tl-reset');
+    if (reset) {
+      tl.querySelectorAll('.pb-task.done').forEach(function (r) { r.classList.remove('done'); });
+      var g0 = tl.querySelector('.pb-task-gate');
+      if (g0) { g0.classList.remove('unlocked'); var gn0 = g0.querySelector('.pb-task-gatenote'); if (gn0) gn0.textContent = tl.getAttribute('data-gate-locked'); }
+      writeState({ done: [], gate: false });
+      updateProgress();
+      return;
+    }
+
+    var check = t.closest('.pb-task-check');
+    var row = t.closest('.pb-task');
+    if (check && row) {
+      if (row.classList.contains('pb-task-gate')) {
+        // gate: only unlocks when every task is done
+        if (doneCount() < total - 1 && !row.classList.contains('unlocked')) {
+          var gn = row.querySelector('.pb-task-gatenote');
+          if (gn) { gn.textContent = tl.getAttribute('data-gate-locked'); row.classList.add('nudge'); setTimeout(function () { row.classList.remove('nudge'); }, 400); }
+          return;
+        }
+        var un = row.classList.toggle('unlocked');
+        var gn2 = row.querySelector('.pb-task-gatenote');
+        if (gn2) gn2.textContent = un ? tl.getAttribute('data-gate-open') : tl.getAttribute('data-gate-locked');
+        var st2 = readState(); st2.gate = un; writeState(st2);
+        updateProgress();
+        return;
+      }
+      row.classList.toggle('done');
+      var st = readState();
+      var idx = row.getAttribute('data-task');
+      if (row.classList.contains('done')) { if (st.done.indexOf(idx) === -1) st.done.push(idx); }
+      else { st.done = st.done.filter(function (x) { return x !== idx; }); }
+      writeState(st);
+      updateProgress();
+      return;
+    }
+    // tap the row body (not a pill/link) to expand its note
+    var body = t.closest('.pb-task-body');
+    if (body && !t.closest('.pb-task-pill') && !t.closest('a') && row && row.querySelector('.pb-task-note')) {
+      row.classList.toggle('open');
+    }
+  });
+}
+
+// Restore task-list ticks + gate after (re)render, then paint progress.
+function refreshTasklists() {
+  document.querySelectorAll('.pb-tasklist').forEach(function (tl) {
+    var cid = tl.getAttribute('data-tasklist');
+    var st;
+    try { st = JSON.parse(localStorage.getItem('motask-' + cid)) || { done: [], gate: false }; }
+    catch (e) { st = { done: [], gate: false }; }
+    tl.querySelectorAll('.pb-task[data-task]').forEach(function (r) {
+      if (st.done.indexOf(r.getAttribute('data-task')) !== -1) r.classList.add('done');
+    });
+    var g = tl.querySelector('.pb-task-gate');
+    if (g && st.gate) {
+      g.classList.add('unlocked');
+      var gn = g.querySelector('.pb-task-gatenote');
+      if (gn) gn.textContent = tl.getAttribute('data-gate-open');
+    }
+    var n = tl.querySelectorAll('.pb-task.done:not(.pb-task-gate)').length + (g && st.gate ? 1 : 0);
+    var total = parseInt(tl.getAttribute('data-count') || '0', 10) + (g ? 1 : 0);
+    var fill = tl.querySelector('.pb-tl-fill');
+    var count = tl.querySelector('.pb-tl-count');
+    if (fill) fill.style.width = Math.round(n / (total || 1) * 100) + '%';
+    if (count) count.textContent = n + ' of ' + total + ' complete';
   });
 }
 
@@ -3412,13 +3551,6 @@ function applyPlaybook(next, opts) {
   updateRailAbout();
   updateMasthead();
   applyTypography();
-  try {
-    document.querySelectorAll('.pb-check').forEach(function (chk) {
-      var k = 'pbcheck-' + chk.getAttribute('data-check');
-      if (sessionStorage.getItem(k)) chk.classList.add('done');
-    });
-  } catch (e) {}
-    refreshChecklistProgress();
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
   try {
@@ -3429,6 +3561,17 @@ function applyPlaybook(next, opts) {
     // restore position (chapter may no longer exist -> fall back to cover)
     if (document.getElementById(keep)) goTo(keep, keepSub);
     else goTo('cover');
+    // restore reader state AFTER the fresh DOM exists — checklist ticks,
+    // task-list ticks + gates, and their progress bars (previously this ran
+    // before renderAll and was wiped by it).
+    try {
+      document.querySelectorAll('.pb-check').forEach(function (chk) {
+        var k = 'pbcheck-' + chk.getAttribute('data-check');
+        if (sessionStorage.getItem(k)) chk.classList.add('done');
+      });
+    } catch (e) {}
+    refreshChecklistProgress();
+    refreshTasklists();
   } catch (e) {
     if (window.parent !== window) {
       window.parent.postMessage({ type: 'preview-error', message: String(e && e.message || e) }, '*');
