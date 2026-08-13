@@ -2539,6 +2539,75 @@ function cardTrackHTML(ch) {
   '</div></div>';
 }
 
+// Process diagram chapter ("MO Luminous Cards" directory): a reference
+// diagram of section cards on a spine, each with linked step rows that
+// navigate to chapters. Author-provided design system (.mo-opp). Desktop
+// grid; mobile accordion (delegated handler below).
+var PROC_ICONS = {
+  ruler: '<svg width="30" height="30" viewBox="0 0 30 30"><rect x="4" y="9.5" width="22" height="11" rx="2"/><path d="M9 9.5v4M13.5 9.5v4M18 9.5v4M22.5 9.5v4"/></svg>',
+  tag: '<svg width="30" height="30" viewBox="0 0 30 30"><path d="M6 6h8l10 10-8 8L6 14V6z"/><circle cx="11" cy="11" r="1.6"/></svg>',
+  sliders: '<svg width="30" height="30" viewBox="0 0 30 30"><path d="M6 9h18M6 15h18M6 21h18"/><circle cx="12" cy="9" r="2.4" fill="#FDFDF3"/><circle cx="19" cy="15" r="2.4" fill="#FDFDF3"/><circle cx="10" cy="21" r="2.4" fill="#FDFDF3"/></svg>',
+  flag: '<svg width="30" height="30" viewBox="0 0 30 30"><path d="M9 26V5"/><path d="M9 6c3-2 6 2 9 0s4-1 4-1v9s-1-1-4 1-6-2-9 0"/></svg>',
+  calendar: '<svg width="30" height="30" viewBox="0 0 30 30"><rect x="5" y="7" width="20" height="18" rx="2"/><path d="M5 12h20M10 4v5M20 4v5"/></svg>',
+  chart: '<svg width="30" height="30" viewBox="0 0 30 30"><path d="M6 25V5"/><path d="M6 25h19"/><path d="M10 20l4-5 4 3 6-8"/></svg>',
+  check: '<svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="10"/><path d="M10 15.4l3.4 3.4L20 12"/></svg>',
+  doc: '<svg width="30" height="30" viewBox="0 0 30 30"><path d="M9 4h9l5 5v17H9z"/><path d="M18 4v5h5"/><path d="M12 15h8M12 19h8"/>'
+};
+function procIcon(key) { return PROC_ICONS[key] || PROC_ICONS.ruler; }
+function pluralUnit(n, unit) { return n + ' ' + (unit || 'item') + (n === 1 ? '' : ((unit || '').endsWith('y') ? 'ies' : 's')); }
+
+function processDiagramHTML(ch) {
+  var d = ch.diagram || {};
+  var b = chapterBodyFor(ch);
+  var intro = b.intro && b.intro.length ? subIntroHTML({ intro: b.intro }) : '';
+  var sections = d.sections || [];
+  var unit = d.unit || 'opportunity';
+  var cols = sections.map(function (s, si) {
+    var links = s.links || [];
+    var count = pluralUnit(links.length, unit);
+    var meta = (s.label || ('Section ' + (si + 1))) + ' \u00b7 ' + count;
+    return '<div class="mo-opp__col" style="--d: ' + (si * 0.12).toFixed(2) + 's;">' +
+      '<article class="mo-opp__section">' +
+        '<button class="mo-opp__head" type="button" aria-expanded="false" aria-controls="mo-opp-body-' + si + '">' +
+          '<span class="mo-opp__section-top">' +
+            '<span class="mo-opp__icon" aria-hidden="true">' + procIcon(s.icon) + '</span>' +
+            '<span class="mo-opp__num">' + esc(s.num || ('0' + (si + 1)).slice(-2)) + '</span>' +
+          '</span>' +
+          '<span class="mo-opp__head-text">' +
+            '<span class="mo-opp__section-label">' + esc(s.label || ('Section ' + (si + 1))) + '</span>' +
+            '<span class="mo-opp__head-meta">' + esc(meta) + '</span>' +
+            '<span class="mo-opp__section-name">' + esc(s.name || 'Section') + '</span>' +
+          '</span>' +
+          '<span class="mo-opp__count">' + esc(count) + '</span>' +
+          '<span class="mo-opp__chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5 2.5 9.5 7 5 11.5"/></svg></span>' +
+        '</button>' +
+        '<div class="mo-opp__body" id="mo-opp-body-' + si + '"><div class="mo-opp__body-inner">' +
+          links.map(function (l, li) {
+            return '<button type="button" class="mo-opp__link" style="--d: ' + (li * 0.05).toFixed(2) + 's;" data-goto="' + esc(l.target || 'menu') + '">' +
+              '<span class="mo-opp__link-num">' + esc(l.num || String(li + 1)) + '</span>' +
+              '<span class="mo-opp__link-text">' +
+                '<span class="mo-opp__link-name">' + esc(l.name || 'Link') + '</span>' +
+                (l.ref ? '<span class="mo-opp__link-chapter">' + esc(l.ref) + '</span>' : '') +
+              '</span>' +
+              '<span class="mo-opp__link-arrow" aria-hidden="true"><svg width="18" height="12" viewBox="0 0 18 12"><path d="M1 6h14M10.5 1.5 15 6l-4.5 4.5"/></svg></span>' +
+            '</button>';
+          }).join('') +
+        '</div></div>' +
+      '</article>' +
+    '</div>';
+  }).join('');
+  return '<div class="spread"><div class="mo-opp-ground"><section class="mo-opp" aria-label="Process diagram">' +
+    '<header class="mo-opp__header"><div>' +
+      (d.eyebrow ? '<p class="mo-opp__eyebrow">' + esc(d.eyebrow) + '</p>' : '') +
+      (d.title ? '<h1 class="mo-opp__title">' + esc(d.title) + '</h1>' : '') +
+      (d.subline ? '<p class="mo-opp__subline">' + esc(d.subline) + '</p>' : '') +
+    '</div>' + (d.pill ? '<span class="mo-opp__pill">' + esc(d.pill) + '</span>' : '') + '</header>' +
+    '<div class="mo-opp__panel"><div class="mo-opp__grid">' + cols + '</div>' +
+    (d.footnote ? '<footer class="mo-opp__footer"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10"/><path d="M7 11.4l2.6 2.6L15 8.6"/></svg><p>' + esc(d.footnote) + '</p></footer>' : '') +
+    '</div>' +
+  '</section></div></div>';
+}
+
 function renderGenericChapter(ch, prevId, nextId) {
   const type = chapterTypeOf(ch);
   const prefix = ch.id.replace('ch-', 'ch'); // prose key convention: ch-7 -> ch7
@@ -2635,6 +2704,8 @@ function renderGenericChapter(ch, prevId, nextId) {
     body = tileMenuChapterHTML(ch);
   } else if (type === 'card-track') {
     body = '<div class="spread">' + openerVideoHTML + '</div>' + cardTrackHTML(ch);
+  } else if (type === 'process-diagram') {
+    body = '<div class="spread">' + openerVideoHTML + '</div>' + processDiagramHTML(ch);
   } else if (type === 'part') {
     // Part chapter: opener + part intro, then each sub-topic as its own
     // anchored block (rail links scroll to them). No wheel — this is the
@@ -2968,6 +3039,20 @@ if (!window.__videoErrorHintWired) {
     hint.textContent = 'This video can\u2019t be played in the browser — it was likely recorded in HEVC (e.g. on an iPhone). Convert it to H.264 MP4 and it will play everywhere.';
     fig.appendChild(hint);
   }, true);
+}
+
+// Process diagram mobile accordion (active <= 620px only, matching the
+// design's matchMedia gate; desktop heads stay inert).
+if (!window.__moOppWired) {
+  window.__moOppWired = true;
+  document.addEventListener('click', function (e) {
+    var head = e.target && e.target.closest ? e.target.closest('.mo-opp__head') : null;
+    if (!head) return;
+    if (!window.matchMedia('(max-width: 620px)').matches) return;
+    var section = head.closest('.mo-opp__section');
+    var open = section.classList.toggle('open');
+    head.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
 }
 
 // Timeline + checklist interactions.

@@ -42,7 +42,8 @@
     'sections-list':{label: 'Sections list',      prose: null,     body: 'sections' },
     'tile-menu':   { label: 'Tile menu',          prose: null,     body: 'tilemenu' },
     'part':        { label: 'Part with sub-topics', prose: null,   body: 'part' },
-    'card-track':  { label: 'Card track diagram',  prose: null,    body: 'cardtrack' }
+    'card-track':  { label: 'Card track diagram',  prose: null,    body: 'cardtrack' },
+    'process-diagram': { label: 'Process diagram', prose: null,    body: 'proc' }
   };
 
   var ITEM_SYMBOLS = [
@@ -383,7 +384,7 @@
     return 'ch-' + (max + 1);
   }
   function openAddChapterModal() {
-    var order = ['standard', 'sections-list', 'lifecycle', 'directory', 'letter', 'tile-menu', 'part', 'card-track'];
+    var order = ['standard', 'sections-list', 'lifecycle', 'directory', 'letter', 'tile-menu', 'part', 'card-track', 'process-diagram'];
     var descs = {
       'standard': 'Opener plus numbered policy sections with items.',
       'sections-list': 'A simple list of sections — good for toolkits and resources.',
@@ -392,7 +393,8 @@
       'letter': 'Foreword-style editorial chapter.',
       'tile-menu': 'A grid of image tiles, each linking to a chapter — like the Contents page, placed anywhere.',
       'part': 'A part that groups sub-topics — sub-topics show indented in the outline and rail (e.g. “Introduction” with 1.1–1.7 under it).',
-      'card-track': 'A horizontal track of linked cards on a spine — an opportunity/section map. Stacks vertically on mobile.'
+      'card-track': 'A horizontal track of linked cards on a spine — an opportunity/section map. Stacks vertically on mobile.',
+      'process-diagram': 'A reference process diagram: section cards with linked steps that open chapters. Accordion on mobile.'
     };
     var body = el('div', {});
     body.appendChild(el('div', { class: 'note', text: 'Pick the kind of chapter to add. It is appended to the outline — use Move up / Move down in the chapter panel to reorder.' }));
@@ -438,6 +440,14 @@
       PB.sectionBodies[id] = { intro: [], sections: [] };
       ch.track = [{ num: '01', icon: '', label: 'SECTION 1', title: 'First card', pill: '',
         links: [{ num: '1', name: 'First link', target: 'menu' }] }];
+    }
+    if (type === 'process-diagram') {
+      PB.sectionBodies[id] = { intro: [], sections: [] };
+      ch.diagram = {
+        eyebrow: '', title: 'Process overview', subline: '', pill: 'Select a step', footnote: '', unit: 'step',
+        sections: [{ num: '01', label: 'Section 1', name: 'First section', icon: 'ruler',
+          links: [{ num: '1', name: 'First step', ref: '', target: 'menu' }] }]
+      };
     }
     PB.chapters.push(ch);
     touch(); renderTree();
@@ -573,6 +583,67 @@
       }
       // Tile-menu chapters: the tiles are the whole point — title, text,
       // optional image and the chapter each tile links to.
+      if (type === 'process-diagram') {
+        ch.diagram = ch.diagram || { sections: [] };
+        var dgm = ch.diagram;
+        dgm.sections = dgm.sections || [];
+        var dTargets = [{ v: 'menu', l: 'Contents page' }].concat(PB.chapters.map(function (c) {
+          return { v: c.id, l: (c.numeral ? c.numeral + ' · ' : '') + (c.label || c.id) };
+        }));
+        box.appendChild(sectionLabel('Diagram header'));
+        box.appendChild(textField('Eyebrow', dgm.eyebrow || '', function (v) { dgm.eyebrow = v; touch(); }, 'e.g. Part 3 · Opportunities Overview'));
+        box.appendChild(textField('Title', dgm.title || '', function (v) { dgm.title = v; touch(); }));
+        box.appendChild(textField('Sub-line', dgm.subline || '', function (v) { dgm.subline = v; touch(); }, '', true));
+        box.appendChild(textField('Pill (top right)', dgm.pill || '', function (v) { dgm.pill = v; touch(); }, 'e.g. Select an opportunity'));
+        box.appendChild(textField('Footer note', dgm.footnote || '', function (v) { dgm.footnote = v; touch(); }, 'Small line under the panel.', true));
+        box.appendChild(textField('Unit word (for the count chips)', dgm.unit || 'opportunity', function (v) { dgm.unit = v.trim() || 'opportunity'; touch(); }, 'Singular — e.g. opportunity, step, section. Pluralised automatically.'));
+        box.appendChild(sectionLabel('Sections (' + dgm.sections.length + ')'));
+        renderRepeatable(box, dgm.sections, {
+          nameOf: function (s) { return (s.num ? s.num + ' \u00b7 ' : '') + (s.name || '(section)'); },
+          subOf: function (s) { return (s.links || []).length + ' linked step(s)'; },
+          open: null,
+          inlineEdit: function (s, wrap) {
+            wrap.appendChild(textField('Number', s.num || '', function (v) { s.num = v; touch(); }, 'e.g. 01'));
+            wrap.appendChild(textField('Label', s.label || '', function (v) { s.label = v; touch(); }, 'e.g. Section 1'));
+            wrap.appendChild(textField('Name', s.name || '', function (v) { s.name = v; touch(); }));
+            wrap.appendChild(selectField('Icon', s.icon || 'ruler', [
+              { v: 'ruler', l: 'Ruler (baseline/measure)' }, { v: 'tag', l: 'Tag (offers/packages)' },
+              { v: 'sliders', l: 'Sliders (pricing/controls)' }, { v: 'flag', l: 'Flag (events)' },
+              { v: 'calendar', l: 'Calendar' }, { v: 'chart', l: 'Chart (performance)' },
+              { v: 'check', l: 'Check (done/review)' }, { v: 'doc', l: 'Document' }
+            ], function (v) { s.icon = v; touch(); }));
+            s.links = s.links || [];
+            wrap.appendChild(sectionLabel('Linked steps (' + s.links.length + ')'));
+            renderRepeatable(wrap, s.links, {
+              nameOf: function (l) { return l.name || '(step)'; },
+              subOf: function (l) {
+                var t = dTargets.filter(function (x) { return x.v === l.target; })[0];
+                return '\u2192 ' + (t ? t.l : 'Contents page');
+              },
+              open: null,
+              inlineEdit: function (l, wrap2) {
+                wrap2.appendChild(textField('Number', l.num || '', function (v) { l.num = v; touch(); }));
+                wrap2.appendChild(textField('Step name', l.name || '', function (v) { l.name = v; touch(); }));
+                wrap2.appendChild(textField('Reference line (e.g. Chapter VI)', l.ref || '', function (v) { l.ref = v; touch(); }));
+                wrap2.appendChild(selectField('Links to', l.target || 'menu', dTargets, function (v) {
+                  l.target = v;
+                  if (!l.ref) {
+                    var t = dTargets.filter(function (x) { return x.v === v; })[0];
+                    if (t && t.v !== 'menu' && t.l.indexOf('\u00b7') !== -1) l.ref = 'Chapter ' + t.l.split('\u00b7')[0].trim();
+                  }
+                  touch();
+                }));
+              },
+              addLabel: 'Add linked step',
+              make: function () { return { num: String(s.links.length + 1), name: 'New step', ref: '', target: 'menu' }; }
+            });
+          },
+          addLabel: 'Add section',
+          make: function () { return { num: '0' + (dgm.sections.length + 1), label: 'Section ' + (dgm.sections.length + 1), name: 'New section', icon: 'ruler', links: [] }; }
+        });
+        var bodyD = bodyForChapter(ch);
+        box.appendChild(paraArrayField('Intro paragraph(s) above the diagram (optional)', bodyD.intro || [], function (arr) { bodyD.intro = arr; touch(); }));
+      }
       if (type === 'card-track') {
         ch.track = ch.track || [];
         var trackTargets = [{ v: 'menu', l: 'Contents page' }].concat(PB.chapters.map(function (c) {
