@@ -384,13 +384,19 @@
     // ("0.1", "2.7 – 2.11", "3.2.1 · 3.2.4 · 3.3") contain no content — only
     // entries that would be misdetected as headings.
     // TOC-shaped lines: numbered entries, § section markers, or bare numerals.
-    // 40% threshold: the v8 two-column contents page mixes number entries with
-    // § entries and wrapped continuations.
+    // Two gates, because content pages can also be number-dense: (a) very
+    // high ratio (index/cross-reference pages, ~60%+), or (b) a page that
+    // actually says "Contents"/"Navigation" at a lower ratio. A summary table
+    // page like "the six opportunities at a glance" (47% number-led rows but
+    // no Contents title) must NOT be skipped.
     var NUMLINE_RE = /^\d+(\.\d+)*(\s|$|[–—·])|^§/;
     var isTocPage = pages.map(function (lines) {
       if (lines.length < 6) return false;
       var numLines = lines.filter(function (l) { return NUMLINE_RE.test(l.text.trim()); }).length;
-      return numLines >= 6 && numLines >= lines.length * 0.4;
+      var hasContentsTitle = lines.some(function (l) {
+        return /^(contents|navigation)$/i.test(despace(l.text.trim()).replace(/\s+/g, ' '));
+      });
+      return numLines >= 6 && (numLines >= lines.length * 0.6 || (hasContentsTitle && numLines >= lines.length * 0.35));
     });
 
     var paragraphs = []; // {text, heading, bullet, page, size, bold}
