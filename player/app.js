@@ -2444,7 +2444,7 @@ function renderRail() {
       </button>
       ${c.hasSubs || (chapterTypeOf(c) === 'part' && (c.subs || []).length) ? `
         <ul class="rail-sub" data-parent="${c.id}">
-          ${(chapterTypeOf(c) === 'part' ? (c.subs || []) : LIFECYCLE).map(s => `<li${s.depth === 2 ? ' class="lvl2"' : ''}><button data-goto="${c.id}" data-sub="${s.id}" data-letter="${s.letter || ''}"><span>${s.label}</span></button></li>`).join('')}
+          ${(chapterTypeOf(c) === 'part' ? (c.subs || []) : LIFECYCLE).map(s => `<li${s.depth === 2 ? ' class="lvl2"' : (s.depth === 3 ? ' class="lvl3"' : '')}><button data-goto="${c.id}" data-sub="${s.id}" data-letter="${s.letter || ''}"><span>${s.label}</span></button></li>`).join('')}
         </ul>
       ` : ''}
     </li>
@@ -2762,10 +2762,10 @@ function renderGenericChapter(ch, prevId, nextId) {
       ${(pb.sections || []).map(sectionHTML).join('')}
       ${(ch.subs || []).map(function (sub) {
         const sb = chapterBodyFor({ id: sub.id });
-        const isTopic = sub.depth === 2;
+        const tier = sub.depth === 3 ? 'sub' : (sub.depth === 2 ? 'topic' : 'section');
         return `
-        <div class="spread tight part-${isTopic ? 'topic' : 'section'}" id="${esc(sub.id)}">
-          <div class="section-eyebrow${isTopic ? ' part-topic-eyebrow' : ''}"><span class="txt">${esc(sub.label || '')}</span><span class="rule"></span></div>
+        <div class="spread tight part-${tier}" id="${esc(sub.id)}">
+          <div class="section-eyebrow${tier !== 'section' ? ' part-' + tier + '-eyebrow' : ''}"><span class="txt">${esc(sub.label || '')}</span><span class="rule"></span></div>
           ${sb.intro && sb.intro.length ? subIntroHTML({ intro: sb.intro }) : ''}
           ${(sb.sections || []).map(sectionHTML).join('')}
         </div>`;

@@ -359,6 +359,7 @@
             onSelect: function () { select({ kind: kidKind, id: sub.id, chapter: ch.id, sub: sub.id }); }
           });
           if (sub.depth === 2) node.style.paddingLeft = '26px'; // topic under a § section
+          if (sub.depth === 3) node.style.paddingLeft = '46px'; // sub-section under a topic
           kids.appendChild(node);
         });
         tree.appendChild(kids);
@@ -709,7 +710,9 @@
           subOf: function (s) {
             var ix = ch.subs.indexOf(s);
             var n = 0;
-            for (var j = ix + 1; j < ch.subs.length && ch.subs[j].depth === 2; j++) n++;
+            for (var j = ix + 1; j < ch.subs.length && (ch.subs[j].depth || 1) > 1; j++) {
+              if (ch.subs[j].depth === 2) n++;
+            }
             return n + ' sub-topic(s) indented under it';
           },
           open: function (s) { select({ kind: 'part-sub', id: s.id, chapter: ch.id, sub: s.id }); },
@@ -922,20 +925,26 @@
     box.appendChild(textField('Label', sub.label || '', function (v) { sub.label = v; touch(); renderTree(); },
       isSection ? 'Shown as the first indent level under the part.' : 'Shown double-indented under its section.'));
     box.appendChild(paraArrayField('Intro paragraphs', content.intro || [], function (arr) { content.intro = arr; touch(); }));
-    if (isSection) {
-      // a § section lists its own sub-topics (the depth-2 subs that follow it)
-      var myTopics = [];
+    // helper: entries belonging to a sub = the run of deeper entries that
+    // follow it in the flat subs list (until the next same-or-shallower depth)
+    function childRun(parentSub, parentDepth) {
+      var out = [];
       var seen = false;
       (ch.subs || []).forEach(function (s2) {
-        if (s2 === sub) { seen = true; return; }
+        if (s2 === parentSub) { seen = true; return; }
         if (!seen) return;
-        if (s2.depth === 1) seen = false;
-        else myTopics.push(s2);
+        if ((s2.depth || 1) <= parentDepth) seen = false;
+        else out.push(s2);
       });
+      return out;
+    }
+    if (isSection) {
+      // a § section lists its topics (depth 2; their depth-3 subs ride along)
+      var myTopics = childRun(sub, 1).filter(function (t) { return t.depth === 2; });
       box.appendChild(sectionLabel('Sub-topics (' + myTopics.length + ')'));
       renderRepeatable(box, myTopics, {
         nameOf: function (t) { return t.label || '(sub-topic)'; },
-        subOf: function () { return 'Indented under this section'; },
+        subOf: function (t) { return childRun(t, 2).length + ' sub-section(s)'; },
         open: function (t) { select({ kind: 'part-sub', id: t.id, chapter: ch.id, sub: t.id }); },
         addLabel: 'Add sub-topic',
         make: function () {
@@ -944,13 +953,43 @@
           return ns;
         },
         onChange: function () {
-          // myTopics is a derived view — splice it back over the old run
+          // splice the edited topic list back, keeping each topic's depth-3 run
           var ix = ch.subs.indexOf(sub);
-          var run = 0;
-          for (var j = ix + 1; j < ch.subs.length && ch.subs[j].depth === 2; j++) run++;
-          ch.subs.splice.apply(ch.subs, [ix + 1, run].concat(myTopics));
+          var end = ix + 1;
+          while (end < ch.subs.length && (ch.subs[end].depth || 1) > 1) end++;
+          var runs = {};
+          childRun(sub, 1).forEach(function (t) { if (t.depth === 2) runs[t.id] = childRun(t, 2); });
+          var rebuilt = [];
+          myTopics.forEach(function (t) {
+            rebuilt.push(t);
+            (runs[t.id] || []).forEach(function (s3) { rebuilt.push(s3); });
+          });
+          ch.subs.splice.apply(ch.subs, [ix + 1, end - ix - 1].concat(rebuilt));
         }
       });
+    } else if (sub.depth === 2) {
+      // a topic lists its sub-sections (depth 3) AND keeps its own sections
+      var mySubs = childRun(sub, 2).filter(function (t) { return t.depth === 3; });
+      box.appendChild(sectionLabel('Sub-sections (' + mySubs.length + ')'));
+      renderRepeatable(box, mySubs, {
+        nameOf: function (t) { return t.label || '(sub-section)'; },
+        subOf: function () { return 'Indented under this topic'; },
+        open: function (t) { select({ kind: 'part-sub', id: t.id, chapter: ch.id, sub: t.id }); },
+        addLabel: 'Add sub-section',
+        make: function () {
+          var ns = { id: uid('sub'), label: 'New sub-section', depth: 3 };
+          PB.sectionBodies[ns.id] = { intro: [], sections: [] };
+          return ns;
+        },
+        onChange: function () {
+          var ix = ch.subs.indexOf(sub);
+          var end = ix + 1;
+          while (end < ch.subs.length && (ch.subs[end].depth || 1) > 2) end++;
+          ch.subs.splice.apply(ch.subs, [ix + 1, end - ix - 1].concat(mySubs));
+        }
+      });
+      box.appendChild(sectionLabel('Sections'));
+      renderSectionsList(box, content, null, sel.id);
     } else {
       box.appendChild(sectionLabel('Sections'));
       renderSectionsList(box, content, null, sel.id);
@@ -2591,9 +2630,17 @@
         }
       }
       if (lvl === 'sub' && curTopicId) {
-        var tb = PB.sectionBodies[curTopicId];
-        tb.sections.push({ num: '', title: s.title, blurb: s.paragraphs || [], items: window.PdfImport.sectionItems(s) });
-        return;
+        // X.Y.Z sub-sections get their own depth-3 outline entry (and page
+        // block) under the topic — not folded into the topic's sections.
+        var host = curPart;
+        var sub3 = { id: uid('sub'), label: s.title || 'Sub-section', depth: 3 };
+        if (host) {
+          host.subs.push(sub3);
+          PB.sectionBodies[sub3.id] = makeBody(s, first);
+          lastId = host.id; first = false;
+          return;
+        }
+        // no active part (shouldn't happen — topics set it) — fall through
       }
       var id2 = newId();
       var ch2 = { id: id2, numeral: numeral(), label: s.title || (result.chapter.title + ' — part ' + (i + 1)), type: 'standard', opener: '' };

@@ -768,7 +768,11 @@
     var out = [];
     for (var i = 0; i < sections.length; i++) {
       var s = sections[i];
-      var bodyChars = s.paragraphs.join(' ').length + s.bullets.join(' ').length;
+      // Structured blocks (tables/callouts/steps) are substantive content — a
+      // section carrying only a callout or table is NOT bodiless and must not
+      // fold or be dropped (e.g. "5.2.4 Local experiential packages…", whose
+      // whole body is one callout).
+      var bodyChars = s.paragraphs.join(' ').length + s.bullets.join(' ').length + (s.blocks || []).length * 50;
       var isWrapper = !NUMBERED_STEP.test(s.title) && i < sections.length - 1 &&
         (opts.onlyEmpty ? bodyChars === 0
                         : (bodyChars < 200 && (WRAPPER_NAMES.test(s.title) || bodyChars === 0 || !s.title)));
@@ -779,12 +783,14 @@
         nxt.paragraphs = [introBits.concat(s.paragraphs).join(' ')].concat(nxt.paragraphs).filter(function (x) { return x; });
         nxt.bullets = s.bullets.concat(nxt.bullets);
         nxt.images = s.images.concat(nxt.images);
+        nxt.blocks = (s.blocks || []).concat(nxt.blocks || []);
+        nxt.mixed = (s.mixed || []).concat(nxt.mixed || []);
         continue;
       }
       out.push(s);
     }
     return out.filter(function (s) {
-      return s.title && (s.paragraphs.length || s.bullets.length || s.images.length);
+      return s.title && (s.paragraphs.length || s.bullets.length || s.images.length || (s.blocks || []).length);
     });
   }
 
