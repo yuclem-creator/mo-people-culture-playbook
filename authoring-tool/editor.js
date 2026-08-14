@@ -1024,6 +1024,9 @@
       // the § section's own imported sections — editable and deletable
       box.appendChild(sectionLabel('Sections in this section (' + (content.sections || []).length + ')'));
       renderSectionsList(box, content, ch.id, sel.id);
+      if (!(content.sections || []).length && !myTopics.length) {
+        box.appendChild(contentElsewhereNote(ch, sel));
+      }
       box.appendChild(sectionLabel('Sub-topics (' + myTopics.length + ')'));
       renderRepeatable(box, myTopics, {
         nameOf: function (t) { return t.label || '(sub-topic)'; },
@@ -1073,10 +1076,45 @@
       });
       box.appendChild(sectionLabel('Sections'));
       renderSectionsList(box, content, null, sel.id);
+      if (!(content.sections || []).length && !childRun(sub, 2).length) {
+        box.appendChild(contentElsewhereNote(ch, sub));
+      }
     } else {
       box.appendChild(sectionLabel('Sections'));
       renderSectionsList(box, content, null, sel.id);
+      if (!(content.sections || []).length) {
+        box.appendChild(contentElsewhereNote(ch, sub));
+      }
     }
+  }
+
+  // When a section/sub-topic page shows content but its own sections list is
+  // empty, that content was folded into the parent part during import — point
+  // the editor there with a jump link.
+  function contentElsewhereNote(ch, sel) {
+    var holder = null, holderLabel = '';
+    if ((bodyForChapter(ch).sections || []).length) { holderLabel = 'the part "' + ch.label + '"'; }
+    else {
+      var sibs = (ch.subs || []).filter(function (s) {
+        var b = PB.sectionBodies && PB.sectionBodies[s.id];
+        return b && (b.sections || []).length;
+      });
+      if (sibs.length) { holder = sibs[0].id; holderLabel = '"' + sibs[0].label + '"'; }
+    }
+    var note = el('div', { class: 'form-note' });
+    note.style.margin = '2px 0 6px';
+    note.appendChild(document.createTextNode(
+      'Nothing sits directly under this page. Content shown on the part page (steps, tables, paragraphs) is edited on ' + (holderLabel || 'the parent') + '. '));
+    if (holderLabel) {
+      var jump = el('button', { type: 'button', class: 'btn ghost', text: 'Open it ›' });
+      jump.style.marginLeft = '6px';
+      jump.onclick = function () {
+        if (holder) select({ kind: 'part-sub', id: holder, chapter: ch.id, sub: holder });
+        else select({ kind: 'chapter', id: ch.id, type: ch.type, chapter: ch.id });
+      };
+      note.appendChild(jump);
+    }
+    return note;
   }
 
   // =========================================================================
@@ -2069,7 +2107,10 @@
       var ratio = 0;
       try {
         ffmpeg.on('progress', function (p) {
-          var r = p && typeof p.progress === 'number' ? p.progress : 0;
+          // progress events are 0..1 when ffmpeg can read the duration; for
+          // some inputs they arrive as raw timestamps — clamp and ignore junk
+          var r = p && typeof p.progress === 'number' && isFinite(p.progress) ? p.progress : 0;
+          if (r < 0 || r > 1) return;
           if (r > ratio) {
             ratio = r;
             onProgress(0.05 + ratio * 0.85, 'Compressing video… ' + Math.round(ratio * 100) + '%');
@@ -2079,19 +2120,32 @@
       // Keep the source extension so ffmpeg probes the right demuxer.
       var ext = (/\.[a-z0-9]+$/i.exec(file.name || '') || ['.mp4'])[0].toLowerCase();
       var inName = 'input' + ext;
+      function runPass(args, label, ms) {
+        return withTimeout(ffmpeg.exec(args), ms, label).then(function () {
+          return ffmpeg.readFile('output.mp4');
+        }).then(function (data) {
+          try { ffmpeg.deleteFile('output.mp4'); } catch (e) {}
+          if (!data || !data.length) throw new Error('compression produced no output');
+          return new Blob([data], { type: 'video/mp4' });
+        });
+      }
       return window.FFmpegUtil.fetchFile(file).then(function (buf) {
         return ffmpeg.writeFile(inName, buf);
       }).then(function () {
-        return withTimeout(
-          ffmpeg.exec(['-i', inName, '-vf', 'scale=-2:720', '-c:v', 'libx264',
-            '-preset', 'veryfast', '-crf', '26', '-c:a', 'aac', '-b:a', '96k',
-            '-movflags', '+faststart', 'output.mp4']),
-          10 * 60 * 1000, 'Compressing the video');
-      }).then(function () {
-        return ffmpeg.readFile('output.mp4');
-      }).then(function (data) {
-        var blob = new Blob([data], { type: 'video/mp4' });
-        try { ffmpeg.deleteFile(inName); ffmpeg.deleteFile('output.mp4'); } catch (e) {}
+        // Pass 1: 720p CRF 26. On timeout / wasm errors (large sources can
+        // exhaust wasm32 memory), retry once with a lighter, faster pass.
+        return runPass(['-i', inName, '-vf', 'scale=-2:720', '-c:v', 'libx264',
+          '-preset', 'veryfast', '-crf', '26', '-c:a', 'aac', '-b:a', '96k',
+          '-movflags', '+faststart', 'output.mp4'], 'Compressing the video', 10 * 60 * 1000)
+          .catch(function (err) {
+            onProgress(0.3, 'First pass struggled — retrying with lighter settings…');
+            return runPass(['-i', inName, '-vf', 'scale=-2:540', '-c:v', 'libx264',
+              '-preset', 'ultrafast', '-crf', '30', '-c:a', 'aac', '-b:a', '80k',
+              '-movflags', '+faststart', 'output.mp4'], 'Compressing the video (lighter pass)', 10 * 60 * 1000)
+              .catch(function () { throw err; });
+          });
+      }).then(function (blob) {
+        try { ffmpeg.deleteFile(inName); } catch (e) {}
         onProgress(1, 'Compression complete');
         return { blob: blob, compressed: true, originalSize: file.size };
       });
@@ -2100,6 +2154,12 @@
         throw new Error('"' + file.name + '" is ' + Math.round(r.blob.size / 1048576) + 'MB even after compression — the cloud limit is 50MB. Please split it or compress it further (HandBrake, 720p).');
       }
       return r;
+    }, function (err) {
+      var msg = err && err.message ? err.message : String(err);
+      if (/memory|out of bounds|unreachable|RuntimeError/i.test(msg)) {
+        throw new Error('"' + file.name + '" is too large to compress in the browser. Please compress it in HandBrake (720p MP4) and upload the smaller file.');
+      }
+      throw err;
     });
   }
 
