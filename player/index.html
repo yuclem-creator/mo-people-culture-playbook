@@ -4089,6 +4089,22 @@ mark {
   .topbar, .rail, .chapter-nav, .progress-bar { display: none; }
   .chapter { display: block !important; page-break-after: always; }
 }
+
+/* Task list context card (V5 dark panel beside the tasks) */
+.pb-tl-wrap{display:grid;grid-template-columns:290px minmax(0,1fr);gap:24px;align-items:start;}
+.pb-tl-card{background:var(--ink);color:var(--mo-ivory);border-radius:14px;padding:24px;position:sticky;top:24px;}
+.pb-tl-card-lbl{font-size:10px;letter-spacing:.26em;color:var(--celadon);text-transform:uppercase;margin:14px 0 4px;font-weight:700;}
+.pb-tl-card-lbl:first-child{margin-top:0;}
+.pb-tl-card-val{font-size:14px;line-height:1.55;color:#EDEAE3;}
+.pb-tl-card-val em{color:var(--celadon);font-style:normal;}
+.pb-tl-card-progress{margin-top:20px;}
+.pb-tl-card-bar{height:4px;background:#3d3a34;border-radius:2px;overflow:hidden;}
+.pb-tl-card-fill{height:100%;background:var(--gold);width:0;transition:width .5s cubic-bezier(.2,.8,.2,1);}
+.pb-tl-card-count{font-size:11px;letter-spacing:.18em;color:var(--celadon);margin-top:9px;text-transform:uppercase;}
+@media(max-width:880px){
+  .pb-tl-wrap{grid-template-columns:1fr;}
+  .pb-tl-card{position:static;}
+}
 </style>
 </head>
 <body>

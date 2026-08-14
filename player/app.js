@@ -390,7 +390,18 @@ function policyItemHTML(it) {
     const items = Array.isArray(it.items) ? it.items : [];
     const cid = it.cid || ('tl-' + String(it.name || 'list').replace(/[^\w]+/g, '-'));
     const total = items.length + (it.gateText ? 1 : 0);
-    return `<div class="pb-tasklist" data-tasklist="${esc(cid)}" data-count="${items.length}"
+    // Optional V5 context card: dark sticky panel beside the tasks with
+    // customisable label/value rows and a live "N of M complete" progress.
+    const card = (it.card && it.card.on) ? it.card : null;
+    const cardHtml = card ? `<aside class="pb-tl-card">
+      ${(card.rows || []).map(function (r) {
+        return (r && (r.label || r.value))
+          ? `<div class="pb-tl-card-lbl">${esc(r.label || '')}</div><div class="pb-tl-card-val">${inlineRichHTML(r.value || '')}</div>`
+          : '';
+      }).join('')}
+      ${card.showCount !== false ? `<div class="pb-tl-card-progress"><div class="pb-tl-card-bar"><div class="pb-tl-card-fill" style="width:0%"></div></div><div class="pb-tl-card-count">0 of ${total} complete</div></div>` : ''}
+    </aside>` : '';
+    const listHtml = `<div class="pb-tasklist" data-tasklist="${esc(cid)}" data-count="${items.length}"
       data-gate-locked="${esc(it.gateLocked || 'Complete all actions first.')}"
       data-gate-open="${esc(it.gateOpen || 'Gate passed.')}">
       ${it.showProgress !== false ? `<div class="pb-tl-progress"><div class="pb-tl-bar"><div class="pb-tl-fill" style="width:0%"></div></div><div class="pb-tl-count">0 of ${total} complete</div></div>` : ''}
@@ -421,6 +432,7 @@ function policyItemHTML(it) {
       </div>` : ''}
       <div class="pb-tl-saved">Your ticks are saved on this device — pick up where you left off. <button type="button" class="pb-tl-reset">Reset</button></div>
     </div>`;
+    return card ? `<div class="pb-tl-wrap">${cardHtml}${listHtml}</div>` : listHtml;
   }
   // Embedded figure carried over from an imported document — optionally with
   // interactive hotspots (numbered pins revealing popup text on click).
@@ -3108,6 +3120,13 @@ if (!window.__pbTasksWired) {
       var full = total + (hasGate ? 1 : 0) || 1;
       if (fill) fill.style.width = Math.round(n / full * 100) + '%';
       if (count) count.textContent = n + ' of ' + full + ' complete';
+      var wrap = tl.closest('.pb-tl-wrap');
+      if (wrap) {
+        var cfill = wrap.querySelector('.pb-tl-card-fill');
+        var ccount = wrap.querySelector('.pb-tl-card-count');
+        if (cfill) cfill.style.width = Math.round(n / full * 100) + '%';
+        if (ccount) ccount.textContent = n + ' of ' + full + ' complete';
+      }
     }
 
     var reset = t.closest('.pb-tl-reset');
@@ -3176,6 +3195,13 @@ function refreshTasklists() {
     var count = tl.querySelector('.pb-tl-count');
     if (fill) fill.style.width = Math.round(n / (total || 1) * 100) + '%';
     if (count) count.textContent = n + ' of ' + total + ' complete';
+    var wrap = tl.closest('.pb-tl-wrap');
+    if (wrap) {
+      var cfill = wrap.querySelector('.pb-tl-card-fill');
+      var ccount = wrap.querySelector('.pb-tl-card-count');
+      if (cfill) cfill.style.width = Math.round(n / (total || 1) * 100) + '%';
+      if (ccount) ccount.textContent = n + ' of ' + total + ' complete';
+    }
   });
 }
 

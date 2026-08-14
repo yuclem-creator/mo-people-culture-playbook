@@ -1348,6 +1348,31 @@
     if (it.s === 'tasklist') {
       if (!it.cid) it.cid = uid('tl');
       box.appendChild(checkField('Show progress bar ("N of M complete")', it.showProgress !== false, function (v) { it.showProgress = v; touch(); }));
+      // Optional V5 context card: dark panel beside the tasks.
+      it.card = it.card || { on: false, rows: [], showCount: true };
+      box.appendChild(checkField('Show context card (dark panel beside the tasks)', !!it.card.on, function (v) {
+        it.card.on = v;
+        if (v && !(it.card.rows || []).length) {
+          it.card.rows = [{ label: 'Stage', value: '' }, { label: 'Objective', value: '' }, { label: 'Timing', value: '' }, { label: 'Owner', value: '' }];
+        }
+        touch(); renderInspector();
+      }));
+      if (it.card.on) {
+        box.appendChild(checkField('Show "N of M complete" progress in the card', it.card.showCount !== false, function (v) { it.card.showCount = v; touch(); }));
+        it.card.rows = it.card.rows || [];
+        box.appendChild(sectionLabel('Card rows (' + it.card.rows.length + ')'));
+        renderRepeatable(box, it.card.rows, {
+          nameOf: function (r) { return r.label || '(row)'; },
+          subOf: function (r) { return (r.value || '').replace(/<[^>]+>/g, '').slice(0, 60); },
+          open: null,
+          inlineEdit: function (r, wrap) {
+            wrap.appendChild(textField('Label (small caps)', r.label || '', function (v) { r.label = v; touch(); }, 'e.g. Stage'));
+            wrap.appendChild(textField('Value', r.value || '', function (v) { r.value = v; touch(); }, 'e.g. Baselining', true));
+          },
+          addLabel: 'Add card row',
+          make: function () { return { label: 'Label', value: '' }; }
+        });
+      }
       box.appendChild(textField('Gate text (sign-off row — optional)', it.gateText || '', function (v) {
         var had = !!it.gateText;
         it.gateText = v;
