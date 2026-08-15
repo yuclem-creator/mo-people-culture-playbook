@@ -381,7 +381,17 @@ function pbChartHTML(it) {
 // A single expandable subheading (resource) row.
 // Collapsed: symbol + name + kind + chevron.
 // Expanded: reveals the blurb description and the hyperlinked resource.
+// Every content element can carry an optional heading (it.head), set in the
+// Studio inspector — rendered above the element regardless of its type.
 function policyItemHTML(it) {
+  var inner = policyItemBodyHTML(it);
+  if (it && it.head && String(it.head).trim()) {
+    return '<div class="pb-item"><div class="pb-item-head">' + esc(it.head) + '</div>' + inner + '</div>';
+  }
+  return inner;
+}
+
+function policyItemBodyHTML(it) {
   const id = 'acc-' + (++_accId);
   // Video frame (uploaded or linked).
   if (it && it.s === 'video') {
@@ -584,6 +594,131 @@ function policyItemHTML(it) {
       </div>` : '';
     if (!slider && !cards) return `<div class="pb-bawrap pb-ba-empty">Add before / after images or text to build this comparison.</div>`;
     return `<div class="pb-bawrap">${slider}${cards}</div>`;
+  }
+  // Heading: a standalone section heading for pacing long pages.
+  if (it && it.s === 'heading') {
+    if (!it.text) return '';
+    return `<div class="pb-heading">
+      ${it.sub ? `<div class="pb-heading-sub">${esc(it.sub)}</div>` : ''}
+      <h2 class="pb-heading-text">${esc(it.text)}</h2>
+      <span class="pb-heading-rule" aria-hidden="true"></span>
+    </div>`;
+  }
+  // Stat / KPI band: a strip of headline metrics with optional deltas.
+  if (it && it.s === 'statband') {
+    const stats = (Array.isArray(it.stats) ? it.stats : []).filter(function (s) { return s && (s.value || s.label); });
+    if (!stats.length) return `<div class="pb-stats pb-chart-empty">Add stats to draw this band.</div>`;
+    return `<div class="pb-stats" style="--cols:${stats.length}">` + stats.map(function (s) {
+      const mark = s.deltaDir === 'down' ? '▼ ' : s.deltaDir === 'up' ? '▲ ' : '';
+      return `<div class="pb-stat">
+        <div class="pb-stat-num">${esc(String(s.value || ''))}${s.unit ? `<span class="pb-stat-unit">${esc(s.unit)}</span>` : ''}</div>
+        <div class="pb-stat-label">${esc(s.label || '')}</div>
+        ${s.sub ? `<div class="pb-stat-sub">${esc(s.sub)}</div>` : ''}
+        ${s.delta ? `<div class="pb-stat-delta${s.deltaDir === 'down' ? ' down' : ''}">${mark}${esc(s.delta)}</div>` : ''}
+      </div>`;
+    }).join('') + '</div>';
+  }
+  // Gauge / maturity meter: semicircular dial, needle from score ÷ max, with
+  // a level scale whose active level follows the score.
+  if (it && it.s === 'gauge') {
+    const gmax = (isFinite(it.max) && it.max > 0) ? Number(it.max) : 5;
+    const gval = Math.max(0, Math.min(gmax, Number(it.value) || 0));
+    const levels = (Array.isArray(it.levels) ? it.levels : []).filter(Boolean);
+    const zn = Math.max(levels.length, 2);
+    const gcx = 180, gcy = 180, gr = 150;
+    const gpt = function (a, rr) { const th = (180 - a) * Math.PI / 180; return [gcx + rr * Math.cos(th), gcy - rr * Math.sin(th)]; };
+    const gap = 1.2;
+    const zones = [];
+    for (let zi = 0; zi < zn; zi++) {
+      const a0 = zi * 180 / zn + gap, a1 = (zi + 1) * 180 / zn - gap;
+      const p0 = gpt(a0, gr), p1 = gpt(a1, gr);
+      zones.push(`<path d="M ${p0[0].toFixed(1)} ${p0[1].toFixed(1)} A ${gr} ${gr} 0 0 1 ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}" fill="none" stroke="${pbChartPalette(zi)}" stroke-width="26" stroke-linecap="${zi === 0 || zi === zn - 1 ? 'round' : 'butt'}"/>`);
+    }
+    const activeI = Math.max(0, Math.min(zn - 1, Math.round(gval / gmax * zn) - (gval > 0 ? 1 : 0)));
+    const needleDeg = gval / gmax * 180 - 90;
+    const endL = gpt(0, gr), endR = gpt(180, gr);
+    const rows = levels.map(function (l, i) {
+      return `<div class="pb-gauge-row${i === activeI ? ' now' : ''}"><span class="dot"></span>${esc(String(l))}</div>`;
+    }).join('');
+    return `<div class="pb-gauge-card">
+      <div class="pb-gauge-svgwrap">
+        <svg viewBox="0 0 360 205" role="img" aria-label="${esc(it.name || 'Gauge')}">
+          <path d="M ${endL[0]} ${endL[1]} A ${gr} ${gr} 0 0 1 ${endR[0]} ${endR[1]}" fill="none" stroke="#EDEADF" stroke-width="26" stroke-linecap="round"/>
+          ${zones}
+          <g transform="rotate(${needleDeg.toFixed(1)} ${gcx} ${gcy})">
+            <path d="M ${gcx - 4} ${gcy} L ${gcx} ${gcy - 118} L ${gcx + 4} ${gcy} Z" fill="#26241F"/>
+            <circle cx="${gcx}" cy="${gcy}" r="11" fill="#26241F"/>
+            <circle cx="${gcx}" cy="${gcy}" r="4.5" fill="#FDFDF3"/>
+          </g>
+          <text x="${endL[0]}" y="203" font-size="11" fill="#9a958a" text-anchor="middle">1</text>
+          <text x="${endR[0]}" y="203" font-size="11" fill="#9a958a" text-anchor="middle">${zn}</text>
+        </svg>
+      </div>
+      <div class="pb-gauge-read">
+        ${it.levelLabel ? `<div class="pb-gauge-level">${esc(it.levelLabel)}</div>` : ''}
+        <div class="pb-gauge-of">${esc(pbFmtNum(gval, ''))} of ${esc(pbFmtNum(gmax, ''))}${it.caption ? ' · ' + esc(it.caption) : ''}</div>
+        ${rows ? `<div class="pb-gauge-scale">${rows}</div>` : ''}
+      </div>
+    </div>`;
+  }
+  // Hierarchy / pyramid: layered tiers, apex first, with side annotations.
+  if (it && it.s === 'pyramid') {
+    const tiers = (Array.isArray(it.tiers) ? it.tiers : []).filter(function (t) { return t && t.name; });
+    if (!tiers.length) return `<div class="pb-pyr pb-chart-empty">Add tiers to build this pyramid.</div>`;
+    const shades = ['#B59060', '#5C7062', '#7C917F', '#A9BBAC', '#C3CFC5', '#DCE3DD'];
+    const n = tiers.length;
+    const stack = tiers.map(function (t, i) {
+      const w = 34 + (n > 1 ? (i / (n - 1)) * 66 : 66);
+      const bg = shades[Math.min(i, shades.length - 1)];
+      const light = i >= 3;
+      return `<div class="pb-pyr-tier${light ? ' light' : ''}" style="width:${w.toFixed(0)}%;background:${bg};">
+        <div class="t-name">${esc(t.name)}</div>
+        ${t.sub ? `<div class="t-sub">${esc(t.sub)}</div>` : ''}
+      </div>`;
+    }).join('');
+    const notes = tiers.map(function (t, i) {
+      if (!t.note) return '';
+      const bg = shades[Math.min(i, shades.length - 1)];
+      return `<div class="pb-pyr-note"><span class="swatch" style="background:${bg};"></span><span><b>${esc(t.name)}.</b> ${esc(t.note)}</span></div>`;
+    }).join('');
+    return `<div class="pb-pyr"><div class="pb-pyr-stack">${stack}</div>${notes ? `<div class="pb-pyr-notes">${notes}</div>` : ''}</div>`;
+  }
+  // Radial lifecycle wheel: tappable ring segments around a hub; the detail
+  // card follows the selected segment (delegated wiring below).
+  if (it && it.s === 'wheel') {
+    const stages = (Array.isArray(it.stages) ? it.stages : []).filter(function (s) { return s && s.label; });
+    if (!stages.length) return `<div class="pb-wheelwrap pb-chart-empty">Add stages to build this wheel.</div>`;
+    const wcx = 260, wcy = 260, r1 = 132, r2 = 242, wgap = 2.4;
+    const wpt = function (r, a) { const rad = (a - 90) * Math.PI / 180; return [wcx + r * Math.cos(rad), wcy + r * Math.sin(rad)]; };
+    const wn = stages.length, step = 360 / wn;
+    const segs = stages.map(function (s, i) {
+      const a0 = i * step + wgap / 2, a1 = (i + 1) * step - wgap / 2;
+      const p0 = wpt(r2, a0), p1 = wpt(r2, a1), p2 = wpt(r1, a1), p3 = wpt(r1, a0);
+      const large = (a1 - a0) > 180 ? 1 : 0;
+      const lp = wpt((r1 + r2) / 2, (a0 + a1) / 2);
+      return `<path class="pb-wheel-seg${i === 0 ? ' on' : ''}" data-wi="${i}" tabindex="0" role="button" aria-label="${esc(s.label)}"
+        d="M ${p0[0].toFixed(1)} ${p0[1].toFixed(1)} A ${r2} ${r2} 0 ${large} 1 ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} L ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} A ${r1} ${r1} 0 ${large} 0 ${p3[0].toFixed(1)} ${p3[1].toFixed(1)} Z"
+        fill="${['#7C917F','#5C7062','#8FA294','#6E8274','#A9BBAC','#93A896'][i % 6]}"/>` +
+        `<text class="pb-wheel-num" x="${lp[0].toFixed(1)}" y="${(lp[1] - 2).toFixed(1)}" text-anchor="middle">${('0' + (i + 1)).slice(-2)}</text>` +
+        `<text class="pb-wheel-lbl" x="${lp[0].toFixed(1)}" y="${(lp[1] + 13).toFixed(1)}" text-anchor="middle">${esc(String(s.label).toUpperCase())}</text>`;
+    }).join('');
+    const cards = stages.map(function (s, i) {
+      return `<div class="pb-wheel-stage" data-wc="${i}" style="display:${i === 0 ? 'block' : 'none'};">
+        <div class="s-num">Stage ${('0' + (i + 1)).slice(-2)}</div>
+        <div class="s-name">${esc(s.label)}</div>
+        <div class="s-text">${inlineRichHTML(s.text || '')}</div>
+      </div>`;
+    }).join('');
+    return `<div class="pb-wheelwrap">
+      <div class="pb-wheel">
+        <svg viewBox="0 0 520 520">${segs}<circle cx="${wcx}" cy="${wcy}" r="118" fill="#FDFDF3" stroke="#E3E0D3"/></svg>
+        <div class="pb-wheel-hub">
+          ${it.hubEyebrow ? `<div class="h-eyebrow">${esc(it.hubEyebrow)}</div>` : ''}
+          <div class="h-title">${esc(it.hubTitle || it.name || '')}</div>
+        </div>
+      </div>
+      <div class="pb-wheel-side">${cards}<div class="pb-wheel-hint">Tap a segment to read its stage</div></div>
+    </div>`;
   }
   // Embedded figure carried over from an imported document — optionally with
   // interactive hotspots (numbered pins revealing popup text on click).
@@ -2807,7 +2942,7 @@ function processDiagramHTML(ch) {
       '</article>' +
     '</div>';
   }).join('');
-  return '<div class="spread"><div class="mo-opp-ground"><section class="mo-opp" aria-label="Process diagram">' +
+  return '<div class="spread">' + intro + '<div class="mo-opp-ground"><section class="mo-opp" aria-label="Process diagram">' +
     '<header class="mo-opp__header"><div>' +
       (d.eyebrow ? '<p class="mo-opp__eyebrow">' + esc(d.eyebrow) + '</p>' : '') +
       (d.title ? '<h1 class="mo-opp__title">' + esc(d.title) + '</h1>' : '') +
@@ -2828,6 +2963,14 @@ function chapterBodyExtrasHTML(ch) {
   var html = (b.items || []).map(policyItemHTML).join('') +
     (b.sections || []).map(sectionHTML).join('');
   return html ? '<div class="spread">' + html + '</div>' : '';
+}
+
+// Opening paragraphs for chapter types whose bespoke layout would otherwise
+// drop them (lifecycle, directory; tile-menu / card-track / process-diagram
+// render their intro inside their own templates).
+function chapterIntroHTML(ch) {
+  var b = chapterBodyFor(ch);
+  return (b.intro && b.intro.length) ? '<div class="spread">' + subIntroHTML({ intro: b.intro }) + '</div>' : '';
 }
 
 function renderGenericChapter(ch, prevId, nextId) {
@@ -2876,7 +3019,7 @@ function renderGenericChapter(ch, prevId, nextId) {
 
   let body = '';
   if (type === 'lifecycle') {
-    body = lifecycleWheelHTML(ch) + LIFECYCLE.filter(function (s) {
+    body = chapterIntroHTML(ch) + lifecycleWheelHTML(ch) + LIFECYCLE.filter(function (s) {
       // Bottom stage pages are OFF by default and only render when the chapter
       // explicitly opts in ('shown'), the stage has content, and it is not
       // redirected to another chapter.
@@ -2898,7 +3041,7 @@ function renderGenericChapter(ch, prevId, nextId) {
         </div>`;
     }).join('') + chapterBodyExtrasHTML(ch);
   } else if (type === 'directory') {
-    body = `
+    body = chapterIntroHTML(ch) + `
       <div class="spread">
         <div class="section-eyebrow"><span class="txt">${T(prefix + '.people.eyebrow', 'Senior Management')}</span><span class="rule"></span></div>
         <div class="leaders-grid">
@@ -2921,7 +3064,7 @@ function renderGenericChapter(ch, prevId, nextId) {
             </div>`).join('')}
         </div>
       </div>
-      ${BELIEFS && BELIEFS.length ? `<div class="spread tight">${beliefsTabsHTML()}</div>` : ''}`;
+      ${BELIEFS && BELIEFS.length ? `<div class="spread tight">${beliefsTabsHTML()}</div>` : ''}` + chapterBodyExtrasHTML(ch);
   } else if (type === 'tile-menu') {
     body = tileMenuChapterHTML(ch) + chapterBodyExtrasHTML(ch);
   } else if (type === 'card-track') {
@@ -3546,6 +3689,34 @@ if (!window.__baWired) {
     var cur = parseFloat(wrap.style.getPropertyValue('--ba')) || 50;
     wrap.style.setProperty('--ba', (e.key === 'ArrowLeft' ? Math.max(3, cur - 4) : Math.min(97, cur + 4)) + '%');
     e.preventDefault();
+  });
+}
+
+// Radial lifecycle wheel: tap/click a segment (or arrow through with the
+// keyboard) to show its stage card beside the wheel.
+if (!window.__wheelWired) {
+  window.__wheelWired = true;
+  function pbWheelPick(seg) {
+    var wrap = seg.closest('.pb-wheelwrap');
+    if (!wrap) return;
+    var i = seg.getAttribute('data-wi');
+    wrap.querySelectorAll('.pb-wheel-seg').forEach(function (s) { s.classList.toggle('on', s.getAttribute('data-wi') === i); });
+    wrap.querySelectorAll('.pb-wheel-stage').forEach(function (c) { c.style.display = c.getAttribute('data-wc') === i ? 'block' : 'none'; });
+  }
+  document.addEventListener('click', function (e) {
+    var seg = e.target && e.target.closest ? e.target.closest('.pb-wheel-seg') : null;
+    if (seg) pbWheelPick(seg);
+  });
+  document.addEventListener('keydown', function (e) {
+    var seg = e.target && e.target.closest ? e.target.closest('.pb-wheel-seg') : null;
+    if (!seg) return;
+    if (e.key === 'Enter' || e.key === ' ') { pbWheelPick(seg); e.preventDefault(); return; }
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    var wrap = seg.closest('.pb-wheelwrap');
+    var segs = wrap ? Array.prototype.slice.call(wrap.querySelectorAll('.pb-wheel-seg')) : [];
+    var i = segs.indexOf(seg);
+    var next = segs[(i + (e.key === 'ArrowRight' ? 1 : segs.length - 1)) % segs.length];
+    if (next) { pbWheelPick(next); next.focus(); e.preventDefault(); }
   });
 }
 
