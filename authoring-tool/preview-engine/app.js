@@ -1430,6 +1430,10 @@ function renderCover() {
 // ---- INTRO VIDEO (welcome interstitial) ----------------------------
 function renderIntro() {
   const vid = T('intro.video', '');
+  // videoField stores a bare filename (e.g. "upload_…_film.mp4"); the seed
+  // uses a "video/"-prefixed path. Normalise to the prefixed form so
+  // resolveAssets() picks it up — without this the welcome film 404s.
+  const vidNorm = vid && !/^(video\/|data:|https?:)/.test(vid) ? 'video/' + vid : vid;
   const metaTitle = esc((PB.meta && PB.meta.title) || 'Playbook');
   return `
     <section class="chapter" id="intro">
@@ -1439,7 +1443,7 @@ function renderIntro() {
           <h1 class="intro-title">${T('intro.title','Welcome to the ' + metaTitle)}</h1>
           <div class="intro-video-wrap">
             ${vid
-              ? `<video class="intro-video" src="${vid}" playsinline controls preload="auto"></video>`
+              ? `<video class="intro-video" src="${esc(vidNorm)}" playsinline controls preload="auto"></video>`
               : `<div style="display:flex;align-items:center;justify-content:center;min-height:240px;border:1px dashed var(--rule);color:var(--ink-mute);font-size:14px;padding:40px;text-align:center;">No welcome film yet — upload one in the Studio (Welcome Film chapter) to feature it here.</div>`}
           </div>
           <button class="intro-next" data-goto="menu">
