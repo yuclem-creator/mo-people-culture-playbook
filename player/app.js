@@ -1733,8 +1733,8 @@ function renderIntro() {
     <section class="chapter" id="intro">
       <div class="intro-full">
         <div class="intro-inner">
-          <div class="intro-eyebrow">${T('intro.eyebrow','Welcome')}</div>
-          <h1 class="intro-title">${T('intro.title','Welcome to the ' + metaTitle)}</h1>
+          <div class="intro-eyebrow">${T('intro.eyebrow', UI('welcome'))}</div>
+          <h1 class="intro-title">${T('intro.title', UI('welcomeTo') + metaTitle)}</h1>
           <div class="intro-video-wrap">
             ${vid
               ? `<video class="intro-video" src="${esc(vidNorm)}" playsinline controls preload="auto"></video>`
@@ -3974,7 +3974,9 @@ const UI_EN = {
   searchPlaceholder: 'Search the playbook…',
   noResults: 'No results',
   noResultsHint: 'Try a different term',
-  aboutEdition: 'About this edition'
+  aboutEdition: 'About this edition',
+  welcome: 'Welcome',
+  welcomeTo: 'Welcome to the '
 };
 const UI_I18N = {
   'zh-CN': {
@@ -3990,7 +3992,9 @@ const UI_I18N = {
     searchPlaceholder: '搜索手册…',
     noResults: '没有结果',
     noResultsHint: '请尝试其他关键词',
-    aboutEdition: '关于本版本'
+    aboutEdition: '关于本版本',
+    welcome: '欢迎',
+    welcomeTo: '欢迎阅读'
   }
 };
 function UI(key) {
