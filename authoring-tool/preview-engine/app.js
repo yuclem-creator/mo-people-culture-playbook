@@ -281,6 +281,103 @@ function esc(str) {
 // unique id counter for accordion controls
 let _accId = 0;
 
+// ---- Chart / dashboard block ----------------------------------------------
+// Branded SVG charts (bar / line / donut) — dependency-free and scalable.
+function pbChartPalette(i) { const c = ['#B59060', '#7C917F', '#8f6d3f', '#5C7062', '#C9A879', '#A9BBAC']; return c[i % c.length]; }
+function pbFmtNum(v, unit) {
+  const a = Math.abs(v); let s;
+  if (a >= 1e6) s = String(Math.round(v / 1e5) / 10) + 'M';
+  else if (a >= 1e4) s = String(Math.round(v / 1e2) / 10) + 'k';
+  else s = String(Math.round(v * 100) / 100);
+  return s + (unit ? '\u2009' + unit : '');
+}
+function pbNiceMax(v) {
+  if (!isFinite(v) || v <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  const m = v / p;
+  const n = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+  return n * p;
+}
+function pbChartHTML(it) {
+  const type = ['bar', 'line', 'donut'].indexOf(it.chartType) !== -1 ? it.chartType : 'bar';
+  const labels = Array.isArray(it.labels) ? it.labels : [];
+  const series = (Array.isArray(it.series) ? it.series : []).filter(function (s) { return s && Array.isArray(s.values) && s.values.length; });
+  const unit = it.unit || '';
+  if (!labels.length || !series.length) {
+    return `<div class="pb-chart pb-chart-empty">Add category labels and at least one series of values to draw this chart.</div>`;
+  }
+  if (type === 'donut') {
+    const vals = labels.map(function (_, i) { return Math.max(0, Number(series[0].values[i]) || 0); });
+    const total = vals.reduce(function (a, b) { return a + b; }, 0);
+    if (total <= 0) return `<div class="pb-chart pb-chart-empty">Add values above zero to draw this chart.</div>`;
+    const cx = 150, cy = 150, r = 96, sw = 42, C = 2 * Math.PI * r;
+    let acc = 0;
+    const segs = vals.map(function (v, i) {
+      const len = v / total * C;
+      const seg = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${pbChartPalette(i)}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"><title>${esc(String(labels[i]))}: ${esc(pbFmtNum(v, unit))}</title></circle>`;
+      acc += len;
+      return seg;
+    }).join('');
+    const items = vals.map(function (v, i) {
+      const pct = Math.round(v / total * 100);
+      return `<div class="pb-chart-legrow"><span class="pb-chart-chip" style="background:${pbChartPalette(i)}"></span><span class="pb-chart-leglabel">${esc(String(labels[i]))}</span><span class="pb-chart-legval">${esc(pbFmtNum(v, unit))} · ${pct}%</span></div>`;
+    }).join('');
+    return `<div class="pb-chart"><div class="pb-chart-donutwrap">
+      <svg viewBox="0 0 300 300" role="img" aria-label="${esc(it.name || 'Donut chart')}">
+        ${segs}
+        <text x="${cx}" y="${cy - 4}" text-anchor="middle" class="pb-chart-big">${esc(pbFmtNum(total, unit))}</text>
+        <text x="${cx}" y="${cy + 18}" text-anchor="middle" class="pb-chart-bigsub">${esc(series[0].label || 'Total')}</text>
+      </svg>
+      <div class="pb-chart-legcol">${items}</div>
+    </div></div>`;
+  }
+  // bar / line — shared axes
+  const W = 760, H = 360, P = { l: 58, r: 18, t: 26, b: 46 };
+  const iw = W - P.l - P.r, ih = H - P.t - P.b;
+  const allVals = series.reduce(function (a, s) { return a.concat(s.values); }, [0]);
+  const maxV = pbNiceMax(Math.max.apply(null, allVals.map(function (v) { return Math.max(0, Number(v) || 0); })));
+  const gx = function (i) { return P.l + (iw / labels.length) * (i + 0.5); };
+  const gy = function (v) { return P.t + ih - (Math.max(0, v) / maxV) * ih; };
+  let grid = '';
+  for (let t = 0; t <= 4; t++) {
+    const y = (P.t + ih - ih * t / 4).toFixed(1);
+    grid += `<line x1="${P.l}" y1="${y}" x2="${W - P.r}" y2="${y}" class="pb-chart-grid${t === 0 ? ' pb-chart-base' : ''}" />
+      <text x="${P.l - 8}" y="${+y + 4}" text-anchor="end" class="pb-chart-tick">${esc(pbFmtNum(maxV * t / 4, unit))}</text>`;
+  }
+  const xlabels = labels.map(function (lb, i) {
+    return `<text x="${gx(i).toFixed(1)}" y="${H - P.b + 20}" text-anchor="middle" class="pb-chart-tick">${esc(String(lb))}</text>`;
+  }).join('');
+  let body = '';
+  if (type === 'bar') {
+    const gw = iw / labels.length;
+    const bw = Math.min(38, gw * 0.62 / series.length);
+    series.forEach(function (s, si) {
+      labels.forEach(function (_, i) {
+        const v = Math.max(0, Number(s.values[i]) || 0);
+        const x = gx(i) - bw * series.length / 2 + si * bw;
+        const y = gy(v), h = P.t + ih - y;
+        body += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(bw - 3).toFixed(1)}" height="${Math.max(h, 0).toFixed(1)}" rx="2.5" fill="${pbChartPalette(si)}"><title>${esc(s.label || ('Series ' + (si + 1)))} · ${esc(String(labels[i]))}: ${esc(pbFmtNum(v, unit))}</title></rect>`;
+        if (series.length === 1) body += `<text x="${(x + (bw - 3) / 2).toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" class="pb-chart-val">${esc(pbFmtNum(v, unit))}</text>`;
+      });
+    });
+  } else { // line
+    series.forEach(function (s, si) {
+      const pts = labels.map(function (_, i) { return gx(i).toFixed(1) + ',' + gy(Math.max(0, Number(s.values[i]) || 0)).toFixed(1); }).join(' ');
+      body += `<polyline points="${pts}" fill="none" stroke="${pbChartPalette(si)}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />`;
+      labels.forEach(function (_, i) {
+        const v = Math.max(0, Number(s.values[i]) || 0);
+        body += `<circle cx="${gx(i).toFixed(1)}" cy="${gy(v).toFixed(1)}" r="4" fill="#fff" stroke="${pbChartPalette(si)}" stroke-width="2.5"><title>${esc(s.label || ('Series ' + (si + 1)))} · ${esc(String(labels[i]))}: ${esc(pbFmtNum(v, unit))}</title></circle>`;
+      });
+    });
+  }
+  const legRows = series.length > 1 ? `<div class="pb-chart-legend">${series.map(function (s, si) {
+    return `<span class="pb-chart-legitem"><span class="pb-chart-chip" style="background:${pbChartPalette(si)}"></span>${esc(s.label || ('Series ' + (si + 1)))}</span>`;
+  }).join('')}</div>` : '';
+  return `<div class="pb-chart">${legRows}
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(it.name || 'Chart')}">${grid}${body}${xlabels}</svg>
+  </div>`;
+}
+
 // A single expandable subheading (resource) row.
 // Collapsed: symbol + name + kind + chevron.
 // Expanded: reveals the blurb description and the hyperlinked resource.
@@ -433,6 +530,60 @@ function policyItemHTML(it) {
       <div class="pb-tl-saved">Your ticks are saved on this device — pick up where you left off. <button type="button" class="pb-tl-reset">Reset</button></div>
     </div>`;
     return card ? `<div class="pb-tl-wrap">${cardHtml}${listHtml}</div>` : listHtml;
+  }
+  // Swimlane timeline: one lane per role, steps flowing left to right with
+  // continuous numbering across lanes; a handoff marker appears where a new
+  // lane begins. Pure CSS grid — stacks lane-by-lane on narrow screens.
+  if (it && it.s === 'swimlane') {
+    const lanes = Array.isArray(it.lanes) ? it.lanes : [];
+    let n = 0;
+    return `<div class="pb-swim">
+      ${lanes.map(function (l, li) {
+        const steps = Array.isArray(l.steps) ? l.steps : [];
+        return `<div class="pb-swim-row">
+          <div class="pb-swim-role"><span class="pb-swim-role-num">${String(li + 1).padStart(2, '0')}</span><span>${esc(l.role || ('Lane ' + (li + 1)))}</span></div>
+          <div class="pb-swim-steps">
+            ${li > 0 ? '<span class="pb-swim-hand" aria-hidden="true">↓</span>' : ''}
+            ${steps.map(function (s) {
+              n++;
+              return `<div class="pb-swim-step">
+                <span class="pb-swim-num">${n}</span>
+                <div class="pb-swim-card">
+                  <div class="pb-swim-label">${esc(s.label || '')}</div>
+                  ${s.text ? `<div class="pb-swim-text">${inlineRichHTML(s.text)}</div>` : ''}
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  // Chart / dashboard: branded SVG bar, line or donut chart — no library.
+  if (it && it.s === 'chart') {
+    return pbChartHTML(it);
+  }
+  // Before / after: draggable comparison slider when both images are set
+  // (clip-path driven, keyboard accessible), with optional text cards below.
+  if (it && it.s === 'beforeafter') {
+    const bL = it.beforeLabel || 'Before', aL = it.afterLabel || 'After';
+    const slider = (it.beforeImg && it.afterImg) ? `<figure class="pb-ba" style="--ba:50%;">
+        <img class="pb-ba-base" src="img/${esc(it.afterImg)}" alt="${esc(aL)}" draggable="false" />
+        <img class="pb-ba-top" src="img/${esc(it.beforeImg)}" alt="${esc(bL)}" draggable="false" />
+        <span class="pb-ba-tag pb-ba-tag--b">${esc(bL)}</span>
+        <span class="pb-ba-tag pb-ba-tag--a">${esc(aL)}</span>
+        <div class="pb-ba-handle"><button type="button" class="pb-ba-btn" aria-label="Comparison slider — drag or use arrow keys"><span>‹</span><span>›</span></button></div>
+      </figure>` : '';
+    const rows = function (text, mark) {
+      return String(text || '').split('\n').map(function (ln) { return ln.trim(); }).filter(Boolean)
+        .map(function (ln) { return `<div class="pb-ba-line"><span class="pb-ba-mark">${mark}</span><span>${inlineRichHTML(ln)}</span></div>`; }).join('');
+    };
+    const cards = (it.beforeText || it.afterText) ? `<div class="pb-ba-cards">
+        <div class="pb-ba-card pb-ba-card--b"><div class="pb-ba-eyebrow">${esc(bL)}</div><div class="pb-ba-cardtext">${rows(it.beforeText, '—')}</div></div>
+        <div class="pb-ba-card pb-ba-card--a"><div class="pb-ba-eyebrow">${esc(aL)}</div><div class="pb-ba-cardtext">${rows(it.afterText, '✓')}</div></div>
+      </div>` : '';
+    if (!slider && !cards) return `<div class="pb-bawrap pb-ba-empty">Add before / after images or text to build this comparison.</div>`;
+    return `<div class="pb-bawrap">${slider}${cards}</div>`;
   }
   // Embedded figure carried over from an imported document — optionally with
   // interactive hotspots (numbered pins revealing popup text on click).
@@ -3349,6 +3500,41 @@ if (!window.__lightboxWired) {
       var open = document.getElementById('pb-lightbox');
       if (open) open.remove();
     }
+  });
+}
+
+// Before / after slider: drag the handle (or use arrow keys on it) to sweep
+// the comparison. The --ba custom property on the figure drives both the
+// clip-path and the handle position.
+if (!window.__baWired) {
+  window.__baWired = true;
+  function pbBaSet(wrap, clientX) {
+    var r = wrap.getBoundingClientRect();
+    if (!r.width) return;
+    var x = Math.min(97, Math.max(3, (clientX - r.left) / r.width * 100));
+    wrap.style.setProperty('--ba', x.toFixed(2) + '%');
+  }
+  document.addEventListener('pointerdown', function (e) {
+    var h = e.target && e.target.closest ? e.target.closest('.pb-ba-handle') : null;
+    if (!h) return;
+    var wrap = h.closest('.pb-ba');
+    if (!wrap) return;
+    e.preventDefault();
+    var move = function (ev) { pbBaSet(wrap, ev.clientX); };
+    var up = function () { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    pbBaSet(wrap, e.clientX);
+  });
+  document.addEventListener('keydown', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('.pb-ba-btn') : null;
+    if (!b) return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    var wrap = b.closest('.pb-ba');
+    if (!wrap) return;
+    var cur = parseFloat(wrap.style.getPropertyValue('--ba')) || 50;
+    wrap.style.setProperty('--ba', (e.key === 'ArrowLeft' ? Math.max(3, cur - 4) : Math.min(97, cur + 4)) + '%');
+    e.preventDefault();
   });
 }
 
