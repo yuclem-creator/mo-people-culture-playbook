@@ -3876,6 +3876,7 @@ function init() {
   // though window.PLAYBOOK is already the fetched playbook. Apply it here.
   if (window.PLAYBOOK && PB !== window.PLAYBOOK) PB = window.PLAYBOOK;
   updateMasthead();
+  renderLangSwitch();
   updateRailAbout();
   applyTypography();
   renderRail();
@@ -3951,6 +3952,57 @@ function applyTypography() {
 
 // Masthead bar follows the loaded playbook (wordmark + title + edition),
 // so non-P&C playbooks no longer carry P&C branding.
+/* ---- Masthead language toggle (Phase 1 multilingual) ----------------------
+   When the playbook declares languages (meta.languages), a compact switch
+   appears in the topbar. In the standalone player / Remote SCORM it reloads
+   with ?lang=<code> (the loader merges playbook-data.<code>.json over
+   English); inside the Studio preview iframe it asks the editor to re-push
+   the merged playbook instead.
+--------------------------------------------------------------------------- */
+function currentLangCode() {
+  if (window.MO_PB_LANG) return window.MO_PB_LANG;
+  try { var q = new URLSearchParams(location.search).get('lang'); if (q) return q; } catch (e) {}
+  try { var s = localStorage.getItem('mo_pb_lang'); if (s) return s; } catch (e) {}
+  return 'en';
+}
+function renderLangSwitch() {
+  var old = document.getElementById('langSwitch');
+  if (old) old.remove();
+  var host = document.querySelector('.topbar .brand-right');
+  if (!host) return;
+  var langs = (PB && PB.meta && PB.meta.languages) || [];
+  if (!langs.length) return;
+  var cur = currentLangCode() || 'en';
+  var opts = [{ code: 'en', label: 'English' }].concat(langs.map(function (l) {
+    return { code: l.code, label: l.label || l.code };
+  }));
+  var sel = document.createElement('select');
+  sel.id = 'langSwitch';
+  sel.className = 'lang-switch';
+  sel.setAttribute('aria-label', 'Language');
+  opts.forEach(function (o) {
+    var op = document.createElement('option');
+    op.value = o.code;
+    op.textContent = o.label;
+    if (o.code === cur) op.selected = true;
+    sel.appendChild(op);
+  });
+  sel.addEventListener('change', function () {
+    var code = sel.value;
+    try { localStorage.setItem('mo_pb_lang', code); } catch (e) {}
+    if (window.parent !== window) {
+      try { window.parent.postMessage({ type: 'preview-lang', lang: code }, '*'); } catch (e) {}
+      return;
+    }
+    try {
+      var u = new URL(location.href);
+      u.searchParams.set('lang', code);
+      location.href = u.toString();
+    } catch (e) { location.reload(); }
+  });
+  host.insertBefore(sel, host.firstChild);
+}
+
 function updateMasthead() {
   var m = (PB && PB.meta) || {};
   var wm = document.getElementById('brandWordmark');
@@ -3967,6 +4019,7 @@ function applyPlaybook(next, opts) {
   refreshDerived();
   updateRailAbout();
   updateMasthead();
+  renderLangSwitch();
   applyTypography();
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
@@ -4007,6 +4060,12 @@ window.addEventListener('message', function (ev) {
     return;
   }
   if (d.type === 'set-playbook') {
+    if (d.lang) {
+      try {
+        window.MO_PB_LANG = d.lang === 'en' ? '' : d.lang;
+        document.documentElement.lang = d.lang || 'en';
+      } catch (e) {}
+    }
     applyPlaybook(d.playbook, { chapter: d.chapter, sub: d.sub });
     if (window.parent !== window) window.parent.postMessage({ type: 'preview-ready' }, '*');
   } else if (d.type === 'goto') {
