@@ -2662,7 +2662,7 @@ function processDiagramHTML(ch) {
       (d.title ? '<h1 class="mo-opp__title">' + esc(d.title) + '</h1>' : '') +
       (d.subline ? '<p class="mo-opp__subline">' + esc(d.subline) + '</p>' : '') +
     '</div>' + (d.pill ? '<span class="mo-opp__pill">' + esc(d.pill) + '</span>' : '') + '</header>' +
-    '<div class="mo-opp__panel"><div class="mo-opp__grid">' + cols + '</div>' +
+    '<div class="mo-opp__panel"><div class="mo-opp__grid' + (sections.length >= 6 ? ' mo-opp__grid--many' : '') + '" style="--cols:' + Math.max(sections.length, 1) + '">' + cols + '</div>' +
     (d.footnote ? '<footer class="mo-opp__footer"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10"/><path d="M7 11.4l2.6 2.6L15 8.6"/></svg><p>' + esc(d.footnote) + '</p></footer>' : '') +
     '</div>' +
   '</section></div></div>';
