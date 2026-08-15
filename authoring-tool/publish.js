@@ -397,6 +397,18 @@
         upsert: true, contentType: 'application/json'
       }).then(function (r) {
         if (r.error) throw new Error(r.error.message);
+        // Language overlays travel with the light refresh too — otherwise a
+        // declared language would show the picker but silently boot English
+        // until the next full Save.
+        var overlayCodes = Object.keys(pb.i18n || {});
+        return overlayCodes.reduce(function (chain, code) {
+          return chain.then(function () {
+            return sbUpload.storage.from(bucket).upload('drafts/' + slug + '/playbook-data.' + code + '.json',
+              new Blob([JSON.stringify(pb.i18n[code])], { type: 'application/json' }),
+              { upsert: true, contentType: 'application/json' });
+          });
+        }, Promise.resolve());
+      }).then(function () {
         var version = { publishedAt: new Date().toISOString(),
           publishedBy: (session.user && session.user.email) || null, stage: 'draft', autosave: true };
         return sbUpload.storage.from(bucket).upload('drafts/' + slug + '/version.json',
