@@ -164,10 +164,46 @@
       .catch(function () { memFallback.blocked = true; return { persisted: false, blocked: true }; });
   };
 
+  var lastRingAt = 0;
   LocalFileAdapter.prototype.saveAutosnapshot = function (playbook) {
     var rec = { at: Date.now(), playbook: playbook };
     memFallback.autosave = rec;
+    // Snapshot ring: beyond the single latest autosnapshot, keep up to 5
+    // earlier snapshots (at most one per 30s, skipping anything over 60MB)
+    // so a corrupted or unlucky latest snapshot never means total loss.
+    if (Date.now() - lastRingAt > 30000) {
+      try {
+        var size = JSON.stringify(playbook).length;
+        if (size < 60 * 1048576) {
+          lastRingAt = Date.now();
+          idbGet(keyFor('snaplog')).then(function (log) {
+            log = Array.isArray(log) ? log : [];
+            log.push(rec);
+            while (log.length > 5) log.shift();
+            return idbSet(keyFor('snaplog'), log);
+          }).catch(function () { /* ring is best-effort */ });
+        }
+      } catch (e) { /* best-effort */ }
+    }
     return idbSet(keyFor('autosave'), rec).catch(function () { memFallback.blocked = true; });
+  };
+
+  LocalFileAdapter.prototype.listSnapshots = function () {
+    return idbGet(keyFor('snaplog'))
+      .then(function (v) { return Array.isArray(v) ? v : []; })
+      .catch(function () { return []; });
+  };
+
+  // Optional real-file backup (File System Access API): the handle persists
+  // in IndexedDB, so once chosen the file is rewritten silently on saves.
+  LocalFileAdapter.prototype.saveBackupHandle = function (handle) {
+    return idbSet('backup_handle', handle).catch(function () {});
+  };
+  LocalFileAdapter.prototype.loadBackupHandle = function () {
+    return idbGet('backup_handle').catch(function () { return null; });
+  };
+  LocalFileAdapter.prototype.clearBackupHandle = function () {
+    return idbDel('backup_handle').catch(function () {});
   };
 
   LocalFileAdapter.prototype.loadAutosnapshot = function () {

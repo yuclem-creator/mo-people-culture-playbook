@@ -198,6 +198,37 @@
     });
   }, 45000);
 
+  // ---- Local safety nets ---------------------------------------------------
+  // Optional real-file backup (Chrome/Edge File System Access): once a file
+  // is chosen in Settings, saves and a 90s timer rewrite it silently — work
+  // survives even a full browser-data wipe.
+  var backupHandle = null, backupFileName = '', backupNeedsGesture = false, backupLastWrite = 0;
+  if (STORE.loadBackupHandle) {
+    STORE.loadBackupHandle().then(function (h) {
+      if (h) { backupHandle = h; backupFileName = h.name || 'backup file'; }
+    });
+  }
+  function writeBackupFile() {
+    if (!backupHandle || !backupHandle.createWritable || !PB) return Promise.resolve(false);
+    return backupHandle.queryPermission({ mode: 'readwrite' }).then(function (perm) {
+      if (perm !== 'granted') { backupNeedsGesture = true; return false; }
+      return backupHandle.createWritable().then(function (w) {
+        return w.write(JSON.stringify(PB, null, 2)).then(function () { return w.close(); });
+      }).then(function () {
+        backupLastWrite = Date.now(); backupNeedsGesture = false;
+        return true;
+      });
+    }).catch(function () { return false; });
+  }
+  setInterval(function () {
+    if (backupHandle && dirty && !document.querySelector('#busy')) writeBackupFile();
+  }, 90000);
+
+  // Never let a tab close silently take unsynced edits with it.
+  window.addEventListener('beforeunload', function (e) {
+    if (cloudDirty) { e.preventDefault(); e.returnValue = ''; }
+  });
+
   function loadSeed() {
     return fetch('seed-playbook.json').then(function (r) { return r.json(); }).then(function (seed) {
       setPlaybook(seed);
@@ -273,35 +304,49 @@
   function loadPublishedForEdit(slug) {
     var cfg = window.SUPABASE_CONFIG || {};
     if (!cfg.url) { toast('Supabase is not configured here.', 'err'); pendingEdit = null; return; }
-    // Drafts first if the Library flagged stage=draft; always fall back to the
-    // other lane — an entry may only exist in one of them.
+    // Always load the NEWER of the two lanes — a playbook that was published
+    // once keeps index status 'published' forever, so preferring the published
+    // lane would silently load an older copy over a newer draft. The Library's
+    // stage=draft hint is only a tiebreak, not the deciding factor.
     var params = new URLSearchParams(window.location.search);
-    var preferDraft = params.get('stage') === 'draft';
-    var lanes = preferDraft ? ['drafts', 'published'] : ['published', 'drafts'];
+    var preferDraft = params.get('stage') === 'draft'; // tiebreak only
+    var base = String(cfg.url).replace(/\/$/, '') + '/storage/v1/object/public/playbook-content/';
+    function probe(lane) {
+      return fetch(base + lane + '/' + encodeURIComponent(slug) + '/version.json?t=' + Date.now())
+        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }
     toast('Loading playbook\u2026');
-    (function tryLane(i) {
-      if (i >= lanes.length) {
+    Promise.all([probe('drafts'), probe('published')]).then(function (vs) {
+      var draftAt = vs[0] && vs[0].publishedAt ? Date.parse(vs[0].publishedAt) : 0;
+      var pubAt = vs[1] && vs[1].publishedAt ? Date.parse(vs[1].publishedAt) : 0;
+      var lane = draftAt > pubAt ? 'drafts' : (pubAt ? 'published' : (draftAt ? 'drafts' : (preferDraft ? null : null)));
+      if (!lane) {
         toast('Could not load the playbook: not found in published or draft storage.', 'err');
         pendingEdit = null;
         stripLibraryParams();
         return;
       }
-      var url = String(cfg.url).replace(/\/$/, '') + '/storage/v1/object/public/playbook-content/' + lanes[i] + '/' +
-        encodeURIComponent(slug) + '/playbook-data.json?t=' + Date.now();
-      fetch(url).then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      }).then(function (pb) {
-        pb.meta = pb.meta || {};
-        if (!pb.meta.slug) pb.meta.slug = slug;
-        setPlaybook(pb);
-        markSaved();
-        var lane = lanes[i] === 'drafts' ? 'draft' : 'published version';
-        toast('Loaded \u201C' + ((pb.meta && pb.meta.title) || slug) + '\u201D — you are editing the ' + lane + '.', 'ok');
-        pendingEdit = null;
-        stripLibraryParams();
-      }).catch(function () { tryLane(i + 1); });
-    })(0);
+      fetch(base + lane + '/' + encodeURIComponent(slug) + '/playbook-data.json?t=' + Date.now())
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        }).then(function (pb) {
+          pb.meta = pb.meta || {};
+          if (!pb.meta.slug) pb.meta.slug = slug;
+          setPlaybook(pb);
+          markSaved();
+          lastAssetSig = assetSig();
+          var laneLabel = lane === 'drafts' ? 'draft' : 'published version';
+          toast('Loaded \u201C' + ((pb.meta && pb.meta.title) || slug) + '\u201D — you are editing the ' + laneLabel +
+            (lane === 'drafts' && pubAt ? ' (newer than the published copy).' : '.'), 'ok');
+          pendingEdit = null;
+          stripLibraryParams();
+        }).catch(function () {
+          toast('Could not load the playbook content (HTTP error).', 'err');
+          pendingEdit = null;
+          stripLibraryParams();
+        });
+    });
   }
   function applyPendingCreate(pb) {
     if (!pendingCreate) return;
@@ -2360,6 +2405,137 @@
       stepImg();
     } }, ['Optimise media (shrink images & videos)…']));
 
+    // ---- Local backup & recovery ------------------------------------------
+    // Two extra safety nets beyond the single latest autosnapshot:
+    //  1. a ring of earlier snapshots kept in this browser (restore any one)
+    //  2. an optional real backup file on disk (survives a browser-data wipe)
+    box.appendChild(sectionLabel('Local backup & recovery'));
+
+    var backupRow = el('div', { class: 'field' });
+    backupRow.appendChild(el('label', {}, ['Backup file on disk']));
+    var backupStatus = el('div', { class: 'tip' }, [
+      backupHandle
+        ? (backupFileName + (backupLastWrite ? ' · last written ' + new Date(backupLastWrite).toLocaleTimeString() : ''))
+        : 'Not set — every save and every 90s rewrites this file silently once chosen (Chrome / Edge only).'
+    ]);
+    backupRow.appendChild(backupStatus);
+    var backupBtns = el('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;' });
+    if (window.showSaveFilePicker) {
+      backupBtns.appendChild(el('button', { class: 'btn', onclick: function () {
+        var suggested = (PB.meta.slug || 'playbook') + '-backup.json';
+        window.showSaveFilePicker({
+          suggestedName: suggested,
+          types: [{ description: 'Playbook backup', accept: { 'application/json': ['.json'] } }]
+        }).then(function (h) {
+          return STORE.saveBackupHandle(h).then(function () {
+            backupHandle = h; backupFileName = h.name || suggested;
+            return writeBackupFile();
+          });
+        }).then(function (ok) {
+          if (ok) toast('Backup file set — it will be rewritten on every save.', 'ok');
+          renderInspector();
+        }).catch(function (e) {
+          if (e && e.name === 'AbortError') return;
+          toast('Could not set the backup file: ' + ((e && e.message) || e), 'err');
+        });
+      } }, [backupHandle ? 'Change backup file…' : 'Choose backup file…']));
+    }
+    if (backupHandle) {
+      if (backupNeedsGesture) {
+        backupBtns.appendChild(el('button', { class: 'btn primary', onclick: function () {
+          backupHandle.requestPermission({ mode: 'readwrite' }).then(function (p) {
+            if (p === 'granted') { backupNeedsGesture = false; writeBackupFile(); toast('Backup re-enabled.', 'ok'); }
+            renderInspector();
+          });
+        } }, ['Re-enable backup (needs permission)']));
+      }
+      backupBtns.appendChild(el('button', { class: 'btn danger', onclick: function () {
+        if (!window.confirm('Stop backing up to ' + backupFileName + '? The existing file is left untouched.')) return;
+        STORE.clearBackupHandle();
+        backupHandle = null; backupFileName = ''; backupNeedsGesture = false; backupLastWrite = 0;
+        renderInspector();
+      } }, ['Remove']));
+    }
+    backupRow.appendChild(backupBtns);
+    box.appendChild(backupRow);
+
+    box.appendChild(el('div', { class: 'section-label', style: 'margin-top:12px;', text: 'Earlier autosaves (this browser)' }));
+    var snapBox = el('div', { class: 'field' });
+    snapBox.appendChild(el('div', { class: 'tip' }, ['Loading…']));
+    box.appendChild(snapBox);
+    STORE.listSnapshots().then(function (snaps) {
+      snapBox.innerHTML = '';
+      if (!snaps.length) {
+        snapBox.appendChild(el('div', { class: 'tip' }, ['No earlier snapshots yet — they accumulate automatically as you work (one every 30s, up to 5 kept).']));
+        return;
+      }
+      snapBox.appendChild(el('div', { class: 'tip' }, ['Up to 5 earlier snapshots, newest last. Restoring replaces the current playbook — Save to cloud first if unsure.']));
+      snaps.slice().reverse().forEach(function (snap) {
+        var row = el('div', { style: 'display:flex;align-items:center;gap:8px;margin-top:6px;' });
+        row.appendChild(el('div', { style: 'flex:1;font-size:12px;color:var(--ink-3);' }, [
+          new Date(snap.at).toLocaleString()
+        ]));
+        row.appendChild(el('button', { class: 'btn', style: 'font-size:11px;padding:4px 10px;', onclick: function () {
+          if (!window.confirm('Restore the snapshot from ' + new Date(snap.at).toLocaleString() + '? This replaces the current playbook content.')) return;
+          setPlaybook(JSON.parse(JSON.stringify(snap.playbook)));
+          touch();
+          toast('Snapshot restored. Press Save to make it the cloud version.', 'ok');
+          renderInspector();
+        } }, ['Restore']));
+        snapBox.appendChild(row);
+      });
+    });
+
+    // ---- Cloud version history --------------------------------------------
+    // Every cloud save (manual Save, 45s autosave, Publish) leaves a
+    // timestamped snapshot on the server — newest 30 kept. This is the real
+    // recovery path when the wrong version was loaded or content was lost.
+    box.appendChild(sectionLabel('Version history (cloud)'));
+    var verBox = el('div', { class: 'field' });
+    verBox.appendChild(el('div', { class: 'tip' }, ['Loading…']));
+    box.appendChild(verBox);
+    if (!(window.PlaybookPublish && window.PlaybookPublish.listVersions)) {
+      verBox.innerHTML = '';
+      verBox.appendChild(el('div', { class: 'tip' }, ['Version history is not available in this build.']));
+    } else {
+      var verSlug = window.PlaybookPublish.slugFor(PB);
+      window.PlaybookPublish.listVersions(verSlug).then(function (versions) {
+        verBox.innerHTML = '';
+        if (!versions.length) {
+          verBox.appendChild(el('div', { class: 'tip' }, ['No cloud versions yet — every Save, autosave and Publish will leave a timestamped copy here (30 kept).']));
+          return;
+        }
+        verBox.appendChild(el('div', { class: 'tip' }, ['Every cloud save keeps a timestamped copy (newest 30). Restoring loads that copy into the editor — press Save to make it the current draft.']));
+        versions.slice().reverse().forEach(function (v) {
+          var row = el('div', { style: 'display:flex;align-items:center;gap:8px;margin-top:6px;' });
+          var label = new Date(v.at).toLocaleString() +
+            (v.stage === 'published' ? ' · published' : (v.autosave ? ' · autosave' : ' · draft')) +
+            (v.by ? ' · ' + v.by : '');
+          row.appendChild(el('div', { style: 'flex:1;font-size:12px;color:var(--ink-3);' }, [label]));
+          row.appendChild(el('button', { class: 'btn', style: 'font-size:11px;padding:4px 10px;', onclick: function () {
+            if (!window.confirm('Restore the cloud version from ' + new Date(v.at).toLocaleString() + '? This replaces the current playbook content. Press Save afterwards to make it the current draft.')) return;
+            busy(true, 'Restoring version…');
+            fetch(window.PlaybookPublish.versionUrl(verSlug, v.file) + '?t=' + Date.now())
+              .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+              .then(function (pb) {
+                pb.meta = pb.meta || {};
+                if (!pb.meta.slug) pb.meta.slug = verSlug;
+                setPlaybook(pb);
+                touch();
+                busy(false);
+                toast('Version restored. Press Save to make it the current cloud draft.', 'ok');
+                renderInspector();
+              })
+              .catch(function (e) {
+                busy(false);
+                toast('Could not restore that version: ' + ((e && e.message) || e), 'err');
+              });
+          } }, ['Restore']));
+          verBox.appendChild(row);
+        });
+      });
+    }
+
     box.appendChild(sectionLabel('SCORM manifest inspector'));
     renderManifestInspector(box);
   }
@@ -2588,6 +2764,7 @@
             toast('Saved · listed in the Library as Draft' + (dept ? ' · ' + dept : ''), 'ok');
             lastAssetSig = assetSig();
             cloudDirty = false;
+            writeBackupFile();
             reportFailedAssets(res);
             // Slug changed on this save (collision guard)? Remove the stale
             // library entry the old slug left behind — but only when its title

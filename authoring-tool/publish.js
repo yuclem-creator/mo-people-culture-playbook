@@ -223,6 +223,7 @@
       .then(function (r) {
         if (r.error) throw new Error('Upload failed (version.json): ' + r.error.message);
         tick();
+        recordVersion(playbookForUpload, slug, stage, session); // best-effort, non-blocking
         var contentUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/' + basePath + 'playbook-data.json';
         return { slug: slug, contentUrl: contentUrl, assetCount: assetPaths.length, publishedBy: email, failedAssets: failedAssets };
       });
@@ -261,6 +262,78 @@
         });
       })
       .catch(function (e) { console.warn('[publish] library index update skipped:', e && e.message); });
+  }
+
+  /* ---- cloud version history -------------------------------------------------
+     Every draft save / publish also writes a timestamped snapshot of the
+     playbook JSON to versions/<slug>/<timestamp>.json and maintains a capped
+     index at versions/<slug>/index.json (newest 30 kept). Best-effort: a
+     version-history failure never fails the save itself.
+  -------------------------------------------------------------------------- */
+  var VERSIONS_KEEP = 30;
+
+  function recordVersion(playbookForUpload, slug, stage, session, opts) {
+    opts = opts || {};
+    try {
+      var sbUpload = uploadClientFor(session);
+      var bucket = cfg.bucket || 'playbook-content';
+      var email = (session && session.user && session.user.email) || null;
+      var now = new Date();
+      var file = now.toISOString().replace(/:/g, '-') + '.json';
+      var entry = {
+        file: file,
+        at: now.toISOString(),
+        by: email,
+        stage: stage,
+        autosave: !!opts.autosave,
+        title: (playbookForUpload.meta && playbookForUpload.meta.title) || slug
+      };
+      var body = new Blob([JSON.stringify(playbookForUpload)], { type: 'application/json' });
+      return sbUpload.storage.from(bucket).upload('versions/' + slug + '/' + file, body, {
+        upsert: true, contentType: 'application/json'
+      }).then(function (r) {
+        if (r.error) throw new Error(r.error.message);
+        var idxUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/versions/' + slug + '/index.json';
+        return fetch(idxUrl + '?t=' + Date.now())
+          .then(function (res) { return res.ok ? res.json() : { versions: [] }; })
+          .catch(function () { return { versions: [] }; });
+      }).then(function (idx) {
+        var list = (idx && Array.isArray(idx.versions)) ? idx.versions : [];
+        list.push(entry);
+        list.sort(function (a, b) { return Date.parse(a.at) - Date.parse(b.at); });
+        var overflow = list.slice(0, Math.max(0, list.length - VERSIONS_KEEP));
+        list = list.slice(-VERSIONS_KEEP);
+        var idxBlob = new Blob([JSON.stringify({ versions: list }, null, 2)], { type: 'application/json' });
+        return sbUpload.storage.from(bucket).upload('versions/' + slug + '/index.json', idxBlob, {
+          upsert: true, contentType: 'application/json'
+        }).then(function () {
+          if (overflow.length) {
+            return sbUpload.storage.from(bucket)
+              .remove(overflow.map(function (e) { return 'versions/' + slug + '/' + e.file; }))
+              .catch(function () {});
+          }
+        });
+      }).catch(function (e) { console.warn('[publish] version history skipped:', e && e.message); });
+    } catch (e) {
+      console.warn('[publish] version history skipped:', e && e.message);
+      return Promise.resolve();
+    }
+  }
+
+  // Public read of the version index (no session needed — the bucket's reads
+  // are public). Returns [] when no history exists yet.
+  function listVersions(slug) {
+    var bucket = cfg.bucket || 'playbook-content';
+    var idxUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/versions/' + slug + '/index.json';
+    return fetch(idxUrl + '?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : { versions: [] }; })
+      .then(function (idx) { return (idx && Array.isArray(idx.versions)) ? idx.versions : []; })
+      .catch(function () { return []; });
+  }
+
+  function versionUrl(slug, file) {
+    var bucket = cfg.bucket || 'playbook-content';
+    return cfg.url + '/storage/v1/object/public/' + bucket + '/versions/' + slug + '/' + file;
   }
 
   /* ---- lanes ----------------------------------------------------------------- */
@@ -302,6 +375,7 @@
           { upsert: true, contentType: 'application/json' });
       }).then(function (r) {
         if (r.error) throw new Error(r.error.message);
+        recordVersion(playbookForUpload, slug, 'draft', session, { autosave: true }); // best-effort
         return { slug: slug, failedAssets: [] };
       });
     });
@@ -402,6 +476,8 @@
     publish: publish,
     saveDraft: saveDraft,
     saveDraftJson: saveDraftJson,
+    listVersions: listVersions,
+    versionUrl: versionUrl,
     removeIndexEntry: removeIndexEntry
   };
 })(window);
