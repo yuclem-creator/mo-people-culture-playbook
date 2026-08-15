@@ -1689,10 +1689,18 @@ function renderCover() {
     return rest.length ? rest[0].id : 'menu';
   })();
   const hasIntro = nextAfterCover === 'intro';
+  const coverLangs = (PB.meta && PB.meta.languages) || [];
+  const curLang = currentLangCode() || 'en';
+  const coverLangRow = coverLangs.length
+    ? '<div class="cover-lang">' + [{ code: 'en', label: 'English' }].concat(coverLangs).map(function (l) {
+        return '<button type="button" class="cover-lang-btn' + (l.code === curLang ? ' on' : '') + '" data-lang-switch="' + esc(l.code) + '">' + esc(l.label) + '</button>';
+      }).join('') + '</div>'
+    : '';
   return `
     <section class="chapter" id="cover">
       <div class="cover-full"${bg ? ` style="background-image: url('img/${bg}');"` : ' style="background:linear-gradient(160deg,#17150f 0%,#2b2417 100%);"'}>
         <div class="cover-veil"></div>
+        ${coverLangRow}
         <div class="cover-inner">
           <div class="cover-top">
             <div class="cover-wordmark">${T('cover.wordmark',(PB.meta && PB.meta.wordmark) || 'Mandarin Oriental')}</div>
@@ -3946,6 +3954,28 @@ function currentLangCode() {
   try { var s = localStorage.getItem('mo_pb_lang'); if (s) return s; } catch (e) {}
   return 'en';
 }
+function switchPlaybookLang(code) {
+  try { localStorage.setItem('mo_pb_lang', code); } catch (e) {}
+  if (window.parent !== window) {
+    try { window.parent.postMessage({ type: 'preview-lang', lang: code }, '*'); } catch (e) {}
+    return;
+  }
+  try {
+    var u = new URL(location.href);
+    u.searchParams.set('lang', code);
+    location.href = u.toString();
+  } catch (e) { location.reload(); }
+}
+if (!window.__langSwitchWired) {
+  window.__langSwitchWired = true;
+  document.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('[data-lang-switch]') : null;
+    if (!b) return;
+    e.preventDefault();
+    e.stopPropagation();
+    switchPlaybookLang(b.getAttribute('data-lang-switch'));
+  }, true);
+}
 function renderLangSwitch() {
   var old = document.getElementById('langSwitch');
   if (old) old.remove();
@@ -3968,19 +3998,7 @@ function renderLangSwitch() {
     if (o.code === cur) op.selected = true;
     sel.appendChild(op);
   });
-  sel.addEventListener('change', function () {
-    var code = sel.value;
-    try { localStorage.setItem('mo_pb_lang', code); } catch (e) {}
-    if (window.parent !== window) {
-      try { window.parent.postMessage({ type: 'preview-lang', lang: code }, '*'); } catch (e) {}
-      return;
-    }
-    try {
-      var u = new URL(location.href);
-      u.searchParams.set('lang', code);
-      location.href = u.toString();
-    } catch (e) { location.reload(); }
-  });
+  sel.addEventListener('change', function () { switchPlaybookLang(sel.value); });
   host.insertBefore(sel, host.firstChild);
 }
 
