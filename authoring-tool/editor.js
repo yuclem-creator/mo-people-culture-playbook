@@ -54,7 +54,10 @@
     { v: 'table', l: 'Table' }, { v: 'callout', l: 'Callout' },
     { v: 'tasklist', l: 'Task list (gated)' },
     { v: 'swimlane', l: 'Swimlane timeline' }, { v: 'chart', l: 'Chart / dashboard' },
-    { v: 'beforeafter', l: 'Before / after' }
+    { v: 'beforeafter', l: 'Before / after' },
+    { v: 'heading', l: 'Heading' }, { v: 'statband', l: 'Stat / KPI band' },
+    { v: 'gauge', l: 'Gauge / maturity meter' }, { v: 'pyramid', l: 'Hierarchy / pyramid' },
+    { v: 'wheel', l: 'Radial lifecycle wheel' }
   ];
 
   // =========================================================================
@@ -1264,7 +1267,41 @@
       el('button', { class: 'btn ghost', onclick: function () {
         itemsArr.push({ s: 'beforeafter', name: 'Before / after', beforeLabel: 'Before', afterLabel: 'After', beforeText: '', afterText: '', beforeImg: '', afterImg: '' });
         touch(); renderInspector();
-      } }, ['+ Add before / after'])
+      } }, ['+ Add before / after']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'heading', name: 'Heading', text: 'New heading', sub: '' });
+        touch(); renderInspector();
+      } }, ['+ Add heading']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'timeline', name: 'Visual timeline', variant: 'history', steps: [{ label: '1876', sub: 'Era or place', text: '', img: '' }] });
+        touch(); renderInspector();
+      } }, ['+ Add visual timeline']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'statband', name: 'Stat band', stats: [
+          { value: '96', unit: '%', label: 'Metric one', sub: '', delta: '', deltaDir: 'up' },
+          { value: '72', unit: 'h', label: 'Metric two', sub: '', delta: '', deltaDir: '' }
+        ] });
+        touch(); renderInspector();
+      } }, ['+ Add stat band']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'gauge', name: 'Gauge', value: 3, max: 5, levelLabel: 'Level 3', caption: '', levels: ['Ad hoc', 'Emerging', 'Established', 'Managed', 'Optimising'] });
+        touch(); renderInspector();
+      } }, ['+ Add gauge']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'pyramid', name: 'Pyramid', tiers: [
+          { name: 'Apex outcome', sub: '', note: '' },
+          { name: 'Middle tier', sub: '', note: '' },
+          { name: 'Foundation', sub: '', note: '' }
+        ] });
+        touch(); renderInspector();
+      } }, ['+ Add pyramid']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'wheel', name: 'Lifecycle wheel', hubEyebrow: '', hubTitle: 'The lifecycle', stages: [
+          { label: 'Stage one', text: '' }, { label: 'Stage two', text: '' },
+          { label: 'Stage three', text: '' }, { label: 'Stage four', text: '' }
+        ] });
+        touch(); renderInspector();
+      } }, ['+ Add wheel'])
     ]);
   }
 
@@ -1317,6 +1354,7 @@
     box.appendChild(sectionLabel('Item'));
     box.appendChild(selectField('Type', it.s || 'policy', ITEM_SYMBOLS, function (v) { it.s = v; touch(); renderInspector(); }));
     box.appendChild(textField('Name', it.name || '', function (v) { it.name = v; touch(); }));
+    box.appendChild(textField('Heading above element (optional)', it.head || '', function (v) { it.head = v; touch(); }, 'Shown above this element on the page — leave blank for no heading.'));
     if (it.s === 'image' || it.s === 'video') {
       box.appendChild(el('div', { class: 'note', text: 'File: ' + (it.url || '(none)') }));
       box.appendChild(el('button', { class: 'btn', onclick: function () {
@@ -1553,6 +1591,96 @@
       box.appendChild(textField('Before text', it.beforeText || '', function (v) { it.beforeText = v; touch(); }, 'One point per line works well.', true));
       box.appendChild(textField('After text', it.afterText || '', function (v) { it.afterText = v; touch(); }, 'One point per line works well.', true));
       box.appendChild(el('div', { class: 'note', text: 'With both images set, readers drag a handle to compare them. Text renders as two cards below the images.' }));
+      return;
+    }
+    // Heading: a standalone section heading for pacing long pages.
+    if (it.s === 'heading') {
+      box.appendChild(textField('Heading text', it.text || '', function (v) { it.text = v; touch(); }));
+      box.appendChild(textField('Eyebrow above heading (optional)', it.sub || '', function (v) { it.sub = v; touch(); }, 'Small caps label above the heading, e.g. "Part 3 · Opportunities".'));
+      return;
+    }
+    // Stat / KPI band: a strip of headline metrics.
+    if (it.s === 'statband') {
+      it.stats = it.stats || [];
+      box.appendChild(sectionLabel('Stats (' + it.stats.length + ')'));
+      renderRepeatable(box, it.stats, {
+        nameOf: function (s) { return (s.value || '?') + (s.unit || '') + ' — ' + (s.label || '(stat)'); },
+        subOf: function (s) { return s.sub || ''; },
+        open: null,
+        inlineEdit: function (s, wrap) {
+          wrap.appendChild(textField('Value', s.value || '', function (v) { s.value = v; touch(); }, 'e.g. 96'));
+          wrap.appendChild(textField('Unit (optional)', s.unit || '', function (v) { s.unit = v; touch(); }, 'e.g. %, h, rooms'));
+          wrap.appendChild(textField('Label', s.label || '', function (v) { s.label = v; touch(); }, 'e.g. Audit completion'));
+          wrap.appendChild(textField('Sub-line (optional)', s.sub || '', function (v) { s.sub = v; touch(); }));
+          wrap.appendChild(textField('Delta text (optional)', s.delta || '', function (v) { s.delta = v; touch(); }, 'e.g. 4 pts vs last year'));
+          wrap.appendChild(selectField('Delta direction', s.deltaDir || '', [
+            { v: '', l: 'None' }, { v: 'up', l: 'Up (improvement)' }, { v: 'down', l: 'Down (reduction)' }
+          ], function (v) { s.deltaDir = v; touch(); }));
+        },
+        addLabel: 'Add stat',
+        make: function () { return { value: '', unit: '', label: 'New stat', sub: '', delta: '', deltaDir: '' }; }
+      });
+      return;
+    }
+    // Gauge / maturity meter: semicircular dial with a level scale.
+    if (it.s === 'gauge') {
+      box.appendChild(textField('Score', String(it.value == null ? '' : it.value), function (v) { it.value = parseFloat(v) || 0; touch(); }, 'e.g. 3.4'));
+      box.appendChild(textField('Maximum', String(it.max == null ? 5 : it.max), function (v) { it.max = parseFloat(v) || 5; touch(); }, 'Scale maximum, e.g. 5'));
+      box.appendChild(textField('Result label', it.levelLabel || '', function (v) { it.levelLabel = v; touch(); }, 'e.g. Level 3 — Established'));
+      box.appendChild(textField('Caption (optional)', it.caption || '', function (v) { it.caption = v; touch(); }, 'e.g. Commercial maturity self-assessment'));
+      it.levels = it.levels || [];
+      box.appendChild(sectionLabel('Scale levels — low to high (' + it.levels.length + ')'));
+      renderRepeatable(box, it.levels, {
+        nameOf: function (l) { return (it.levels.indexOf(l) + 1) + ' · ' + (l || '(level)'); },
+        subOf: function () { return ''; },
+        open: null,
+        inlineEdit: function (l, wrap) {
+          var i = it.levels.indexOf(l);
+          wrap.appendChild(textField('Level ' + (i + 1) + ' label', l || '', function (v) { it.levels[i] = v; touch(); }, 'e.g. Established — standards followed'));
+        },
+        addLabel: 'Add level',
+        make: function () { return 'New level'; }
+      });
+      box.appendChild(el('div', { class: 'note', text: 'The needle is placed from Score ÷ Maximum. The level nearest the score is highlighted.' }));
+      return;
+    }
+    // Hierarchy / pyramid: layered tiers building to an apex (top tier first).
+    if (it.s === 'pyramid') {
+      it.tiers = it.tiers || [];
+      box.appendChild(sectionLabel('Tiers — apex first, foundation last (' + it.tiers.length + ')'));
+      renderRepeatable(box, it.tiers, {
+        nameOf: function (t) { return t.name || '(tier)'; },
+        subOf: function (t) { return t.sub || ''; },
+        open: null,
+        inlineEdit: function (t, wrap) {
+          wrap.appendChild(textField('Tier name', t.name || '', function (v) { t.name = v; touch(); }));
+          wrap.appendChild(textField('Tier sub-line (optional)', t.sub || '', function (v) { t.sub = v; touch(); }));
+          wrap.appendChild(textField('Side note (optional)', t.note || '', function (v) { t.note = v; touch(); }, 'Annotation shown beside the pyramid.', true));
+        },
+        addLabel: 'Add tier',
+        make: function () { return { name: 'New tier', sub: '', note: '' }; }
+      });
+      box.appendChild(el('div', { class: 'note', text: 'The apex tier renders in gold; lower tiers step down through celadon shades.' }));
+      return;
+    }
+    // Radial lifecycle wheel: tappable segments around a centre hub.
+    if (it.s === 'wheel') {
+      box.appendChild(textField('Hub eyebrow (optional)', it.hubEyebrow || '', function (v) { it.hubEyebrow = v; touch(); }, 'e.g. The colleague'));
+      box.appendChild(textField('Hub title', it.hubTitle || '', function (v) { it.hubTitle = v; touch(); }, 'e.g. Lifecycle at Mandarin Oriental'));
+      it.stages = it.stages || [];
+      box.appendChild(sectionLabel('Stages (' + it.stages.length + ')'));
+      renderRepeatable(box, it.stages, {
+        nameOf: function (s) { return ('0' + (it.stages.indexOf(s) + 1)).slice(-2) + ' — ' + (s.label || '(stage)'); },
+        subOf: function (s) { return (s.text || '').slice(0, 60); },
+        open: null,
+        inlineEdit: function (s, wrap) {
+          wrap.appendChild(textField('Stage label', s.label || '', function (v) { s.label = v; touch(); }));
+          wrap.appendChild(textField('Stage text', s.text || '', function (v) { s.text = v; touch(); }, 'Shown in the detail card when the segment is tapped.', true));
+        },
+        addLabel: 'Add stage',
+        make: function () { return { label: 'New stage', text: '' }; }
+      });
+      box.appendChild(el('div', { class: 'note', text: 'Readers tap a segment to read that stage. Works best with 4–8 stages.' }));
       return;
     }
     if (it.s === 'table') {
