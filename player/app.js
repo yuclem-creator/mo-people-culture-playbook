@@ -1707,12 +1707,12 @@ function renderCover() {
             <div class="cover-edition">${T('cover.edition',(PB.meta && PB.meta.edition && PB.meta.edition !== 'Edition') ? PB.meta.edition : '')}</div>
           </div>
           <div class="cover-center">
-            <div class="cover-eyebrow">${T('cover.eyebrow','The Interactive Playbook')}</div>
+            <div class="cover-eyebrow">${T('cover.eyebrow', UI('coverEyebrow'))}</div>
             <h1 class="cover-title">${T('cover.titleHtml', esc(metaTitle))}</h1>
             <p class="cover-sub">${T('cover.sub','')}</p>
             <button class="cover-cta" data-goto="${nextAfterCover}">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 6.2C10 4.8 7.2 4.2 3.5 4.2v13.9c3.7 0 6.5.6 8.5 2 2-1.4 4.8-2 8.5-2V4.2c-3.7 0-6.5.6-8.5 2z"/><path d="M12 6.2v13.9"/></svg>
-              ${T('cover.ctaLabel','Explore')}
+              ${T('cover.ctaLabel', UI('explore'))}
             </button>
           </div>
         </div>
@@ -1741,7 +1741,7 @@ function renderIntro() {
               : `<div style="display:flex;align-items:center;justify-content:center;min-height:240px;border:1px dashed var(--rule);color:var(--ink-mute);font-size:14px;padding:40px;text-align:center;">No welcome film yet — upload one in the Studio (Welcome Film chapter) to feature it here.</div>`}
           </div>
           <button class="intro-next" data-goto="menu">
-            ${T('intro.nextLabel','Continue to Contents')}
+            ${T('intro.nextLabel', UI('continueContents'))}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </div>
@@ -1756,7 +1756,7 @@ function renderLetter() {
     <section class="chapter" id="letter">
       <div class="spread">
         <div class="spread-header center">
-          <div class="running-mini">${T('letter.running','Foreword')}</div>
+          <div class="running-mini">${T('letter.running', UI('foreword'))}</div>
           <div class="center-rule"></div>
           <h2 class="spread-title center">${T('letter.title','From the Chief People &amp; Culture Officer')}</h2>
           <p class="spread-lede center">${T('letter.lede','A letter to Colleagues — the intent, the tone, and the invitation behind these pages.')}</p>
@@ -1796,7 +1796,7 @@ function renderCh1() {
         <div class="opener-hero" style="background-image: url('img/${T('ch1.opener.bg','opener_intro.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-1"]}</span>Chapter I</div></div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="${UI('backContents')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>${UI('contents')}</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-1"]}</span>${chapterLabel('I')}</div></div>
               <div class="opener-eyebrow">${T('ch1.opener.eyebrow','Introduction')}</div>
             </div>
             <div class="opener-bottom">
@@ -1995,7 +1995,7 @@ function renderCh2() {
         <div class="opener-hero" style="background-image: url('img/${T('ch2.opener.bg','opener_about.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-2"]}</span>Chapter II</div></div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="${UI('backContents')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>${UI('contents')}</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-2"]}</span>${chapterLabel('II')}</div></div>
               <div class="opener-eyebrow">${T('ch2.opener.eyebrow','The House')}</div>
             </div>
             <div class="opener-bottom">
@@ -2344,7 +2344,7 @@ function renderCh3() {
         <div class="opener-hero" style="background-image: url('img/${T('ch3.opener.bg','opener_lifecycle.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-3"]}</span>Chapter III</div></div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="${UI('backContents')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>${UI('contents')}</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-3"]}</span>${chapterLabel('III')}</div></div>
               <div class="opener-eyebrow">${T('ch3.opener.eyebrow','The Colleague Lifecycle')}</div>
             </div>
             <div class="opener-bottom">
@@ -2617,7 +2617,7 @@ function renderCh4() {
         <div class="opener-hero" style="background-image: url('img/${T('ch4.opener.bg','opener_preopen.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-4"]}</span>Chapter IV</div></div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="${UI('backContents')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>${UI('contents')}</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-4"]}</span>${chapterLabel('IV')}</div></div>
               <div class="opener-eyebrow">${T('ch4.opener.eyebrow','Openings')}</div>
             </div>
             <div class="opener-bottom">
@@ -2648,7 +2648,7 @@ function renderCh5() {
         <div class="opener-hero" style="background-image: url('img/${T('ch5.opener.bg','opener_audit.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-5"]}</span>Chapter V</div></div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="${UI('backContents')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>${UI('contents')}</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-5"]}</span>${chapterLabel('V')}</div></div>
               <div class="opener-eyebrow">${T('ch5.opener.eyebrow','Governance')}</div>
             </div>
             <div class="opener-bottom">
@@ -2676,7 +2676,7 @@ function renderCh6() {
         <div class="opener-hero" style="background-image: url('img/${T('ch6.opener.bg','opener_support.jpg')}');">
           <div class="opener-content">
             <div class="opener-top">
-              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-6"]}</span>Chapter VI</div></div>
+              <div class="opener-top-left"><button class="opener-back" data-goto="menu" aria-label="${UI('backContents')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>${UI('contents')}</button><div class="opener-numeral"><span class="opener-icon">${ICONS["ch-6"]}</span>${chapterLabel('VI')}</div></div>
               <div class="opener-eyebrow">${T('ch6.opener.eyebrow','Closing')}</div>
             </div>
             <div class="opener-bottom">
@@ -2781,7 +2781,7 @@ function renderMenu() {
         ? `<div class="menu-card-img"><img src="img/${img}" alt="${c.label}" loading="lazy" /></div>`
         : `<div class="menu-card-img" style="background:linear-gradient(135deg,#F4F1EA 0%,#E7DFCE 100%);"></div>`}
       <div class="menu-card-body">
-        <div class="menu-card-eyebrow">${ICONS[c.id] ? `<span class="menu-card-icon">${ICONS[c.id]}</span>` : ''}${c.numeral ? 'Chapter ' + c.numeral : (c.isVideo ? 'Welcome Film' : 'Foreword')}</div>
+        <div class="menu-card-eyebrow">${ICONS[c.id] ? `<span class="menu-card-icon">${ICONS[c.id]}</span>` : ''}${c.numeral ? chapterLabel(c.numeral) : (c.isVideo ? UI('welcomeFilm') : UI('foreword'))}</div>
         <div class="menu-card-title">${c.label}</div>
         <div class="menu-card-desc">${MENU_DESC[c.id] || ''}</div>
       </div>
@@ -2794,7 +2794,7 @@ function renderMenu() {
         <div class="spread-header">
           <div class="running-mini">${T('menu.running', isSeedPlaybook() ? 'People &amp; Culture' : esc((PB.meta && PB.meta.title) || ''))}</div>
           <div class="center-rule"></div>
-          <h2 class="spread-title center">${T('menu.title','Explore the Playbook')}</h2>
+          <h2 class="spread-title center">${T('menu.title', UI('menuTitle'))}</h2>
           <p class="spread-lede center">${T('menu.lede','')}</p>
         </div>
         <div class="menu-grid">${chapterCards}</div>
@@ -2988,11 +2988,11 @@ function renderGenericChapter(ch, prevId, nextId) {
   const title = T(prefix + '.opener.title', '') || esc(ch.label || '');
   const sub = T(prefix + '.opener.sub', ch.opener || '');
   const eyebrow = T(prefix + '.opener.eyebrow', '');
-  const backBtn = '<button class="opener-back" data-goto="menu" aria-label="Back to Contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Contents</button>';
+  const backBtn = '<button class="opener-back" data-goto="menu" aria-label="' + UI('backContents') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' + UI('contents') + '</button>';
   // Chapter label on the opener: default "Chapter N"; a custom label replaces
   // it verbatim (e.g. "Section 3 · Opportunity 5"); hideLabel or a blank
   // numeral removes it entirely.
-  const numeral = ch.hideLabel ? '' : (ch.labelText ? esc(ch.labelText) : (ch.numeral ? 'Chapter ' + esc(ch.numeral) : ''));
+  const numeral = ch.hideLabel ? '' : (ch.labelText ? esc(ch.labelText) : (ch.numeral ? chapterLabel(esc(ch.numeral)) : ''));
 
   const opener = bg
     ? `<div class="opener">
@@ -3261,7 +3261,7 @@ function buildSearchIndex() {
   const idx = [];
   CHAPTERS.forEach(c => {
     if (c.id === 'cover' || c.id === 'intro') return;
-    idx.push({ chapter: c.id, sub: null, title: c.numeral ? `${c.numeral}. ${c.label}` : c.label, crumb: c.numeral ? 'Chapter' : 'Foreword', text: c.label });
+    idx.push({ chapter: c.id, sub: null, title: c.numeral ? `${c.numeral}. ${c.label}` : c.label, crumb: c.numeral ? UI('chapterCrumb') : UI('foreword'), text: c.label });
   });
   LIFECYCLE.forEach(s => {
     idx.push({ chapter: 'ch-3', sub: s.id, title: `${s.letter}. ${s.label}`, crumb: 'Lifecycle', text: s.label + ' ' + s.lede });
@@ -3298,7 +3298,7 @@ function initSearch() {
     if (!q) { results.classList.remove('on'); return; }
     const hits = SEARCH_IDX.filter(e => e.text.toLowerCase().includes(q)).slice(0, 12);
     if (!hits.length) {
-      results.innerHTML = `<div class="search-result"><div class="sr-title">No results</div><div class="sr-crumb">Try a different term</div></div>`;
+      results.innerHTML = `<div class="search-result"><div class="sr-title">${UI('noResults')}</div><div class="sr-crumb">${UI('noResultsHint')}</div></div>`;
     } else {
       results.innerHTML = hits.map((h, i) => `
         <div class="search-result" data-chapter="${h.chapter}" data-sub="${h.sub||''}" data-i="${i}">
@@ -3866,6 +3866,7 @@ function init() {
   if (window.PLAYBOOK && PB !== window.PLAYBOOK) PB = window.PLAYBOOK;
   updateMasthead();
   renderLangSwitch();
+  applyChromeLang();
   updateRailAbout();
   applyTypography();
   renderRail();
@@ -3954,6 +3955,65 @@ function currentLangCode() {
   try { var s = localStorage.getItem('mo_pb_lang'); if (s) return s; } catch (e) {}
   return 'en';
 }
+
+// ---- UI chrome i18n (Phase 1.5) -------------------------------------------
+// Hardcoded renderer chrome (buttons, eyebrows, menu title, openers, search)
+// can never be reached by a playbook's translation overlay, because the
+// strings live in the renderer, not the data. UI() localises them per
+// language; playbook prose keys still win wherever a T() default is used.
+const UI_EN = {
+  explore: 'Explore',
+  coverEyebrow: 'The Interactive Playbook',
+  menuTitle: 'Explore the Playbook',
+  contents: 'Contents',
+  continueContents: 'Continue to Contents',
+  backContents: 'Back to Contents',
+  welcomeFilm: 'Welcome Film',
+  foreword: 'Foreword',
+  chapterCrumb: 'Chapter',
+  searchPlaceholder: 'Search the playbook…',
+  noResults: 'No results',
+  noResultsHint: 'Try a different term',
+  aboutEdition: 'About this edition'
+};
+const UI_I18N = {
+  'zh-CN': {
+    explore: '开始探索',
+    coverEyebrow: '互动手册',
+    menuTitle: '浏览手册',
+    contents: '目录',
+    continueContents: '前往目录',
+    backContents: '返回目录',
+    welcomeFilm: '欢迎影片',
+    foreword: '前言',
+    chapterCrumb: '章节',
+    searchPlaceholder: '搜索手册…',
+    noResults: '没有结果',
+    noResultsHint: '请尝试其他关键词',
+    aboutEdition: '关于本版本'
+  }
+};
+function UI(key) {
+  var dict = UI_I18N[currentLangCode()] || null;
+  return (dict && dict[key]) || UI_EN[key] || key;
+}
+const CN_NUM = { I: '一', II: '二', III: '三', IV: '四', V: '五', VI: '六', VII: '七', VIII: '八', IX: '九', X: '十', XI: '十一', XII: '十二' };
+function chapterLabel(numeral) {
+  if (currentLangCode() === 'zh-CN') return '第' + (CN_NUM[numeral] || numeral) + '章';
+  return 'Chapter ' + numeral;
+}
+// Swaps the static shell strings (search box, Contents fab, rail eyebrow)
+// that live in index.html rather than in render functions.
+function applyChromeLang() {
+  var si = document.getElementById('searchInput');
+  if (si) si.setAttribute('placeholder', UI('searchPlaceholder'));
+  var mf = document.querySelector('#menuFab span');
+  if (mf) mf.textContent = UI('contents');
+  var re = document.querySelector('.rail-eyebrow');
+  if (re) re.textContent = UI('contents');
+  var rf = document.querySelector('.rail-footer h4');
+  if (rf) rf.textContent = UI('aboutEdition');
+}
 function switchPlaybookLang(code) {
   try { localStorage.setItem('mo_pb_lang', code); } catch (e) {}
   if (window.parent !== window) {
@@ -4019,6 +4079,7 @@ function applyPlaybook(next, opts) {
   updateRailAbout();
   updateMasthead();
   renderLangSwitch();
+  applyChromeLang();
   applyTypography();
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
