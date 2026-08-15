@@ -916,6 +916,31 @@ html[lang="zh-CN"] .pb-pyr-tier .t-name, html[lang="zh-CN"] .pb-chart-big,
 html[lang="zh-CN"] .pb-step-num, html[lang="zh-CN"] .pb-swim-num,
 html[lang="zh-CN"] .pb-swim-role-num, html[lang="zh-CN"] .pb-wheel-num { font-family: 'MO Exceptional', 'Songti SC', 'Noto Serif SC', Georgia, serif; }
 html[lang="zh-CN"] h4, html[lang="zh-CN"] .small-caps { letter-spacing: .1em; }
+/* --- zh-CN global weight & alignment rules -------------------------------
+   CJK glyphs carry more visual density per character than Latin, so the
+   same nominal weight reads heavier. Global rule: display/heading text one
+   step up in weight (600), body text unchanged (400); display sizes one
+   step down with slightly looser leading; titles balance-wrap so no single
+   orphan character drops onto its own line. */
+html[lang="zh-CN"] .cover-title {
+  font-weight: 600;
+  font-size: clamp(2.3rem, 5.2vw, 4.2rem);
+  line-height: 1.18;
+  letter-spacing: .05em;
+  text-wrap: balance;
+  max-width: 14em;
+}
+html[lang="zh-CN"] .spread-title,
+html[lang="zh-CN"] .opener-title,
+html[lang="zh-CN"] .letter-title,
+html[lang="zh-CN"] h1, html[lang="zh-CN"] h2, html[lang="zh-CN"] h3,
+html[lang="zh-CN"] .pb-heading-text, html[lang="zh-CN"] .pb-item-head { font-weight: 600; }
+html[lang="zh-CN"] .spread-title, html[lang="zh-CN"] .opener-title { text-wrap: balance; line-height: 1.25; }
+html[lang="zh-CN"] .menu-card-title { font-weight: 600; letter-spacing: .03em; }
+html[lang="zh-CN"] .menu-card-eyebrow, html[lang="zh-CN"] .opener-numeral,
+html[lang="zh-CN"] .cover-eyebrow { letter-spacing: .3em; }
+html[lang="zh-CN"] .menu-fab span, html[lang="zh-CN"] .lang-switch,
+html[lang="zh-CN"] #mo-ask-fab { letter-spacing: .12em; }
 
 .cover-lang { position: absolute; top: 22px; right: 26px; z-index: 6; display: flex; gap: 8px; align-items: center; }
 .cover-lang-btn { border: 1px solid rgba(255,255,255,.45); background: rgba(13,11,8,.28); color: rgba(255,255,255,.92); border-radius: 999px; padding: 7px 16px; font: 500 11.5px/1 'Avenir Next LT Pro', system-ui, sans-serif; letter-spacing: .06em; cursor: pointer; backdrop-filter: blur(4px); transition: background .2s, border-color .2s; }
