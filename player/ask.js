@@ -201,9 +201,37 @@
       askTitle: '查询手册',
       askDesc: '描述您在酒店遇到的人员情况，我们将为您指引手册中适用的政策原文。',
       readTitle: '阅读手册',
-      readDesc: '按章节完整浏览本手册。'
+      readDesc: '按章节完整浏览本手册。',
+      fab: '查询手册',
+      panelTitle: '查询手册',
+      askBtn: '查询',
+      qwPlaceholder: '描述您遇到的情况——例如“同事经常迟到”',
+      hint: '答案均<b>直接引自本手册</b>，并附上相应章节。请在上方输入您遇到的人员情况或主题。<br><br>内容绝不虚构——如果手册未涵盖，我们会如实告知。',
+      footer: '如遇敏感或紧急情况，请务必联系您的人力资源总监。所示指引均直接引自本手册。',
+      noCover: '<b>手册未直接涵盖此情况。</b><br><br>未找到与“%Q%”相符的内容。请尝试其他措辞（例如“试用期”、“申诉”、“交接”），或咨询您的人力资源总监——他们可以就手册以外的情况提供建议。',
+      openSection: '打开此章节',
+      sectionFallback: '章节'
     }
   };
+
+  var ASK_EN = {
+    fab: 'Ask the Playbook',
+    panelTitle: 'Query the Playbook',
+    askBtn: 'Ask',
+    qwPlaceholder: 'Describe the situation — e.g. \u201ccolleague keeps arriving late\u201d',
+    hint: 'Answers come <b>verbatim from this playbook</b>, with the section to read. Type a people situation or topic above.<br><br>Nothing here is invented — if the playbook doesn\u2019t cover it, we\u2019ll say so.',
+    footer: 'For sensitive or urgent situations, always speak with your P&C Director. Guidance shown is quoted directly from this playbook.',
+    noCover: '<b>The playbook doesn\u2019t cover this directly.</b><br><br>Nothing matched \u201c%Q%\u201d. Try different words (e.g. \u201cprobation\u201d, \u201cgrievance\u201d, \u201chandover\u201d), or speak with your P&C Director — they can advise on situations beyond the playbook.',
+    openSection: 'Open this section',
+    sectionFallback: 'Section'
+  };
+  function askStrings() {
+    var t = ENTRY_I18N[currentLang()] || {};
+    var out = {};
+    for (var k in ASK_EN) out[k] = ASK_EN[k];
+    for (var k2 in t) out[k2] = t[k2];
+    return out;
+  }
 
   function currentLang() {
     if (global.MO_PB_LANG) return global.MO_PB_LANG;
@@ -358,7 +386,8 @@
     style.textContent = CSS;
     document.head.appendChild(style);
 
-    fabEl = h('<button id="mo-ask-fab" type="button">Ask the Playbook</button>');
+    fabEl = h('<button id="mo-ask-fab" type="button"></button>');
+    fabEl.textContent = askStrings().fab;
     fabEl.addEventListener('click', openAsk);
     document.body.appendChild(fabEl);
 
@@ -425,13 +454,18 @@
     backdropEl.addEventListener('click', closeAsk);
     document.body.appendChild(backdropEl);
     document.addEventListener('keydown', onEscKey);
+    var as = askStrings();
     panelEl = h(
-      '<div id="mo-ask-panel" role="dialog" aria-label="Query the Playbook">' +
-        '<div class="hd"><b>Query the Playbook</b><button class="x" type="button" aria-label="Close">×</button></div>' +
-        '<div class="qw"><input type="text" placeholder="Describe the situation — e.g. “colleague keeps arriving late”" /><button class="go" type="button">Ask</button></div>' +
-        '<div class="rs"><div class="hint">Answers come <b>verbatim from this playbook</b>, with the section to read. Type a people situation or topic above.<br><br>Nothing here is invented — if the playbook doesn’t cover it, we’ll say so.</div></div>' +
-        '<div class="ft">For sensitive or urgent situations, always speak with your P&C Director. Guidance shown is quoted directly from this playbook.</div>' +
+      '<div id="mo-ask-panel" role="dialog" aria-label="' + esc(as.panelTitle) + '">' +
+        '<div class="hd"><b></b><button class="x" type="button" aria-label="Close">×</button></div>' +
+        '<div class="qw"><input type="text" /><button class="go" type="button"></button></div>' +
+        '<div class="rs"><div class="hint">' + as.hint + '</div></div>' +
+        '<div class="ft"></div>' +
       '</div>');
+    panelEl.querySelector('.hd b').textContent = as.panelTitle;
+    panelEl.querySelector('.qw input').setAttribute('placeholder', as.qwPlaceholder);
+    panelEl.querySelector('.qw .go').textContent = as.askBtn;
+    panelEl.querySelector('.ft').textContent = as.footer;
     panelEl.querySelector('.x').addEventListener('click', closeAsk);
     var input = panelEl.querySelector('input');
     var run = function () { runQuery(input.value); };
@@ -454,8 +488,7 @@
     if (!q) return;
     var out = query(q);
     if (!out.results.length) {
-      rs.innerHTML = '<div class="hint"><b>The playbook doesn’t cover this directly.</b><br><br>' +
-        'Nothing matched “' + esc(q) + '”. Try different words (e.g. “probation”, “grievance”, “handover”), or speak with your P&C Director — they can advise on situations beyond the playbook.</div>';
+      rs.innerHTML = '<div class="hint">' + askStrings().noCover.replace('%Q%', esc(q)) + '</div>';
       return;
     }
     rs.innerHTML = '';
@@ -463,10 +496,11 @@
       var card = h(
         '<div class="res">' +
           '<div class="crumb">' + esc(r.p.chapterLabel || '') + (r.p.subLabel ? ' · ' + esc(r.p.subLabel) : '') + '</div>' +
-          '<h4>' + esc(r.p.title || 'Section') + '</h4>' +
+          '<h4>' + esc(r.p.title || askStrings().sectionFallback) + '</h4>' +
           '<p class="ex">' + excerpt(r.p, out.tokens) + '</p>' +
-          '<button class="jump" type="button">Open this section</button>' +
+          '<button class="jump" type="button"></button>' +
         '</div>');
+      card.querySelector('.jump').textContent = askStrings().openSection;
       card.querySelector('.jump').addEventListener('click', function () { goToPassage(r.p); });
       rs.appendChild(card);
     });
