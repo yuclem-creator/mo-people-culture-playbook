@@ -137,6 +137,82 @@
 @media (max-width: 720px) {
   .pb-ba-cards { grid-template-columns: 1fr; }
 }
+/* --- Standalone heading element + optional per-element header --- */
+.pb-item-head { font-family: 'MO Exceptional', 'Didot', serif; font-size: 24px; color: var(--ink); margin: 30px 0 12px; line-height: 1.25; }
+.pb-heading { margin: 34px 0 8px; }
+.pb-heading-sub { font-size: 10.5px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--gold-deep); margin-bottom: 6px; }
+.pb-heading-text { font-family: 'MO Exceptional', 'Didot', serif; font-size: 30px; font-weight: 400; color: var(--ink); margin: 0; line-height: 1.2; }
+.pb-heading-rule { display: block; height: 1px; background: var(--rule); margin-top: 14px; }
+/* --- Stat / KPI band --- */
+.pb-stats { display: grid; grid-template-columns: repeat(var(--cols, 3), 1fr); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: #fff; box-shadow: var(--shadow-card); margin: 20px 0; }
+.pb-stat { padding: 26px 24px 22px; border-left: 1px solid var(--rule); position: relative; }
+.pb-stat:first-child { border-left: none; }
+.pb-stat::before { content: ""; position: absolute; top: 0; left: 24px; width: 26px; height: 3px; background: var(--gold); border-radius: 0 0 3px 3px; }
+.pb-stat-num { font-family: 'MO Exceptional', 'Didot', serif; font-size: 46px; line-height: 1; color: var(--ink); display: flex; align-items: baseline; gap: 3px; }
+.pb-stat-unit { font-size: 20px; color: var(--gold-deep); }
+.pb-stat-label { margin-top: 9px; font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-body); }
+.pb-stat-sub { margin-top: 4px; font-size: 12.5px; color: var(--ink-mute); }
+.pb-stat-delta { margin-top: 8px; font-size: 11.5px; font-weight: 700; color: var(--celadon-deep); }
+.pb-stat-delta.down { color: var(--gold-deep); }
+@media (max-width: 720px) {
+  .pb-stats { grid-template-columns: 1fr 1fr; }
+  .pb-stat:nth-child(3) { border-left: none; }
+  .pb-stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
+}
+/* --- Gauge / maturity meter --- */
+.pb-gauge-card { border: 1px solid var(--rule); border-radius: 10px; background: #fff; box-shadow: var(--shadow-card); padding: 30px 34px; display: flex; gap: 48px; align-items: center; margin: 20px 0; }
+.pb-gauge-svgwrap { flex: none; width: 340px; max-width: 100%; }
+.pb-gauge-svgwrap svg { width: 100%; height: auto; display: block; }
+.pb-gauge-read { flex: 1; min-width: 0; }
+.pb-gauge-level { font-family: 'MO Exceptional', 'Didot', serif; font-size: 28px; color: var(--ink); line-height: 1.2; }
+.pb-gauge-of { font-size: 13px; color: var(--ink-mute); margin-top: 4px; }
+.pb-gauge-scale { margin-top: 20px; display: flex; flex-direction: column; gap: 7px; }
+.pb-gauge-row { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--ink-mute); }
+.pb-gauge-row .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--rule-strong); flex: none; }
+.pb-gauge-row.now { color: var(--ink); font-weight: 700; }
+.pb-gauge-row.now .dot { background: var(--gold); box-shadow: 0 0 0 3px rgba(181,144,96,.22); }
+@media (max-width: 720px) {
+  .pb-gauge-card { flex-direction: column; gap: 22px; padding: 24px 20px; }
+}
+/* --- Hierarchy / pyramid --- */
+.pb-pyr { display: flex; gap: 44px; align-items: center; margin: 20px 0; }
+.pb-pyr-stack { flex: 1.15; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.pb-pyr-tier { min-height: 68px; padding: 10px 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff; border-radius: 6px; clip-path: polygon(6% 0, 94% 0, 100% 100%, 0 100%); }
+.pb-pyr-tier .t-name { font-family: 'MO Exceptional', 'Didot', serif; font-size: 18px; letter-spacing: .02em; }
+.pb-pyr-tier .t-sub { font-size: 10px; letter-spacing: .13em; text-transform: uppercase; opacity: .82; margin-top: 2px; }
+.pb-pyr-tier.light { color: var(--ink); }
+.pb-pyr-tier.light .t-sub { color: var(--ink-body); opacity: .75; }
+.pb-pyr-notes { flex: 1; display: flex; flex-direction: column; gap: 13px; min-width: 0; }
+.pb-pyr-note { display: flex; gap: 13px; align-items: baseline; font-size: 13.5px; line-height: 1.55; color: var(--ink-body); }
+.pb-pyr-note .swatch { flex: none; width: 11px; height: 11px; border-radius: 3px; transform: translateY(1px); }
+.pb-pyr-note b { color: var(--ink); }
+@media (max-width: 720px) {
+  .pb-pyr { flex-direction: column; gap: 22px; align-items: stretch; }
+}
+/* --- Radial lifecycle wheel --- */
+.pb-wheelwrap { display: flex; gap: 52px; align-items: center; margin: 24px 0; }
+.pb-wheel { flex: none; width: 460px; max-width: 100%; position: relative; }
+.pb-wheel svg { width: 100%; height: auto; display: block; }
+.pb-wheel-seg { cursor: pointer; opacity: .88; transition: opacity .15s ease; outline: none; }
+.pb-wheel-seg:hover, .pb-wheel-seg:focus-visible { opacity: 1; }
+.pb-wheel-seg.on { fill: var(--gold); opacity: 1; }
+.pb-wheel-num { font-family: 'MO Exceptional', 'Didot', serif; font-size: 13px; font-weight: 700; fill: #fff; pointer-events: none; }
+.pb-wheel-lbl { font-family: 'Avenir Next LT Pro', 'Avenir Next', sans-serif; font-size: 9px; letter-spacing: .08em; fill: rgba(255,255,255,.94); pointer-events: none; }
+.pb-wheel-hub { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
+.pb-wheel-hub .h-eyebrow { font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--gold-deep); font-weight: 700; }
+.pb-wheel-hub .h-title { font-family: 'MO Exceptional', 'Didot', serif; font-size: 22px; color: var(--ink); margin-top: 6px; max-width: 180px; line-height: 1.2; }
+.pb-wheel-side { flex: 1; min-width: 0; }
+.pb-wheel-stage { border: 1px solid var(--gold-hair); border-radius: 10px; background: #fff; padding: 20px 24px; box-shadow: var(--shadow-card); }
+.pb-wheel-stage .s-num { font-family: 'MO Exceptional', 'Didot', serif; font-size: 14px; color: var(--gold-deep); }
+.pb-wheel-stage .s-name { font-family: 'MO Exceptional', 'Didot', serif; font-size: 21px; color: var(--ink); margin: 3px 0 7px; }
+.pb-wheel-stage .s-text { font-size: 13.5px; line-height: 1.6; color: var(--ink-body); }
+.pb-wheel-hint { margin-top: 14px; font-size: 12px; color: var(--ink-mute); }
+@media (max-width: 760px) {
+  .pb-wheelwrap { flex-direction: column; gap: 20px; align-items: stretch; }
+  .pb-wheel { width: min(420px, 100%); margin: 0 auto; }
+  .pb-wheel-side .pb-wheel-stage { display: block !important; margin-bottom: 10px; }
+  .pb-wheel-hint { display: none; }
+}
 /* ============================================================
    Process diagram chapter (author-provided MO Luminous Cards v2
    directory) — scoped under .mo-opp; ground wrapper .mo-opp-ground.
