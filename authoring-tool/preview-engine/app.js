@@ -2819,6 +2819,17 @@ function processDiagramHTML(ch) {
   '</section></div></div>';
 }
 
+// Chapter-level content items and sections authored on a diagram-type
+// chapter (lifecycle wheel, tile menu, card track, process diagram). Those
+// layouts render their bespoke visual only — this appends anything the author
+// added beneath it, so items never silently vanish on non-standard types.
+function chapterBodyExtrasHTML(ch) {
+  var b = chapterBodyFor(ch);
+  var html = (b.items || []).map(policyItemHTML).join('') +
+    (b.sections || []).map(sectionHTML).join('');
+  return html ? '<div class="spread">' + html + '</div>' : '';
+}
+
 function renderGenericChapter(ch, prevId, nextId) {
   const type = chapterTypeOf(ch);
   const prefix = ch.id.replace('ch-', 'ch'); // prose key convention: ch-7 -> ch7
@@ -2885,7 +2896,7 @@ function renderGenericChapter(ch, prevId, nextId) {
           ${s.lede ? `<div class="editorial-body"><p>${inlineRichHTML(s.lede)}</p></div>` : ''}
           ${(c.sections || []).map(sectionHTML).join('')}
         </div>`;
-    }).join('');
+    }).join('') + chapterBodyExtrasHTML(ch);
   } else if (type === 'directory') {
     body = `
       <div class="spread">
@@ -2912,11 +2923,11 @@ function renderGenericChapter(ch, prevId, nextId) {
       </div>
       ${BELIEFS && BELIEFS.length ? `<div class="spread tight">${beliefsTabsHTML()}</div>` : ''}`;
   } else if (type === 'tile-menu') {
-    body = tileMenuChapterHTML(ch);
+    body = tileMenuChapterHTML(ch) + chapterBodyExtrasHTML(ch);
   } else if (type === 'card-track') {
-    body = '<div class="spread">' + openerVideoHTML + '</div>' + cardTrackHTML(ch);
+    body = '<div class="spread">' + openerVideoHTML + '</div>' + cardTrackHTML(ch) + chapterBodyExtrasHTML(ch);
   } else if (type === 'process-diagram') {
-    body = '<div class="spread">' + openerVideoHTML + '</div>' + processDiagramHTML(ch);
+    body = '<div class="spread">' + openerVideoHTML + '</div>' + processDiagramHTML(ch) + chapterBodyExtrasHTML(ch);
   } else if (type === 'part') {
     // Part chapter: opener + part intro, then each sub-topic as its own
     // anchored block (rail links scroll to them). No wheel — this is the
