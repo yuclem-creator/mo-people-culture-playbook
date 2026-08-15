@@ -185,6 +185,75 @@
     };
   }
 
+  /* ---- multilingual entry (Phase 1) -----------------------------------------
+     When the playbook declares languages (meta.languages) the entry overlay
+     shows a language row. Switching reloads the player with ?lang=<code>
+     (the loader then merges playbook-data.<code>.json over English); inside
+     the Studio preview iframe it asks the parent editor to re-push instead.
+     Entry strings below cover the languages we ship UI text for; content
+     strings come from the overlay JSON itself.
+     -------------------------------------------------------------------------- */
+  var ENTRY_I18N = {
+    'zh-CN': {
+      langLabel: '语言',
+      title: '您想如何使用本手册？',
+      sub: '两种方式任选其一，您可以随时切换。',
+      askTitle: '查询手册',
+      askDesc: '描述您在酒店遇到的人员情况，我们将为您指引手册中适用的政策原文。',
+      readTitle: '阅读手册',
+      readDesc: '按章节完整浏览本手册。'
+    }
+  };
+
+  function currentLang() {
+    if (global.MO_PB_LANG) return global.MO_PB_LANG;
+    try {
+      var q = new URLSearchParams(global.location.search).get('lang');
+      if (q) return q;
+    } catch (e) {}
+    try {
+      var saved = global.localStorage.getItem('mo_pb_lang');
+      if (saved) return saved;
+    } catch (e) {}
+    return '';
+  }
+
+  function entryStrings() {
+    var d = {
+      langLabel: 'Language',
+      title: 'How would you like to use the playbook?',
+      sub: 'Two ways in — pick one. You can switch anytime.',
+      askTitle: 'Query the Playbook',
+      askDesc: 'Ask about a people situation in your hotel — get pointed to the exact policy passages that apply.',
+      readTitle: 'Read the Playbook',
+      readDesc: 'Browse the full playbook cover to cover, chapter by chapter.'
+    };
+    var t = ENTRY_I18N[currentLang()];
+    if (t) Object.keys(t).forEach(function (k) { d[k] = t[k]; });
+    return d;
+  }
+
+  function playbookLanguages() {
+    var langs = (PB && PB.meta && PB.meta.languages) || [];
+    var out = [{ code: 'en', label: 'English' }];
+    langs.forEach(function (l) { if (l && l.code && l.code !== 'en') out.push(l); });
+    return out;
+  }
+
+  function switchLang(code) {
+    try { global.localStorage.setItem('mo_pb_lang', code); } catch (e) {}
+    if (global.parent && global.parent !== global) {
+      // Inside the Studio preview iframe — let the editor re-push the merged playbook.
+      try { global.parent.postMessage({ type: 'preview-lang', lang: code }, '*'); } catch (e) {}
+      return;
+    }
+    try {
+      var u = new URL(global.location.href);
+      u.searchParams.set('lang', code);
+      global.location.href = u.toString();
+    } catch (e) { global.location.reload(); }
+  }
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -243,6 +312,11 @@
   '#mo-ask-entry .eyebrow{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#B59060;margin-bottom:14px;text-align:center}' +
   '#mo-ask-entry h2{font-family:Georgia,serif;font-weight:400;font-size:28px;color:#0d0b08;margin:0 0 8px;text-align:center}' +
   '#mo-ask-entry .sub{color:#6b625a;font-size:13.5px;text-align:center;margin:0 0 26px}' +
+  '#mo-ask-entry .langs{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 0 22px}' +
+  '#mo-ask-entry .langs-label{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#a89f92;margin-right:4px}' +
+  '#mo-ask-entry .lang-btn{border:1px solid #E5E2DA;background:#fff;color:#4a443f;border-radius:999px;padding:7px 16px;font:600 11.5px/1 system-ui,sans-serif;letter-spacing:.06em;cursor:pointer;transition:border-color .2s,background .2s}' +
+  '#mo-ask-entry .lang-btn:hover{border-color:#C9A879}' +
+  '#mo-ask-entry .lang-btn.on{border-color:#B59060;background:#B59060;color:#fff}' +
   '#mo-ask-entry .opts{display:flex;gap:14px}' +
   '#mo-ask-entry .opt{flex:1;text-align:left;border:1px solid #E5E2DA;background:#fff;border-radius:4px;padding:20px 18px;cursor:pointer;font:inherit;transition:border-color .2s,transform .2s}' +
   '#mo-ask-entry .opt:hover{border-color:#B59060;transform:translateY(-2px)}' +
@@ -295,26 +369,44 @@
 
   function showEntry() {
     if (entryEl) return;
+    var T = entryStrings();
+    var langs = playbookLanguages();
+    var cur = currentLang() || 'en';
+    var langRow = '';
+    if (langs.length > 1) {
+      langRow = '<div class="langs"><span class="langs-label">' + esc(T.langLabel) + '</span>' +
+        langs.map(function (l) {
+          return '<button class="lang-btn' + (l.code === cur ? ' on' : '') + '" type="button" data-lang="' + esc(l.code) + '">' + esc(l.label) + '</button>';
+        }).join('') + '</div>';
+    }
     entryEl = h(
       '<div id="mo-ask-entry">' +
         '<div class="ask-card-box">' +
           '<div class="eyebrow">Mandarin Oriental</div>' +
-          '<h2>How would you like to use the playbook?</h2>' +
-          '<p class="sub">Two ways in — pick one. You can switch anytime.</p>' +
+          langRow +
+          '<h2>' + esc(T.title) + '</h2>' +
+          '<p class="sub">' + esc(T.sub) + '</p>' +
           '<div class="opts">' +
             '<button class="opt" type="button" data-k="ask">' +
-              '<h3>Query the Playbook</h3>' +
-              '<p>Ask about a people situation in your hotel — get pointed to the exact policy passages that apply.</p>' +
+              '<h3>' + esc(T.askTitle) + '</h3>' +
+              '<p>' + esc(T.askDesc) + '</p>' +
             '</button>' +
             '<button class="opt" type="button" data-k="read">' +
-              '<h3>Read the Playbook</h3>' +
-              '<p>Browse the full playbook cover to cover, chapter by chapter.</p>' +
+              '<h3>' + esc(T.readTitle) + '</h3>' +
+              '<p>' + esc(T.readDesc) + '</p>' +
             '</button>' +
           '</div>' +
         '</div>' +
       '</div>');
     entryEl.querySelector('[data-k="ask"]').addEventListener('click', function () { dismissEntry(); openAsk(); });
     entryEl.querySelector('[data-k="read"]').addEventListener('click', dismissEntry);
+    entryEl.querySelectorAll('.lang-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var code = btn.getAttribute('data-lang');
+        if (code === cur) return;
+        switchLang(code);
+      });
+    });
     document.body.appendChild(entryEl);
   }
 
@@ -391,7 +483,14 @@
   global.addEventListener('message', function (ev) {
     var d = ev.data || {};
     if (d.type === 'set-playbook') {
-      setTimeout(function () { buildIndex(global.PLAYBOOK); }, 0);
+      if (d.lang) { try { global.MO_PB_LANG = d.lang === 'en' ? '' : d.lang; } catch (e) {} }
+      setTimeout(function () {
+        buildIndex(global.PLAYBOOK);
+        // The Studio preview pushes the real playbook AFTER this script boots
+        // with shell defaults — rebuild the entry overlay so its language row
+        // and strings reflect the pushed playbook.
+        if (entryEl) { entryEl.remove(); entryEl = null; showEntry(); }
+      }, 0);
     }
   });
 
