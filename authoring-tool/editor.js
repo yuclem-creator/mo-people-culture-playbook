@@ -81,8 +81,84 @@
         // the user stays on the menu page and edits tiles from the side panel.
         select({ kind: 'chapter', id: ch.id, type: t, chapter: ch.id }, { noNav: true });
       }
+    } else if (d.type === 'preview-lang') {
+      // The reader picked a language inside the preview (entry overlay or
+      // masthead switch) — mirror it in the toolbar and re-push merged content.
+      PREVIEW_LANG = d.lang || 'en';
+      syncPreviewLangSelect();
+      pushPreview(true);
     }
   });
+
+  // =========================================================================
+  // Multilingual (Phase 1)
+  // ----------------------------------------------------------------------------
+  // English is the source of truth. meta.languages declares the available
+  // languages; PB.i18n[code] holds a full-structure overlay JSON whose strings
+  // replace the English ones at load time (deep merge — missing or empty
+  // strings fall back to English). publish.js uploads each overlay as
+  // playbook-data.<code>.json next to playbook-data.json.
+  // =========================================================================
+  var LANG_CHOICES = [
+    { code: 'zh-CN', label: '简体中文 (Simplified Chinese)' },
+    { code: 'zh-TW', label: '繁體中文 (Traditional Chinese)' },
+    { code: 'ja', label: '日本語 (Japanese)' },
+    { code: 'ko', label: '한국어 (Korean)' },
+    { code: 'th', label: 'ไทย (Thai)' },
+    { code: 'id', label: 'Bahasa Indonesia' },
+    { code: 'ms', label: 'Bahasa Melayu' },
+    { code: 'fr', label: 'Français (French)' },
+    { code: 'de', label: 'Deutsch (German)' },
+    { code: 'es', label: 'Español (Spanish)' },
+    { code: 'ar', label: 'العربية (Arabic — RTL)' }
+  ];
+  var PREVIEW_LANG = 'en';
+
+  function deepMergeLang(base, over) {
+    if (over == null) return base;
+    if (typeof over === 'string') return over.trim() === '' ? base : over;
+    if (typeof over !== 'object') return over;
+    if (Array.isArray(over)) {
+      var src = Array.isArray(base) ? base : [];
+      return over.map(function (item, i) {
+        return i < src.length ? deepMergeLang(src[i], item) : item;
+      });
+    }
+    var out = {};
+    var bObj = (base && typeof base === 'object' && !Array.isArray(base)) ? base : {};
+    Object.keys(bObj).forEach(function (k) { out[k] = bObj[k]; });
+    Object.keys(over).forEach(function (k) { out[k] = deepMergeLang(bObj[k], over[k]); });
+    return out;
+  }
+
+  function declaredLangs() {
+    if (!PB) return [];
+    PB.meta = PB.meta || {};
+    if (!Array.isArray(PB.meta.languages)) PB.meta.languages = [];
+    return PB.meta.languages;
+  }
+
+  // Toolbar language select: visible only when the playbook declares languages.
+  function syncPreviewLangSelect() {
+    var sel = $('#pvLang');
+    if (!sel) return;
+    var langs = declaredLangs();
+    sel.innerHTML = '';
+    var opts = [{ code: 'en', label: 'English (source)' }].concat(langs);
+    opts.forEach(function (l) {
+      sel.appendChild(el('option', { value: l.code, selected: l.code === PREVIEW_LANG ? 'selected' : null }, [l.label]));
+      if (l.code === PREVIEW_LANG) sel.value = l.code;
+    });
+    if (!opts.some(function (o) { return o.code === PREVIEW_LANG; })) { PREVIEW_LANG = 'en'; sel.value = 'en'; }
+    sel.style.display = langs.length ? '' : 'none';
+  }
+
+  function playbookForPreview() {
+    if (PREVIEW_LANG !== 'en' && PB.i18n && PB.i18n[PREVIEW_LANG]) {
+      return deepMergeLang(PB, PB.i18n[PREVIEW_LANG]);
+    }
+    return PB;
+  }
 
   function armPreviewHandshake() {
     var frame = $('#preview');
@@ -373,6 +449,8 @@
     }
     renderTree();
     renderInspector();
+    PREVIEW_LANG = 'en';
+    syncPreviewLangSelect();
     pushPreview();
     markSaved();
   }
@@ -431,7 +509,7 @@
   function pushPreview(keep) {
     if (!previewReady) { pendingPush = true; return; }
     var frame = $('#preview');
-    var msg = { type: 'set-playbook', playbook: PB };
+    var msg = { type: 'set-playbook', playbook: playbookForPreview(), lang: PREVIEW_LANG };
     if (keep) { msg.chapter = keep.chapter; msg.sub = keep.sub; }
     else if (SEL && SEL.chapter) { msg.chapter = SEL.chapter; msg.sub = SEL.sub; }
     frame.contentWindow.postMessage(msg, '*');
@@ -2502,6 +2580,76 @@
       m.department = v.trim(); touch();
     }, 'Folder id from playbooks.json — files this playbook under that department in the Playbook Library.'));
 
+    // ---- Languages (multilingual, Phase 1) --------------------------------
+    box.appendChild(sectionLabel('Languages (multilingual)'));
+    box.appendChild(el('p', { class: 'hint', style: 'margin:0 0 10px;font-size:12px;line-height:1.6;color:#6b665d;' },
+      ['English stays the source. Add a language, download the English source JSON, translate the text values (keep ids, keys and asset paths unchanged), then upload the translated JSON. Publishing writes it as playbook-data.<code>.json next to the main content; readers pick a language on the opening screen. Anything left untranslated falls back to English.']));
+    var langs = declaredLangs();
+    PB.i18n = PB.i18n || {};
+    langs.forEach(function (l) {
+      var has = PB.i18n[l.code];
+      var count = 0;
+      if (has) { try { count = Object.keys(has).length; } catch (e) {} }
+      var row = el('div', { class: 'field', style: 'border:1px solid #e2ded4;border-radius:4px;padding:10px 12px;margin-bottom:8px;background:#fbfaf7;' }, [
+        el('div', { style: 'display:flex;align-items:center;justify-content:space-between;gap:8px;' }, [
+          el('b', { text: l.label + '  ', style: 'font-weight:600;font-size:13px;' }),
+          el('span', { class: 'hint', text: has ? 'translation loaded' : 'no translation yet', style: has ? 'color:#5C7062;font-size:11.5px;' : 'color:#a89f92;font-size:11.5px;' })
+        ]),
+        el('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;' }, [
+          el('button', { class: 'btn', onclick: function () {
+            var src = JSON.parse(JSON.stringify(PB));
+            delete src.i18n;
+            src.assets = {};
+            delete src.__remoteAssetBase;
+            STORE.exportFile(src, safeName(PB.meta.title || 'playbook').toLowerCase() + '.english-source.json');
+          } }, ['Download English source']),
+          el('button', { class: 'btn', onclick: function () {
+            var inp = document.createElement('input');
+            inp.type = 'file'; inp.accept = '.json,application/json';
+            inp.onchange = function () {
+              var f = inp.files && inp.files[0];
+              if (!f) return;
+              var r = new FileReader();
+              r.onload = function () {
+                try {
+                  var obj = JSON.parse(r.result);
+                  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw new Error('not an object');
+                  PB.i18n[l.code] = obj;
+                  touch();
+                  toast('Translation loaded for ' + l.label + '. Use the preview language toggle to check it, then Save.', 'ok');
+                  renderInspector();
+                } catch (e) { toast('That file is not a valid translation JSON.', 'err'); }
+              };
+              r.readAsText(f);
+            };
+            inp.click();
+          } }, ['Upload translation JSON…']),
+          has ? el('button', { class: 'btn', onclick: function () {
+            STORE.exportFile(PB.i18n[l.code], safeName(PB.meta.title || 'playbook').toLowerCase() + '.' + l.code + '.json');
+          } }, ['Download translation']) : null,
+          el('button', { class: 'btn danger', onclick: function () {
+            if (!window.confirm('Remove ' + l.label + ' from this playbook? The loaded translation is discarded. (A published playbook-data.' + l.code + '.json already on the server is not deleted.)')) return;
+            PB.meta.languages = PB.meta.languages.filter(function (x) { return x.code !== l.code; });
+            delete PB.i18n[l.code];
+            if (PREVIEW_LANG === l.code) PREVIEW_LANG = 'en';
+            touch(); syncPreviewLangSelect(); renderInspector();
+          } }, ['Remove'])
+        ].filter(Boolean))
+      ]);
+      box.appendChild(row);
+    });
+    var remaining = LANG_CHOICES.filter(function (c) {
+      return !langs.some(function (l) { return l.code === c.code; });
+    });
+    if (remaining.length) {
+      box.appendChild(selectField('Add a language', '', [{ v: '', l: '— choose —' }].concat(remaining.map(function (c) { return { v: c.code, l: c.label }; })), function (v) {
+        if (!v) return;
+        var choice = LANG_CHOICES.filter(function (c) { return c.code === v; })[0];
+        declaredLangs().push({ code: choice.code, label: choice.label });
+        touch(); syncPreviewLangSelect(); pushPreview(true); renderInspector();
+      }, 'Readers will be able to pick this language on the opening screen once a translation is uploaded and published.'));
+    }
+
     box.appendChild(sectionLabel('SCORM package'));
     m.scorm = m.scorm || {};
     box.appendChild(textField('Manifest identifier', m.scorm.identifier || '', function (v) { m.scorm.identifier = v; touch(); }, 'Written into imsmanifest.xml.'));
@@ -2876,6 +3024,12 @@
     $('#btnVersions').addEventListener('click', doVersionsClick);
     $('#pvDesktop').addEventListener('click', function () { setPreviewWidth(false); });
     $('#pvMobile').addEventListener('click', function () { setPreviewWidth(true); });
+    var pvLang = $('#pvLang');
+    if (pvLang) pvLang.addEventListener('change', function () {
+      PREVIEW_LANG = pvLang.value || 'en';
+      pushPreview(true);
+    });
+    syncPreviewLangSelect();
   }
 
   function setPreviewWidth(mobile) {
