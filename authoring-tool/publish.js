@@ -146,6 +146,17 @@
     var playbookForUpload = JSON.parse(JSON.stringify(ext.playbook));
     playbookForUpload.__remoteAssetBase = publicBase;
 
+    // Multilingual (Phase 1): each declared language with a loaded translation
+    // (playbook.i18n[code]) ships as a separate playbook-data.<code>.json next
+    // to the main content — the reader fetches it only when that language is
+    // chosen. The PUBLISHED main JSON stays English-only (i18n stripped, so
+    // translations never double the payload); the DRAFT lane keeps i18n
+    // inline so Studio Save/Open round-trips translations. meta.languages is
+    // kept in both lanes — it drives the reader's language picker.
+    var overlayCodes = Object.keys((ext.playbook.meta && ext.playbook.meta.languages) ? (ext.playbook.i18n || {}) : {});
+    if (stage === 'published') delete playbookForUpload.i18n;
+    total += overlayCodes.length;
+
     onProgress(0, total);
 
     // Media uploads are ISOLATED per file: one failure (e.g. a video over the
@@ -214,6 +225,24 @@
       .then(function (r) {
         if (r.error) throw new Error('Upload failed (playbook-data.json): ' + r.error.message);
         tick();
+        // Language overlays — isolated like asset failures: one bad overlay
+        // never blocks the rest of the package.
+        return overlayCodes.reduce(function (chain, code) {
+          return chain.then(function () {
+            var blob = new Blob([JSON.stringify(ext.playbook.i18n[code])], { type: 'application/json' });
+            return sbUpload.storage.from(bucket).upload(basePath + 'playbook-data.' + code + '.json', blob, {
+              upsert: true, contentType: 'application/json'
+            }).then(function (ru) {
+              if (ru.error) failedAssets.push({ path: 'playbook-data.' + code + '.json', reason: ru.error.message });
+              tick();
+            }, function (e) {
+              failedAssets.push({ path: 'playbook-data.' + code + '.json', reason: (e && e.message) || String(e) });
+              tick();
+            });
+          });
+        }, Promise.resolve());
+      })
+      .then(function () {
         var version = { publishedAt: new Date().toISOString(), publishedBy: email || null, stage: stage };
         var blob = new Blob([JSON.stringify(version)], { type: 'application/json' });
         return sbUpload.storage.from(bucket).upload(basePath + 'version.json', blob, {
