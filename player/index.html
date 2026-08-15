@@ -904,6 +904,19 @@ button { font-family: inherit; cursor: pointer; background: none; border: 0; pad
 .small-caps { font-family: 'Avenir Next LT Pro', sans-serif; font-size: 0.68rem; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 500; color: var(--ink-mute); }
 .number-anchor { font-family: 'MO Exceptional', Georgia, serif; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.12em; color: var(--gold-deep); font-style: italic; }
 
+/* Multilingual (Phase 1) — topbar language switch + CJK font fallbacks */
+.lang-switch { border: 1px solid var(--gold-hair); background: #fff; color: var(--ink-body); border-radius: 999px; padding: 7px 12px; font: 500 11.5px/1 'Avenir Next LT Pro', system-ui, sans-serif; letter-spacing: .04em; margin-right: 12px; outline: none; cursor: pointer; }
+.lang-switch:focus { border-color: var(--gold); }
+html[lang="zh-CN"] body, html[lang="zh-CN"] button, html[lang="zh-CN"] input, html[lang="zh-CN"] select { font-family: 'Avenir Next LT Pro', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif; }
+html[lang="zh-CN"] h1, html[lang="zh-CN"] h2, html[lang="zh-CN"] h3,
+html[lang="zh-CN"] .serif, html[lang="zh-CN"] .number-anchor,
+html[lang="zh-CN"] .pb-item-head, html[lang="zh-CN"] .pb-heading-text,
+html[lang="zh-CN"] .pb-stat-num, html[lang="zh-CN"] .pb-gauge-level,
+html[lang="zh-CN"] .pb-pyr-tier .t-name, html[lang="zh-CN"] .pb-chart-big,
+html[lang="zh-CN"] .pb-step-num, html[lang="zh-CN"] .pb-swim-num,
+html[lang="zh-CN"] .pb-swim-role-num, html[lang="zh-CN"] .pb-wheel-num { font-family: 'MO Exceptional', 'Songti SC', 'Noto Serif SC', Georgia, serif; }
+html[lang="zh-CN"] h4, html[lang="zh-CN"] .small-caps { letter-spacing: .1em; }
+
 /* Gold hairline — the ONE ornamental device */
 .gold-rule { height: 1px; background: var(--gold-hair); width: 60px; border: none; margin: 24px 0; }
 .gold-rule.wide { width: 100%; }
