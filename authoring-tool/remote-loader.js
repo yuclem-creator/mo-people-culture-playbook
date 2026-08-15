@@ -102,6 +102,68 @@
     return req.length ? req : chs;
   }
 
+  /* ---- Multilingual (Phase 1) ------------------------------------------
+     English playbook-data.json is always fetched first. When the playbook
+     declares languages (meta.languages: [{code,label}]) and the viewer has
+     chosen one (?lang= or localStorage), we fetch playbook-data.<code>.json
+     from the same folder and deep-merge it OVER the English copy: missing
+     or empty strings fall back to English. The merge preserves structure,
+     ids, asset URLs and ordering — only user-facing strings are overlaid.
+     -------------------------------------------------------------------- */
+  var LANG_LS_KEY = 'mo_pb_lang';
+
+  function deepMergeLang(base, over) {
+    if (over == null) return base;
+    if (typeof over === 'string') return over.trim() === '' ? base : over;
+    if (typeof over !== 'object') return over; // numbers/booleans copied as-is
+    if (Array.isArray(over)) {
+      var src = Array.isArray(base) ? base : [];
+      return over.map(function (item, i) {
+        return i < src.length ? deepMergeLang(src[i], item) : item;
+      });
+    }
+    var out = {};
+    var bObj = (base && typeof base === 'object' && !Array.isArray(base)) ? base : {};
+    Object.keys(bObj).forEach(function (k) { out[k] = bObj[k]; });
+    Object.keys(over).forEach(function (k) { out[k] = deepMergeLang(bObj[k], over[k]); });
+    return out;
+  }
+
+  function chosenLang(pb) {
+    var langs = (pb && pb.meta && pb.meta.languages) || [];
+    if (!langs.length) return null;
+    var want = '';
+    try {
+      var q = new URLSearchParams(global.location.search).get('lang');
+      want = (q || global.localStorage.getItem(LANG_LS_KEY) || '').trim();
+    } catch (e) {}
+    if (!want) return null;
+    for (var i = 0; i < langs.length; i++) if (langs[i].code === want) return langs[i].code;
+    return null;
+  }
+
+  function langOverlayUrl(code) {
+    if (!CFG.contentUrl) return null;
+    var base = CFG.contentUrl.split('?')[0];
+    return base.replace(/playbook-data\.json$/, 'playbook-data.' + code + '.json');
+  }
+
+  function bootWithLang(pb, sourceLabel) {
+    var code = chosenLang(pb);
+    if (!code) { boot(pb, sourceLabel); return; }
+    var url = langOverlayUrl(code);
+    if (!url) { boot(pb, sourceLabel); return; }
+    var full = url + (url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+    fetchWithTimeout(full, TIMEOUT_MS).then(function (overlay) {
+      try { document.documentElement.lang = code; } catch (e) {}
+      global.MO_PB_LANG = code;
+      boot(deepMergeLang(pb, overlay), sourceLabel + '+lang:' + code);
+    }).catch(function (err) {
+      console.warn('[remote-loader] language overlay ' + code + ' failed (' + err.message + '); using English.');
+      boot(pb, sourceLabel);
+    });
+  }
+
   function loadScriptsSequentially(paths, cb) {
     var i = 0;
     function next() {
@@ -141,8 +203,8 @@
 
   function fallbackChain() {
     var cached = readCache();
-    if (cached) { boot(cached, 'localStorage-cache'); return; }
-    if (global.FALLBACK_PLAYBOOK) { boot(global.FALLBACK_PLAYBOOK, 'bundled-fallback'); return; }
+    if (cached) { bootWithLang(cached, 'localStorage-cache'); return; }
+    if (global.FALLBACK_PLAYBOOK) { bootWithLang(global.FALLBACK_PLAYBOOK, 'bundled-fallback'); return; }
     console.error('[remote-loader] No network content, no cache, and no bundled fallback available. The course cannot start.');
   }
 
@@ -153,7 +215,7 @@
     var url = CFG.contentUrl + (CFG.contentUrl.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
     fetchWithTimeout(url, TIMEOUT_MS).then(function (pb) {
       writeCache(pb);
-      boot(pb, 'network');
+      bootWithLang(pb, 'network');
     }).catch(function (err) {
       console.warn('[remote-loader] network fetch failed (' + err.message + '); falling back.');
       fallbackChain();
