@@ -52,7 +52,9 @@
     { v: 'image', l: 'Image' }, { v: 'video', l: 'Video' }, { v: 'tabs', l: 'Tabbed group' },
     { v: 'timeline', l: 'Timeline' }, { v: 'checklist', l: 'Checklist' },
     { v: 'table', l: 'Table' }, { v: 'callout', l: 'Callout' },
-    { v: 'tasklist', l: 'Task list (gated)' }
+    { v: 'tasklist', l: 'Task list (gated)' },
+    { v: 'swimlane', l: 'Swimlane timeline' }, { v: 'chart', l: 'Chart / dashboard' },
+    { v: 'beforeafter', l: 'Before / after' }
   ];
 
   // =========================================================================
@@ -1247,7 +1249,22 @@
       el('button', { class: 'btn ghost', onclick: function () {
         itemsArr.push({ s: 'tasklist', name: 'Task list', cid: uid('tl'), showProgress: true, gateText: '', items: [{ text: 'New task', note: '', pills: [] }] });
         touch(); renderInspector();
-      } }, ['+ Add task list'])
+      } }, ['+ Add task list']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'swimlane', name: 'Swimlane timeline', lanes: [
+          { role: 'Role 1', steps: [{ label: 'Step 1', text: '' }] },
+          { role: 'Role 2', steps: [{ label: 'Step 2', text: '' }] }
+        ] });
+        touch(); renderInspector();
+      } }, ['+ Add swimlane']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'chart', name: 'Chart', chartType: 'bar', unit: '', labels: ['Q1', 'Q2', 'Q3', 'Q4'], series: [{ label: 'Series 1', values: [3, 5, 4, 6] }] });
+        touch(); renderInspector();
+      } }, ['+ Add chart']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'beforeafter', name: 'Before / after', beforeLabel: 'Before', afterLabel: 'After', beforeText: '', afterText: '', beforeImg: '', afterImg: '' });
+        touch(); renderInspector();
+      } }, ['+ Add before / after'])
     ]);
   }
 
@@ -1463,6 +1480,79 @@
         addLabel: 'Add task',
         make: function () { return { text: 'New task', note: '', pills: [] }; }
       });
+      return;
+    }
+    // Swimlane timeline: one lane per role, steps flowing left to right with
+    // continuous numbering — shows who does what, and where handoffs happen.
+    if (it.s === 'swimlane') {
+      it.lanes = it.lanes || [];
+      box.appendChild(sectionLabel('Lanes — one per role (' + it.lanes.length + ')'));
+      renderRepeatable(box, it.lanes, {
+        nameOf: function (l) { return l.role || '(role)'; },
+        subOf: function (l) { return (l.steps || []).length + ' step(s)'; },
+        open: null,
+        inlineEdit: function (l, wrap) {
+          wrap.appendChild(textField('Role / lane name', l.role || '', function (v) { l.role = v; touch(); }, 'e.g. Front Office'));
+          l.steps = l.steps || [];
+          wrap.appendChild(sectionLabel('Steps in this lane (' + l.steps.length + ')'));
+          renderRepeatable(wrap, l.steps, {
+            nameOf: function (s) { return s.label || '(step)'; },
+            subOf: function (s) { return (s.text || '').slice(0, 60); },
+            open: null,
+            inlineEdit: function (s, wrap2) {
+              wrap2.appendChild(textField('Step label', s.label || '', function (v) { s.label = v; touch(); }));
+              wrap2.appendChild(textField('Step text (optional)', s.text || '', function (v) { s.text = v; touch(); }, '', true));
+            },
+            addLabel: 'Add step',
+            make: function () { return { label: 'Step', text: '' }; }
+          });
+        },
+        addLabel: 'Add lane',
+        make: function () { return { role: 'New role', steps: [{ label: 'Step 1', text: '' }] }; }
+      });
+      box.appendChild(el('div', { class: 'note', text: 'Steps number continuously across lanes (reading order). A handoff marker appears automatically where a new lane begins.' }));
+      return;
+    }
+    // Chart / dashboard: bar, line or donut rendered as branded SVG — no
+    // library. Labels name the categories; series carry the values.
+    if (it.s === 'chart') {
+      box.appendChild(selectField('Chart type', ['bar', 'line', 'donut'].indexOf(it.chartType) !== -1 ? it.chartType : 'bar', [
+        { v: 'bar', l: 'Bar chart' }, { v: 'line', l: 'Line chart' }, { v: 'donut', l: 'Donut chart' }
+      ], function (v) { it.chartType = v; touch(); renderInspector(); }));
+      box.appendChild(textField('Unit (optional)', it.unit || '', function (v) { it.unit = v; touch(); }, 'e.g. rooms, HKD \'000, %'));
+      box.appendChild(textField('Category labels (comma-separated)', (it.labels || []).join(', '), function (v) {
+        it.labels = v.split(',').map(function (x) { return x.trim(); }).filter(Boolean); touch();
+      }, it.chartType === 'donut' ? 'Each label names a donut segment.' : 'e.g. Jan, Feb, Mar, Apr'));
+      it.series = it.series || [];
+      box.appendChild(sectionLabel('Series (' + it.series.length + ')'));
+      renderRepeatable(box, it.series, {
+        nameOf: function (s) { return s.label || '(series)'; },
+        subOf: function (s) { return (s.values || []).join(', '); },
+        open: null,
+        inlineEdit: function (s, wrap) {
+          wrap.appendChild(textField('Series label', s.label || '', function (v) { s.label = v; touch(); }));
+          wrap.appendChild(textField('Values (comma-separated numbers)', (s.values || []).join(', '), function (v) {
+            s.values = v.split(',').map(function (x) { return parseFloat(x.trim()); }).filter(function (n) { return !isNaN(n); }); touch();
+          }, 'One number per category label, in the same order.'));
+        },
+        addLabel: 'Add series',
+        make: function () { return { label: 'Series ' + (it.series.length + 1), values: [] }; }
+      });
+      if (it.chartType === 'donut') box.appendChild(el('div', { class: 'note', text: 'Donut charts draw the first series only — category labels name the segments.' }));
+      return;
+    }
+    // Before / after: draggable image comparison when two images are set,
+    // plus optional Before / After text cards below.
+    if (it.s === 'beforeafter') {
+      box.appendChild(textField('Before label', it.beforeLabel || 'Before', function (v) { it.beforeLabel = v; touch(); }));
+      box.appendChild(textField('After label', it.afterLabel || 'After', function (v) { it.afterLabel = v; touch(); }));
+      box.appendChild(sectionLabel('Images (optional — enables the drag slider)'));
+      box.appendChild(imageField('Before image', it.beforeImg || '', function (fn) { it.beforeImg = fn; touch(); }));
+      box.appendChild(imageField('After image', it.afterImg || '', function (fn) { it.afterImg = fn; touch(); }));
+      box.appendChild(sectionLabel('Text cards (optional)'));
+      box.appendChild(textField('Before text', it.beforeText || '', function (v) { it.beforeText = v; touch(); }, 'One point per line works well.', true));
+      box.appendChild(textField('After text', it.afterText || '', function (v) { it.afterText = v; touch(); }, 'One point per line works well.', true));
+      box.appendChild(el('div', { class: 'note', text: 'With both images set, readers drag a handle to compare them. Text renders as two cards below the images.' }));
       return;
     }
     if (it.s === 'table') {
