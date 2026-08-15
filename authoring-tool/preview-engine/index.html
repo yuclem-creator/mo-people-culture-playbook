@@ -189,17 +189,23 @@
 .mo-opp__grid {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); /* minmax(0,…) stops long cards blowing out the row */
   gap: clamp(16px, 1.8vw, 26px);
   padding-top: 34px; /* room for spine + node */
 }
+/* six or more sections: a single spine row no longer reads well — switch to a
+   clean 3-column card grid (numbers carry the ordering instead of the spine) */
+.mo-opp__grid--many { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-top: 26px; }
+.mo-opp__grid--many::before { display: none; }
+.mo-opp__grid--many .mo-opp__col::before,
+.mo-opp__grid--many .mo-opp__col::after { display: none; }
 /* sage spine joining the four section nodes (wide layouts only) */
 .mo-opp__grid::before {
   content: '';
   position: absolute;
-  top: 8px;
-  left: 12.5%;
-  right: 12.5%;
+  top: 5px; /* vertically centred on the node dots (dot centre = 6.5px) */
+  left: calc(50% / var(--cols, 4));  /* centre of the first column, any count */
+  right: calc(50% / var(--cols, 4)); /* centre of the last column, any count */
   height: 3px;
   border-radius: 2px;
   background: var(--mo-sage);
@@ -208,7 +214,7 @@
   animation: mo-spine 0.9s cubic-bezier(0.3, 0.7, 0.3, 1) 0.55s both;
 }
 
-.mo-opp__col { position: relative; display: flex; flex-direction: column; }
+.mo-opp__col { position: relative; display: flex; flex-direction: column; min-width: 0; }
 
 /* gold node dot + sage stem above each section card */
 .mo-opp__col::before {
@@ -240,6 +246,7 @@
 
 /* ---------- section card ---------- */
 .mo-opp__section {
+  min-width: 0;
   background: var(--mo-white);
   border: 1px solid var(--mo-hairline);
   border-radius: 20px;
@@ -320,6 +327,10 @@
 }
 .mo-opp__count {
   align-self: flex-start;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   background: var(--mo-sage-chip);
   color: var(--mo-sage-deep);
   font-weight: 700;
