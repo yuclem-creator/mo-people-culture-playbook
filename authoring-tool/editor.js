@@ -57,8 +57,86 @@
     { v: 'beforeafter', l: 'Before / after' },
     { v: 'heading', l: 'Heading' }, { v: 'statband', l: 'Stat / KPI band' },
     { v: 'gauge', l: 'Gauge / maturity meter' }, { v: 'pyramid', l: 'Hierarchy / pyramid' },
-    { v: 'wheel', l: 'Radial lifecycle wheel' }
+    { v: 'wheel', l: 'Radial lifecycle wheel' },
+    { v: 'ix', l: 'Interactive element (17 kinds)' }
   ];
+
+  // Interactive elements (s:'ix') — 17 renderer kinds. Kind picker + starter
+  // templates here; the renderers live in preview-engine/app.js (and the
+  // mirrored player/app.js).
+  var IX_KINDS = [
+    { v: 'processflow', l: '1 · Decision & exception logic (step pills + branches)' },
+    { v: 'horizons',    l: '2 · Horizon stepper / journey map band' },
+    { v: 'legendtour',  l: '3 · Legend panel + onboarding tooltip tour' },
+    { v: 'flipcards',   l: '4 · Principle flip cards' },
+    { v: 'mixbars',     l: '5 · Stacked-bar mix explorer' },
+    { v: 'xtable',      l: '6 · Interactive table explorer (sort + filter)' },
+    { v: 'benchdash',   l: '7 · Benchmark dashboard' },
+    { v: 'alloc',       l: '8 · Discount allocation chart' },
+    { v: 'tabx',        l: '9 · Tabbed data explorer' },
+    { v: 'cardwall',    l: '10 · Opportunity card wall' },
+    { v: 'scorecard',   l: '11 · Assessment scorecard / rubric' },
+    { v: 'typedist',    l: '12 · Count / distribution chart (toggle)' },
+    { v: 'stageflow',   l: '13 · Stage step flow + checklists (gated)' },
+    { v: 'dlcheck',     l: '14 · Downloadable template + guided checklist' },
+    { v: 'testline',    l: '15 · Test-design timeline' },
+    { v: 'eventcal',    l: '16 · Event calendar timeline' },
+    { v: 'kpidash',     l: '17 · KPI dashboard with STLY toggle' }
+  ];
+  var IX_TEMPLATES = {
+    processflow: { steps: [
+      { label: 'Current situation and diagnosis', sub: 'Always start here', title: 'Outline the reasons', text: 'Describe the situation.', example: '' },
+      { label: 'Mitigation actions', sub: 'Then act', title: 'Develop an action plan', text: 'Act on findings.', branches: [{ label: 'Branch A', text: '' }] },
+      { label: 'Accountability tracker', sub: 'Track owners', title: 'Assign owners', text: 'Track owners.' }] },
+    horizons: { stages: [
+      { label: 'Kick-off', dur: '4 weeks', text: '' }, { label: 'Baselining', dur: '4 weeks', gate: 'Gate', text: '' },
+      { label: 'Assess', dur: '4 weeks', text: '' }, { label: 'Track', dur: '3–6 months', text: '' }],
+      bands: [{ label: 'Phase one', from: 0, to: 1 }, { label: 'Phase two', from: 2, to: 3 }] },
+    legendtour: { title: 'How to read this playbook',
+      legend: [{ label: 'Section', text: '', color: '#C07A3E' }, { label: 'Gate', text: 'a checklist must be completed', color: '#4E7A6B' }],
+      tour: [{ label: 'Stages', text: 'Each stage shows its owner and timing.' }, { label: 'Gate', text: 'The gate is a hard stop.' }] },
+    flipcards: { cards: [
+      { num: '01', title: 'Position in public', backLabel: 'Principle 01', back: 'Maintain the competitive price positioning in the open market.' },
+      { num: '02', title: 'Every discount needs a fence', backLabel: 'Principle 02', back: 'Discounts are accompanied by an appropriate fence.', chips: ['Advance booking windows', 'Length of stay'] }] },
+    mixbars: { legend: [{ label: 'Package', color: '#A4523F' }, { label: 'Offers', color: '#C07A3E' }, { label: 'Retail', color: '#4E7A6B' }],
+      rows: [{ label: 'Row one', meta: 'ADR 1,240 · 860 room nights', segs: [55, 20, 25], detail: '' }], note: '' },
+    xtable: { cols: ['Section', '#', 'Opportunity', 'Owner'], rows: [['1', '1', 'First row', 'Owner']], filterLabel: '' },
+    benchdash: { kpis: [{ label: 'RGI', value: '97', sub: 'vs compset', down: true, bar: 40 }],
+      trend: { title: 'Index evolution by month', sub: 'this year vs STLY', labels: ['J','F','M','A','M','J','J','A','S','O','N','D'],
+        series: [{ name: 'This year', color: '#A4523F', values: [100,101,99,97,95,96,93,92,95,98,100,101] },
+                 { name: 'STLY', color: '#6b625a', dash: true, values: [102,102,101,101,100,101,100,100,101,101,102,103] }] },
+      tips: [{ label: '01 · Tip', title: 'Tip title', text: '' }] },
+    alloc: { buildTitle: 'Building the total benefits',
+      parts: [{ label: 'USD credit', value: 100, color: '#B59060' }, { label: 'Club benefits access', value: 50, color: '#4E7A6B' }],
+      total: { label: 'Total benefits allocated', text: 'USD 150' },
+      quality: { eyebrow: 'Package "quality"', value: 12, display: '≈ 12%', text: '' },
+      steps: [{ label: 'Step 1', text: '' }] },
+    tabx: { tabs: [{ label: 'Tab one', usedin: '', title: 'Tab one', text: '', url: '', linkLabel: '' }, { label: 'Tab two', usedin: '', title: 'Tab two', text: '' }] },
+    cardwall: { legend: [{ label: 'Theme', color: '#C07A3E' }], cards: [
+      { num: 'Opportunity 1', title: 'First opportunity', owner: 'Owner: …', back: '', steps: ['Assess', 'Adjust', 'Test & rollout', 'Track'], themeColor: '#C07A3E' }] },
+    scorecard: { taskCol: 'Process step · Task', dims: ['Dimension 1', 'Dimension 2'], scaleMax: 4,
+      tasks: [{ name: 'Task one', covers: '' }], totalLabel: 'Overall score', note: '' },
+    typedist: { toggle: { a: 'This year', b: 'STLY' },
+      rows: [{ label: 'Run of House', a: 34, b: 30, suffix: '% of room nights', color: '#B59060' }], note: '' },
+    stageflow: { cid: '', items: [
+      { label: 'Action 1', text: '' }, { label: 'Action 2', text: '' }, { label: 'Action 3', text: '' }],
+      gateText: 'Gate — signed off', gateLocked: 'You cannot proceed without this.', gateOpen: 'Gate passed — you may proceed.' },
+    dlcheck: { file: { title: 'Companion workbook', meta: 'Excel workbook', text: '', url: '', button: 'Download workbook' },
+      listTitle: 'Guided checklist', items: [{ text: 'First checklist item', tag: '' }] },
+    testline: { phases: [
+      { num: 2, label: 'Weeks · Baseline', text: '', tag: '2 week baseline', color: '#8a8378' },
+      { num: 3, label: 'Weeks · Test', text: '', tag: '3 week test', color: '#B59060' },
+      { num: 2, label: 'Weeks · Post-test', text: '', tag: '2 week post-test baseline', color: '#4E7A6B' }],
+      axis: { from: 'Stay period — not booking period', mid: 'Week 0', to: 'Week 7' },
+      cards: [{ label: 'Do not test', text: '', tone: 'warn' }] },
+    eventcal: { pins: [
+      { at: 'Sep', label: 'Budget', title: 'September budget', bullets: ['Set special event pricing strategy'] },
+      { at: '-90 d', label: 'Pre-peak', title: 'Pre-peak period', bullets: ['Review policies'] }],
+      end: { date: '25 Dec', label: 'Stay date' }, exception: '', exceptionLabel: '' },
+    kpidash: { cats: [{ label: 'Category', kpis: [
+      { name: 'KPI one', src: 'D360', unit: 'Index', target: 100,
+        ty: [98,99,101,100,102,104,103,105,106,108,107,109], ly: [97,98,99,99,100,101,101,102,103,104,104,105] }] }] }
+  };
 
   // =========================================================================
   // Boot
@@ -1379,7 +1457,11 @@
           { label: 'Stage three', text: '' }, { label: 'Stage four', text: '' }
         ] });
         touch(); renderInspector();
-      } }, ['+ Add wheel'])
+      } }, ['+ Add wheel']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        itemsArr.push({ s: 'ix', kind: 'processflow', name: 'Interactive element' });
+        touch(); renderInspector();
+      } }, ['+ Add interactive'])
     ]);
   }
 
@@ -1433,6 +1515,33 @@
     box.appendChild(selectField('Type', it.s || 'policy', ITEM_SYMBOLS, function (v) { it.s = v; touch(); renderInspector(); }));
     box.appendChild(textField('Name', it.name || '', function (v) { it.name = v; touch(); }));
     box.appendChild(textField('Heading above element (optional)', it.head || '', function (v) { it.head = v; touch(); }, 'Shown above this element on the page — leave blank for no heading.'));
+    if (it.s === 'ix') {
+      if (!it.kind || IX_KINDS.filter(function (k) { return k.v === it.kind; }).length === 0) it.kind = 'processflow';
+      box.appendChild(selectField('Interaction kind', it.kind, IX_KINDS, function (v) { it.kind = v; touch(); renderInspector(); }));
+      box.appendChild(el('button', { class: 'btn ghost', onclick: function () {
+        var tpl = IX_TEMPLATES[it.kind] || {};
+        Object.keys(tpl).forEach(function (k) { it[k] = JSON.parse(JSON.stringify(tpl[k])); });
+        touch(); renderInspector();
+        toast('Starter content loaded for ' + it.kind + ' — edit the JSON below to customise.', 'ok');
+      } }, ['Load starter content for this interaction']));
+      box.appendChild(el('div', { class: 'note', text: 'Content model for this interaction. Edit the JSON below, then Apply. The fields depend on the kind — load the starter content first if you are unsure.' }));
+      var jsonTa = el('textarea', { class: 'in', style: 'min-height:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;white-space:pre;' });
+      var snapshot = {};
+      Object.keys(it).forEach(function (k) { if (['s', 'name', 'head', 'kind'].indexOf(k) === -1) snapshot[k] = it[k]; });
+      jsonTa.value = JSON.stringify(snapshot, null, 2);
+      box.appendChild(jsonTa);
+      box.appendChild(el('button', { class: 'btn', onclick: function () {
+        var parsed;
+        try { parsed = JSON.parse(jsonTa.value); }
+        catch (err) { toast('Invalid JSON: ' + err.message, 'err'); return; }
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) { toast('JSON must be an object { ... }', 'err'); return; }
+        Object.keys(it).forEach(function (k) { if (['s', 'name', 'head', 'kind'].indexOf(k) === -1) delete it[k]; });
+        Object.keys(parsed).forEach(function (k) { it[k] = parsed[k]; });
+        touch(); renderInspector();
+        toast('Interaction updated.', 'ok');
+      } }, ['Apply JSON']));
+      return;
+    }
     if (it.s === 'image' || it.s === 'video') {
       box.appendChild(el('div', { class: 'note', text: 'File: ' + (it.url || '(none)') }));
       box.appendChild(el('button', { class: 'btn', onclick: function () {
