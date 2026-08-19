@@ -768,7 +768,7 @@ function policyItemBodyHTML(it) {
         ${it.desc ? `<p class="policy-group-desc">${esc(it.desc)}</p>` : ''}
       </div>`;
   }
-  const hasDetail = !!(it.blurb || it.url);
+  const hasDetail = !!(it.blurb || (it.url && !it.hideLink));
   const kind = symLabel(it.s);
   // Resource line: hyperlink if url present, else plain styled name.
   const resourceLine = it.url
@@ -803,10 +803,10 @@ function policyItemBodyHTML(it) {
       <div class="policy-item-panel" id="${id}" role="region" hidden>
         <div class="policy-item-panel-inner">
           ${it.blurb ? `<p class="policy-item-blurb">${esc(it.blurb)}</p>` : ''}
-          <div class="policy-item-resource">
+          ${it.hideLink ? '' : `<div class="policy-item-resource">
             <span class="resource-eyebrow">Resource</span>
             ${resourceLine}
-          </div>
+          </div>`}
         </div>
       </div>
     </div>`;
