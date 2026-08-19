@@ -2277,6 +2277,9 @@
     }
     box.appendChild(textField('Description', it.blurb || '', function (v) { it.blurb = v; touch(); }, '', true));
     box.appendChild(linkField('Link (URL)', it.url || '', function (v) { it.url = v; touch(); }));
+    box.appendChild(checkField('Show the resource link in the expanded panel', !it.hideLink, function (v) {
+      it.hideLink = !v; touch();
+    }));
   }
 
   function symbolLabel(s) {
