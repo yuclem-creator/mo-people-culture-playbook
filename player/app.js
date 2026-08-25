@@ -385,7 +385,7 @@ function pbChartHTML(it) {
 // Studio inspector — rendered above the element regardless of its type.
 function policyItemHTML(it) {
   var inner = policyItemBodyHTML(it);
-  if (it && it.head && String(it.head).trim()) {
+  if (it && it.head && !Array.isArray(it.head) && String(it.head).trim()) {
     return '<div class="pb-item"><div class="pb-item-head">' + esc(it.head) + '</div>' + inner + '</div>';
   }
   return inner;
@@ -393,6 +393,9 @@ function policyItemHTML(it) {
 
 function policyItemBodyHTML(it) {
   const id = 'acc-' + (++_accId);
+  // Interactive elements (17 kinds) — builders and wiring live in the
+  // pbIxHTML block appended to this file.
+  if (it && it.s === 'ix') { return pbIxHTML(it); }
   // Video frame (uploaded or linked).
   if (it && it.s === 'video') {
     return `<figure class="policy-video" style="margin:16px 0;">
@@ -418,7 +421,7 @@ function policyItemBodyHTML(it) {
     const rows = Array.isArray(it.rows) ? it.rows : [];
     return `<div class="pb-tablewrap"><table class="pb-table">
       ${head.length ? `<thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>` : ''}
-      <tbody>${rows.map(r => `<tr>${(Array.isArray(r) ? r : [r]).map(c => `<td>${inlineRichHTML(String(c || ''))}</td>`).join('')}</tr>`).join('')}</tbody>
+      <tbody>${rows.map(r => `<tr>${(Array.isArray(r) ? r : [r]).map((c, ci) => `<td data-th="${esc(head[ci] || '')}">${inlineRichHTML(String(c || ''))}</td>`).join('')}</tr>`).join('')}</tbody>
     </table></div>`;
   }
   // Callout: a labelled panel — note (warm neutral, gold bar) or warning
@@ -765,7 +768,7 @@ function policyItemBodyHTML(it) {
         ${it.desc ? `<p class="policy-group-desc">${esc(it.desc)}</p>` : ''}
       </div>`;
   }
-  const hasDetail = !!(it.blurb || it.url);
+  const hasDetail = !!(it.blurb || (it.url && !it.hideLink));
   const kind = symLabel(it.s);
   // Resource line: hyperlink if url present, else plain styled name.
   const resourceLine = it.url
@@ -800,10 +803,10 @@ function policyItemBodyHTML(it) {
       <div class="policy-item-panel" id="${id}" role="region" hidden>
         <div class="policy-item-panel-inner">
           ${it.blurb ? `<p class="policy-item-blurb">${esc(it.blurb)}</p>` : ''}
-          <div class="policy-item-resource">
+          ${it.hideLink ? '' : `<div class="policy-item-resource">
             <span class="resource-eyebrow">Resource</span>
             ${resourceLine}
-          </div>
+          </div>`}
         </div>
       </div>
     </div>`;
@@ -4169,3 +4172,693 @@ refreshDerived();
 if (window.parent !== window) {
   window.parent.postMessage({ type: 'preview-boot' }, '*');
 }
+
+var PB_IX_KINDS = ['processflow','horizons','legendtour','flipcards','mixbars','xtable','benchdash','alloc','tabx','scorecard','typedist','stageflow','dlcheck','testline','eventcal','kpidash','cardwall'];
+
+function pbIxHTML(it) {
+  var fn = PB_IX_RENDER[it.kind];
+  if (!fn) return '<div class="pb-ix pb-chart-empty">Unknown interactive element "' + esc(it.kind || '') + '".</div>';
+  try { return fn(it); } catch (e) { return '<div class="pb-ix pb-chart-empty">This interactive element could not be drawn — check its content in Studio.</div>'; }
+}
+
+function _ixArr(v) { return Array.isArray(v) ? v : []; }
+function _ixId(p) { return p + '-' + (++_accId); }
+var _IX_COLORS = ['#B59060','#C07A3E','#4E7A6B','#A4523F','#7A6A9E','#8F6B3C'];
+
+var PB_IX_RENDER = {
+
+  // 1. Decision & exception logic — numbered process flow, one step at a time.
+  processflow: function (it) {
+    var steps = _ixArr(it.steps);
+    if (!steps.length) return '<div class="pb-ix pb-chart-empty">Add steps to build this process flow.</div>';
+    var wid = _ixId('ixpf');
+    return '<div class="pb-ix pb-ixpf" id="' + wid + '">' +
+      '<div class="ixpf-track">' + steps.map(function (s, i) {
+        return '<button type="button" class="ixpf-step' + (i === 0 ? ' on' : '') + '" data-pf="' + i + '">' +
+          '<span class="ixpf-num">' + (i + 1) + '</span>' +
+          '<span class="ixpf-step-name">' + esc(s.label || ('Step ' + (i + 1))) + '</span>' +
+          (s.sub ? '<span class="ixpf-step-sub">' + esc(s.sub) + '</span>' : '') +
+          '</button>' + (i < steps.length - 1 ? '<span class="ixpf-arrow" aria-hidden="true">→</span>' : '');
+      }).join('') + '</div>' +
+      steps.map(function (s, i) {
+        var branches = _ixArr(s.branches);
+        return '<div class="ixpf-detail" data-pfd="' + i + '" style="display:' + (i === 0 ? 'block' : 'none') + ';">' +
+          (s.sub ? '<div class="ixpf-d-eyebrow">' + esc(s.sub) + '</div>' : '') +
+          '<div class="ixpf-d-title">' + esc(s.title || s.label || '') + '</div>' +
+          (s.text ? '<div class="ixpf-d-text">' + inlineRichHTML(s.text) + '</div>' : '') +
+          (s.example ? '<div class="ixpf-d-example">' + inlineRichHTML(s.example) + '</div>' : '') +
+          (branches.length ? '<div class="ixpf-branches">' + branches.map(function (b, bi) {
+            return '<div class="ixpf-branch" style="--bc:' + _IX_COLORS[bi % _IX_COLORS.length] + ';">' +
+              '<div class="ixpf-b-label">' + esc(b.label || '') + '</div>' +
+              '<div class="ixpf-b-text">' + inlineRichHTML(b.text || '') + '</div></div>';
+          }).join('') + '</div>' : '') +
+          '</div>';
+      }).join('') + '</div>';
+  },
+
+  // 2. Horizon stepper / journey map band.
+  horizons: function (it) {
+    var stages = _ixArr(it.stages);
+    if (!stages.length) return '<div class="pb-ix pb-chart-empty">Add stages to build this stepper.</div>';
+    var bands = _ixArr(it.bands);
+    return '<div class="pb-ix pb-ixhz">' +
+      '<div class="ixhz-band">' +
+        '<div class="ixhz-line" aria-hidden="true"></div>' +
+        stages.map(function (s, i) {
+          return '<button type="button" class="ixhz-node' + (i === 0 ? ' on' : '') + '" data-hz="' + i + '" style="left:' + (stages.length > 1 ? (3 + (i / (stages.length - 1)) * 94) : 50) + '%;">' +
+            '<span class="ixhz-dot">' + (i + 1) + '</span>' +
+            '<span class="ixhz-lbl">' + esc(s.label || '') + '</span>' +
+            (s.dur ? '<span class="ixhz-dur">' + esc(s.dur) + '</span>' : '') +
+            (s.gate ? '<span class="ixhz-gate">' + esc(s.gate === true ? 'Gate' : s.gate) + '</span>' : '') +
+            '</button>';
+        }).join('') +
+      '</div>' +
+      (bands.length ? '<div class="ixhz-horizons">' + bands.map(function (b) {
+        var from = Math.max(0, Number(b.from) || 0), to = Math.min(stages.length - 1, b.to == null ? stages.length - 1 : Number(b.to));
+        var l = stages.length > 1 ? (3 + (from / (stages.length - 1)) * 94) : 0, w = stages.length > 1 ? ((to - from) / (stages.length - 1)) * 94 : 94;
+        return '<span class="ixhz-horizon" style="left:' + l + '%;width:' + Math.max(w, 8) + '%;">' + esc(b.label || '') + '</span>';
+      }).join('') + '</div>' : '') +
+      stages.map(function (s, i) {
+        return '<div class="ixhz-detail" data-hzd="' + i + '" style="display:' + (i === 0 ? 'block' : 'none') + ';">' +
+          '<div class="ixhz-d-eyebrow">' + esc('Stage ' + (i + 1) + (s.dur ? ' · ' + s.dur : '')) + '</div>' +
+          '<div class="ixhz-d-title">' + esc(s.label || '') + '</div>' +
+          (s.text ? '<div class="ixhz-d-text">' + inlineRichHTML(s.text) + '</div>' : '') + '</div>';
+      }).join('') + '</div>';
+  },
+
+  // 3. Static legend panel + onboarding tooltip tour.
+  legendtour: function (it) {
+    var legend = _ixArr(it.legend), tour = _ixArr(it.tour);
+    var tid = _ixId('ixlg');
+    return '<div class="pb-ix pb-ixlg" id="' + tid + '">' +
+      '<div class="ixlg-grid">' +
+        '<div class="ixlg-panel"><div class="ixlg-title">' + esc(it.title || 'How to read this playbook') + '</div>' +
+          legend.map(function (l, i) {
+            return '<div class="ixlg-row"><span class="ixlg-sw" style="background:' + esc(l.color || _IX_COLORS[i % _IX_COLORS.length]) + ';"></span><span class="ixlg-txt"><b>' + esc(l.label || '') + '</b>' + (l.text ? ' — ' + inlineRichHTML(l.text) : '') + '</span></div>';
+          }).join('') + '</div>' +
+        (tour.length ? '<div class="ixlg-tourwrap">' +
+          '<button type="button" class="ixlg-start" data-tour-start="' + tid + '">' + esc(it.tourLabel || 'Take the quick tour') + '</button>' +
+          '<div class="ixlg-tip" data-tour-tip="' + tid + '" hidden>' +
+            '<div class="ixlg-tip-eyebrow" data-tour-count></div>' +
+            '<div class="ixlg-tip-text" data-tour-text></div>' +
+            '<div class="ixlg-tip-row"><button type="button" class="ixlg-skip" data-tour-skip>' + esc(it.skipLabel || 'Skip') + '</button>' +
+            '<button type="button" class="ixlg-next" data-tour-next>' + esc(it.nextLabel || 'Next') + '</button></div>' +
+          '</div>' +
+          '<script type="application/json" data-tour-data="' + tid + '">' + JSON.stringify(tour).replace(/</g, '\\u003c') + '</script>' +
+        '</div>' : '') +
+      '</div></div>';
+  },
+
+  // 4. Principle flip cards (light) — front: principle; back: full guidance.
+  flipcards: function (it) {
+    var cards = _ixArr(it.cards);
+    if (!cards.length) return '<div class="pb-ix pb-chart-empty">Add cards to build this set.</div>';
+    var dark = it.variant === 'dark';
+    var legend = _ixArr(it.legend);
+    return '<div class="pb-ix pb-ixfc' + (dark ? ' dark' : '') + '">' +
+      (legend.length ? '<div class="ixfc-legend">' + legend.map(function (l, i) {
+        return '<span class="ixfc-leg"><span class="ixlg-sw" style="background:' + esc(l.color || _IX_COLORS[i % _IX_COLORS.length]) + ';"></span>' + esc(l.label || '') + '</span>';
+      }).join('') + '</div>' : '') +
+      '<div class="ixfc-grid">' + cards.map(function (c, i) {
+        var chips = _ixArr(c.chips);
+        return '<button type="button" class="ixfc-card" data-fc>' +
+          '<span class="ixfc-face ixfc-front" style="' + (dark && c.themeColor ? 'border-top-color:' + esc(c.themeColor) + ';' : '') + '">' +
+            (c.num ? '<span class="ixfc-num">' + esc(c.num) + '</span>' : '') +
+            '<span class="ixfc-title">' + esc(c.title || ('Card ' + (i + 1))) + '</span>' +
+            (dark && c.owner ? '<span class="ixfc-owner">' + esc(c.owner) + '</span>' : '') +
+            '<span class="ixfc-hint">' + esc(it.flipHint || 'Tap to flip') + '</span>' +
+          '</span>' +
+          '<span class="ixfc-face ixfc-back">' +
+            (c.backLabel ? '<span class="ixfc-backlabel">' + esc(c.backLabel) + '</span>' : '') +
+            '<span class="ixfc-backtext">' + inlineRichHTML(c.back || '') + '</span>' +
+            (chips.length ? '<span class="ixfc-chips">' + chips.map(function (ch) { return '<span class="ixfc-chip">' + esc(ch) + '</span>'; }).join('') + '</span>' : '') +
+            (dark && _ixArr(c.steps).length ? '<span class="ixfc-steps">' + c.steps.map(function (st) { return '<span class="ixfc-step-chip">' + esc(st) + '</span>'; }).join('<span class="ixfc-step-arrow">→</span>') + '</span>' : '') +
+          '</span>' +
+          '</button>';
+      }).join('') + '</div></div>';
+  },
+
+  // 10. Opportunity card wall — dark flip cards grouped by theme (1-2-2-1 etc.).
+  cardwall: function (it) {
+    it = Object.assign({}, it, { variant: 'dark' });
+    return PB_IX_RENDER.flipcards(it);
+  },
+
+  // 5. Stacked-bar mix explorer.
+  mixbars: function (it) {
+    var rows = _ixArr(it.rows);
+    if (!rows.length) return '<div class="pb-ix pb-chart-empty">Add rows to build this explorer.</div>';
+    var legend = _ixArr(it.legend);
+    return '<div class="pb-ix pb-ixmix">' +
+      (legend.length ? '<div class="ixmix-legend">' + legend.map(function (l, i) {
+        return '<span class="ixfc-leg"><span class="ixlg-sw" style="background:' + esc(l.color || _IX_COLORS[i % _IX_COLORS.length]) + ';"></span>' + esc(l.label || '') + '</span>';
+      }).join('') + '</div>' : '') +
+      rows.map(function (r, ri) {
+        var segs = _ixArr(r.segs);
+        var tot = segs.reduce(function (a, b) { return a + (Number(b) || 0); }, 0) || 1;
+        return '<button type="button" class="ixmix-row" data-mix="' + ri + '">' +
+          '<span class="ixmix-head"><span class="ixmix-name">' + esc(r.label || '') + '</span>' + (r.meta ? '<span class="ixmix-meta">' + esc(r.meta) + '</span>' : '') + '</span>' +
+          '<span class="ixmix-bar">' + segs.map(function (v, si) {
+            var col = legend[si] && legend[si].color ? legend[si].color : _IX_COLORS[si % _IX_COLORS.length];
+            return '<span class="ixmix-seg" style="width:' + (Number(v) / tot * 100).toFixed(1) + '%;background:' + esc(col) + ';"></span>';
+          }).join('') + '</span></button>';
+      }).join('') +
+      '<div class="ixmix-detail" data-mix-detail hidden></div>' +
+      (it.note ? '<div class="pb-ix-note">' + inlineRichHTML(it.note) + '</div>' : '') +
+      '<script type="application/json" data-mix-data>' + JSON.stringify(rows.map(function (r) { return { label: r.label, meta: r.meta, segs: r.segs, detail: r.detail }; })).replace(/</g, '\\u003c') + '</script>' +
+      '<script type="application/json" data-mix-legend>' + JSON.stringify(legend.map(function (l) { return l.label; })).replace(/</g, '\\u003c') + '</script>' +
+      '</div>';
+  },
+
+  // 6. Interactive table explorer — sort + filter, never overflows.
+  xtable: function (it) {
+    var head = _ixArr(it.cols), rows = _ixArr(it.rows);
+    if (!head.length && Array.isArray(it.head)) head = _ixArr(it.head); // back-compat: early payloads used head[]
+    if (!rows.length) return '<div class="pb-ix pb-chart-empty">Add rows to build this table.</div>';
+    var tid = _ixId('ixxt');
+    return '<div class="pb-ix pb-ixxt" id="' + tid + '" data-sort="-1" data-dir="1">' +
+      '<input type="search" class="ixxt-filter" placeholder="' + esc(it.filterLabel || 'Filter…') + '" data-xt-filter />' +
+      '<div class="pb-tablewrap"><table class="pb-table ixxt-table">' +
+        (head.length ? '<thead><tr>' + head.map(function (h, i) { return '<th><button type="button" class="ixxt-sort" data-xt-sort="' + i + '">' + esc(h) + '<span class="ixxt-arrow" aria-hidden="true"></span></button></th>'; }).join('') + '</tr></thead>' : '') +
+        '<tbody>' + rows.map(function (r) {
+          return '<tr>' + (Array.isArray(r) ? r : [r]).map(function (c, ci) { return '<td data-th="' + esc(head[ci] || '') + '">' + inlineRichHTML(String(c || '')) + '</td>'; }).join('') + '</tr>';
+        }).join('') + '</tbody>' +
+      '</table></div>' +
+      '<div class="ixxt-count" data-xt-count>' + rows.length + ' of ' + rows.length + ' shown</div>' +
+      '</div>';
+  },
+
+  // 7. Benchmark dashboard — KPI cards + trend + tips.
+  benchdash: function (it) {
+    var kpis = _ixArr(it.kpis), trend = it.trend || {}, tips = _ixArr(it.tips);
+    var svg = _ixTrendSVG(trend, 760, 260);
+    return '<div class="pb-ix pb-ixbd">' +
+      (kpis.length ? '<div class="ixbd-kpis" style="--cols:' + kpis.length + ';">' + kpis.map(function (k) {
+        return '<div class="ixbd-kpi"><div class="ixbd-k-label">' + esc(k.label || '') + '</div>' +
+          '<div class="ixbd-k-value">' + esc(String(k.value || '')) + '</div>' +
+          (k.sub ? '<div class="ixbd-k-sub' + (k.down ? ' down' : '') + '">' + esc(k.sub) + '</div>' : '') +
+          '<div class="ixbd-k-bar"><span style="width:' + Math.max(4, Math.min(100, Number(k.bar) || 50)) + '%;"></span></div></div>';
+      }).join('') + '</div>' : '') +
+      (svg ? '<div class="ixbd-trend"><div class="ixbd-t-title">' + esc(trend.title || '') + '</div>' + (trend.sub ? '<div class="ixbd-t-sub">' + esc(trend.sub) + '</div>' : '') + svg +
+        '<div class="ixbd-t-legend">' + _ixArr(trend.series).map(function (s) {
+          return '<span class="ixfc-leg"><span class="ixlg-sw" style="background:' + esc(s.color || '#B59060') + ';' + (s.dash ? 'height:2px;margin-top:4px;' : '') + '"></span>' + esc(s.name || '') + '</span>';
+        }).join('') + '</div></div>' : '') +
+      (tips.length ? '<div class="ixbd-tips">' + tips.map(function (t, i) {
+        return '<div class="ixbd-tip"><div class="ixbd-tip-eyebrow">' + esc(t.label || ('0' + (i + 1))) + '</div><div class="ixbd-tip-title">' + esc(t.title || '') + '</div><div class="ixbd-tip-text">' + inlineRichHTML(t.text || '') + '</div></div>';
+      }).join('') + '</div>' : '') +
+      '</div>';
+  },
+
+  // 8. Discount allocation chart — build-up + quality gauge + steps.
+  alloc: function (it) {
+    var parts = _ixArr(it.parts);
+    var total = it.total || {}, q = it.quality || {};
+    var max = Math.max.apply(null, parts.map(function (p) { return Number(p.value) || 0; }).concat([1]));
+    var qv = Math.max(0, Math.min(100, Number(q.value) || 0));
+    return '<div class="pb-ix pb-ixal">' +
+      '<div class="ixal-top">' +
+        '<div class="ixal-build"><div class="ixal-b-title">' + esc(it.buildTitle || '') + '</div>' +
+          parts.map(function (p, i) {
+            return '<div class="ixal-row"><span class="ixal-r-label">' + esc(p.label || '') + '</span>' +
+              '<span class="ixal-r-bar"><span style="width:' + (Number(p.value) / max * 100).toFixed(0) + '%;background:' + esc(p.color || _IX_COLORS[i % _IX_COLORS.length]) + ';"></span></span>' +
+              '<span class="ixal-r-val">' + esc(String(p.value || '')) + '</span></div>';
+          }).join('') +
+          '<div class="ixal-total"><span>' + esc(total.label || '') + '</span><span class="ixal-t-val">' + inlineRichHTML(total.text || '') + '</span></div>' +
+        '</div>' +
+        '<div class="ixal-quality"><div class="ixal-q-eyebrow">' + esc(q.eyebrow || '') + '</div>' +
+          '<div class="ixal-q-val">' + esc(String(q.display || (qv + '%'))) + '</div>' +
+          '<div class="ixal-q-bar"><span style="width:' + qv + '%;"></span></div>' +
+          (q.text ? '<div class="ixal-q-text">' + inlineRichHTML(q.text) + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+      (_ixArr(it.steps).length ? '<div class="ixal-steps">' + it.steps.map(function (s, i) {
+        return '<div class="ixal-step"><div class="ixal-s-eyebrow">' + esc(s.label || ('Step ' + (i + 1))) + '</div><div class="ixal-s-text">' + inlineRichHTML(s.text || '') + '</div></div>';
+      }).join('') + '</div>' : '') +
+      '</div>';
+  },
+
+  // 9. Tabbed data explorer (workbook tabs etc.).
+  tabx: function (it) {
+    var tabs = _ixArr(it.tabs);
+    if (!tabs.length) return '<div class="pb-ix pb-chart-empty">Add tabs to build this explorer.</div>';
+    return '<div class="pb-ix pb-ixtx">' +
+      '<div class="ixtx-bar">' + tabs.map(function (t, i) {
+        return '<button type="button" class="ixtx-tab' + (i === 0 ? ' on' : '') + '" data-tx="' + i + '">' + esc(t.label || ('Tab ' + (i + 1))) + '</button>';
+      }).join('') + '</div>' +
+      tabs.map(function (t, i) {
+        return '<div class="ixtx-panel" data-txd="' + i + '"' + (i ? ' hidden' : '') + '>' +
+          (t.usedin ? '<div class="ixtx-usedin">' + esc(t.usedin) + '</div>' : '') +
+          '<div class="ixtx-title">' + esc(t.title || t.label || '') + '</div>' +
+          (t.text ? '<div class="ixtx-text">' + inlineRichHTML(t.text) + '</div>' : '') +
+          (t.url ? '<a class="ixtx-link" href="' + esc(t.url) + '" target="_blank" rel="noopener noreferrer">' + esc(t.linkLabel || 'Open resource →') + '</a>' : '') +
+          '</div>';
+      }).join('') + '</div>';
+  },
+
+  // 11. Assessment scorecard / rubric.
+  scorecard: function (it) {
+    var dims = _ixArr(it.dims), tasks = _ixArr(it.tasks);
+    if (!tasks.length || !dims.length) return '<div class="pb-ix pb-chart-empty">Add dimensions and tasks to build this scorecard.</div>';
+    var max = Number(it.scaleMax) || 4;
+    var total = tasks.length * dims.length * max;
+    return '<div class="pb-ix pb-ixsc" data-scale="' + max + '">' +
+      '<div class="pb-tablewrap"><table class="pb-table ixsc-table"><thead><tr><th>' + esc(it.taskCol || 'Task') + '</th>' +
+        dims.map(function (d) { return '<th class="ixsc-dim">' + esc(d) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        tasks.map(function (t) {
+          return '<tr><td><div class="ixsc-task">' + esc(t.name || '') + '</div>' + (t.covers ? '<div class="ixsc-covers">' + esc(t.covers) + '</div>' : '') + '</td>' +
+            dims.map(function (_, di) {
+              return '<td class="ixsc-cell">' + '<span class="ixsc-picks">' +
+                Array.apply(null, { length: max }).map(function (_, v) {
+                  return '<button type="button" class="ixsc-pick" data-sc="' + (v + 1) + '" aria-label="Score ' + (v + 1) + '">' + (v + 1) + '</button>';
+                }).join('') + '</span></td>';
+            }).join('') + '</tr>';
+        }).join('') + '</tbody></table></div>' +
+      '<div class="ixsc-total"><div><div class="ixsc-t-eyebrow">' + esc(it.totalLabel || 'Overall score') + '</div><div class="ixsc-t-val"><span data-sc-total>0</span> / ' + total + '</div></div>' +
+      (it.note ? '<div class="ixsc-t-note">' + inlineRichHTML(it.note) + '</div>' : '') + '</div>' +
+      '</div>';
+  },
+
+  // 12. Count / distribution chart by room type (TY/LY toggle).
+  typedist: function (it) {
+    var rows = _ixArr(it.rows);
+    if (!rows.length) return '<div class="pb-ix pb-chart-empty">Add rows to build this chart.</div>';
+    var a = (it.toggle && it.toggle.a) || 'This year', b = (it.toggle && it.toggle.b) || 'STLY';
+    var maxv = Math.max.apply(null, rows.map(function (r) { return Math.max(Number(r.a) || 0, Number(r.b) || 0); }).concat([1]));
+    return '<div class="pb-ix pb-ixtd">' +
+      '<div class="ixtd-toggle"><button type="button" class="on" data-td="a">' + esc(a) + '</button><button type="button" data-td="b">' + esc(b) + '</button></div>' +
+      '<div class="ixtd-rows">' + rows.map(function (r, i) {
+        var col = r.color || _IX_COLORS[i % _IX_COLORS.length];
+        return '<div class="ixtd-row" data-a="' + (Number(r.a) || 0) + '" data-b="' + (Number(r.b) || 0) + '" data-max="' + maxv + '">' +
+          '<span class="ixtd-label">' + esc(r.label || '') + '</span>' +
+          '<span class="ixtd-track"><span class="ixtd-fill" style="width:' + ((Number(r.a) || 0) / maxv * 100).toFixed(1) + '%;background:' + esc(col) + ';"></span></span>' +
+          '<span class="ixtd-val">' + esc(String(r.a || '')) + (r.suffix ? ' ' + esc(r.suffix) : '') + '</span></div>';
+      }).join('') + '</div>' +
+      (it.note ? '<div class="pb-ix-note">' + inlineRichHTML(it.note) + '</div>' : '') +
+      '</div>';
+  },
+
+  // 13. Stage step flow + checklists — sequential unlock, ends in a gate.
+  stageflow: function (it) {
+    var items = _ixArr(it.items);
+    if (!items.length) return '<div class="pb-ix pb-chart-empty">Add actions to build this flow.</div>';
+    var cid = it.cid || _ixId('ixsf');
+    return '<div class="pb-ix pb-ixsf" data-sf="' + esc(cid) + '" data-count="' + items.length + '">' +
+      '<div class="ixsf-rail"></div>' +
+      items.map(function (c, i) {
+        return '<div class="ixsf-item' + (i === 0 ? '' : ' locked') + '" data-sf-i="' + i + '">' +
+          '<span class="ixsf-node"></span>' +
+          '<button type="button" class="ixsf-check" aria-label="Mark action ' + (i + 1) + ' done"><span>✓</span></button>' +
+          '<div class="ixsf-body"><div class="ixsf-eyebrow">' + esc(c.label || ('Action ' + (i + 1))) + '</div>' +
+          '<div class="ixsf-text">' + inlineRichHTML(c.text || '') + '</div></div>' +
+          '</div>';
+      }).join('') +
+      (it.gateText ? '<div class="ixsf-gate locked" data-sf-gate data-locked-text="' + esc(it.gateLocked || 'Complete every action to unlock the gate.') + '"' + (it.gateOpen ? ' data-open-text="' + esc(it.gateOpen) + '"' : '') + '>' +
+        '<span class="ixsf-gate-mark">✓</span><div class="ixsf-gate-body"><div class="ixsf-gate-title">' + esc(it.gateText) + '</div>' +
+        '<div class="ixsf-gate-note" data-sf-gatenote>' + esc(it.gateLocked || 'Complete every action to unlock the gate.') + '</div></div>' +
+        '<span class="ixsf-gate-count" data-sf-count>0 / ' + items.length + '</span></div>' : '') +
+      '</div>';
+  },
+
+  // 14. Downloadable template + guided checklist.
+  dlcheck: function (it) {
+    var f = it.file || {}, items = _ixArr(it.items);
+    var cid = _ixId('ixdl');
+    return '<div class="pb-ix pb-ixdl" data-dl="' + cid + '">' +
+      '<div class="ixdl-card"><div class="ixdl-icon" aria-hidden="true">↓</div>' +
+        '<div class="ixdl-f-title">' + esc(f.title || 'Template') + '</div>' +
+        (f.meta ? '<div class="ixdl-f-meta">' + esc(f.meta) + '</div>' : '') +
+        (f.text ? '<div class="ixdl-f-text">' + inlineRichHTML(f.text) + '</div>' : '') +
+        (f.url ? '<a class="ixdl-btn" href="' + esc(f.url) + '" download>' + esc(f.button || 'Download workbook') + '</a>' : '<span class="ixdl-btn disabled">' + esc(f.button || 'Download workbook') + '</span>') +
+      '</div>' +
+      (items.length ? '<div class="ixdl-list"><div class="ixdl-l-title">' + esc(it.listTitle || 'Guided checklist') + '</div>' +
+        items.map(function (c, i) {
+          return '<div class="ixdl-item" data-dl-i="' + i + '"><button type="button" class="ixdl-check" aria-label="Toggle item ' + (i + 1) + '"><span>✓</span></button>' +
+            '<span class="ixdl-text">' + inlineRichHTML(c.text || '') + '</span>' +
+            (c.tag ? '<span class="ixdl-tag">' + esc(c.tag) + '</span>' : '') + '</div>';
+        }).join('') +
+        '<div class="ixdl-count" data-dl-count>0 of ' + items.length + ' complete</div></div>' : '') +
+      '</div>';
+  },
+
+  // 15. Test-design timeline diagram (A/B phases).
+  testline: function (it) {
+    var phases = _ixArr(it.phases);
+    if (!phases.length) return '<div class="pb-ix pb-chart-empty">Add phases to build this timeline.</div>';
+    return '<div class="pb-ix pb-ixtl">' +
+      '<div class="ixtl-band">' + phases.map(function (p, i) {
+        return '<div class="ixtl-phase"><span class="ixtl-bar" style="background:' + esc(p.color || _IX_COLORS[i % _IX_COLORS.length]) + ';"></span>' +
+          '<div class="ixtl-num">' + esc(String(p.num != null ? p.num : (i + 1))) + '</div>' +
+          '<div class="ixtl-lbl">' + esc(p.label || '') + '</div>' +
+          (p.text ? '<div class="ixtl-text">' + inlineRichHTML(p.text) + '</div>' : '') +
+          (p.tag ? '<div class="ixtl-tag">' + esc(p.tag) + '</div>' : '') + '</div>';
+      }).join('') + '</div>' +
+      (it.axis ? '<div class="ixtl-axis"><span>' + esc(it.axis.from || '') + '</span><span>' + esc(it.axis.mid || '') + '</span><span>' + esc(it.axis.to || '') + '</span></div>' : '') +
+      (_ixArr(it.cards).length ? '<div class="ixtl-cards">' + it.cards.map(function (c) {
+        return '<div class="ixtl-card' + (c.tone === 'warn' ? ' warn' : '') + '"><div class="ixtl-c-eyebrow">' + esc(c.label || '') + '</div><div class="ixtl-c-text">' + inlineRichHTML(c.text || '') + '</div></div>';
+      }).join('') + '</div>' : '') +
+      '</div>';
+  },
+
+  // 16. Event calendar timeline (booking windows countdown).
+  eventcal: function (it) {
+    var pins = _ixArr(it.pins);
+    if (!pins.length) return '<div class="pb-ix pb-chart-empty">Add phases to build this calendar.</div>';
+    return '<div class="pb-ix pb-ixec">' +
+      '<div class="ixec-trackwrap"><div class="ixec-track" aria-hidden="true"></div>' +
+        pins.map(function (p, i) {
+          return '<button type="button" class="ixec-pin' + (i === 0 ? ' on' : '') + '" data-ec="' + i + '" style="left:' + (pins.length > 1 ? (3 + (i / (pins.length - 1)) * 90) : 50) + '%;">' +
+            '<span class="ixec-at">' + esc(p.at || '') + '</span><span class="ixec-dot">' + (i + 1) + '</span><span class="ixec-lbl">' + esc(p.label || '') + '</span></button>';
+        }).join('') +
+        (it.end ? '<span class="ixec-end"><span class="ixec-end-date">' + esc(it.end.date || '') + '</span><span class="ixec-end-lbl">' + esc(it.end.label || '') + '</span></span>' : '') +
+      '</div>' +
+      pins.map(function (p, i) {
+        var bl = _ixArr(p.bullets);
+        return '<div class="ixec-detail" data-ecd="' + i + '" style="display:' + (i === 0 ? 'block' : 'none') + ';">' +
+          '<div class="ixec-d-eyebrow">' + esc([p.at, p.label].filter(Boolean).join(' · ')) + '</div>' +
+          '<div class="ixec-d-title">' + esc(p.title || p.label || '') + '</div>' +
+          (bl.length ? '<ul class="ixec-d-list">' + bl.map(function (b2) { return '<li>' + inlineRichHTML(b2) + '</li>'; }).join('') + '</ul>' : '') +
+          '</div>';
+      }).join('') +
+      (it.exception ? '<div class="ixec-exception"><b>' + esc(it.exceptionLabel || 'Timing exception') + '</b> — ' + inlineRichHTML(it.exception) + '</div>' : '') +
+      '</div>';
+  },
+
+  // 17. KPI dashboard with STLY toggle.
+  kpidash: function (it) {
+    var cats = _ixArr(it.cats);
+    var flat = [];
+    cats.forEach(function (c) { _ixArr(c.kpis).forEach(function (k) { flat.push({ cat: c.label, name: k.name, src: k.src, unit: k.unit, target: k.target, ty: _ixArr(k.ty), ly: _ixArr(k.ly) }); }); });
+    if (!flat.length) return '<div class="pb-ix pb-chart-empty">Add KPIs to build this dashboard.</div>';
+    var tid = _ixId('ixkpi');
+    return '<div class="pb-ix pb-ixkpi" id="' + tid + '">' +
+      '<div class="ixkpi-list">' + cats.map(function (c, ci) {
+        return '<div class="ixkpi-cat">' + esc(c.label || '') + '</div>' + _ixArr(c.kpis).map(function (k) {
+          var gi = flat.findIndex(function (f) { return f.name === k.name && f.cat === c.label; });
+          return '<button type="button" class="ixkpi-item' + (gi === 0 ? ' on' : '') + '" data-kpi="' + gi + '"><span>' + esc(k.name || '') + '</span>' + (k.src ? '<span class="ixkpi-src">' + esc(k.src) + '</span>' : '') + '</button>';
+        }).join('');
+      }).join('') + '</div>' +
+      '<div class="ixkpi-main">' +
+        '<div class="ixkpi-head"><div><div class="ixkpi-title" data-kpi-name></div><div class="ixkpi-sub" data-kpi-sub></div></div>' +
+        '<div class="ixtd-toggle ixkpi-toggle"><button type="button" class="on" data-kty>This year</button><button type="button" class="on" data-kstly>vs STLY</button></div></div>' +
+        '<div class="ixkpi-chart" data-kpi-chart></div>' +
+        '<div class="ixkpi-stats"><div class="ixkpi-stat"><div class="l" data-kpi-s1l>Latest month</div><div class="v" data-kpi-s1></div><div class="d" data-kpi-s1d></div></div>' +
+        '<div class="ixkpi-stat"><div class="l" data-kpi-s2l>vs previous month</div><div class="v" data-kpi-s2></div><div class="d" data-kpi-s2d></div></div>' +
+        '<div class="ixkpi-stat"><div class="l" data-kpi-s3l>vs STLY</div><div class="v" data-kpi-s3></div><div class="d" data-kpi-s3d></div></div></div>' +
+      '</div>' +
+      '<script type="application/json" data-kpi-data>' + JSON.stringify(flat).replace(/</g, '\\u003c') + '</script>' +
+      '</div>';
+  }
+};
+
+// Shared mini trend chart (benchmark dashboard + KPI dashboard).
+function _ixTrendSVG(trend, W, H) {
+  var series = _ixArr(trend.series).filter(function (s) { return _ixArr(s.values).length > 1; });
+  if (!series.length) return '';
+  var labels = _ixArr(trend.labels);
+  var all = [];
+  series.forEach(function (s) { s.values.forEach(function (v) { if (isFinite(v)) all.push(Number(v)); }); });
+  if (isFinite(trend.target)) all.push(Number(trend.target));
+  var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+  var pad = (hi - lo) * 0.15 || 1; lo -= pad; hi += pad;
+  var X = function (i, n) { return 40 + (W - 60) * (n > 1 ? i / (n - 1) : 0); };
+  var Y = function (v) { return 16 + (H - 60) * (1 - (Number(v) - lo) / (hi - lo)); };
+  var s = '<svg class="ixchart" viewBox="0 0 ' + W + ' ' + H + '" role="img" preserveAspectRatio="none" style="width:100%;height:auto;aspect-ratio:' + W + '/' + H + ';">';
+  [0.25, 0.5, 0.75].forEach(function (g) {
+    var y = 16 + (H - 60) * g;
+    s += '<line x1="40" y1="' + y + '" x2="' + (W - 20) + '" y2="' + y + '" stroke="#E5E2DA" stroke-width="1"/>';
+  });
+  if (isFinite(trend.target)) {
+    s += '<line x1="40" y1="' + Y(trend.target) + '" x2="' + (W - 20) + '" y2="' + Y(trend.target) + '" stroke="#4E7A6B" stroke-width="1.5" stroke-dasharray="4 4"/>' +
+      '<text x="' + (W - 24) + '" y="' + (Y(trend.target) - 4) + '" text-anchor="end" font-size="10" fill="#4E7A6B">Target ' + esc(String(trend.target)) + '</text>';
+  }
+  series.forEach(function (sr) {
+    var n = sr.values.length;
+    var d = sr.values.map(function (v, i) { return (i ? 'L' : 'M') + X(i, n).toFixed(1) + ' ' + Y(v).toFixed(1); }).join(' ');
+    s += '<path d="' + d + '" fill="none" stroke="' + esc(sr.color || '#B59060') + '" stroke-width="2"' + (sr.dash ? ' stroke-dasharray="2 4"' : '') + ' stroke-linecap="round"/>';
+    if (sr.dots) sr.values.forEach(function (v, i) { s += '<circle cx="' + X(i, n).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="3" fill="#fff" stroke="' + esc(sr.color || '#B59060') + '" stroke-width="1.5"/>'; });
+  });
+  labels.forEach(function (lb, i) {
+    s += '<text x="' + X(i, labels.length).toFixed(1) + '" y="' + (H - 18) + '" text-anchor="middle" font-size="10" fill="#6b625a">' + esc(lb) + '</text>';
+  });
+  return s + '</svg>';
+}
+
+// =========================================================================
+// INTERACTIVE ELEMENTS — delegated wiring (wired once, all renderers).
+// =========================================================================
+if (!window.__ixWired) {
+  window.__ixWired = true;
+
+  function _ixJSON(root, sel) {
+    var n = root.querySelector(sel);
+    if (!n) return null;
+    try { return JSON.parse(n.textContent); } catch (e) { return null; }
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target : null;
+    if (!t) return;
+
+    // 1. Process flow — pick a step.
+    var pf = t.closest('.ixpf-step');
+    if (pf) {
+      var pfw = pf.closest('.pb-ixpf');
+      var i = pf.getAttribute('data-pf');
+      pfw.querySelectorAll('.ixpf-step').forEach(function (s) { s.classList.toggle('on', s.getAttribute('data-pf') === i); });
+      pfw.querySelectorAll('.ixpf-detail').forEach(function (d) { d.style.display = d.getAttribute('data-pfd') === i ? 'block' : 'none'; });
+      return;
+    }
+    // 2. Horizon stepper — pick a stage.
+    var hz = t.closest('.ixhz-node');
+    if (hz) {
+      var hzw = hz.closest('.pb-ixhz');
+      var hi = hz.getAttribute('data-hz');
+      hzw.querySelectorAll('.ixhz-node').forEach(function (s) { s.classList.toggle('on', s.getAttribute('data-hz') === hi); });
+      hzw.querySelectorAll('.ixhz-detail').forEach(function (d) { d.style.display = d.getAttribute('data-hzd') === hi ? 'block' : 'none'; });
+      return;
+    }
+    // 3. Legend tour — start / next / skip.
+    var ts = t.closest('[data-tour-start]');
+    if (ts) {
+      var lw = ts.closest('.pb-ixlg'), tip = lw.querySelector('[data-tour-tip]');
+      tip.hidden = false; ts.hidden = true;
+      _ixTourStep(lw, 0);
+      return;
+    }
+    var tn = t.closest('[data-tour-next]');
+    if (tn) {
+      var lw2 = tn.closest('.pb-ixlg');
+      var cur = Number(lw2.getAttribute('data-tour-i') || 0);
+      var data = _ixJSON(lw2, '[data-tour-data]') || [];
+      if (cur + 1 >= data.length) { _ixTourEnd(lw2); } else { _ixTourStep(lw2, cur + 1); }
+      return;
+    }
+    var tk = t.closest('[data-tour-skip]');
+    if (tk) { _ixTourEnd(tk.closest('.pb-ixlg')); return; }
+    // 4/10. Flip cards.
+    var fc = t.closest('.ixfc-card');
+    if (fc) { fc.classList.toggle('flip'); return; }
+    // 5. Mix explorer — row detail.
+    var mx = t.closest('.ixmix-row');
+    if (mx) {
+      var mxw = mx.closest('.pb-ixmix');
+      var rows = _ixJSON(mxw, '[data-mix-data]') || [];
+      var leg = _ixJSON(mxw, '[data-mix-legend]') || [];
+      var r = rows[Number(mx.getAttribute('data-mix'))];
+      var det = mxw.querySelector('[data-mix-detail]');
+      if (r && det) {
+        var segs = (r.segs || []);
+        var tot = segs.reduce(function (a2, b2) { return a2 + (Number(b2) || 0); }, 0) || 1;
+        var htm = '<b>' + (r.label || '') + '</b> — ' + segs.map(function (v, si) {
+          return (leg[si] || ('Part ' + (si + 1))) + ' ' + Math.round(Number(v) / tot * 100) + '%';
+        }).join(' · ') + (r.meta ? '. ' + r.meta + '.' : '') + (r.detail ? ' ' + r.detail : '');
+        det.innerHTML = htm;
+        det.hidden = false;
+      }
+      return;
+    }
+    // 6. Table explorer — sort.
+    var xs = t.closest('.ixxt-sort');
+    if (xs) {
+      var xw = xs.closest('.pb-ixxt');
+      var col = Number(xs.getAttribute('data-xt-sort'));
+      var dir = xw.getAttribute('data-sort') === String(col) ? -Number(xw.getAttribute('data-dir') || 1) : 1;
+      xw.setAttribute('data-sort', String(col)); xw.setAttribute('data-dir', String(dir));
+      var tb = xw.querySelector('tbody');
+      Array.prototype.slice.call(tb.rows).sort(function (ra, rb) {
+        var a2 = ra.cells[col] ? ra.cells[col].textContent : '', b2 = rb.cells[col] ? rb.cells[col].textContent : '';
+        var na = parseFloat(String(a2).replace(/[^\d.\-]/g, '')), nb = parseFloat(String(b2).replace(/[^\d.\-]/g, ''));
+        var cmp = (isFinite(na) && isFinite(nb)) ? na - nb : String(a2).localeCompare(String(b2));
+        return cmp * dir;
+      }).forEach(function (r2) { tb.appendChild(r2); });
+      xw.querySelectorAll('.ixxt-arrow').forEach(function (a3) { a3.textContent = ''; });
+      var ar = xs.querySelector('.ixxt-arrow'); if (ar) ar.textContent = dir > 0 ? ' ▲' : ' ▼';
+      return;
+    }
+    // 9. Tabbed explorer.
+    var tx = t.closest('.ixtx-tab');
+    if (tx) {
+      var txw = tx.closest('.pb-ixtx');
+      var ti = tx.getAttribute('data-tx');
+      txw.querySelectorAll('.ixtx-tab').forEach(function (b2) { b2.classList.toggle('on', b2.getAttribute('data-tx') === ti); });
+      txw.querySelectorAll('.ixtx-panel').forEach(function (p2) { p2.hidden = p2.getAttribute('data-txd') !== ti; });
+      return;
+    }
+    // 11. Scorecard — pick a score.
+    var sc = t.closest('.ixsc-pick');
+    if (sc) {
+      var cell = sc.closest('.ixsc-picks');
+      cell.querySelectorAll('.ixsc-pick').forEach(function (p2) { p2.classList.toggle('on', p2 === sc); });
+      var scw = sc.closest('.pb-ixsc');
+      var tot = 0;
+      scw.querySelectorAll('.ixsc-pick.on').forEach(function (p2) { tot += Number(p2.getAttribute('data-sc')) || 0; });
+      var out = scw.querySelector('[data-sc-total]'); if (out) out.textContent = tot;
+      return;
+    }
+    // 12. Room type distribution — TY/LY toggle.
+    var td = t.closest('.ixtd-toggle [data-td]');
+    if (td) {
+      var tdw = td.closest('.pb-ixtd');
+      var mode = td.getAttribute('data-td');
+      tdw.querySelectorAll('.ixtd-toggle [data-td]').forEach(function (b2) { b2.classList.toggle('on', b2 === td); });
+      tdw.querySelectorAll('.ixtd-row').forEach(function (r2) {
+        var v = Number(r2.getAttribute('data-' + mode)) || 0, mx2 = Number(r2.getAttribute('data-max')) || 1;
+        r2.querySelector('.ixtd-fill').style.width = (v / mx2 * 100).toFixed(1) + '%';
+        var suf = (r2.querySelector('.ixtd-val').textContent.split(' ').slice(1).join(' '));
+        r2.querySelector('.ixtd-val').textContent = v + (suf ? ' ' + suf : '');
+      });
+      return;
+    }
+    // 13. Stage flow — sequential ticks + gate.
+    var sfc = t.closest('.ixsf-check');
+    if (sfc) {
+      var sfw = sfc.closest('.pb-ixsf');
+      var row = sfc.closest('.ixsf-item');
+      if (row.classList.contains('locked')) return;
+      row.classList.toggle('done');
+      _ixSfSync(sfw);
+      return;
+    }
+    // 14. Download checklist ticks.
+    var dlc = t.closest('.ixdl-check');
+    if (dlc) {
+      var dlw = dlc.closest('.pb-ixdl');
+      dlc.closest('.ixdl-item').classList.toggle('done');
+      var dn = dlw.querySelectorAll('.ixdl-item.done').length, dt = dlw.querySelectorAll('.ixdl-item').length;
+      var cnt = dlw.querySelector('[data-dl-count]'); if (cnt) cnt.textContent = dn + ' of ' + dt + ' complete';
+      return;
+    }
+    // 16. Event calendar pins.
+    var ec = t.closest('.ixec-pin');
+    if (ec) {
+      var ecw = ec.closest('.pb-ixec');
+      var ei = ec.getAttribute('data-ec');
+      ecw.querySelectorAll('.ixec-pin').forEach(function (p2) { p2.classList.toggle('on', p2.getAttribute('data-ec') === ei); });
+      ecw.querySelectorAll('.ixec-detail').forEach(function (d2) { d2.style.display = d2.getAttribute('data-ecd') === ei ? 'block' : 'none'; });
+      return;
+    }
+    // 17. KPI dashboard — pick KPI, toggle series.
+    var ki = t.closest('.ixkpi-item');
+    if (ki) {
+      var kw = ki.closest('.pb-ixkpi');
+      kw.querySelectorAll('.ixkpi-item').forEach(function (b2) { b2.classList.toggle('on', b2 === ki); });
+      _ixKpiDraw(kw, Number(ki.getAttribute('data-kpi')));
+      return;
+    }
+    var kt = t.closest('.ixkpi-toggle button');
+    if (kt) {
+      kt.classList.toggle('on');
+      var kw2 = kt.closest('.pb-ixkpi');
+      var on = kw2.querySelector('.ixkpi-item.on');
+      _ixKpiDraw(kw2, on ? Number(on.getAttribute('data-kpi')) : 0);
+      return;
+    }
+  });
+
+  // Table explorer — live filter (input event).
+  document.addEventListener('input', function (e) {
+    var f = e.target && e.target.matches && e.target.matches('[data-xt-filter]') ? e.target : null;
+    if (!f) return;
+    var xw = f.closest('.pb-ixxt');
+    var q = f.value.trim().toLowerCase();
+    var tb = xw.querySelector('tbody');
+    var shown = 0, tot = 0;
+    Array.prototype.slice.call(tb.rows).forEach(function (r2) {
+      tot++;
+      var hit = !q || r2.textContent.toLowerCase().indexOf(q) !== -1;
+      r2.style.display = hit ? '' : 'none';
+      if (hit) shown++;
+    });
+    var cnt = xw.querySelector('[data-xt-count]');
+    if (cnt) cnt.textContent = shown + ' of ' + tot + ' shown';
+  });
+
+  function _ixTourStep(lw, i) {
+    var data = _ixJSON(lw, '[data-tour-data]') || [];
+    var st = data[i]; if (!st) return;
+    lw.setAttribute('data-tour-i', String(i));
+    var tip = lw.querySelector('[data-tour-tip]');
+    tip.querySelector('[data-tour-count]').textContent = 'Step ' + (i + 1) + ' of ' + data.length + (st.label ? ' · ' + st.label : '');
+    tip.querySelector('[data-tour-text]').textContent = st.text || '';
+    tip.querySelector('[data-tour-next]').textContent = (i + 1 >= data.length) ? 'Done' : 'Next';
+  }
+  function _ixTourEnd(lw) {
+    var tip = lw.querySelector('[data-tour-tip]'); if (tip) tip.hidden = true;
+    var st = lw.querySelector('[data-tour-start]'); if (st) st.hidden = false;
+  }
+
+  function _ixSfSync(sfw) {
+    var rows = Array.prototype.slice.call(sfw.querySelectorAll('.ixsf-item'));
+    var done = 0, ok = true;
+    // Sequential rule: a row is unlocked only when every row before it is done.
+    rows.forEach(function (r2) {
+      r2.classList.toggle('locked', !ok);
+      if (r2.classList.contains('done')) done++;
+      else ok = false;
+    });
+    var gate = sfw.querySelector('[data-sf-gate]');
+    if (gate) {
+      var all = done === rows.length;
+      gate.classList.toggle('locked', !all);
+      var note = gate.querySelector('[data-sf-gatenote]');
+      if (note) note.textContent = all ? (gate.getAttribute('data-open-text') || 'Gate passed — you may proceed.') : (gate.getAttribute('data-locked-text') || '');
+    }
+    var c = sfw.querySelector('[data-sf-count]');
+    if (c) c.textContent = done + ' / ' + rows.length;
+  }
+
+  // KPI dashboard chart drawing.
+  window._ixKpiDraw = function (kw, gi) {
+    var data = _ixJSON(kw, '[data-kpi-data]') || [];
+    var k = data[gi]; if (!k) return;
+    var showTY = kw.querySelector('[data-kty]').classList.contains('on');
+    var showSTLY = kw.querySelector('[data-kstly]').classList.contains('on');
+    kw.querySelector('[data-kpi-name]').textContent = k.name || '';
+    kw.querySelector('[data-kpi-sub]').textContent = (k.src ? 'Data source: ' + k.src : '') + (k.unit ? ' · ' + k.unit : '');
+    var labels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'].slice(0, Math.max(k.ty.length, k.ly.length));
+    var series = [];
+    if (showTY && k.ty.length > 1) series.push({ name: 'This year', color: '#B59060', values: k.ty, dots: true });
+    if (showSTLY && k.ly.length > 1) series.push({ name: 'Same time last year', color: '#A89F92', values: k.ly, dash: true });
+    kw.querySelector('[data-kpi-chart]').innerHTML = _ixTrendSVG({ labels: labels, series: series, target: k.target }, 640, 260);
+    var last = k.ty.length ? k.ty[k.ty.length - 1] : null;
+    var prev = k.ty.length > 1 ? k.ty[k.ty.length - 2] : null;
+    var ly = k.ly.length ? k.ly[k.ly.length - 1] : null;
+    var set = function (vSel, dSel, v, d) { var n = kw.querySelector(vSel); if (n) n.textContent = v; var n2 = kw.querySelector(dSel); if (n2) n2.textContent = d || ''; };
+    set('[data-kpi-s1]', '[data-kpi-s1d]', last != null ? last : '—', 'This year');
+    set('[data-kpi-s2]', '[data-kpi-s2d]', (last != null && prev != null) ? ((last - prev >= 0 ? '+' : '') + (last - prev)) : '—', 'Month-on-month');
+    set('[data-kpi-s3]', '[data-kpi-s3d]', (last != null && ly != null) ? ((last - ly >= 0 ? '+' : '') + (last - ly)) : '—', ly != null ? 'Same time last year · ' + ly : '');
+  };
+  // Draw the initially selected KPI in every dashboard after each render.
+  function _ixKpiInit() {
+    document.querySelectorAll('.pb-ixkpi').forEach(function (kw) {
+      if (kw.getAttribute('data-kpi-init')) return;
+      kw.setAttribute('data-kpi-init', '1');
+      _ixKpiDraw(kw, 0);
+    });
+  }
+  if (typeof MutationObserver !== 'undefined') {
+    new MutationObserver(function () { _ixKpiInit(); }).observe(document.documentElement, { childList: true, subtree: true });
+  }
+  document.addEventListener('DOMContentLoaded', _ixKpiInit);
+}
+

@@ -57,8 +57,414 @@
     { v: 'beforeafter', l: 'Before / after' },
     { v: 'heading', l: 'Heading' }, { v: 'statband', l: 'Stat / KPI band' },
     { v: 'gauge', l: 'Gauge / maturity meter' }, { v: 'pyramid', l: 'Hierarchy / pyramid' },
-    { v: 'wheel', l: 'Radial lifecycle wheel' }
+    { v: 'wheel', l: 'Radial lifecycle wheel' },
+    { v: 'ix', l: 'Interactive element (17 kinds)' }
   ];
+
+  // Interactive elements (s:'ix') — 17 renderer kinds. Kind picker + starter
+  // templates here; the renderers live in preview-engine/app.js (and the
+  // mirrored player/app.js).
+  var IX_KINDS = [
+    { v: 'processflow', l: '1 · Decision & exception logic (step pills + branches)' },
+    { v: 'horizons',    l: '2 · Horizon stepper / journey map band' },
+    { v: 'legendtour',  l: '3 · Legend panel + onboarding tooltip tour' },
+    { v: 'flipcards',   l: '4 · Principle flip cards' },
+    { v: 'mixbars',     l: '5 · Stacked-bar mix explorer' },
+    { v: 'xtable',      l: '6 · Interactive table explorer (sort + filter)' },
+    { v: 'benchdash',   l: '7 · Benchmark dashboard' },
+    { v: 'alloc',       l: '8 · Discount allocation chart' },
+    { v: 'tabx',        l: '9 · Tabbed data explorer' },
+    { v: 'cardwall',    l: '10 · Opportunity card wall' },
+    { v: 'scorecard',   l: '11 · Assessment scorecard / rubric' },
+    { v: 'typedist',    l: '12 · Count / distribution chart (toggle)' },
+    { v: 'stageflow',   l: '13 · Stage step flow + checklists (gated)' },
+    { v: 'dlcheck',     l: '14 · Downloadable template + guided checklist' },
+    { v: 'testline',    l: '15 · Test-design timeline' },
+    { v: 'eventcal',    l: '16 · Event calendar timeline' },
+    { v: 'kpidash',     l: '17 · KPI dashboard with STLY toggle' }
+  ];
+  var IX_TEMPLATES = {
+    processflow: { steps: [
+      { label: 'Current situation and diagnosis', sub: 'Always start here', title: 'Outline the reasons', text: 'Describe the situation.', example: '' },
+      { label: 'Mitigation actions', sub: 'Then act', title: 'Develop an action plan', text: 'Act on findings.', branches: [{ label: 'Branch A', text: '' }] },
+      { label: 'Accountability tracker', sub: 'Track owners', title: 'Assign owners', text: 'Track owners.' }] },
+    horizons: { stages: [
+      { label: 'Kick-off', dur: '4 weeks', text: '' }, { label: 'Baselining', dur: '4 weeks', gate: 'Gate', text: '' },
+      { label: 'Assess', dur: '4 weeks', text: '' }, { label: 'Track', dur: '3–6 months', text: '' }],
+      bands: [{ label: 'Phase one', from: 0, to: 1 }, { label: 'Phase two', from: 2, to: 3 }] },
+    legendtour: { title: 'How to read this playbook',
+      legend: [{ label: 'Section', text: '', color: '#C07A3E' }, { label: 'Gate', text: 'a checklist must be completed', color: '#4E7A6B' }],
+      tour: [{ label: 'Stages', text: 'Each stage shows its owner and timing.' }, { label: 'Gate', text: 'The gate is a hard stop.' }] },
+    flipcards: { cards: [
+      { num: '01', title: 'Position in public', backLabel: 'Principle 01', back: 'Maintain the competitive price positioning in the open market.' },
+      { num: '02', title: 'Every discount needs a fence', backLabel: 'Principle 02', back: 'Discounts are accompanied by an appropriate fence.', chips: ['Advance booking windows', 'Length of stay'] }] },
+    mixbars: { legend: [{ label: 'Package', color: '#A4523F' }, { label: 'Offers', color: '#C07A3E' }, { label: 'Retail', color: '#4E7A6B' }],
+      rows: [{ label: 'Row one', meta: 'ADR 1,240 · 860 room nights', segs: [55, 20, 25], detail: '' }], note: '' },
+    xtable: { cols: ['Section', '#', 'Opportunity', 'Owner'], rows: [['1', '1', 'First row', 'Owner']], filterLabel: '' },
+    benchdash: { kpis: [{ label: 'RGI', value: '97', sub: 'vs compset', down: true, bar: 40 }],
+      trend: { title: 'Index evolution by month', sub: 'this year vs STLY', labels: ['J','F','M','A','M','J','J','A','S','O','N','D'],
+        series: [{ name: 'This year', color: '#A4523F', values: [100,101,99,97,95,96,93,92,95,98,100,101] },
+                 { name: 'STLY', color: '#6b625a', dash: true, values: [102,102,101,101,100,101,100,100,101,101,102,103] }] },
+      tips: [{ label: '01 · Tip', title: 'Tip title', text: '' }] },
+    alloc: { buildTitle: 'Building the total benefits',
+      parts: [{ label: 'USD credit', value: 100, color: '#B59060' }, { label: 'Club benefits access', value: 50, color: '#4E7A6B' }],
+      total: { label: 'Total benefits allocated', text: 'USD 150' },
+      quality: { eyebrow: 'Package "quality"', value: 12, display: '≈ 12%', text: '' },
+      steps: [{ label: 'Step 1', text: '' }] },
+    tabx: { tabs: [{ label: 'Tab one', usedin: '', title: 'Tab one', text: '', url: '', linkLabel: '' }, { label: 'Tab two', usedin: '', title: 'Tab two', text: '' }] },
+    cardwall: { legend: [{ label: 'Theme', color: '#C07A3E' }], cards: [
+      { num: 'Opportunity 1', title: 'First opportunity', owner: 'Owner: …', back: '', steps: ['Assess', 'Adjust', 'Test & rollout', 'Track'], themeColor: '#C07A3E' }] },
+    scorecard: { taskCol: 'Process step · Task', dims: ['Dimension 1', 'Dimension 2'], scaleMax: 4,
+      tasks: [{ name: 'Task one', covers: '' }], totalLabel: 'Overall score', note: '' },
+    typedist: { toggle: { a: 'This year', b: 'STLY' },
+      rows: [{ label: 'Run of House', a: 34, b: 30, suffix: '% of room nights', color: '#B59060' }], note: '' },
+    stageflow: { cid: '', items: [
+      { label: 'Action 1', text: '' }, { label: 'Action 2', text: '' }, { label: 'Action 3', text: '' }],
+      gateText: 'Gate — signed off', gateLocked: 'You cannot proceed without this.', gateOpen: 'Gate passed — you may proceed.' },
+    dlcheck: { file: { title: 'Companion workbook', meta: 'Excel workbook', text: '', url: '', button: 'Download workbook' },
+      listTitle: 'Guided checklist', items: [{ text: 'First checklist item', tag: '' }] },
+    testline: { phases: [
+      { num: 2, label: 'Weeks · Baseline', text: '', tag: '2 week baseline', color: '#8a8378' },
+      { num: 3, label: 'Weeks · Test', text: '', tag: '3 week test', color: '#B59060' },
+      { num: 2, label: 'Weeks · Post-test', text: '', tag: '2 week post-test baseline', color: '#4E7A6B' }],
+      axis: { from: 'Stay period — not booking period', mid: 'Week 0', to: 'Week 7' },
+      cards: [{ label: 'Do not test', text: '', tone: 'warn' }] },
+    eventcal: { pins: [
+      { at: 'Sep', label: 'Budget', title: 'September budget', bullets: ['Set special event pricing strategy'] },
+      { at: '-90 d', label: 'Pre-peak', title: 'Pre-peak period', bullets: ['Review policies'] }],
+      end: { date: '25 Dec', label: 'Stay date' }, exception: '', exceptionLabel: '' },
+    kpidash: { cats: [{ label: 'Category', kpis: [
+      { name: 'KPI one', src: 'D360', unit: 'Index', target: 100,
+        ty: [98,99,101,100,102,104,103,105,106,108,107,109], ly: [97,98,99,99,100,101,101,102,103,104,104,105] }] }] }
+  };
+  // ---- Structured form specs for the 17 interaction kinds ------------------
+  // Each entry: { k: 'fieldKey', l: 'Label', t: 'text'|'area'|'num'|'check'|
+  // 'color'|'select'|'csv'|'lines'|'rowscsv'|'group'|'list', ... }.
+  // Rendered by ixField() below — no raw JSON needed for normal editing.
+  function ixNameOf(item) { return (item && (item.label || item.title || item.name)) || 'Item'; }
+
+  var IX_FORMS = {
+    processflow: [
+      { t: 'list', k: 'steps', l: 'Steps', addLabel: 'Add step',
+        make: function () { return { label: 'New step', sub: '', title: '', text: '', example: '' }; },
+        fields: [
+          { k: 'label', l: 'Step name' },
+          { k: 'sub', l: 'Small label above the name', tip: 'e.g. "Always start here"' },
+          { k: 'title', l: 'Detail panel — title' },
+          { k: 'text', l: 'Detail panel — text', t: 'area' },
+          { k: 'example', l: 'Worked example (optional)', t: 'area' },
+          { t: 'list', k: 'branches', l: 'Branches / exceptions (optional)', addLabel: 'Add branch',
+            make: function () { return { label: 'Branch', text: '' }; },
+            fields: [{ k: 'label', l: 'Branch label' }, { k: 'text', l: 'Branch text', t: 'area' }] }
+        ] }
+    ],
+    horizons: [
+      { t: 'list', k: 'stages', l: 'Stages (left to right)', addLabel: 'Add stage',
+        make: function () { return { label: 'Stage', dur: '', gate: '', text: '' }; },
+        fields: [
+          { k: 'label', l: 'Stage name' },
+          { k: 'dur', l: 'Duration label', tip: 'e.g. "4 weeks"' },
+          { k: 'gate', l: 'Gate label (optional)', tip: 'e.g. "Gate" — shows a pill under the stage' },
+          { k: 'text', l: 'Detail text', t: 'area' }
+        ] },
+      { t: 'list', k: 'bands', l: 'Journey bands (optional)', addLabel: 'Add band',
+        make: function () { return { label: 'Band', from: 0, to: 1 }; },
+        fields: [
+          { k: 'label', l: 'Band label' },
+          { k: 'from', l: 'From stage #', t: 'num', tip: 'Stage positions count from 0' },
+          { k: 'to', l: 'To stage #', t: 'num' }
+        ] }
+    ],
+    legendtour: [
+      { k: 'title', l: 'Panel title' },
+      { t: 'list', k: 'legend', l: 'Legend entries', addLabel: 'Add entry',
+        make: function () { return { label: 'Entry', text: '', color: '#C07A3E' }; },
+        fields: [{ k: 'label', l: 'Label' }, { k: 'text', l: 'Explanation', t: 'area' }, { k: 'color', l: 'Colour', t: 'color' }] },
+      { t: 'list', k: 'tour', l: 'Tour steps (the tooltip walkthrough)', addLabel: 'Add tour step',
+        make: function () { return { label: 'Step', text: '' }; },
+        fields: [{ k: 'label', l: 'Step title' }, { k: 'text', l: 'Step text', t: 'area' }] }
+    ],
+    flipcards: [
+      { t: 'list', k: 'cards', l: 'Cards', addLabel: 'Add card',
+        make: function () { return { num: String(Math.floor(Math.random() * 90) + 10), title: 'New card', backLabel: '', back: '', chips: [] }; },
+        fields: [
+          { k: 'num', l: 'Number', tip: 'e.g. 01' },
+          { k: 'title', l: 'Front — title' },
+          { k: 'backLabel', l: 'Back — small label' },
+          { k: 'back', l: 'Back — text', t: 'area' },
+          { k: 'chips', l: 'Chips on the back (comma separated)', t: 'csv' }
+        ] }
+    ],
+    cardwall: [
+      { t: 'list', k: 'legend', l: 'Theme legend (optional)', addLabel: 'Add legend entry',
+        make: function () { return { label: 'Theme', color: '#C07A3E' }; },
+        fields: [{ k: 'label', l: 'Label' }, { k: 'color', l: 'Colour', t: 'color' }] },
+      { t: 'list', k: 'cards', l: 'Opportunity cards', addLabel: 'Add card',
+        make: function () { return { num: 'Opportunity', title: 'New opportunity', owner: '', back: '', steps: [], themeColor: '#C07A3E' }; },
+        fields: [
+          { k: 'num', l: 'Eyebrow', tip: 'e.g. Opportunity 1' },
+          { k: 'title', l: 'Front — title' },
+          { k: 'owner', l: 'Front — owner line' },
+          { k: 'back', l: 'Back — text', t: 'area' },
+          { k: 'steps', l: 'Back — steps (comma separated)', t: 'csv' },
+          { k: 'themeColor', l: 'Theme colour', t: 'color' }
+        ] }
+    ],
+    mixbars: [
+      { t: 'list', k: 'legend', l: 'Segment legend', addLabel: 'Add segment',
+        make: function () { return { label: 'Segment', color: '#4E7A6B' }; },
+        fields: [{ k: 'label', l: 'Label' }, { k: 'color', l: 'Colour', t: 'color' }] },
+      { t: 'list', k: 'rows', l: 'Rows', addLabel: 'Add row',
+        make: function () { return { label: 'New row', meta: '', segs: [50, 50], detail: '' }; },
+        fields: [
+          { k: 'label', l: 'Row label' },
+          { k: 'meta', l: 'Meta line', tip: 'e.g. ADR 1,240 · 860 room nights' },
+          { k: 'segs', l: 'Segment values (comma separated)', t: 'csv', num: true, tip: 'One value per legend segment, in the same order' },
+          { k: 'detail', l: 'Detail text (shown when the row is clicked)', t: 'area' }
+        ] },
+      { k: 'note', l: 'Note under the chart', t: 'area' }
+    ],
+    xtable: [
+      { k: 'cols', l: 'Column headers (comma separated)', t: 'csv' },
+      { k: 'rows', l: 'Rows', t: 'rowscsv', tip: 'One row per line — separate cells with |' },
+      { k: 'filterLabel', l: 'Filter placeholder', tip: 'e.g. "Filter opportunities…"' }
+    ],
+    benchdash: [
+      { t: 'list', k: 'kpis', l: 'KPI cards', addLabel: 'Add KPI',
+        make: function () { return { label: 'KPI', value: '', sub: '', down: false, bar: 50 }; },
+        fields: [
+          { k: 'label', l: 'Label' }, { k: 'value', l: 'Value' }, { k: 'sub', l: 'Sub-line' },
+          { k: 'down', l: 'Trending down (red)', t: 'check' },
+          { k: 'bar', l: 'Bar fill (0–100)', t: 'num' }
+        ] },
+      { t: 'group', k: 'trend', l: 'Trend chart', fields: [
+        { k: 'title', l: 'Chart title' }, { k: 'sub', l: 'Chart sub-line' },
+        { k: 'labels', l: 'X-axis labels (comma separated)', t: 'csv' },
+        { t: 'list', k: 'series', l: 'Series', addLabel: 'Add series',
+          make: function () { return { name: 'Series', color: '#A4523F', dash: false, values: [] }; },
+          fields: [
+            { k: 'name', l: 'Name' }, { k: 'color', l: 'Colour', t: 'color' },
+            { k: 'dash', l: 'Dashed line', t: 'check' },
+            { k: 'values', l: 'Values (comma separated)', t: 'csv', num: true }
+          ] }
+      ] },
+      { t: 'list', k: 'tips', l: 'Tips / watch-outs', addLabel: 'Add tip',
+        make: function () { return { label: '01 · Tip', title: 'Tip title', text: '' }; },
+        fields: [{ k: 'label', l: 'Small label' }, { k: 'title', l: 'Title' }, { k: 'text', l: 'Text', t: 'area' }] }
+    ],
+    alloc: [
+      { k: 'buildTitle', l: 'Left panel title' },
+      { t: 'list', k: 'parts', l: 'Benefit parts', addLabel: 'Add part',
+        make: function () { return { label: 'Benefit', value: 0, color: '#B59060' }; },
+        fields: [{ k: 'label', l: 'Label' }, { k: 'value', l: 'Value (USD)', t: 'num' }, { k: 'color', l: 'Colour', t: 'color' }] },
+      { t: 'group', k: 'total', l: 'Total line', fields: [{ k: 'label', l: 'Label' }, { k: 'text', l: 'Value text', tip: 'e.g. USD 150' }] },
+      { t: 'group', k: 'quality', l: 'Quality panel (dark box)', fields: [
+        { k: 'eyebrow', l: 'Eyebrow' }, { k: 'value', l: 'Percentage number', t: 'num' },
+        { k: 'display', l: 'Display text', tip: 'e.g. ≈ 12%' }, { k: 'text', l: 'Explanation', t: 'area' }
+      ] },
+      { t: 'list', k: 'steps', l: 'Steps under the chart', addLabel: 'Add step',
+        make: function () { return { label: 'Step', text: '' }; },
+        fields: [{ k: 'label', l: 'Step label' }, { k: 'text', l: 'Step text', t: 'area' }] }
+    ],
+    tabx: [
+      { t: 'list', k: 'tabs', l: 'Tabs', addLabel: 'Add tab',
+        make: function () { return { label: 'New tab', usedin: '', title: '', text: '', url: '', linkLabel: '' }; },
+        fields: [
+          { k: 'label', l: 'Tab label' },
+          { k: 'usedin', l: 'Small line above title', tip: 'e.g. Used in 5.2.5' },
+          { k: 'title', l: 'Title' },
+          { k: 'text', l: 'Body text', t: 'area' },
+          { k: 'url', l: 'Link URL (optional)' },
+          { k: 'linkLabel', l: 'Link label (optional)' }
+        ] }
+    ],
+    scorecard: [
+      { k: 'taskCol', l: 'First column header' },
+      { k: 'dims', l: 'Score dimensions (comma separated)', t: 'csv' },
+      { k: 'scaleMax', l: 'Maximum score per cell', t: 'num', tip: 'Usually 4' },
+      { k: 'totalLabel', l: 'Total label' },
+      { k: 'note', l: 'Note under the scorecard', t: 'area' },
+      { t: 'list', k: 'tasks', l: 'Tasks / rows', addLabel: 'Add task',
+        make: function () { return { name: 'New task', covers: '' }; },
+        fields: [{ k: 'name', l: 'Task name' }, { k: 'covers', l: 'What it covers', t: 'area' }] }
+    ],
+    typedist: [
+      { t: 'group', k: 'toggle', l: 'Toggle labels', fields: [
+        { k: 'a', l: 'First option', tip: 'e.g. This year' }, { k: 'b', l: 'Second option', tip: 'e.g. STLY' }
+      ] },
+      { t: 'list', k: 'rows', l: 'Rows', addLabel: 'Add row',
+        make: function () { return { label: 'New row', a: 0, b: 0, suffix: '', color: '#B59060' }; },
+        fields: [
+          { k: 'label', l: 'Label' },
+          { k: 'a', l: 'First value', t: 'num' }, { k: 'b', l: 'Second value', t: 'num' },
+          { k: 'suffix', l: 'Suffix', tip: 'e.g. % of room nights' },
+          { k: 'color', l: 'Colour', t: 'color' }
+        ] },
+      { k: 'note', l: 'Note under the chart', t: 'area' }
+    ],
+    stageflow: [
+      { t: 'list', k: 'items', l: 'Checklist actions (ticked in order)', addLabel: 'Add action',
+        make: function () { return { label: 'Action', text: '' }; },
+        fields: [{ k: 'label', l: 'Action label' }, { k: 'text', l: 'Action text', t: 'area' }] },
+      { k: 'gateText', l: 'Gate title' },
+      { k: 'gateLocked', l: 'Gate text while locked', t: 'area' },
+      { k: 'gateOpen', l: 'Gate text once unlocked', t: 'area' }
+    ],
+    dlcheck: [
+      { t: 'group', k: 'file', l: 'Downloadable file', fields: [
+        { k: 'title', l: 'File title' }, { k: 'meta', l: 'Meta line', tip: 'e.g. Excel workbook · 9 tabs' },
+        { k: 'text', l: 'Description', t: 'area' },
+        { k: 'url', l: 'File URL', tip: 'Leave blank until the file is uploaded' },
+        { k: 'button', l: 'Button label' }
+      ] },
+      { k: 'listTitle', l: 'Checklist title' },
+      { t: 'list', k: 'items', l: 'Checklist items', addLabel: 'Add item',
+        make: function () { return { text: 'New item', tag: '' }; },
+        fields: [{ k: 'text', l: 'Item text', t: 'area' }, { k: 'tag', l: 'Tag (optional)' }] }
+    ],
+    testline: [
+      { t: 'list', k: 'phases', l: 'Phases (left to right)', addLabel: 'Add phase',
+        make: function () { return { num: 1, label: 'Weeks · Phase', text: '', tag: '', color: '#B59060' }; },
+        fields: [
+          { k: 'num', l: 'Length (number)', t: 'num', tip: 'e.g. 2 for two weeks' },
+          { k: 'label', l: 'Label', tip: 'e.g. Weeks · Test' },
+          { k: 'text', l: 'Description', t: 'area' },
+          { k: 'tag', l: 'Tag on the bar' },
+          { k: 'color', l: 'Colour', t: 'color' }
+        ] },
+      { t: 'group', k: 'axis', l: 'Axis labels', fields: [
+        { k: 'from', l: 'Left label' }, { k: 'mid', l: 'Middle label' }, { k: 'to', l: 'Right label' }
+      ] },
+      { t: 'list', k: 'cards', l: 'Warning cards (optional)', addLabel: 'Add card',
+        make: function () { return { label: 'Note', text: '', tone: 'warn' }; },
+        fields: [
+          { k: 'label', l: 'Label' }, { k: 'text', l: 'Text', t: 'area' },
+          { k: 'tone', l: 'Tone', t: 'select', opts: [{ v: 'warn', l: 'Warning (red)' }, { v: '', l: 'Neutral' }] }
+        ] }
+    ],
+    eventcal: [
+      { t: 'list', k: 'pins', l: 'Timeline pins (left to right)', addLabel: 'Add pin',
+        make: function () { return { at: '', label: 'Pin', title: '', bullets: [] }; },
+        fields: [
+          { k: 'at', l: 'When', tip: 'e.g. Sep, -90 d, +1 mo' },
+          { k: 'label', l: 'Pin label' },
+          { k: 'title', l: 'Detail title' },
+          { k: 'bullets', l: 'Detail bullets (one per line)', t: 'lines' }
+        ] },
+      { t: 'group', k: 'end', l: 'End marker', fields: [
+        { k: 'date', l: 'Date', tip: 'e.g. 25 Dec' }, { k: 'label', l: 'Label', tip: 'e.g. Stay date' }
+      ] },
+      { k: 'exceptionLabel', l: 'Exception label', tip: 'e.g. Timing exception' },
+      { k: 'exception', l: 'Exception text (optional)', t: 'area' }
+    ],
+    kpidash: [
+      { t: 'list', k: 'cats', l: 'KPI categories', addLabel: 'Add category',
+        make: function () { return { label: 'Category', kpis: [] }; },
+        fields: [
+          { k: 'label', l: 'Category label' },
+          { t: 'list', k: 'kpis', l: 'KPIs in this category', addLabel: 'Add KPI',
+            make: function () { return { name: 'New KPI', src: '', unit: 'Index', target: 100, ty: [], ly: [] }; },
+            fields: [
+              { k: 'name', l: 'KPI name' },
+              { k: 'src', l: 'Data source', tip: 'e.g. D360' },
+              { k: 'unit', l: 'Unit' },
+              { k: 'target', l: 'Target line', t: 'num' },
+              { k: 'ty', l: 'This year — monthly values (comma separated)', t: 'csv', num: true },
+              { k: 'ly', l: 'Last year (STLY) — monthly values', t: 'csv', num: true }
+            ] }
+        ] }
+    ]
+  };
+
+  function ixLoadStarter(it) {
+    var tpl = IX_TEMPLATES[it.kind] || {};
+    Object.keys(it).forEach(function (k) { if (['s', 'name', 'head', 'kind'].indexOf(k) === -1) delete it[k]; });
+    Object.keys(tpl).forEach(function (k) { it[k] = JSON.parse(JSON.stringify(tpl[k])); });
+  }
+
+  // Schema-driven field renderer — shared by top-level fields, groups and
+  // inline list rows so every kind gets real form controls.
+  function ixField(box, obj, f) {
+    if (!f) return;
+    if (f.t === 'group') {
+      if (!obj[f.k] || typeof obj[f.k] !== 'object' || Array.isArray(obj[f.k])) obj[f.k] = {};
+      box.appendChild(sectionLabel(f.l));
+      (f.fields || []).forEach(function (sf) { ixField(box, obj[f.k], sf); });
+      return;
+    }
+    if (f.t === 'list') {
+      if (!Array.isArray(obj[f.k])) obj[f.k] = [];
+      box.appendChild(sectionLabel(f.l));
+      renderRepeatable(box, obj[f.k], {
+        nameOf: f.nameOf || ixNameOf,
+        addLabel: f.addLabel, make: f.make,
+        onChange: function () {},
+        inlineEdit: f.fields ? function (item, wrap) {
+          (f.fields || []).forEach(function (sf) { ixField(wrap, item, sf); });
+        } : null
+      });
+      return;
+    }
+    if (f.t === 'csv') {
+      var arr = Array.isArray(obj[f.k]) ? obj[f.k] : [];
+      box.appendChild(textField(f.l, arr.join(', '), function (v) {
+        obj[f.k] = v.split(',').map(function (s) { s = s.trim(); return f.num ? (parseFloat(s) || 0) : s; })
+          .filter(function (s, i, a) { return f.num ? (i < a.length) : s !== ''; });
+        touch();
+      }, f.tip));
+      return;
+    }
+    if (f.t === 'lines') {
+      var ls = Array.isArray(obj[f.k]) ? obj[f.k] : [];
+      box.appendChild(textField(f.l, ls.join('\n'), function (v) {
+        obj[f.k] = v.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+        touch();
+      }, f.tip || 'One per line.', true));
+      return;
+    }
+    if (f.t === 'rowscsv') {
+      var rows = Array.isArray(obj[f.k]) ? obj[f.k] : [];
+      box.appendChild(textField(f.l, rows.map(function (r) { return (Array.isArray(r) ? r : [r]).join(' | '); }).join('\n'), function (v) {
+        obj[f.k] = v.split('\n')
+          .map(function (ln) { return ln.split('|').map(function (c) { return c.trim(); }); })
+          .filter(function (r) { return r.join('').trim() !== ''; });
+        touch();
+      }, f.tip || 'One row per line — separate cells with |', true));
+      return;
+    }
+    if (f.t === 'check') { box.appendChild(checkField(f.l, !!obj[f.k], function (v) { obj[f.k] = v; touch(); })); return; }
+    if (f.t === 'num') {
+      box.appendChild(textField(f.l, obj[f.k] == null ? '' : String(obj[f.k]), function (v) {
+        obj[f.k] = v.trim() === '' ? null : (parseFloat(v) || 0); touch();
+      }, f.tip));
+      return;
+    }
+    if (f.t === 'select') { box.appendChild(selectField(f.l, obj[f.k] || '', f.opts || [], function (v) { obj[f.k] = v; touch(); })); return; }
+    if (f.t === 'color') {
+      var wrap = el('div', { class: 'field' }, [el('label', {}, [f.l])]);
+      var row = el('div', { style: 'display:flex;gap:8px;align-items:center;' });
+      var hexOk = function (v) { return /^#[0-9a-fA-F]{6}$/.test(v || ''); };
+      var cp = el('input', { type: 'color', value: hexOk(obj[f.k]) ? obj[f.k] : '#B59060',
+        style: 'width:44px;height:34px;padding:2px;border:1px solid var(--line);background:var(--paper);border-radius:4px;cursor:pointer;' });
+      var tx = el('input', { type: 'text', value: obj[f.k] || '', placeholder: '#B59060', style: 'flex:1;' });
+      cp.addEventListener('input', function () { tx.value = cp.value; obj[f.k] = cp.value; touch(); });
+      tx.addEventListener('input', function () { obj[f.k] = tx.value.trim(); if (hexOk(tx.value.trim())) cp.value = tx.value.trim(); touch(); });
+      row.appendChild(cp); row.appendChild(tx); wrap.appendChild(row); box.appendChild(wrap);
+      return;
+    }
+    // text (default) / area
+    box.appendChild(textField(f.l, obj[f.k] == null ? '' : String(obj[f.k]), function (v) { obj[f.k] = v; touch(); }, f.tip, f.t === 'area'));
+  }
+
+  function ixRenderForm(box, it) {
+    var spec = IX_FORMS[it.kind] || [];
+    if (!spec.length) {
+      box.appendChild(el('div', { class: 'note', text: 'No form for this kind yet — use the raw JSON below.' }));
+      return;
+    }
+    spec.forEach(function (f) { ixField(box, it, f); });
+  }
+
 
   // =========================================================================
   // Boot
@@ -1480,7 +1886,13 @@
           { label: 'Stage three', text: '' }, { label: 'Stage four', text: '' }
         ] });
         touch(); renderInspector();
-      } }, ['+ Add wheel'])
+      } }, ['+ Add wheel']),
+      el('button', { class: 'btn ghost', onclick: function () {
+        var item = { s: 'ix', kind: 'processflow', name: 'Interactive element' };
+        ixLoadStarter(item); // arrives with working example content — ready immediately
+        itemsArr.push(item);
+        touch(); renderInspector();
+      } }, ['+ Add interactive'])
     ]);
   }
 
@@ -1534,6 +1946,40 @@
     box.appendChild(selectField('Type', it.s || 'policy', ITEM_SYMBOLS, function (v) { it.s = v; touch(); renderInspector(); }));
     box.appendChild(textField('Name', it.name || '', function (v) { it.name = v; touch(); }));
     box.appendChild(textField('Heading above element (optional)', it.head || '', function (v) { it.head = v; touch(); }, 'Shown above this element on the page — leave blank for no heading.'));
+    if (it.s === 'ix') {
+      if (!it.kind || IX_KINDS.filter(function (k) { return k.v === it.kind; }).length === 0) it.kind = 'processflow';
+      box.appendChild(selectField('Interaction kind', it.kind, IX_KINDS, function (v) {
+        it.kind = v;
+        ixLoadStarter(it); // switch kind = ready-made example content, immediately usable
+        touch(); renderInspector();
+      }));
+      box.appendChild(el('button', { class: 'btn ghost', onclick: function () {
+        if (!confirm('Replace this element\u2019s content with the starter example?')) return;
+        ixLoadStarter(it); touch(); renderInspector();
+        toast('Starter content loaded \u2014 edit the fields below.', 'ok');
+      } }, ['Reset to starter content']));
+      ixRenderForm(box, it);
+      // Advanced: raw JSON for edge cases the form doesn't cover.
+      var det = el('details', { style: 'margin-top:16px;border-top:1px solid var(--line);padding-top:10px;' });
+      det.appendChild(el('summary', { style: 'cursor:pointer;font-size:12px;color:var(--ink-mute);letter-spacing:.04em;' }, ['Advanced \u2014 edit raw JSON']));
+      var jsonTa = el('textarea', { class: 'in', style: 'min-height:160px;margin-top:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;white-space:pre;' });
+      var snapshot = {};
+      Object.keys(it).forEach(function (k) { if (['s', 'name', 'head', 'kind'].indexOf(k) === -1) snapshot[k] = it[k]; });
+      jsonTa.value = JSON.stringify(snapshot, null, 2);
+      det.appendChild(jsonTa);
+      det.appendChild(el('button', { class: 'btn', style: 'margin-top:6px;', onclick: function () {
+        var parsed;
+        try { parsed = JSON.parse(jsonTa.value); }
+        catch (err) { toast('Invalid JSON: ' + err.message, 'err'); return; }
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) { toast('JSON must be an object { ... }', 'err'); return; }
+        Object.keys(it).forEach(function (k) { if (['s', 'name', 'head', 'kind'].indexOf(k) === -1) delete it[k]; });
+        Object.keys(parsed).forEach(function (k) { it[k] = parsed[k]; });
+        touch(); renderInspector();
+        toast('Interaction updated.', 'ok');
+      } }, ['Apply JSON']));
+      box.appendChild(det);
+      return;
+    }
     if (it.s === 'image' || it.s === 'video') {
       box.appendChild(el('div', { class: 'note', text: 'File: ' + (it.url || '(none)') }));
       box.appendChild(el('button', { class: 'btn', onclick: function () {
@@ -1932,6 +2378,9 @@
     }
     box.appendChild(textField('Description', it.blurb || '', function (v) { it.blurb = v; touch(); }, '', true));
     box.appendChild(linkField('Link (URL)', it.url || '', function (v) { it.url = v; touch(); }));
+    box.appendChild(checkField('Show the resource link in the expanded panel', !it.hideLink, function (v) {
+      it.hideLink = !v; touch();
+    }));
   }
 
   function symbolLabel(s) {
