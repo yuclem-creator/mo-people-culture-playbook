@@ -32,10 +32,36 @@
   var params = new URLSearchParams(global.location.search);
   var SLUG = (params.get('slug') || '').trim();
   var SRC = (params.get('src') || '').trim(); // optional full contentUrl override
-  var STAGE = (params.get('stage') || '').trim(); // 'draft' opens the work-in-progress lane
+  var STAGE = (params.get('stage') || '').trim(); // 'draft' forces the work-in-progress lane
   var PREFIX = STAGE === 'draft' ? 'drafts/' : 'published/';
-  var CONTENT_BASE = CFG.contentBase || (BUCKET_BASE + PREFIX);
-  var LS_KEY = 'mo_player_cache_v1_' + PREFIX + (SLUG || SRC);
+
+  // Open must show the SAME content as Edit: a playbook that was published
+  // once keeps library status 'published' forever, but its newest content
+  // usually lives in the drafts lane (every Studio Save/autosave lands there).
+  // Both lanes are public reads, so unless the caller explicitly pinned a
+  // stage we probe both version.json files and serve the NEWER lane. Probe
+  // failure falls back to the published lane (the historical default).
+  function resolvePrefix() {
+    if (SRC || STAGE) return Promise.resolve(PREFIX);
+    function probe(lane) {
+      return fetchWithTimeout(
+        BUCKET_BASE + lane + '/' + encodeURIComponent(SLUG) + '/version.json?t=' + Date.now(),
+        TIMEOUT_MS
+      ).then(function (v) { return v && v.publishedAt ? Date.parse(v.publishedAt) : 0; })
+       .catch(function () { return 0; });
+    }
+    return Promise.all([probe('drafts'), probe('published')]).then(function (ts) {
+      if (ts[0] > ts[1]) { log('lane: drafts (newer than published)'); return 'drafts/'; }
+      return 'published/';
+    });
+  }
+  // Filled by resolvePrefix() before any fetch/cache access.
+  var CONTENT_BASE = CFG.contentBase || null;
+  var LS_KEY = null;
+  function activatePrefix(prefix) {
+    if (!CONTENT_BASE) CONTENT_BASE = BUCKET_BASE + prefix;
+    LS_KEY = 'mo_player_cache_v1_' + prefix + (SLUG || SRC);
+  }
 
   function log(path, detail) {
     try { console.log('[player] source: ' + path + (detail ? ' — ' + detail : '')); } catch (e) {}
@@ -141,7 +167,11 @@
     var want = '';
     try {
       var q = params.get('lang');
-      want = (q || global.localStorage.getItem(LANG_LS_KEY) || '').trim();
+      // The reader stores its choice per playbook ('mo_pb_lang_<slug>',
+      // written by app.js switchPlaybookLang); the legacy origin-wide key is
+      // only a fallback for older sessions and is never written any more.
+      want = (q || global.localStorage.getItem(LANG_LS_KEY + '_' + SLUG) ||
+              global.localStorage.getItem(LANG_LS_KEY) || '').trim();
     } catch (e) {}
     if (!want) return null;
     for (var i = 0; i < langs.length; i++) if (langs[i].code === want) return langs[i].code;
@@ -222,15 +252,18 @@
       global.location.replace(HUB_URL);
       return;
     }
-    var url = contentUrl() + (contentUrl().indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
-    fetchWithTimeout(url, TIMEOUT_MS).then(function (pb) {
-      writeCache(pb);
-      bootWithLang(pb, 'network');
-    }).catch(function (err) {
-      console.warn('[player] network fetch failed (' + err.message + '); trying cache.');
-      var cached = readCache();
-      if (cached) { bootWithLang(cached, 'localStorage-cache'); return; }
-      showError();
+    resolvePrefix().then(function (prefix) {
+      activatePrefix(prefix);
+      var url = contentUrl() + (contentUrl().indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+      fetchWithTimeout(url, TIMEOUT_MS).then(function (pb) {
+        writeCache(pb);
+        bootWithLang(pb, 'network');
+      }).catch(function (err) {
+        console.warn('[player] network fetch failed (' + err.message + '); trying cache.');
+        var cached = readCache();
+        if (cached) { bootWithLang(cached, 'localStorage-cache'); return; }
+        showError();
+      });
     });
   }
 

@@ -234,14 +234,23 @@
   }
 
   function currentLang() {
-    if (global.MO_PB_LANG) return global.MO_PB_LANG;
+    // Only honour a language the playbook actually DECLARES — a stale stored
+    // choice must never repaint the entry overlay for a playbook that has no
+    // such language (the cross-playbook leak fixed in app.js).
+    var declared = {};
+    playbookLanguages().forEach(function (l) { if (l && l.code) declared[l.code] = true; });
+    function ok(c) { return !!c && !!declared[c]; }
+    if (ok(global.MO_PB_LANG)) return global.MO_PB_LANG;
     try {
       var q = new URLSearchParams(global.location.search).get('lang');
-      if (q) return q;
+      if (ok(q)) return q;
     } catch (e) {}
     try {
-      var saved = global.localStorage.getItem('mo_pb_lang');
-      if (saved) return saved;
+      var slug = (PB && PB.meta && PB.meta.slug) || 'default';
+      var saved = global.localStorage.getItem('mo_pb_lang_' + slug);
+      if (ok(saved)) return saved;
+      var legacy = global.localStorage.getItem('mo_pb_lang');
+      if (ok(legacy)) return legacy;
     } catch (e) {}
     return '';
   }
@@ -269,7 +278,10 @@
   }
 
   function switchLang(code) {
-    try { global.localStorage.setItem('mo_pb_lang', code); } catch (e) {}
+    try {
+      var slug = (PB && PB.meta && PB.meta.slug) || 'default';
+      global.localStorage.setItem('mo_pb_lang_' + slug, code); // per-playbook key
+    } catch (e) {}
     if (global.parent && global.parent !== global) {
       // Inside the Studio preview iframe — let the editor re-push the merged playbook.
       try { global.parent.postMessage({ type: 'preview-lang', lang: code }, '*'); } catch (e) {}

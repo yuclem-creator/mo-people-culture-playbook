@@ -185,7 +185,13 @@
         }
       } catch (e) { /* best-effort */ }
     }
-    return idbSet(keyFor('autosave'), rec).catch(function () { memFallback.blocked = true; });
+    return idbSet(keyFor('autosave'), rec).catch(function (e) {
+      memFallback.blocked = true;
+      // Do NOT swallow: the editor shows a visible warning when the browser
+      // refused to persist — a silent failure here used to look exactly like
+      // "saving stopped working" on that one browser.
+      throw e;
+    });
   };
 
   LocalFileAdapter.prototype.listSnapshots = function () {
