@@ -355,3 +355,174 @@ a{color:var(--gold)}
   .version-actions .btn{flex:1 1 auto;justify-content:center}
   .toast{max-width:calc(100vw - 24px)}
 }
+
+
+/* ============================================================================
+   VISUAL REDESIGN LAYER (approved mockups v2, 2026-08)
+   Presentation only — tokens, topbar chips, inspector cards, outline, modals.
+   No selector here changes behaviour; the engine DOM/JS contract is untouched.
+   ============================================================================ */
+:root{
+  --sage:#B7CDC2;
+  --sage-tint:#E9F1EC;
+  --ivory:#F7F4EE;
+  --hairline:#E4DECF;
+  --gold-deep:#8a6b3f;
+  --radius:12px;
+  --serif:Georgia,"Times New Roman",serif;
+}
+
+/* ---- Topbar: warm ivory bar, pill buttons, status chips ----------------- */
+.topbar{
+  height:64px;flex-basis:64px;gap:10px;padding:0 18px;
+  background:var(--ivory);border-bottom:1px solid var(--hairline);
+}
+.brand .title{font-family:var(--serif);font-weight:700;font-size:17px;letter-spacing:.01em}
+.brand{flex:0 0 auto}
+.brand .sub{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  max-width:210px;overflow:hidden;text-overflow:ellipsis}
+.topbar .doc-name{
+  border:1px solid transparent;background:transparent;color:var(--ink);
+  font-family:var(--serif);font-size:16px;max-width:260px;margin-left:14px;
+}
+.topbar .doc-name:hover{background:#fff;border-color:var(--hairline)}
+.topbar .doc-name:focus{background:#fff;border-color:var(--gold);border-radius:999px}
+
+.topbar .btn{border-radius:999px;padding:7px 16px;border-color:var(--hairline);background:#fff}
+.topbar .btn:hover{border-color:var(--gold)}
+.topbar .btn.primary{background:var(--gold);border-color:var(--gold);color:#fff}
+.topbar .btn.ghost{background:transparent;border-color:var(--hairline)}
+.export-seg .btn:first-child{border-radius:999px 0 0 999px}
+.export-seg .seg-caret{border-radius:0 999px 999px 0}
+
+/* Save-state pill (Saved / Editing… / browser-only warning) */
+.autosave{
+  font-size:12px;color:var(--ink-2);background:#fff;border:1px solid var(--hairline);
+  border-radius:999px;padding:6px 13px;gap:7px;
+}
+.autosave .dot{width:8px;height:8px}
+.autosave.saved{border-color:var(--sage);background:var(--sage-tint);color:#3f5a4d}
+.autosave.dirty{border-color:var(--gold-soft);background:#FBF4E6;color:var(--gold-deep)}
+
+/* NEW: "Last saved by X · 2h ago" chip */
+.savedby-chip{
+  font-size:12px;color:#3f5a4d;background:var(--sage-tint);
+  border:1px solid var(--sage);border-radius:999px;padding:6px 13px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:460px;flex:0 0 auto;
+}
+
+/* Signed-in chip (always visible: gold outline when in, muted when out) */
+.auth-chip{
+  font-size:12px;border-radius:999px;padding:6px 13px;white-space:nowrap;
+  display:flex;align-items:center;gap:6px;
+}
+.auth-chip.on{color:var(--gold-deep);background:#FBF7F0;border:1px solid var(--gold)}
+.auth-chip.on .who{color:var(--gold-deep);font-weight:600}
+.auth-chip.off{color:var(--ink-3);background:transparent;border:1px dashed var(--line-2)}
+.auth-chip button.linklike{font-size:12px}
+
+/* ---- Body columns -------------------------------------------------------- */
+.col-outline{background:#FBFAF6;border-right:1px solid var(--hairline)}
+.col-preview{background:#EAE6DC}
+.col-inspector{background:var(--ivory);border-left:1px solid var(--hairline)}
+.col-head{
+  background:transparent;border-bottom:1px solid var(--hairline);
+  letter-spacing:.14em;padding:14px 16px 10px;
+}
+.preview-toolbar{background:#E1DCd2;border-bottom:1px solid #d2ccc0}
+.preview-wrap{padding:22px}
+.preview-frame{border:1px solid var(--hairline);border-radius:10px;box-shadow:0 10px 34px rgba(35,35,35,.10)}
+
+/* ---- Outline tree -------------------------------------------------------- */
+.tree .node{border-radius:9px;padding:8px 10px}
+.tree .node.sel{background:var(--sage-tint);color:var(--ink);font-weight:600;
+  box-shadow:inset 0 0 0 1px var(--sage)}
+.tree .kids{border-left-color:var(--hairline)}
+.tree .node .badge{
+  font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);
+  border:1px solid var(--hairline);background:#fff;padding:1px 7px;border-radius:999px;
+}
+.tree-add{border-radius:12px;padding:11px 10px}
+.tree-add:hover{border-color:var(--gold);color:var(--gold-deep);background:#fff}
+
+/* ---- Inspector: card language ------------------------------------------- */
+.inspector{padding:18px 16px 80px}
+.insp-title{font-family:var(--serif);font-size:24px;font-weight:700;line-height:1.2;margin:2px 0 4px}
+.insp-crumb{margin-bottom:16px}
+.back-link{color:var(--gold-deep);font-size:12.5px}
+
+.card{
+  background:#fff;border:1px solid var(--hairline);border-radius:14px;
+  padding:16px 18px 10px;margin-bottom:16px;
+  box-shadow:0 1px 3px rgba(35,35,35,.04);
+}
+.card .section-label.card-head,
+.section-label.card-head{
+  margin:0 0 14px;padding-bottom:9px;border-bottom:1px solid var(--hairline);
+  font-size:10.5px;letter-spacing:.16em;color:var(--ink-3);
+}
+/* a section-label inside a card body (sub-groups) loses the double rule */
+.card .section-label:not(.card-head){
+  margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--hairline);
+  font-size:10px;
+}
+
+/* Fields */
+.field{margin-bottom:14px}
+.field > label{font-size:12px;color:var(--ink-2)}
+.field input[type=text],.field textarea,.field select{
+  border:1px solid var(--hairline);border-radius:10px;padding:9px 12px;background:#fff;
+}
+.field input[type=text]:focus,.field textarea:focus,.field select:focus{
+  border-color:var(--gold);box-shadow:0 0 0 3px rgba(181,144,96,.16)
+}
+
+/* Repeatable rows (Page sections / items) */
+.rep-item{
+  background:#fff;border:1px solid var(--hairline);border-radius:11px;padding:11px 12px;
+}
+.rep-item:hover{border-color:var(--gold)}
+.rep-item .rep-open{color:var(--gold-deep)}
+.add-btn{border-radius:11px;padding:10px;color:var(--ink-3)}
+.add-btn:hover{border-color:var(--gold);color:var(--gold-deep);background:#fff}
+
+/* Chips inside cards (e.g. type chips) */
+.chip{background:var(--sage-tint);color:#3f5a4d;border-radius:999px;padding:3px 10px}
+
+/* Action rows stay outside cards, pill buttons */
+.ch-actions{margin:4px 0 16px}
+.ch-actions .btn{border-radius:999px;border-color:var(--hairline)}
+.btn.danger:hover{border-color:var(--danger);color:var(--danger)}
+
+/* Media action rows inside paragraph fields → grouped, quieter */
+.media-actions .btn.ghost,.field .btn.ghost{
+  border:1px solid var(--hairline);border-radius:999px;background:#fff;
+  font-size:12px;padding:5px 12px;color:var(--ink-2);
+}
+.media-actions .btn.ghost:hover,.field .btn.ghost:hover{border-color:var(--gold);color:var(--gold-deep)}
+
+/* Notes */
+.note{border-radius:10px;border-color:var(--hairline);border-left-color:var(--gold)}
+
+/* ---- Modals -------------------------------------------------------------- */
+.modal{border-radius:16px;box-shadow:0 24px 70px rgba(35,35,35,.28)}
+.modal .m-head{font-family:var(--serif);font-size:20px;padding:20px 24px 16px;border-bottom:1px solid var(--hairline)}
+.modal .m-body{padding:20px 24px}
+.modal .m-foot{border-top:1px solid var(--hairline);padding:14px 24px}
+.modal .btn{border-radius:999px}
+.new-card{border-radius:12px;border-color:var(--hairline)}
+.new-card:hover{border-color:var(--gold);background:var(--ivory)}
+.version-row,.playbook-row{border-radius:11px;border-color:var(--hairline)}
+.signed-in-row{border-radius:11px;border-color:var(--hairline)}
+
+/* Toasts: pill */
+.toast{border-radius:999px;padding:10px 18px}
+
+/* Export menu */
+.export-menu{border-radius:12px;border-color:var(--hairline)}
+
+/* ---- Responsive additions ------------------------------------------------ */
+@media (max-width:900px){
+  .savedby-chip{order:11;flex:1 1 100%;max-width:none;text-align:right}
+  .auth-chip{order:12;flex:1 1 100%;justify-content:flex-end}
+}

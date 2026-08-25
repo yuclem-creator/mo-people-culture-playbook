@@ -673,6 +673,7 @@
         setPlaybook(pb);
         STORE.save(pb);
         lastAssetSig = assetSig();
+        noteSaved(by, at);
         var who = by ? ' (last saved by ' + by + (at ? ' · ' + new Date(at).toLocaleString() : '') + ')' : '';
         toast(extraNote || ('Loaded the latest cloud version of "' + (pb.meta.title || slug) + '"' + who + '.'), 'ok');
         return pb;
@@ -705,6 +706,7 @@
       p.then(function () {
         lastAssetSig = sig;
         cloudDirty = false; dirty = false;
+        noteSaved(session.user && session.user.email, Date.now());
         setAutosave('saved', 'Autosaved to cloud · ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       }).catch(function () {
         // stays dirty — next tick retries, but do not pretend it synced
@@ -921,6 +923,7 @@
           setPlaybook(pb);
           markSaved();
           lastAssetSig = assetSig();
+          noteSaved(laneBy && laneBy.publishedBy, laneAt || Date.now());
           var laneLabel = lane === 'drafts' ? 'draft' : 'published version';
           var who = laneBy && laneBy.publishedBy
             ? ' Last saved by ' + laneBy.publishedBy + (laneAt ? ' · ' + new Date(laneAt).toLocaleString() : '') + '.'
@@ -1243,12 +1246,32 @@
       box.appendChild(el('div', { class: 'empty', text: 'Select an item in the outline to edit its content.' }));
       return;
     }
-    if (SEL.kind === 'settings') return renderSettings(box);
-    if (SEL.kind === 'chapter') return renderChapterInspector(box, SEL);
-    if (SEL.kind === 'lifecycle-sub') return renderLifecycleSub(box, SEL);
-    if (SEL.kind === 'part-sub') return renderPartSub(box, SEL);
-    if (SEL.kind === 'section') return renderSection(box, SEL);
-    if (SEL.kind === 'item') return renderItem(box, SEL);
+    if (SEL.kind === 'settings') { renderSettings(box); groupInspectorCards(box); return; }
+    if (SEL.kind === 'chapter') { renderChapterInspector(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'lifecycle-sub') { renderLifecycleSub(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'part-sub') { renderPartSub(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'section') { renderSection(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'item') { renderItem(box, SEL); groupInspectorCards(box); return; }
+  }
+
+  // Presentation-only regrouping: everything a render* function emits between
+  // two .section-label markers is gathered into one white .card (the approved
+  // redesign's "Chapter hero / Opening words / Page sections" card language).
+  // The data model, field handlers and touch() calls are untouched.
+  function groupInspectorCards(box) {
+    var nodes = Array.prototype.slice.call(box.childNodes);
+    var card = null;
+    nodes.forEach(function (n) {
+      if (n.nodeType !== 1) return;
+      if (n.classList.contains('section-label') && !n.classList.contains('card-head')) {
+        card = el('div', { class: 'card' });
+        box.insertBefore(card, n);
+        n.classList.add('card-head');
+        card.appendChild(n);
+      } else if (card) {
+        card.appendChild(n);
+      }
+    });
   }
 
   function inspTitle(box, title, crumb, back) {
@@ -3689,6 +3712,7 @@
             toast('Saved · listed in the Library as Draft' + (dept ? ' · ' + dept : ''), 'ok');
             lastAssetSig = assetSig();
             cloudDirty = false;
+            noteSaved(session.user && session.user.email, Date.now());
             writeBackupFile();
             reportFailedAssets(res);
             // Slug changed on this save (collision guard)? Remove the stale
@@ -4174,21 +4198,56 @@
   // =========================================================================
   // Publish (Supabase) — login gate + upload flow
   // =========================================================================
+  // ---- "Last saved by" chip ------------------------------------------------
+  // Always-visible attribution for the most recent CLOUD save of this
+  // playbook — newest save wins, whoever made it. Fed by every path that
+  // loads or writes a cloud copy: lane loads, manual Save, cloud autosave,
+  // Publish, and version restore.
+  var lastSavedInfo = null; // { by: string|null, at: number(ms)|null }
+  function noteSaved(by, at) {
+    lastSavedInfo = { by: by || null, at: at || Date.now() };
+    renderSavedByChip();
+  }
+  function relTime(ms) {
+    var s = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+    if (s < 45) return 'just now';
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + ' min ago';
+    var h = Math.floor(m / 60);
+    if (h < 24) return h + 'h ago';
+    var d = Math.floor(h / 24);
+    if (d < 7) return d + 'd ago';
+    return new Date(ms).toLocaleDateString();
+  }
+  function renderSavedByChip() {
+    var chip = $('#savedByChip');
+    if (!chip) return;
+    if (!lastSavedInfo || !lastSavedInfo.at) { chip.style.display = 'none'; return; }
+    chip.style.display = '';
+    var who = lastSavedInfo.by || 'a teammate';
+    chip.textContent = 'Last saved by ' + who + ' · ' + relTime(lastSavedInfo.at);
+    chip.title = 'Most recent cloud save: ' + who + ' · ' + new Date(lastSavedInfo.at).toLocaleString() +
+      ' — the newest save always loads, whoever made it.';
+  }
+  setInterval(function () { if (lastSavedInfo) renderSavedByChip(); }, 60000);
+
   var _authSession = null;
   function renderAuthChip() {
     var chip = $('#authChip');
     if (!chip) return;
+    chip.innerHTML = '';
     if (_authSession && _authSession.user) {
-      chip.style.display = '';
-      chip.innerHTML = '';
-      chip.appendChild(el('span', {}, ['Signed in as ']));
+      chip.className = 'auth-chip on';
+      chip.appendChild(el('span', {}, ['Signed in · ']));
       chip.appendChild(el('span', { class: 'who', text: _authSession.user.email }));
       chip.appendChild(el('button', { class: 'linklike', onclick: function () {
         window.PlaybookPublish.signOut().then(function () { _authSession = null; renderAuthChip(); toast('Signed out', 'ok'); });
       } }, ['Sign out']));
     } else {
-      chip.style.display = 'none';
-      chip.innerHTML = '';
+      // Signed-out state stays VISIBLE (muted) — an author should never have
+      // to guess why their work is only kept in this browser.
+      chip.className = 'auth-chip off';
+      chip.appendChild(el('span', { text: 'Not signed in — saves stay in this browser' }));
     }
   }
   if (window.PlaybookPublish) {
@@ -4258,6 +4317,7 @@
     }).then(function (result) {
       busy(false);
       toast('Published “' + (PB.meta.title || slug) + '” · ' + result.assetCount + ' asset(s) uploaded', 'ok');
+      noteSaved(result.publishedBy || (session && session.user && session.user.email), Date.now());
       reportFailedAssets(result);
       if (PB.meta.lastSlug && PB.meta.lastSlug !== PB.meta.slug && window.PlaybookPublish.removeIndexEntry) {
         window.PlaybookPublish.removeIndexEntry(PB.meta.lastSlug, PB.meta.title, session);
@@ -4552,7 +4612,10 @@
       setPlaybook(row.data);
       scheduleAutosave();
       closeModal();
-      toast('Version restored into the editor', 'ok');
+      // Deliberately no noteSaved() here: restoring loads an OLD copy into
+      // the editor — the cloud's most recent save (what the chip reports)
+      // is unchanged until the author presses Save.
+      toast('Version restored into the editor — press Save to make it the current cloud version', 'ok');
     }).catch(function (e) {
       busy(false);
       toast('Restore failed: ' + ((e && e.message) || e), 'err');

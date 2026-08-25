@@ -1,0 +1,11 @@
+## 2026-08-25T01:48:05Z — python3 verifier/v1/test_storage.py — exit 0
+PASS P1 published lane not shown 
+PASS P1b string blurb renders as paragraph 
+PASS P1b no sec.blurb.map crash 
+PASS E1 step1 editor loads cloud V1 — docName=TITLE V1 CLOUD
+PASS E1 newer cloud draft beats stale local slot — docName=TITLE V2 CLOUD
+PASS E2 fresh browser loads latest cloud draft — docName=TITLE V2 CLOUD
+PASS P2 poisoned legacy lang key does not leak Chinese chrome — cjk=
+PASS P2 legacy key retired 
+
+9/9 passed
