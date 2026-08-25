@@ -1,6 +1,7 @@
 PASS R1 saved-by chip shows author — Last saved by emmawong@mohg.com · 21h ago
 PASS R1 saved-by chip shows relative time — Last saved by emmawong@mohg.com · 21h ago
 PASS R2 auth chip visible when signed out — Not signed in — saves stay in this browser
+Sign in
 PASS R3 chapter inspector grouped into cards — 3 cards, 3 heads
 PASS R3 field handler still writes through to the model 
 PASS R3 settings grouped into cards — 11 cards

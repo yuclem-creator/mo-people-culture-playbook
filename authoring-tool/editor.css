@@ -419,6 +419,8 @@ a{color:var(--gold)}
 .auth-chip.on{color:var(--gold-deep);background:#FBF7F0;border:1px solid var(--gold)}
 .auth-chip.on .who{color:var(--gold-deep);font-weight:600}
 .auth-chip.off{color:var(--ink-3);background:transparent;border:1px dashed var(--line-2)}
+.auth-chip.off.actionable{cursor:default}
+.auth-chip.off .linklike{color:var(--gold-deep);font-weight:600}
 .auth-chip button.linklike{font-size:12px}
 
 /* ---- Body columns -------------------------------------------------------- */

@@ -4244,10 +4244,16 @@
         window.PlaybookPublish.signOut().then(function () { _authSession = null; renderAuthChip(); toast('Signed out', 'ok'); });
       } }, ['Sign out']));
     } else {
-      // Signed-out state stays VISIBLE (muted) — an author should never have
-      // to guess why their work is only kept in this browser.
-      chip.className = 'auth-chip off';
+      // Signed-out state stays VISIBLE (muted) — and is itself the way back
+      // in: click it to open the sign-in dialog. An author should never have
+      // to hunt through Publish to understand why saves stay local.
+      chip.className = 'auth-chip off actionable';
+      chip.title = 'Click to sign in so your saves sync to the cloud';
       chip.appendChild(el('span', { text: 'Not signed in — saves stay in this browser' }));
+      chip.appendChild(el('button', { class: 'linklike', onclick: function () {
+        openLoginModal(function (s) { _authSession = s; renderAuthChip(); toast('Signed in — your saves will now sync to the cloud.', 'ok'); },
+          'Sign in to sync your saves');
+      } }, ['Sign in']));
     }
   }
   if (window.PlaybookPublish) {
@@ -4264,7 +4270,7 @@
     });
   }
 
-  function openLoginModal(onSignedIn) {
+  function openLoginModal(onSignedIn, title) {
     var body = el('div', { class: 'login-form' });
     var errBox = el('div', { class: 'form-error', style: 'display:none' });
     var emailInput = el('input', { type: 'email', placeholder: 'you@mandarinoriental.com', autocomplete: 'username' });
@@ -4296,7 +4302,7 @@
 
     passInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') attemptSignIn(); });
 
-    showModal('Sign in to publish', body, [
+    showModal(title || 'Sign in to publish', body, [
       { label: 'Cancel', onClick: closeModal },
       { label: 'Sign in', primary: true, onClick: attemptSignIn }
     ]);
