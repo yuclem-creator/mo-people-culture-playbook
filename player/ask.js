@@ -37,23 +37,36 @@
 
   function looksLikeFile(s) { return /\.(jpg|jpeg|png|webp|gif|svg|mp4|webm)$/i.test(String(s || '').trim()); }
 
-  // Items may be plain strings or resource objects like { s, name, url }.
-  function itemText(it) {
-    if (it == null) return '';
-    if (typeof it === 'string') return looksLikeFile(it) ? '' : it;
-    if (typeof it === 'object') {
+  function stripTags(s) { return String(s).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+  // Structural/presentational keys that must never enter the search index.
+  var SKIP_KEYS = { url: 1, s: 1, kind: 1, color: 1, themeColor: 1, weight: 1, variant: 1,
+                    id: 1, img: 1, src: 1, video: 1, poster: 1, from: 1, to: 1, type: 1 };
+
+  // Recursive text extraction — handles plain strings, resource objects
+  // ({ s, name, url }) and interactive elements (s:'ix') whose content lives
+  // in nested arrays (steps, stages, cards, rows, branches, legend…).
+  function deepText(v) {
+    if (v == null) return '';
+    if (typeof v === 'string') return looksLikeFile(v) ? '' : stripTags(v);
+    if (typeof v === 'number') return String(v);
+    if (Array.isArray(v)) return v.map(deepText).filter(Boolean).join(' ');
+    if (typeof v === 'object') {
       var parts = [];
-      ['name', 'h', 'b', 't', 'd', 'title', 'text', 'label', 'desc', 'quote', 'by'].forEach(function (k) {
-        if (typeof it[k] === 'string' && it[k] && !looksLikeFile(it[k])) parts.push(it[k]);
+      Object.keys(v).forEach(function (k) {
+        if (SKIP_KEYS[k]) return;
+        var t = deepText(v[k]);
+        if (t) parts.push(t);
       });
-      if (!parts.length) {
-        Object.keys(it).forEach(function (k) {
-          var v = it[k];
-          if (typeof v === 'string' && v && k !== 'url' && k !== 's' && !looksLikeFile(v)) parts.push(v);
-        });
-      }
       return parts.join(' ');
     }
+    return '';
+  }
+
+  function itemText(it) {
+    if (it == null) return '';
+    if (typeof it === 'string') return looksLikeFile(it) ? '' : stripTags(it);
+    if (typeof it === 'object') return deepText(it);
     return String(it);
   }
 
