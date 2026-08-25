@@ -109,7 +109,10 @@ changed = sorted({l.split()[1].split("mo-people-culture-playbook-main/")[-1] for
 allowed_prefixes = ("authoring-tool/editor.js", "authoring-tool/editor.css", "authoring-tool/index.html",
                     "authoring-tool/storage.js", "authoring-tool/publish.js", "authoring-tool/versions.js",
                     "player/player-loader.js", "player/app.js", "authoring-tool/preview-engine/app.js",
-                    "player/ask.js", "authoring-tool/preview-engine/ask.js", "verifier/")
+                    "player/ask.js", "authoring-tool/preview-engine/ask.js", "verifier/",
+                    # ix stylesheet fix (2026-08-25): interactive elements shipped without CSS;
+                    # styles appended to both mirrored mo-brand.css copies
+                    "authoring-tool/preview-engine/mo-brand.css", "player/mo-brand.css")
 bad = [c for c in changed if not c.startswith(allowed_prefixes)]
 check("R5 change scope limited to known presentation/storage files", len(bad) == 0, ", ".join(bad) or "in-scope only")
 

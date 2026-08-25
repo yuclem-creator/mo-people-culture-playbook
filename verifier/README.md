@@ -37,5 +37,17 @@ Redesign acceptance (visual editor panel + topbar saved-by chip), run against th
 redesigned tree: R1 saved-by chip author+relative time; R2 always-visible auth chip
 (muted signed-out state); R3 inspector card grouping across chapter/stage/settings
 with field-handler write-through intact; R4 zero cloud writes while signed out;
-R5 change scope limited to known presentation/storage files.
+R5 change scope limited to known presentation/storage files (allowlist extended
+2026-08-25 to include both mirrored mo-brand.css copies for the ix style fix).
 Result: 9/9 PASS. v1 9/9, v2 13/13, v3 11/11 re-run on the same tree — all PASS.
+
+## v5 — 2026-08-25
+Interactive elements (s:'ix') style regression gate. Root cause of the "17
+Interaction button renders only text" report: pbIxHTML shipped 17 renderers with
+no stylesheet. v5 proves: X1 both mirrored mo-brand.css copies carry the ix style
+block and stay byte-identical; X2 ix selectors are NOT scoped under .mo-root (no
+.mo-root element exists in the DOM — scoped rules silently never match); X3 in the
+preview engine, testline / flipcards / processflow get real computed styling
+(flex band, card radius, 900px flip perspective, hidden backfaces, pill steps);
+X4 the flip toggle rotates the front face away.
+Result: 10/10 PASS. v1 9/9, v2 13/13, v3 11/11, v4 9/9 re-run — all PASS.
