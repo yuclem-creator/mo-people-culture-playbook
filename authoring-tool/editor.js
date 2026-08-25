@@ -1826,97 +1826,120 @@
     box.appendChild(mediaActionsRow(sec.items));
   }
 
-  // Shared quick-add row for content elements — used by the section editor
+  // Shared quick-add panel for content elements — used by the section editor
   // (section items) and the chapter editor (chapter-level items). Every
-  // button appends a new item to the given array.
+  // button appends a new item to the given array. All elements — including
+  // the 17 interactive kinds — sit at one level, grouped by category in
+  // collapsible groups; inserting is always a single click (no kind picker).
+  var IX_ADD_LABELS = {
+    processflow: 'Decision & exception logic',
+    horizons: 'Horizon stepper / journey map',
+    legendtour: 'Legend panel + tooltip tour',
+    flipcards: 'Principle flip cards',
+    mixbars: 'Stacked-bar mix explorer',
+    xtable: 'Interactive table explorer',
+    benchdash: 'Benchmark dashboard',
+    alloc: 'Discount allocation chart',
+    tabx: 'Tabbed data explorer',
+    cardwall: 'Opportunity card wall',
+    scorecard: 'Assessment scorecard / rubric',
+    typedist: 'Count / distribution chart',
+    stageflow: 'Stage step flow (gated)',
+    dlcheck: 'Template + guided checklist',
+    testline: 'Test-design timeline',
+    eventcal: 'Event calendar timeline',
+    kpidash: 'KPI dashboard (STLY toggle)'
+  };
+
   function mediaActionsRow(itemsArr) {
-    return el('div', { class: 'media-actions', style: 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;' }, [
-      el('button', { class: 'btn ghost', onclick: function () { addMediaItemTo(itemsArr, 'image'); } }, ['+ Add image']),
-      el('button', { class: 'btn ghost', onclick: function () { addMediaItemTo(itemsArr, 'video'); } }, ['+ Add video']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'tabs', name: 'Tabbed group', tabs: [{ label: 'Tab 1', text: '' }] });
-        touch(); renderInspector();
-      } }, ['+ Add tabs']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'timeline', name: 'Timeline', mode: 'all', steps: [{ label: 'Step 1', text: '', url: '' }] });
-        touch(); renderInspector();
-      } }, ['+ Add timeline']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'checklist', name: 'Checklist', items: [{ label: 'New item', url: '' }] });
-        touch(); renderInspector();
-      } }, ['+ Add checklist']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'table', name: 'Table', headFirst: true, head: ['Column 1', 'Column 2'], rows: [['', '']] });
-        touch(); renderInspector();
-      } }, ['+ Add table']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'callout', name: 'Knowledge tip', label: 'Knowledge tip', text: '', tone: 'tip' });
-        touch(); renderInspector();
-      } }, ['+ Add knowledge tip']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'callout', name: 'Quick recap', label: 'Quick recap', text: '', tone: 'recap' });
-        touch(); renderInspector();
-      } }, ['+ Add note box']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'tasklist', name: 'Task list', cid: uid('tl'), showProgress: true, gateText: '', items: [{ text: 'New task', note: '', pills: [] }] });
-        touch(); renderInspector();
-      } }, ['+ Add task list']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'swimlane', name: 'Swimlane timeline', lanes: [
+    function push(item) { itemsArr.push(item); touch(); renderInspector(); }
+    function mk(label, make) {
+      return { label: '+ Add ' + label, make: make };
+    }
+    function mkIx(kind) {
+      return { label: '+ Add ' + IX_ADD_LABELS[kind], make: function () {
+        var item = { s: 'ix', kind: kind, name: IX_ADD_LABELS[kind] };
+        ixLoadStarter(item); // arrives with working example content — ready immediately
+        return item;
+      } };
+    }
+    var CATEGORIES = [
+      { label: 'Text & media', items: [
+        mk('heading', function () { return { s: 'heading', name: 'Heading', text: 'New heading', sub: '' }; }),
+        mk('image', null), // media upload flow
+        mk('video', null), // media upload flow
+        mk('note box', function () { return { s: 'callout', name: 'Quick recap', label: 'Quick recap', text: '', tone: 'recap' }; }),
+        mk('knowledge tip', function () { return { s: 'callout', name: 'Knowledge tip', label: 'Knowledge tip', text: '', tone: 'tip' }; })
+      ] },
+      { label: 'Lists & checks', items: [
+        mk('checklist', function () { return { s: 'checklist', name: 'Checklist', items: [{ label: 'New item', url: '' }] }; }),
+        mk('task list', function () { return { s: 'tasklist', name: 'Task list', cid: uid('tl'), showProgress: true, gateText: '', items: [{ text: 'New task', note: '', pills: [] }] }; }),
+        mk('tabs', function () { return { s: 'tabs', name: 'Tabbed group', tabs: [{ label: 'Tab 1', text: '' }] }; }),
+        mk('table', function () { return { s: 'table', name: 'Table', headFirst: true, head: ['Column 1', 'Column 2'], rows: [['', '']] }; }),
+        mkIx('dlcheck')
+      ] },
+      { label: 'Steps, timelines & journeys', items: [
+        mk('timeline', function () { return { s: 'timeline', name: 'Timeline', mode: 'all', steps: [{ label: 'Step 1', text: '', url: '' }] }; }),
+        mk('visual timeline', function () { return { s: 'timeline', name: 'Visual timeline', variant: 'history', steps: [{ label: '1876', sub: 'Era or place', text: '', img: '' }] }; }),
+        mk('swimlane', function () { return { s: 'swimlane', name: 'Swimlane timeline', lanes: [
           { role: 'Role 1', steps: [{ label: 'Step 1', text: '' }] },
           { role: 'Role 2', steps: [{ label: 'Step 2', text: '' }] }
-        ] });
-        touch(); renderInspector();
-      } }, ['+ Add swimlane']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'chart', name: 'Chart', chartType: 'bar', unit: '', labels: ['Q1', 'Q2', 'Q3', 'Q4'], series: [{ label: 'Series 1', values: [3, 5, 4, 6] }] });
-        touch(); renderInspector();
-      } }, ['+ Add chart']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'beforeafter', name: 'Before / after', beforeLabel: 'Before', afterLabel: 'After', beforeText: '', afterText: '', beforeImg: '', afterImg: '' });
-        touch(); renderInspector();
-      } }, ['+ Add before / after']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'heading', name: 'Heading', text: 'New heading', sub: '' });
-        touch(); renderInspector();
-      } }, ['+ Add heading']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'timeline', name: 'Visual timeline', variant: 'history', steps: [{ label: '1876', sub: 'Era or place', text: '', img: '' }] });
-        touch(); renderInspector();
-      } }, ['+ Add visual timeline']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'statband', name: 'Stat band', stats: [
+        ] }; }),
+        mk('before / after', function () { return { s: 'beforeafter', name: 'Before / after', beforeLabel: 'Before', afterLabel: 'After', beforeText: '', afterText: '', beforeImg: '', afterImg: '' }; }),
+        mkIx('processflow'),
+        mkIx('horizons'),
+        mkIx('stageflow'),
+        mkIx('testline'),
+        mkIx('eventcal')
+      ] },
+      { label: 'Data & dashboards', items: [
+        mk('chart', function () { return { s: 'chart', name: 'Chart', chartType: 'bar', unit: '', labels: ['Q1', 'Q2', 'Q3', 'Q4'], series: [{ label: 'Series 1', values: [3, 5, 4, 6] }] }; }),
+        mk('stat band', function () { return { s: 'statband', name: 'Stat band', stats: [
           { value: '96', unit: '%', label: 'Metric one', sub: '', delta: '', deltaDir: 'up' },
           { value: '72', unit: 'h', label: 'Metric two', sub: '', delta: '', deltaDir: '' }
-        ] });
-        touch(); renderInspector();
-      } }, ['+ Add stat band']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'gauge', name: 'Gauge', value: 3, max: 5, levelLabel: 'Level 3', caption: '', levels: ['Ad hoc', 'Emerging', 'Established', 'Managed', 'Optimising'] });
-        touch(); renderInspector();
-      } }, ['+ Add gauge']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'pyramid', name: 'Pyramid', tiers: [
+        ] }; }),
+        mk('gauge', function () { return { s: 'gauge', name: 'Gauge', value: 3, max: 5, levelLabel: 'Level 3', caption: '', levels: ['Ad hoc', 'Emerging', 'Established', 'Managed', 'Optimising'] }; }),
+        mk('pyramid', function () { return { s: 'pyramid', name: 'Pyramid', tiers: [
           { name: 'Apex outcome', sub: '', note: '' },
           { name: 'Middle tier', sub: '', note: '' },
           { name: 'Foundation', sub: '', note: '' }
-        ] });
-        touch(); renderInspector();
-      } }, ['+ Add pyramid']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        itemsArr.push({ s: 'wheel', name: 'Lifecycle wheel', hubEyebrow: '', hubTitle: 'The lifecycle', stages: [
+        ] }; }),
+        mk('wheel', function () { return { s: 'wheel', name: 'Lifecycle wheel', hubEyebrow: '', hubTitle: 'The lifecycle', stages: [
           { label: 'Stage one', text: '' }, { label: 'Stage two', text: '' },
           { label: 'Stage three', text: '' }, { label: 'Stage four', text: '' }
-        ] });
-        touch(); renderInspector();
-      } }, ['+ Add wheel']),
-      el('button', { class: 'btn ghost', onclick: function () {
-        var item = { s: 'ix', kind: 'processflow', name: 'Interactive element' };
-        ixLoadStarter(item); // arrives with working example content — ready immediately
-        itemsArr.push(item);
-        touch(); renderInspector();
-      } }, ['+ Add interactive'])
-    ]);
+        ] }; }),
+        mkIx('mixbars'),
+        mkIx('xtable'),
+        mkIx('benchdash'),
+        mkIx('alloc'),
+        mkIx('tabx'),
+        mkIx('typedist'),
+        mkIx('kpidash')
+      ] },
+      { label: 'Cards & explorers', items: [
+        mkIx('flipcards'),
+        mkIx('cardwall'),
+        mkIx('scorecard'),
+        mkIx('legendtour')
+      ] }
+    ];
+
+    var wrap = el('div', { class: 'media-actions media-cats', style: 'margin-top:8px;' });
+    CATEGORIES.forEach(function (cat) {
+      var det = el('details', { class: 'media-cat', open: true });
+      det.appendChild(el('summary', { class: 'media-cat-head' }, [cat.label]));
+      var grid = el('div', { class: 'media-cat-grid' });
+      cat.items.forEach(function (spec) {
+        grid.appendChild(el('button', { class: 'btn ghost', onclick: function () {
+          if (spec.make) { push(spec.make()); }
+          else if (spec.label === '+ Add image') { addMediaItemTo(itemsArr, 'image'); }
+          else if (spec.label === '+ Add video') { addMediaItemTo(itemsArr, 'video'); }
+        } }, [spec.label]));
+      });
+      det.appendChild(grid);
+      wrap.appendChild(det);
+    });
+    return wrap;
   }
 
   // addMediaItem with an explicit target array (chapter-level and section-level

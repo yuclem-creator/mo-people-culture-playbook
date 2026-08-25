@@ -503,6 +503,20 @@ a{color:var(--gold)}
 }
 .media-actions .btn.ghost:hover,.field .btn.ghost:hover{border-color:var(--gold);color:var(--gold-deep)}
 
+/* Categorized content-element picker — collapsible groups, one-click insert */
+.media-cats{display:flex;flex-direction:column;gap:6px}
+.media-cat{border:1px solid var(--hairline);border-radius:12px;background:#fff;overflow:hidden}
+.media-cat-head{
+  cursor:pointer;list-style:none;padding:9px 14px;user-select:none;
+  font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);
+  display:flex;align-items:center;gap:8px;background:var(--ivory);
+}
+.media-cat-head::-webkit-details-marker{display:none}
+.media-cat-head::after{content:'▸';margin-left:auto;font-size:11px;color:var(--ink-mute);transition:transform .15s}
+.media-cat[open] .media-cat-head::after{transform:rotate(90deg)}
+.media-cat[open] .media-cat-head{border-bottom:1px solid var(--hairline)}
+.media-cat-grid{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px}
+
 /* Notes */
 .note{border-radius:10px;border-color:var(--hairline);border-left-color:var(--gold)}
 

@@ -51,3 +51,16 @@ preview engine, testline / flipcards / processflow get real computed styling
 (flex band, card radius, 900px flip perspective, hidden backfaces, pill steps);
 X4 the flip toggle rotates the front face away.
 Result: 10/10 PASS. v1 9/9, v2 13/13, v3 11/11, v4 9/9 re-run — all PASS.
+
+## v6 — 2026-08-25
+Categorical Content Elements picker (flattened interactions). The two-level
+"Add interactive" button that hid 17 kinds behind a dropdown is replaced by a
+single-level panel: all 35 elements (18 classic + 17 interactive) are one-click
+inserts, grouped into five collapsible categories (Text & media / Lists &
+checks / Steps, timelines & journeys / Data & dashboards / Cards & explorers).
+v6 proves: C1 five category groups with approved labels; C2 35 first-level
+buttons, no "Add interactive" junk-drawer; C3 all 17 ix kinds offered directly;
+C4 one click inserts kind 'testline' with starter content and the live preview
+iframe shows the styled .pb-ixtl band; C5 category headers collapse/expand;
+C6 change scope limited to presentation/storage files.
+Result: 10/10 PASS. v1–v5 re-run on the same tree — all PASS.
