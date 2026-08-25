@@ -152,7 +152,10 @@ allowed = ("authoring-tool/editor.js", "authoring-tool/editor.css", "authoring-t
            "authoring-tool/storage.js", "authoring-tool/publish.js", "authoring-tool/versions.js",
            "player/player-loader.js", "player/app.js", "authoring-tool/preview-engine/app.js",
            "player/ask.js", "authoring-tool/preview-engine/ask.js", "verifier/",
-           "authoring-tool/preview-engine/mo-brand.css", "player/mo-brand.css")
+           "authoring-tool/preview-engine/mo-brand.css", "player/mo-brand.css",
+           # mobile topbar fix (2026-08-25): language switch + search blew out
+           # the <=900px grid, 155px horizontal overflow at 390px — both copies
+           "authoring-tool/preview-engine/index.html", "player/index.html")
 bad = [c for c in changed if not c.startswith(allowed)]
 check("C6 change scope limited to presentation/storage files", len(bad) == 0, ", ".join(bad) or "in-scope only")
 

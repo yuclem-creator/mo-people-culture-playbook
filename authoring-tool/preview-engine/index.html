@@ -4191,9 +4191,14 @@ mark {
   .wheel-caption--rest { border-top-color: var(--rule); }
   .wheel-caption-desc { max-width: 46ch; margin-left: auto; margin-right: auto; }
   .wheel-caption-icon { display: none; }
-  .topbar { grid-template-columns: 1fr auto; }
+  .topbar { grid-template-columns: minmax(0, 1fr) auto; }
   .running-header { display: none; }
   .brand-wordmark { display: none; }
+  /* Prevent the right cluster (language switch + search) from blowing out the bar */
+  .brand-left, .brand-right { min-width: 0; }
+  .brand-right { flex: 0 1 auto; }
+  .search { min-width: 0; }
+  .lang-switch { flex: 0 1 auto; min-width: 0; max-width: 150px; text-overflow: ellipsis; margin-right: 8px; }
   .layout { grid-template-columns: 1fr; }
   .rail {
     position: fixed;
@@ -4274,6 +4279,8 @@ mark {
   .opener-title { font-size: 2.4rem; }
   .search { width: 140px; }
   .search-hint { display: none; }
+  /* Phones: shrink the language switch so the bar never exceeds the viewport */
+  .lang-switch { max-width: 108px; padding: 7px 8px; font-size: 10.5px; }
   /* Editorial band caption stacks vertically on phones */
   .editorial-band-cap { flex-direction: column; gap: 6px; }
   .editorial-band-eyebrow::after { display: none; }

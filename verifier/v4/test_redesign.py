@@ -112,7 +112,10 @@ allowed_prefixes = ("authoring-tool/editor.js", "authoring-tool/editor.css", "au
                     "player/ask.js", "authoring-tool/preview-engine/ask.js", "verifier/",
                     # ix stylesheet fix (2026-08-25): interactive elements shipped without CSS;
                     # styles appended to both mirrored mo-brand.css copies
-                    "authoring-tool/preview-engine/mo-brand.css", "player/mo-brand.css")
+                    "authoring-tool/preview-engine/mo-brand.css", "player/mo-brand.css",
+                    # mobile topbar fix (2026-08-25): language switch + search blew out
+                    # the <=900px grid, 155px horizontal overflow at 390px — both copies
+                    "authoring-tool/preview-engine/index.html", "player/index.html")
 bad = [c for c in changed if not c.startswith(allowed_prefixes)]
 check("R5 change scope limited to known presentation/storage files", len(bad) == 0, ", ".join(bad) or "in-scope only")
 

@@ -1,0 +1,20 @@
+PASS Q2 signed-out Save downloads fallback .json — v9_cloud_draft.json
+PASS Q2 signed-out Save attempts zero cloud writes — 0 writes
+PASS Q3 sign-in flips chip to signed-in state — Signed in ·
+clement@mohg.com
+Sign out
+PASS Q4 signed-in Save writes to the cloud — 6 writes
+PASS Q4 drafts lane received playbook-data — https://akcypiuealhfqspiwebp.supabase.co/rest/v1/playbook_versions; /drafts/v9-cloud-draft/playbook-data.json; /drafts/v9-cloud-draft/version.json; /versions/v9-cloud-draft/2026-08-25T14-31-36.956Z.json
+PASS Q5 save captured the edited draft 
+PASS Q5 reload serves back the saved draft 
+PASS Q1-Q5 no page errors 
+PASS Q6 offline JSON import loads — Commercial and Revenue Playbook
+PASS Q6 imported playbook's interactions render in preview — 5 .pb-ix
+PASS Q7a valid H.264 video becomes playable — {'found': True, 'ready': 4}
+PASS Q7b broken video shows codec hint, not a black player — This video can’t be played in the browser — it was likely re
+PASS Q8a mobile contents/navigation reaches chapter II 
+PASS Q8b flip card flips on mobile tap 
+PASS Q8d zero horizontal document overflow at 390px — []
+PASS Q8c mobile player produced no page errors 
+
+17 passed, 0 failed

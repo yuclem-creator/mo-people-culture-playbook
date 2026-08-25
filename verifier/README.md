@@ -79,3 +79,44 @@ muted/gold/sage/terra) brand tokens on text AND heading; F5 mirrored files stay
 aligned (mo-brand.css byte-identical, renderer blocks identical across app.js
 copies).
 Result: 19/19 PASS. v1–v6 re-run on the same tree — all PASS.
+
+## v8 — 2026-08-25
+SCORM 1.2 completion end-to-end (test_e2e.py, stubbed LMS API). The model is
+view-based: meta.completion picks the mode (open-each-chapter with ticked
+requiredChapterIds / open-all / open-n), computeRequiredPages() injects
+SCORM_REQUIRED_PAGES into the export, scorm_hook.js marks pages viewed,
+persists the viewed set in cmi.suspend_data across relaunches, and on the last
+required page reports lesson_status=completed + score 100 + LMSCommit;
+LMSFinish on pagehide. v8 proves: C1 init reports incomplete; C2 partial view
+does NOT complete, full view completes with score 100 and a commit; C3 the
+progress chip tracks viewed/total; C4 relaunch restores completion and the
+viewed set from suspend_data; C5 open-n completes after the first N chapters;
+C6 a subset of required chapters completes only when the required one opens;
+C7 leaving the page calls LMSFinish. 12/12 PASS.
+(test_e2e_part2.py is superseded by v9, which covers the same ground with a
+correct harness.)
+CAVEAT surfaced for authors: 'open-n' means the FIRST N chapters
+(chs.slice(0, N)), not any N chapters.
+
+## v9 — 2026-08-25
+Full end-to-end QA — saving, storage, loading, playback, mobile (stubbed
+Supabase storage + gotrue auth). Q1 Studio boots on the cloud draft; Q2
+signed-out Save stays local (fallback .json download, ZERO cloud writes);
+Q3 sign-in against gotrue flips the chip; Q4 signed-in Save writes a
+versions snapshot + drafts-lane playbook-data + version.json; Q5 edit → save
+→ reload round-trips the exact saved body; Q6 the real commercial playbook
+JSON import loads with its interactions rendering; Q7 a valid H.264 mp4
+becomes playable in the preview engine and a broken video in the player
+surfaces the codec hint instead of a black player; Q8 on a 390px touch
+viewport the contents overlay opens, chapter taps navigate, a flip card
+flips on tap, and there is ZERO horizontal document overflow.
+REAL BUG FOUND AND FIXED: the topbar right cluster (language switch injected
+by JS + 140px search) blew out the <=900px `1fr auto` grid — 155px of
+horizontal overflow at 390px on the commercial playbook. Fix in BOTH mirrored
+index.html copies: `minmax(0,1fr) auto` grid, min-width:0 on brand clusters,
+shrinkable search and language switch (108px on phones). A Q8d regression
+check locks it. Harness fix along the way: the storage stub must unwrap
+supabase-js multipart/form-data uploads (file part has filename="blob")
+before serving them back, exactly like real storage does.
+Result: 17/17 PASS. v1–v8 re-run on the same tree — all PASS
+(v4/v6 change-scope allowlists extended to the two index.html copies).

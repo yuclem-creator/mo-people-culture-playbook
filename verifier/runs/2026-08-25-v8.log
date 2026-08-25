@@ -1,0 +1,15 @@
+PASS C1 LMS init reports incomplete — incomplete
+PASS C2a partial view does NOT complete — cover,ch-1,ch-2
+PASS C3 progress chip tracks viewed/total — PAGES VIEWED 2 / 3
+PASS C2b all chapters viewed -> completed — completed
+PASS C2c score 100 reported — 100
+PASS C2d LMSCommit fired — ['cmi.core.lesson_status=completed', 'cmi.core.score.raw=100', 'cmi.core.score.min=0', 'cmi.core.score.max=100']
+PASS C4 relaunch restores completion + viewed state — complete=True progress={'viewed': 3, 'total': 3}
+PASS S1 no page errors during completion flow 
+PASS C5 open-n completes after first N chapters — completed
+PASS C6a non-required chapter does not complete 
+PASS C6b required chapter completes 
+PASS C7 leaving the page calls LMSFinish — ['cmi.suspend_data=cover', 'cmi.suspend_data=cover,ch-1', 'finish']
+-- S1 SCORM completion done --
+
+S1: 12 passed, 0 failed
