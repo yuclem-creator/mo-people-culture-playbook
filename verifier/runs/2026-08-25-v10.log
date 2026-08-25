@@ -1,0 +1,18 @@
+PASS W1 preview iframe present 
+PASS W1 WYSIWYG attached inside preview (style + hover affordances) — 21 editable targets
+PASS W2 section title edit writes through to re-render — Renamed Section Title
+PASS W3 text paragraph edit re-renders with bold markers intact — Rewritten paragraph with <strong>fresh bold</strong> inside.<span class="mo-wys-
+PASS W3 sibling paragraph untouched — Second paragraph stays.
+PASS W4 checklist label edit writes through — Edited check one
+PASS W5 table header edit writes through — Column Bee
+PASS W5 table cell edit writes through — Edited A2
+PASS W6 compare title edit writes through — What it truly is
+PASS W6 compare item edit writes through — ✕Freezing
+PASS W7 Escape cancels the edit — Original Heading
+PASS W8 complex element shows hover ✎ form button 
+PASS W8 flip card still flips (reader behaviour intact) 
+PASS W8 ✎ button opens the existing Studio form 
+PASS W9 engine + player copies carry zero WYSIWYG code 
+PASS W-suite no page errors 
+
+16 passed, 0 failed

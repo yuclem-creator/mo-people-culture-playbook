@@ -499,6 +499,10 @@
     if (d.type === 'preview-boot' || d.type === 'preview-ready') {
       previewReady = true;
       if (pendingPush) { pendingPush = false; pushPreview(); }
+      // (Re)attach the WYSIWYG click-to-edit layer to the freshly rendered DOM.
+      if (d.type === 'preview-ready' && window.MO_WYSIWYG && window.MO_WYSIWYG_BRIDGE) {
+        try { window.MO_WYSIWYG.reattach(window.MO_WYSIWYG_BRIDGE); } catch (err) {}
+      }
     } else if (d.type === 'preview-error') {
       toast('Preview error: ' + d.message, 'err');
     } else if (d.type === 'studio-select' && d.id) {
@@ -4131,6 +4135,20 @@
   // Dirty / autosave
   // =========================================================================
   function touch() { pushPreviewDebounced(); }
+
+  // Bridge exposed to authoring-tool/wysiwyg.js (Studio-only click-to-edit
+  // layer). Keeps the editing logic in its own module while giving it narrow
+  // access to the model, the item-form opener and the standard save path.
+  window.MO_WYSIWYG_BRIDGE = {
+    pb: function () { return PB; },
+    bodyForChapter: bodyForChapter,
+    openItem: function (chId, arr, index) {
+      select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL });
+    },
+    touch: touch,
+    toast: toast,
+    previewLang: function () { return PREVIEW_LANG; }
+  };
   var cloudDirty = false, lastAssetSig = '';
   function markDirty() { dirty = true; cloudDirty = true; setAutosave('dirty', 'Editing…'); }
   function assetSig() { return Object.keys(PB.assets || {}).sort().join('|'); }

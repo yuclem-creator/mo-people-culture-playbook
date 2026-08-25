@@ -120,3 +120,18 @@ supabase-js multipart/form-data uploads (file part has filename="blob")
 before serving them back, exactly like real storage does.
 Result: 17/17 PASS. v1–v8 re-run on the same tree — all PASS
 (v4/v6 change-scope allowlists extended to the two index.html copies).
+
+## v10 — 2026-08-25
+WYSIWYG click-to-edit (Level 1) for Playbook Studio — authoring-tool/wysiwyg.js,
+a Studio-ONLY layer (never loaded by player/SCORM; zero engine changes — W9
+asserts the mirrored renderers carry no WYSIWYG code). Click text in the
+preview → edit in place → the write goes into the same playbook model the
+inspector forms use, via the standard touch() → pushPreview → autosave path.
+Scope: section titles + blurbs, item headings, s:'heading', s:'text' (with
+<strong>⇄** round-trip), checklist labels, table header/cells, compare column
+labels/titles/items. Complex elements keep reader behaviour and get a hover ✎
+button that opens the existing form. Guards: DOM→model mapping only binds when
+element counts match and section titles line up; fields with [links](…) or
+[img]/[vid] figures bail to the form; disabled for non-English preview
+languages. W1 attach; W2-W6 per-kind write-throughs; W7 Esc cancels; W8
+fallback + flip behaviour intact. 16/16 PASS. v1–v9 re-run — all PASS.
