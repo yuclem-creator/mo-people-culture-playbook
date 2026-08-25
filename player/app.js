@@ -601,11 +601,24 @@ function policyItemBodyHTML(it) {
   // Heading: a standalone section heading for pacing long pages.
   if (it && it.s === 'heading') {
     if (!it.text) return '';
+    var hfmt = _pbFmtCls(it);
     return `<div class="pb-heading">
       ${it.sub ? `<div class="pb-heading-sub">${esc(it.sub)}</div>` : ''}
-      <h2 class="pb-heading-text">${esc(it.text)}</h2>
+      <h2 class="pb-heading-text${hfmt}">${esc(it.text)}</h2>
       <span class="pb-heading-rule" aria-hidden="true"></span>
     </div>`;
+  }
+  // Body text: standalone prose block. Blank line = new paragraph; optional
+  // lead paragraph styling; **bold** inline; weight/colour brand tokens.
+  if (it && it.s === 'text') {
+    if (!it.text) return '';
+    var paras = String(it.text).split(/\n\s*\n/).map(function (p) { return p.trim(); }).filter(Boolean);
+    if (!paras.length) return '';
+    var tfmt = _pbFmtCls(it);
+    return '<div class="pb-text' + tfmt + '">' + paras.map(function (p, i) {
+      var html = esc(p).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+      return '<p' + (it.lead && i === 0 ? ' class="pb-text-lead"' : '') + '>' + html + '</p>';
+    }).join('') + '</div>';
   }
   // Stat / KPI band: a strip of headline metrics with optional deltas.
   if (it && it.s === 'statband') {
@@ -4173,7 +4186,17 @@ if (window.parent !== window) {
   window.parent.postMessage({ type: 'preview-boot' }, '*');
 }
 
-var PB_IX_KINDS = ['processflow','horizons','legendtour','flipcards','mixbars','xtable','benchdash','alloc','tabx','scorecard','typedist','stageflow','dlcheck','testline','eventcal','kpidash','cardwall'];
+var PB_IX_KINDS = ['processflow','horizons','legendtour','flipcards','mixbars','xtable','benchdash','alloc','tabx','scorecard','typedist','stageflow','dlcheck','testline','eventcal','kpidash','cardwall','compare'];
+
+// Weight/colour brand-token classes shared by s:'text' and s:'heading'.
+function _pbFmtCls(it) {
+  var c = '';
+  var w = it && it.weight;
+  if (w && /^(400|500|600|700)$/.test(String(w))) c += ' pb-w-' + w;
+  var col = it && it.color;
+  if (col && /^(ink|soft|muted|gold|sage|terra)$/.test(col)) c += ' pb-c-' + col;
+  return c;
+}
 
 function pbIxHTML(it) {
   var fn = PB_IX_RENDER[it.kind];
@@ -4566,6 +4589,25 @@ var PB_IX_RENDER = {
         '<div class="ixkpi-stat"><div class="l" data-kpi-s3l>vs STLY</div><div class="v" data-kpi-s3></div><div class="d" data-kpi-s3d></div></div></div>' +
       '</div>' +
       '<script type="application/json" data-kpi-data>' + JSON.stringify(flat).replace(/</g, '\\u003c') + '</script>' +
+      '</div>';
+  },
+  // 18. Comparison pair — two checklist columns (IS / IS NOT, Do / Don't ...).
+  compare: function (it) {
+    var cols = _ixArr(it.cols);
+    if (!cols.length) return '<div class="pb-ix pb-chart-empty">Add two columns to build this comparison.</div>';
+    return '<div class="pb-ix pb-ixcp"><div class="ixcp-grid">' +
+      cols.slice(0, 2).map(function (c, ci) {
+        var tone = (c.tone === 'is' || c.tone === 'isnot') ? c.tone : (ci === 0 ? 'is' : 'isnot');
+        var items = _ixArr(c.items);
+        return '<div class="ixcp-col ' + tone + '">' +
+          (c.label ? '<div class="ixcp-eyebrow">' + esc(c.label) + '</div>' : '') +
+          (c.title ? '<div class="ixcp-title">' + esc(c.title) + '</div>' : '') +
+          (items.length ? '<ul class="ixcp-list">' + items.map(function (x) {
+            return '<li class="ixcp-item"><span class="ixcp-mark" aria-hidden="true">' + (tone === 'isnot' ? '✕' : '✓') + '</span><span>' + inlineRichHTML(typeof x === 'string' ? x : (x.text || '')) + '</span></li>';
+          }).join('') + '</ul>' : '') +
+          '</div>';
+      }).join('') + '</div>' +
+      (it.note ? '<div class="pb-ix-note">' + inlineRichHTML(it.note) + '</div>' : '') +
       '</div>';
   }
 };

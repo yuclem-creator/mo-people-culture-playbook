@@ -265,7 +265,12 @@
   .mo-shadow-md { box-shadow: var(--mo-shadow-md); }
   .mo-shadow-lg { box-shadow: var(--mo-shadow-lg); }
   
-/* ============ INTERACTIVE ELEMENTS (ix) STYLES ============ */
+/* ============ INTERACTIVE ELEMENTS (ix) STYLES ============ */:root{
+  --mo-display:"MO Exceptional","Times New Roman",serif;
+  --mo-sans:"Futura PT","Avenir Next LT Pro",sans-serif;
+  --mo-body:"Avenir Next LT Pro","Futura PT",sans-serif;
+}
+
 
 
 /* ============================================================================
@@ -276,7 +281,7 @@
    .done (checked), .locked (stageflow gating).
    ============================================================================ */
 .pb-ix{
-  margin:22px 0;font-family:'Avenir Next','Segoe UI',system-ui,sans-serif;
+  margin:22px 0;font-family:var(--mo-body);
   color:#232323;
 }
 .pb-ix-note{margin-top:12px;font-size:12.5px;color:#6b665d;line-height:1.6}
@@ -309,7 +314,7 @@
   border:1px solid #e0d9cc;border-radius:12px;background:#faf8f4;padding:20px 22px;
 }
 .ixpf-d-eyebrow{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#a07e3f;margin-bottom:5px}
-.ixpf-d-title{font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;margin-bottom:8px}
+.ixpf-d-title{font-family:var(--mo-display);font-size:20px;font-weight:700;margin-bottom:8px}
 .ixpf-d-text{font-size:14px;line-height:1.7;color:#45403a}
 .ixpf-d-example{
   margin-top:10px;padding:10px 14px;border-left:3px solid #B59060;background:#fff;
@@ -344,13 +349,13 @@
 }
 .ixhz-detail{border:1px solid #e0d9cc;border-radius:12px;background:#faf8f4;padding:18px 22px}
 .ixhz-d-eyebrow{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#a07e3f;margin-bottom:5px}
-.ixhz-d-title{font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:700;margin-bottom:6px}
+.ixhz-d-title{font-family:var(--mo-display);font-size:19px;font-weight:700;margin-bottom:6px}
 .ixhz-d-text{font-size:14px;line-height:1.7;color:#45403a}
 
 /* ---- 3. Legend tour ------------------------------------------------------ */
 .ixlg-grid{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
 .ixlg-panel{flex:1 1 320px;border:1px solid #e0d9cc;border-radius:12px;background:#faf8f4;padding:18px 20px}
-.ixlg-title{font-family:Georgia,'Times New Roman',serif;font-size:17px;font-weight:700;margin-bottom:12px}
+.ixlg-title{font-family:var(--mo-display);font-size:17px;font-weight:700;margin-bottom:12px}
 .ixlg-row{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #efe9dd;font-size:13px}
 .ixlg-row:last-child{border-bottom:0}
 .ixlg-txt{color:#45403a;line-height:1.55}
@@ -373,6 +378,9 @@
 /* ---- 4 / 10. Flip cards + dark card wall --------------------------------- */
 .ixfc-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px}
 .ixfc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+/* Adaptive last row: a lone odd card stretches full-width as a rectangle,
+   so no dead gap ever shows (even counts never stretch). */
+.ixfc-grid > .ixfc-card:last-child:nth-child(odd){grid-column:1 / -1;min-height:150px}
 .ixfc-card{
   position:relative;display:block;border:0;background:none;padding:0;cursor:pointer;
   min-height:190px;perspective:900px;text-align:left;
@@ -387,7 +395,7 @@
 .ixfc-card.flip .ixfc-front{transform:rotateY(180deg)}
 .ixfc-card.flip .ixfc-back{transform:rotateY(360deg)}
 .ixfc-num{font-size:11px;font-weight:700;letter-spacing:.1em;color:#B59060}
-.ixfc-title{font-family:Georgia,'Times New Roman',serif;font-size:16.5px;font-weight:700;line-height:1.3}
+.ixfc-title{font-family:var(--mo-display);font-size:16.5px;font-weight:700;line-height:1.3}
 .ixfc-hint{margin-top:auto;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#a89f8f}
 .ixfc-backlabel{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#a07e3f}
 .ixfc-backtext{font-size:13px;line-height:1.65;color:#45403a;white-space:pre-line}
@@ -433,13 +441,13 @@
 .ixbd-kpis{display:grid;grid-template-columns:repeat(var(--cols,3),1fr);gap:12px;margin-bottom:16px}
 .ixbd-kpi{border:1px solid #e0d9cc;border-radius:12px;background:#fff;padding:16px 18px}
 .ixbd-k-label{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8b8578}
-.ixbd-k-value{font-family:Georgia,'Times New Roman',serif;font-size:30px;font-weight:700;margin:4px 0 2px}
+.ixbd-k-value{font-family:var(--mo-display);font-size:30px;font-weight:700;margin:4px 0 2px}
 .ixbd-k-sub{font-size:12px;color:#3d7a4e}
 .ixbd-k-sub.down{color:#A4523F}
 .ixbd-k-bar{height:5px;border-radius:3px;background:#f0ebe1;margin-top:10px;overflow:hidden}
 .ixbd-k-bar span{display:block;height:100%;background:#B59060;border-radius:3px}
 .ixbd-trend{border:1px solid #e0d9cc;border-radius:12px;background:#faf8f4;padding:18px 20px;margin-bottom:16px}
-.ixbd-t-title{font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:700}
+.ixbd-t-title{font-family:var(--mo-display);font-size:16px;font-weight:700}
 .ixbd-t-sub{font-size:12px;color:#8b8578;margin-bottom:8px}
 .ixbd-trend svg{width:100%;height:auto;display:block}
 .ixbd-t-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px}
@@ -452,7 +460,7 @@
 /* ---- 8. Allocation chart ---------------------------------------------------- */
 .ixal-top{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:14px}
 .ixal-build,.ixal-quality{border:1px solid #e0d9cc;border-radius:12px;background:#fff;padding:18px 20px}
-.ixal-b-title{font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:700;margin-bottom:12px}
+.ixal-b-title{font-family:var(--mo-display);font-size:16px;font-weight:700;margin-bottom:12px}
 .ixal-row{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center;padding:5px 0}
 .ixal-r-label{font-size:12.5px;color:#45403a}
 .ixal-r-bar{height:12px;border-radius:6px;background:#f0ebe1;overflow:hidden;display:block}
@@ -460,7 +468,7 @@
 .ixal-r-val{font-size:12.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .ixal-total{display:flex;justify-content:space-between;border-top:1px solid #efe9dd;margin-top:10px;padding-top:10px;font-size:13px;font-weight:600}
 .ixal-q-eyebrow{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8b8578}
-.ixal-q-val{font-family:Georgia,'Times New Roman',serif;font-size:34px;font-weight:700;color:#8a6b3f;margin:6px 0}
+.ixal-q-val{font-family:var(--mo-display);font-size:34px;font-weight:700;color:#8a6b3f;margin:6px 0}
 .ixal-q-bar{height:8px;border-radius:4px;background:#f0ebe1;overflow:hidden;margin-bottom:10px}
 .ixal-q-bar span{display:block;height:100%;background:linear-gradient(90deg,#B7CDC2,#B59060)}
 .ixal-q-text{font-size:12.5px;line-height:1.6;color:#55504a}
@@ -479,7 +487,7 @@
 .ixtx-tab.on{color:#8a6b3f;border-bottom-color:#B59060}
 .ixtx-panel{border:1px solid #e0d9cc;border-top:0;border-radius:0 0 12px 12px;background:#fff;padding:20px 22px}
 .ixtx-usedin{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#3f5a4d;background:#E9F1EC;border-radius:999px;padding:3px 10px;display:inline-block;margin-bottom:10px}
-.ixtx-title{font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:700;margin-bottom:8px}
+.ixtx-title{font-family:var(--mo-display);font-size:18px;font-weight:700;margin-bottom:8px}
 .ixtx-text{font-size:13.5px;line-height:1.7;color:#45403a}
 .ixtx-link{display:inline-block;margin-top:12px;color:#8a6b3f;font-size:13px;font-weight:600}
 
@@ -500,7 +508,7 @@
   border:1px solid #e0d9cc;border-radius:12px;background:#faf8f4;padding:14px 20px;margin-top:12px;
 }
 .ixsc-t-eyebrow{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8b8578}
-.ixsc-t-val{font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700}
+.ixsc-t-val{font-family:var(--mo-display);font-size:24px;font-weight:700}
 .ixsc-t-note{font-size:12.5px;color:#55504a;max-width:420px;line-height:1.6}
 
 /* ---- 12. Type distribution ----------------------------------------------------- */
@@ -545,7 +553,7 @@
 }
 .ixsf-gate.locked .ixsf-gate-mark{background:#d9d2c4}
 .ixsf-gate-body{flex:1 1 auto}
-.ixsf-gate-title{font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:700}
+.ixsf-gate-title{font-family:var(--mo-display);font-size:16px;font-weight:700}
 .ixsf-gate-note{font-size:12.5px;color:#55504a;margin-top:2px}
 .ixsf-gate-count{font-size:13px;font-weight:700;color:#3f5a4d;font-variant-numeric:tabular-nums}
 
@@ -556,7 +564,7 @@
   width:44px;height:44px;border-radius:50%;background:#E9F1EC;border:1px solid #B7CDC2;color:#3f5a4d;
   display:inline-flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px;
 }
-.ixdl-f-title{font-family:Georgia,'Times New Roman',serif;font-size:17px;font-weight:700}
+.ixdl-f-title{font-family:var(--mo-display);font-size:17px;font-weight:700}
 .ixdl-f-meta{font-size:11.5px;color:#8b8578;margin-top:3px}
 .ixdl-f-text{font-size:12.5px;color:#55504a;line-height:1.6;margin-top:8px}
 .ixdl-btn{
@@ -585,7 +593,7 @@
   flex:1 1 0;border:1px solid #e0d9cc;border-radius:12px;background:#fff;padding:0 16px 16px;overflow:hidden;
 }
 .ixtl-bar{display:block;height:6px;margin:0 -16px 14px}
-.ixtl-num{font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:700;line-height:1}
+.ixtl-num{font-family:var(--mo-display);font-size:26px;font-weight:700;line-height:1}
 .ixtl-lbl{font-size:12.5px;font-weight:700;letter-spacing:.04em;margin-top:2px}
 .ixtl-text{font-size:12.5px;color:#55504a;line-height:1.55;margin-top:6px}
 .ixtl-tag{
@@ -615,11 +623,11 @@
 .ixec-pin.on .ixec-dot{background:#B59060;color:#fff}
 .ixec-lbl{font-size:11.5px;font-weight:600;text-align:center;line-height:1.25}
 .ixec-end{position:absolute;right:0;top:34px;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
-.ixec-end-date{font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:700;color:#A4523F}
+.ixec-end-date{font-family:var(--mo-display);font-size:16px;font-weight:700;color:#A4523F}
 .ixec-end-lbl{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#8b8578}
 .ixec-detail{border:1px solid #e0d9cc;border-radius:12px;background:#faf8f4;padding:18px 22px}
 .ixec-d-eyebrow{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#a07e3f;margin-bottom:5px}
-.ixec-d-title{font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:700;margin-bottom:8px}
+.ixec-d-title{font-family:var(--mo-display);font-size:18px;font-weight:700;margin-bottom:8px}
 .ixec-d-list{margin:0;padding-left:18px;font-size:13.5px;line-height:1.75;color:#45403a}
 .ixec-exception{
   margin-top:12px;border:1px solid #e3c4bb;border-left:3px solid #A4523F;border-radius:10px;
@@ -641,7 +649,7 @@
 .ixkpi-item.on .ixkpi-src{color:#cbb98f}
 .ixkpi-main{border:1px solid #e0d9cc;border-radius:12px;background:#fff;padding:18px 20px}
 .ixkpi-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
-.ixkpi-title{font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:700}
+.ixkpi-title{font-family:var(--mo-display);font-size:18px;font-weight:700}
 .ixkpi-sub{font-size:12px;color:#8b8578;margin-top:2px}
 .ixkpi-toggle{margin-bottom:0}
 .ixkpi-chart{min-height:180px}
@@ -649,12 +657,13 @@
 .ixkpi-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
 .ixkpi-stat{border:1px solid #e0d9cc;border-radius:10px;background:#faf8f4;padding:12px 14px}
 .ixkpi-stat .l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#8b8578}
-.ixkpi-stat .v{font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;margin-top:3px}
+.ixkpi-stat .v{font-family:var(--mo-display);font-size:22px;font-weight:700;margin-top:3px}
 .ixkpi-stat .d{font-size:11.5px;color:#3d7a4e;margin-top:2px}
 .ixkpi-stat .d.down{color:#A4523F}
 
 /* ---- ix responsive --------------------------------------------------------------------- */
 @media (max-width:760px){
+  .ixfc-grid{grid-template-columns:1fr 1fr}
   .ixal-top,.pb-ixdl,.pb-ixkpi{grid-template-columns:1fr}
   .ixbd-kpis{grid-template-columns:1fr 1fr}
   .ixtl-band{flex-direction:column}
@@ -663,3 +672,42 @@
   .ixal-row{grid-template-columns:110px 1fr 50px}
   .ixtd-row{grid-template-columns:120px 1fr 56px}
 }
+@media (max-width:520px){
+  .ixfc-grid{grid-template-columns:1fr}
+  .ixcp-grid{grid-template-columns:1fr}
+}
+
+/* ---- 18. Comparison pair (IS / IS NOT) ---------------------------------- */
+.pb-ixcp{/* container hook */}
+.ixcp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ixcp-col{border:1px solid #e0d9cc;border-radius:14px;background:#fff;padding:20px 22px}
+.ixcp-col.is{border-top:3px solid #B59060}
+.ixcp-col.isnot{border-top:3px solid #A4523F;background:#faf8f4}
+.ixcp-eyebrow{font-family:var(--mo-sans);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.ixcp-col.is .ixcp-eyebrow{color:#a07e3f}
+.ixcp-col.isnot .ixcp-eyebrow{color:#A4523F}
+.ixcp-title{font-family:var(--mo-display);font-size:19px;line-height:1.25;margin-bottom:12px}
+.ixcp-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.ixcp-item{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid #efe9dd;font-size:13.5px;line-height:1.55;color:#45403a}
+.ixcp-item:first-child{border-top:0}
+.ixcp-mark{flex:0 0 18px;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;margin-top:1px}
+.ixcp-col.is .ixcp-mark{background:rgba(181,144,96,.14);color:#a07e3f}
+.ixcp-col.isnot .ixcp-mark{background:rgba(164,82,63,.12);color:#A4523F}
+
+/* ---- Body text element (s:'text') + weight/colour tokens ----------------- */
+.pb-text{max-width:680px;font-family:var(--mo-body);font-size:15px;line-height:1.75;color:#232323}
+.pb-text p{margin:0 0 14px}
+.pb-text p:last-child{margin-bottom:0}
+.pb-text p.pb-text-lead{font-size:17.5px;line-height:1.7;color:#45403a}
+.pb-text strong{font-weight:600}
+/* weight + colour tokens shared by s:'text' and s:'heading' */
+.pb-w-400{font-weight:400 !important}
+.pb-w-500{font-weight:500 !important}
+.pb-w-600{font-weight:600 !important}
+.pb-w-700{font-weight:700 !important}
+.pb-c-ink{color:#232323 !important}
+.pb-c-soft{color:#55504a !important}
+.pb-c-muted{color:#8b8578 !important}
+.pb-c-gold{color:#a07e3f !important}
+.pb-c-sage{color:#4A6B5D !important}
+.pb-c-terra{color:#A4523F !important}

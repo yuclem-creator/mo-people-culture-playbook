@@ -67,7 +67,7 @@ IX_BUTTONS = {
     "scorecard": "Assessment scorecard / rubric", "typedist": "Count / distribution chart",
     "stageflow": "Stage step flow (gated)", "dlcheck": "Template + guided checklist",
     "testline": "Test-design timeline", "eventcal": "Event calendar timeline",
-    "kpidash": "KPI dashboard (STLY toggle)",
+    "kpidash": "KPI dashboard (STLY toggle)", "compare": "Comparison pair",
 }
 
 with sync_playwright() as p:
@@ -90,11 +90,11 @@ with sync_playwright() as p:
     check("C1 five categories with approved labels", cats == EXPECTED_CATS, " | ".join(cats))
 
     btns = pg.evaluate("() => Array.from(document.querySelectorAll('#inspector .media-cat-grid button')).map(x => x.textContent.trim())")
-    check("C2a 35 one-click element buttons", len(btns) == 35, f"{len(btns)} buttons")
+    check("C2a 37 one-click element buttons", len(btns) == 37, f"{len(btns)} buttons")
     check("C2b no 'Add interactive' junk-drawer button", not any("Add interactive" == x.replace("+ ", "") for x in btns))
 
     missing = [l for l in IX_BUTTONS.values() if ("+ Add " + l) not in btns]
-    check("C3 all 17 interactive kinds are first-level buttons", not missing, "missing: " + ", ".join(missing) if missing else "17/17 present")
+    check("C3 all 18 interactive kinds are first-level buttons", not missing, "missing: " + ", ".join(missing) if missing else "18/18 present")
 
     # C4 — insert a test-design timeline, verify kind + starter + styled preview
     pg.click("text=+ Add Test-design timeline")

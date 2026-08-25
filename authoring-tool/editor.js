@@ -55,10 +55,11 @@
     { v: 'tasklist', l: 'Task list (gated)' },
     { v: 'swimlane', l: 'Swimlane timeline' }, { v: 'chart', l: 'Chart / dashboard' },
     { v: 'beforeafter', l: 'Before / after' },
-    { v: 'heading', l: 'Heading' }, { v: 'statband', l: 'Stat / KPI band' },
+    { v: 'heading', l: 'Heading' }, { v: 'text', l: 'Body text' },
+    { v: 'statband', l: 'Stat / KPI band' },
     { v: 'gauge', l: 'Gauge / maturity meter' }, { v: 'pyramid', l: 'Hierarchy / pyramid' },
     { v: 'wheel', l: 'Radial lifecycle wheel' },
-    { v: 'ix', l: 'Interactive element (17 kinds)' }
+    { v: 'ix', l: 'Interactive element (18 kinds)' }
   ];
 
   // Interactive elements (s:'ix') — 17 renderer kinds. Kind picker + starter
@@ -81,7 +82,8 @@
     { v: 'dlcheck',     l: '14 · Downloadable template + guided checklist' },
     { v: 'testline',    l: '15 · Test-design timeline' },
     { v: 'eventcal',    l: '16 · Event calendar timeline' },
-    { v: 'kpidash',     l: '17 · KPI dashboard with STLY toggle' }
+    { v: 'kpidash',     l: '17 · KPI dashboard with STLY toggle' },
+    { v: 'compare',     l: '18 · Comparison pair (IS / IS NOT)' }
   ];
   var IX_TEMPLATES = {
     processflow: { steps: [
@@ -135,9 +137,19 @@
       end: { date: '25 Dec', label: 'Stay date' }, exception: '', exceptionLabel: '' },
     kpidash: { cats: [{ label: 'Category', kpis: [
       { name: 'KPI one', src: 'D360', unit: 'Index', target: 100,
-        ty: [98,99,101,100,102,104,103,105,106,108,107,109], ly: [97,98,99,99,100,101,101,102,103,104,104,105] }] }] }
+        ty: [98,99,101,100,102,104,103,105,106,108,107,109], ly: [97,98,99,99,100,101,101,102,103,104,104,105] }] }] },
+    compare: { cols: [
+      { label: 'What this playbook is', title: 'A practical commercial reference', tone: 'is', items: [
+        'A step-by-step method to baseline, assess and adjust package performance',
+        'A shared language for Revenue Management and Marketing & Communications',
+        'A living document — updated as opportunities are tested and rolled out' ] },
+      { label: 'What this playbook is not', title: 'Not a policy manual', tone: 'isnot', items: [
+        'Not a replacement for property-level commercial judgement',
+        'Not a pricing system or a set of mandatory rate rules',
+        'Not a one-off exercise — the Track stage is continuous' ] } ],
+      note: '' }
   };
-  // ---- Structured form specs for the 17 interaction kinds ------------------
+  // ---- Structured form specs for the 18 interaction kinds ------------------
   // Each entry: { k: 'fieldKey', l: 'Label', t: 'text'|'area'|'num'|'check'|
   // 'color'|'select'|'csv'|'lines'|'rowscsv'|'group'|'list', ... }.
   // Rendered by ixField() below — no raw JSON needed for normal editing.
@@ -373,6 +385,19 @@
               { k: 'ly', l: 'Last year (STLY) — monthly values', t: 'csv', num: true }
             ] }
         ] }
+    ],
+    compare: [
+      { t: 'list', k: 'cols', l: 'Columns (two — left and right)', addLabel: 'Add column',
+        make: function () { return { label: 'Column label', title: '', tone: 'is', items: ['New point'] }; },
+        fields: [
+          { k: 'label', l: 'Column label (small caps)', tip: 'e.g. "What this playbook is"' },
+          { k: 'title', l: 'Column title (optional)' },
+          { k: 'tone', l: 'Tone', t: 'select', opts: [
+            { v: 'is', l: 'Positive — gold, ✓ marks' },
+            { v: 'isnot', l: 'Negative — terracotta, ✕ marks' } ] },
+          { t: 'lines', k: 'items', l: 'Checklist points (one per line)' }
+        ] },
+      { k: 'note', l: 'Note under the pair (optional)', t: 'area' }
     ]
   };
 
@@ -1831,6 +1856,23 @@
   // button appends a new item to the given array. All elements — including
   // the 17 interactive kinds — sit at one level, grouped by category in
   // collapsible groups; inserting is always a single click (no kind picker).
+  // Weight / colour brand-token fields shared by Body text and Heading.
+  var TEXT_WEIGHTS = [
+    { v: '', l: 'Default (regular)' }, { v: '400', l: 'Regular 400' },
+    { v: '500', l: 'Medium 500' }, { v: '600', l: 'Semibold 600' }, { v: '700', l: 'Bold 700' }
+  ];
+  var TEXT_COLORS = [
+    { v: '', l: 'Default (ink)' }, { v: 'soft', l: 'Soft — supporting copy' },
+    { v: 'muted', l: 'Muted — captions' }, { v: 'gold', l: 'Gold — emphasis' },
+    { v: 'sage', l: 'Sage — positive / confirmed' }, { v: 'terra', l: 'Terracotta — cautions' }
+  ];
+  function appendTextFormatFields(box, it) {
+    box.appendChild(selectField('Weight', it.weight ? String(it.weight) : '', TEXT_WEIGHTS,
+      function (v) { if (v) it.weight = v; else delete it.weight; touch(); }));
+    box.appendChild(selectField('Colour', it.color || '', TEXT_COLORS,
+      function (v) { if (v) it.color = v; else delete it.color; touch(); }));
+  }
+
   var IX_ADD_LABELS = {
     processflow: 'Decision & exception logic',
     horizons: 'Horizon stepper / journey map',
@@ -1848,7 +1890,8 @@
     dlcheck: 'Template + guided checklist',
     testline: 'Test-design timeline',
     eventcal: 'Event calendar timeline',
-    kpidash: 'KPI dashboard (STLY toggle)'
+    kpidash: 'KPI dashboard (STLY toggle)',
+    compare: 'Comparison pair'
   };
 
   function mediaActionsRow(itemsArr) {
@@ -1866,6 +1909,7 @@
     var CATEGORIES = [
       { label: 'Text & media', items: [
         mk('heading', function () { return { s: 'heading', name: 'Heading', text: 'New heading', sub: '' }; }),
+        mk('text', function () { return { s: 'text', name: 'Body text', text: 'New paragraph.', lead: false }; }),
         mk('image', null), // media upload flow
         mk('video', null), // media upload flow
         mk('note box', function () { return { s: 'callout', name: 'Quick recap', label: 'Quick recap', text: '', tone: 'recap' }; }),
@@ -1876,6 +1920,7 @@
         mk('task list', function () { return { s: 'tasklist', name: 'Task list', cid: uid('tl'), showProgress: true, gateText: '', items: [{ text: 'New task', note: '', pills: [] }] }; }),
         mk('tabs', function () { return { s: 'tabs', name: 'Tabbed group', tabs: [{ label: 'Tab 1', text: '' }] }; }),
         mk('table', function () { return { s: 'table', name: 'Table', headFirst: true, head: ['Column 1', 'Column 2'], rows: [['', '']] }; }),
+        mkIx('compare'),
         mkIx('dlcheck')
       ] },
       { label: 'Steps, timelines & journeys', items: [
@@ -2268,6 +2313,15 @@
     if (it.s === 'heading') {
       box.appendChild(textField('Heading text', it.text || '', function (v) { it.text = v; touch(); }));
       box.appendChild(textField('Eyebrow above heading (optional)', it.sub || '', function (v) { it.sub = v; touch(); }, 'Small caps label above the heading, e.g. "Part 3 · Opportunities".'));
+      appendTextFormatFields(box, it);
+      return;
+    }
+    // Body text: standalone prose block with weight/colour brand tokens.
+    if (it.s === 'text') {
+      box.appendChild(textField('Text', it.text || '', function (v) { it.text = v; touch(); },
+        'Blank line = new paragraph. Wrap a phrase in **double asterisks** to make it bold.', true));
+      box.appendChild(checkField('Lead paragraph style (first paragraph larger)', !!it.lead, function (v) { it.lead = v; touch(); }));
+      appendTextFormatFields(box, it);
       return;
     }
     // Stat / KPI band: a strip of headline metrics.

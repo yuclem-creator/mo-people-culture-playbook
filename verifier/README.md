@@ -64,3 +64,18 @@ C4 one click inserts kind 'testline' with starter content and the live preview
 iframe shows the styled .pb-ixtl band; C5 category headers collapse/expand;
 C6 change scope limited to presentation/storage files.
 Result: 10/10 PASS. v1–v5 re-run on the same tree — all PASS.
+(v6 updated 2026-08-25b: 37 buttons / 18 kinds after the compare + body-text batch.)
+
+## v7 — 2026-08-25
+Typography + new-elements batch: F1 ix typography switched from Georgia/system
+stand-ins to the embedded MO house fonts (MO Exceptional display, Futura PT,
+Avenir Next body — font tokens re-declared globally since mo-brand.css scopes
+them under .mo-root, which does not exist in the DOM); F2 adaptive flip-card
+grid (lone odd last card spans full width, even counts never stretch); F3 the
+18th interaction kind 'compare' (two-tone IS / IS NOT checklist columns, gold
+vs terracotta, ✓/✕ marks); F4 the new s:'text' body-text element (paragraphs,
+lead styling, **bold** inline) plus weight (400–700) and colour (ink/soft/
+muted/gold/sage/terra) brand tokens on text AND heading; F5 mirrored files stay
+aligned (mo-brand.css byte-identical, renderer blocks identical across app.js
+copies).
+Result: 19/19 PASS. v1–v6 re-run on the same tree — all PASS.
