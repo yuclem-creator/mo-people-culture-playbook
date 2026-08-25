@@ -4904,3 +4904,814 @@ if (!window.__ixWired) {
   document.addEventListener('DOMContentLoaded', _ixKpiInit);
 }
 
+
+// =========================================================================
+// INTERACTIVE ELEMENTS v2 — concept animations + practice interactions
+// (handoff, buildup, parallel, ripple, journeydot, dtree, scenario,
+//  hotspot, stepper, matching, seq) + glossary inline markup + motion layer.
+// Appended block — registered by push/assign, no edits to the v1 code above.
+// =========================================================================
+PB_IX_KINDS.push('handoff','buildup','parallel','ripple','journeydot','dtree','scenario','hotspot','stepper','matching','seq');
+
+Object.assign(PB_IX_RENDER, {
+
+  // C1 — Handoff: a work token travels lane to lane between roles.
+  handoff: function (it) {
+    var lanes = _ixArr(it.lanes);
+    if (!lanes.length) return '<div class="pb-ix pb-chart-empty">Add lanes to build this handoff.</div>';
+    var wid = _ixId('ix2ho');
+    return '<div class="pb-ix pb-ix2ho" id="' + wid + '">' +
+      '<script type="application/json" data-ix2ho>' + JSON.stringify({ lanes: lanes, token: it.token || '' }).replace(/</g, '\\u003c') + '</script>' +
+      '<div class="ix2ho-stage">' +
+        '<div class="ix2ho-token" aria-hidden="true"><span>' + esc(it.token || '●') + '</span></div>' +
+        lanes.map(function (l, i) {
+          return '<div class="ix2ho-lane" data-lane="' + i + '">' +
+            '<div class="ix2ho-role">' + esc(l.role || ('Role ' + (i + 1))) + '</div>' +
+            '<div class="ix2ho-lane-text">' + inlineRichHTML(l.text || '') + '</div>' +
+            '</div>';
+        }).join('') +
+      '</div>' +
+      '<div class="ix2-bar"><button type="button" class="ix2-replay" data-ix2-replay>↻ Replay</button></div>' +
+      '</div>';
+  },
+
+  // C2 — Build-up: components assemble onto a stage one by one.
+  buildup: function (it) {
+    var items = _ixArr(it.items);
+    if (!items.length) return '<div class="pb-ix pb-chart-empty">Add components to build this visual.</div>';
+    var wid = _ixId('ix2bu');
+    return '<div class="pb-ix pb-ix2bu" id="' + wid + '">' +
+      '<div class="ix2bu-stage"' + (it.img ? ' style="background-image:url(\'' + esc(it.img) + '\');"' : '') + '>' +
+        items.map(function (p, i) {
+          return '<div class="ix2bu-item" data-bu="' + i + '" style="left:' + (parseFloat(p.x) || 0) + '%;top:' + (parseFloat(p.y) || 0) + '%;">' +
+            esc(p.label || ('Part ' + (i + 1))) + '</div>';
+        }).join('') +
+      '</div>' +
+      '<div class="ix2-bar"><button type="button" class="ix2-replay" data-ix2-replay>↻ Replay</button></div>' +
+      '</div>';
+  },
+
+  // C3 — Parallel: two paths (good / bad) revealed beat by beat in sync.
+  parallel: function (it) {
+    var good = it.good || {}, bad = it.bad || {};
+    var gB = _ixArr(good.beats), bB = _ixArr(bad.beats);
+    var n = Math.max(gB.length, bB.length);
+    if (!n) return '<div class="pb-ix pb-chart-empty">Add beats to both paths.</div>';
+    var wid = _ixId('ix2pt');
+    function colHTML(side, obj, beats) {
+      return '<div class="ix2pt-col ix2pt-' + side + '">' +
+        '<div class="ix2pt-head">' + esc(obj.title || (side === 'good' ? 'With it' : 'Without it')) + '</div>' +
+        beats.map(function (b, i) {
+          return '<div class="ix2pt-beat" data-beat="' + i + '">' + inlineRichHTML(typeof b === 'string' ? b : (b.text || '')) + '</div>';
+        }).join('') +
+        (obj.verdict ? '<div class="ix2pt-verdict" data-beat="' + n + '">' + esc(obj.verdict) + '</div>' : '') +
+        '</div>';
+    }
+    return '<div class="pb-ix pb-ix2pt" id="' + wid + '" data-beats="' + n + '">' +
+      '<div class="ix2pt-grid">' + colHTML('good', good, gB) + colHTML('bad', bad, bB) + '</div>' +
+      '<div class="ix2-bar"><button type="button" class="ix2-replay" data-ix2-replay>↻ Replay</button></div>' +
+      '</div>';
+  },
+
+  // C4 — Ripple: one trigger radiates consequences outward in rings.
+  ripple: function (it) {
+    var nodes = _ixArr(it.nodes);
+    if (!nodes.length) return '<div class="pb-ix pb-chart-empty">Add consequence nodes to this ripple.</div>';
+    var wid = _ixId('ix2ri');
+    return '<div class="pb-ix pb-ix2ri" id="' + wid + '">' +
+      '<script type="application/json" data-ix2ri>' + JSON.stringify({ trigger: it.trigger || {}, nodes: nodes }).replace(/</g, '\\u003c') + '</script>' +
+      '<div class="ix2ri-stage">' +
+        '<div class="ix2ri-ring" data-ring="1"></div><div class="ix2ri-ring" data-ring="2"></div><div class="ix2ri-ring" data-ring="3"></div>' +
+        '<div class="ix2ri-trigger"><div class="ix2ri-trigger-label">' + esc((it.trigger && it.trigger.label) || 'Trigger') + '</div>' +
+          ((it.trigger && it.trigger.sub) ? '<div class="ix2ri-trigger-sub">' + esc(it.trigger.sub) + '</div>' : '') + '</div>' +
+      '</div>' +
+      '<div class="ix2-bar"><button type="button" class="ix2-replay" data-ix2-replay>↻ Replay</button></div>' +
+      '</div>';
+  },
+
+  // C5 — Journey dot: a dot travels a path, revealing stops as it passes.
+  journeydot: function (it) {
+    var stops = _ixArr(it.stops);
+    if (!stops.length) return '<div class="pb-ix pb-chart-empty">Add stops to build this journey.</div>';
+    var wid = _ixId('ix2jn');
+    return '<div class="pb-ix pb-ix2jn" id="' + wid + '">' +
+      '<script type="application/json" data-ix2jn>' + JSON.stringify({ stops: stops }).replace(/</g, '\\u003c') + '</script>' +
+      '<div class="ix2jn-stage"><svg class="ix2jn-svg" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">' +
+        '<path class="ix2jn-path" d="M20,200 C180,60 340,220 500,120 C660,20 820,180 980,80" fill="none"/>' +
+        '<circle class="ix2jn-dot" r="9" cx="20" cy="200"/>' +
+      '</svg><div class="ix2jn-stops"></div></div>' +
+      '<div class="ix2-bar"><button type="button" class="ix2-replay" data-ix2-replay>↻ Replay</button></div>' +
+      '</div>';
+  },
+
+  // I1 — Decision tree: answer questions to reach an outcome.
+  dtree: function (it) {
+    var nodes = _ixArr(it.nodes);
+    if (!nodes.length) return '<div class="pb-ix pb-chart-empty">Add nodes to build this decision tree.</div>';
+    var wid = _ixId('ix2dt');
+    return '<div class="pb-ix pb-ix2dt" id="' + wid + '">' +
+      '<script type="application/json" data-ix2dt>' + JSON.stringify({ title: it.title || '', nodes: nodes }).replace(/</g, '\\u003c') + '</script>' +
+      (it.title ? '<div class="ix2-title">' + esc(it.title) + '</div>' : '') +
+      '<div class="ix2dt-trail"></div>' +
+      '<div class="ix2dt-node"></div>' +
+      '</div>';
+  },
+
+  // I2 — Scenario: a story in beats; each beat asks what you'd do.
+  scenario: function (it) {
+    var beats = _ixArr(it.beats);
+    if (!beats.length) return '<div class="pb-ix pb-chart-empty">Add beats to build this scenario.</div>';
+    var wid = _ixId('ix2sc');
+    return '<div class="pb-ix pb-ix2sc" id="' + wid + '">' +
+      '<script type="application/json" data-ix2sc>' + JSON.stringify({ title: it.title || '', beats: beats }).replace(/</g, '\\u003c') + '</script>' +
+      (it.title ? '<div class="ix2-title">' + esc(it.title) + '</div>' : '') +
+      '<div class="ix2sc-dots"></div>' +
+      '<div class="ix2sc-beat"></div>' +
+      '</div>';
+  },
+
+  // I3 — Hotspot: tap points on an image to learn more.
+  hotspot: function (it) {
+    var pts = _ixArr(it.points);
+    if (!pts.length) return '<div class="pb-ix pb-chart-empty">Add points to this hotspot image.</div>';
+    var wid = _ixId('ix2hs');
+    var bg = it.img ? ' style="background-image:url(\'' + esc(it.img) + '\');"' : '';
+    return '<div class="pb-ix pb-ix2hs" id="' + wid + '">' +
+      '<div class="ix2hs-stage' + (it.img ? '' : ' ix2hs-nophoto') + '"' + bg + '>' +
+        pts.map(function (p, i) {
+          return '<button type="button" class="ix2hs-dot" data-hs="' + i + '" style="left:' + (parseFloat(p.x) || 0) + '%;top:' + (parseFloat(p.y) || 0) + '%;" aria-label="' + esc(p.t || ('Point ' + (i + 1))) + '">' + (i + 1) + '</button>' +
+            '<div class="ix2hs-pop" data-hsp="' + i + '" style="left:' + (parseFloat(p.x) || 0) + '%;top:' + (parseFloat(p.y) || 0) + '%;" hidden>' +
+              '<div class="ix2hs-pop-t">' + esc(p.t || '') + '</div>' +
+              (p.d ? '<div class="ix2hs-pop-d">' + inlineRichHTML(p.d) + '</div>' : '') +
+            '</div>';
+        }).join('') +
+      '</div>' +
+      '</div>';
+  },
+
+  // I4 — Stepper: walk through steps with visuals, previous/next.
+  stepper: function (it) {
+    var steps = _ixArr(it.steps);
+    if (!steps.length) return '<div class="pb-ix pb-chart-empty">Add steps to build this walkthrough.</div>';
+    var wid = _ixId('ix2st');
+    return '<div class="pb-ix pb-ix2st" id="' + wid + '">' +
+      '<script type="application/json" data-ix2st>' + JSON.stringify({ steps: steps }).replace(/</g, '\\u003c') + '</script>' +
+      '<div class="ix2st-stage"></div>' +
+      '<div class="ix2st-nav"><button type="button" class="ix2st-btn" data-st="-1">← Previous</button>' +
+        '<span class="ix2st-count"></span>' +
+        '<button type="button" class="ix2st-btn" data-st="1">Next →</button></div>' +
+      '</div>';
+  },
+
+  // I5 — Matching: pair each term with its definition.
+  matching: function (it) {
+    var pairs = _ixArr(it.pairs);
+    if (!pairs.length) return '<div class="pb-ix pb-chart-empty">Add pairs to build this matching exercise.</div>';
+    var wid = _ixId('ix2ma');
+    return '<div class="pb-ix pb-ix2ma" id="' + wid + '">' +
+      '<script type="application/json" data-ix2ma>' + JSON.stringify({ title: it.title || '', pairs: pairs }).replace(/</g, '\\u003c') + '</script>' +
+      (it.title ? '<div class="ix2-title">' + esc(it.title) + '</div>' : '') +
+      '<div class="ix2ma-grid"><div class="ix2ma-col ix2ma-terms"></div><div class="ix2ma-col ix2ma-defs"></div></div>' +
+      '<div class="ix2-bar"><span class="ix2ma-score"></span><button type="button" class="ix2-replay" data-ix2-reset>↻ Shuffle &amp; reset</button></div>' +
+      '</div>';
+  },
+
+  // I6 — Sequencing: tap the steps in the right order.
+  seq: function (it) {
+    var items = _ixArr(it.items);
+    if (!items.length) return '<div class="pb-ix pb-chart-empty">Add steps (in the correct order) to build this exercise.</div>';
+    var wid = _ixId('ix2sq');
+    return '<div class="pb-ix pb-ix2sq" id="' + wid + '">' +
+      '<script type="application/json" data-ix2sq>' + JSON.stringify({ title: it.title || '', items: items }).replace(/</g, '\\u003c') + '</script>' +
+      (it.title ? '<div class="ix2-title">' + esc(it.title) + '</div>' : '') +
+      '<div class="ix2sq-pool"></div>' +
+      '<div class="ix2sq-order"></div>' +
+      '<div class="ix2-bar"><button type="button" class="ix2st-btn" data-sq-check>Check order</button>' +
+        '<button type="button" class="ix2-replay" data-ix2-reset>↻ Reset</button><span class="ix2sq-msg"></span></div>' +
+      '</div>';
+  }
+});
+
+// -------------------------------------------------------------------------
+// ix2 runtime — state, delegated wiring, animation players.
+// -------------------------------------------------------------------------
+if (!window.__ix2Wired) {
+  window.__ix2Wired = true;
+
+  function _ix2JSON(root, sel) {
+    var n = root.querySelector(sel);
+    if (!n) return null;
+    try { return JSON.parse(n.textContent); } catch (e) { return null; }
+  }
+  window.__ix2State = {};
+  window.MO_RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function _ix2St(root) {
+    var id = root.id;
+    if (!window.__ix2State[id]) window.__ix2State[id] = {};
+    return window.__ix2State[id];
+  }
+  function _ix2Shuffle(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function _ix2Timers(root) {
+    var st = _ix2St(root);
+    if (!st.timers) st.timers = [];
+    return st.timers;
+  }
+  function _ix2Clear(root) { _ix2Timers(root).forEach(clearTimeout); _ix2St(root).timers = []; }
+  function _ix2After(root, ms, fn) {
+    if (window.MO_RM) { fn(); return; }
+    _ix2Timers(root).push(setTimeout(fn, ms));
+  }
+
+  // ---- C1 handoff ---------------------------------------------------------
+  function _ix2hoPlay(root) {
+    var data = _ix2JSON(root, '[data-ix2ho]'); if (!data || !data.lanes.length) return;
+    _ix2Clear(root);
+    var token = root.querySelector('.ix2ho-token');
+    var lanes = root.querySelectorAll('.ix2ho-lane');
+    lanes.forEach(function (l) { l.classList.remove('on', 'done'); });
+    token.classList.remove('show');
+    if (window.MO_RM) { lanes.forEach(function (l) { l.classList.add('done'); }); token.classList.add('show'); return; }
+    var step = function (i) {
+      if (i >= lanes.length) return;
+      var lane = lanes[i];
+      var stage = root.querySelector('.ix2ho-stage');
+      var y = lane.offsetTop + lane.offsetHeight / 2 - token.offsetHeight / 2;
+      token.style.top = y + 'px';
+      token.classList.add('show');
+      lane.classList.add('on');
+      if (i > 0) lanes[i - 1].classList.remove('on'), lanes[i - 1].classList.add('done');
+      _ix2After(root, 1100, function () { step(i + 1); });
+    };
+    token.style.top = (lanes[0].offsetTop + lanes[0].offsetHeight / 2 - token.offsetHeight / 2) + 'px';
+    _ix2After(root, 60, function () { step(0); });
+  }
+
+  // ---- C2 buildup ----------------------------------------------------------
+  function _ix2buPlay(root) {
+    _ix2Clear(root);
+    var items = root.querySelectorAll('.ix2bu-item');
+    items.forEach(function (n) { n.classList.remove('in'); });
+    items.forEach(function (n, i) { _ix2After(root, 250 + i * 420, function () { n.classList.add('in'); }); });
+  }
+
+  // ---- C3 parallel ----------------------------------------------------------
+  function _ix2ptPlay(root) {
+    _ix2Clear(root);
+    var n = Number(root.getAttribute('data-beats') || 0);
+    var beats = root.querySelectorAll('.ix2pt-beat, .ix2pt-verdict');
+    beats.forEach(function (b) { b.classList.remove('in'); });
+    for (var i = 0; i <= n; i++) {
+      (function (i) {
+        _ix2After(root, 200 + i * 650, function () {
+          root.querySelectorAll('[data-beat="' + i + '"]').forEach(function (b) { b.classList.add('in'); });
+        });
+      })(i);
+    }
+  }
+
+  // ---- C4 ripple -------------------------------------------------------------
+  function _ix2riLayout(root) {
+    var data = _ix2JSON(root, '[data-ix2ri]'); if (!data) return;
+    var stage = root.querySelector('.ix2ri-stage');
+    // place nodes on rings by angle (remove old)
+    stage.querySelectorAll('.ix2ri-node').forEach(function (n) { n.remove(); });
+    var byRing = {};
+    data.nodes.forEach(function (nd) { var r = Math.min(Math.max(parseInt(nd.ring, 10) || 1, 1), 3); (byRing[r] = byRing[r] || []).push(nd); });
+    Object.keys(byRing).forEach(function (r) {
+      var arr = byRing[r], ringR = 14 + Number(r) * 11; // % of stage
+      arr.forEach(function (nd, i) {
+        var ang = (i / arr.length) * Math.PI * 2 - Math.PI / 2 + Number(r) * 0.5;
+        var x = 50 + ringR * Math.cos(ang), y = 50 + ringR * Math.sin(ang) * 0.82;
+        var el = document.createElement('div');
+        el.className = 'ix2ri-node'; el.setAttribute('data-ring', r);
+        el.style.left = x + '%'; el.style.top = y + '%';
+        el.innerHTML = (nd.icon ? '<span class="ix2ri-icon">' + esc(nd.icon) + '</span>' : '') +
+          '<span class="ix2ri-label">' + esc(nd.label || '') + '</span>' +
+          (nd.cons ? '<span class="ix2ri-cons">' + esc(nd.cons) + '</span>' : '');
+        stage.appendChild(el);
+      });
+    });
+  }
+  function _ix2riPlay(root) {
+    _ix2Clear(root);
+    var trig = root.querySelector('.ix2ri-trigger');
+    var rings = root.querySelectorAll('.ix2ri-ring');
+    var nodes = root.querySelectorAll('.ix2ri-node');
+    trig.classList.remove('in');
+    rings.forEach(function (r) { r.classList.remove('in'); });
+    nodes.forEach(function (n) { n.classList.remove('in'); });
+    _ix2After(root, 150, function () { trig.classList.add('in'); });
+    [1, 2, 3].forEach(function (r) {
+      _ix2After(root, 500 + r * 550, function () {
+        rings.forEach(function (el) { if (el.getAttribute('data-ring') == r) el.classList.add('in'); });
+        nodes.forEach(function (el) { if (el.getAttribute('data-ring') == r) el.classList.add('in'); });
+      });
+    });
+  }
+
+  // ---- C5 journey dot -----------------------------------------------------------
+  function _ix2jnLayout(root) {
+    var data = _ix2JSON(root, '[data-ix2jn]'); if (!data || !data.stops.length) return;
+    var path = root.querySelector('.ix2jn-path');
+    var stopsBox = root.querySelector('.ix2jn-stops');
+    var stage = root.querySelector('.ix2jn-stage');
+    var svg = root.querySelector('.ix2jn-svg');
+    stopsBox.innerHTML = '';
+    var L = path.getTotalLength();
+    var boxW = stage.clientWidth || 600, boxH = stage.clientHeight || 200;
+    var st = _ix2St(root);
+    st.jnPts = data.stops.map(function (s, i) {
+      var p = path.getPointAtLength(L * (data.stops.length === 1 ? 1 : i / (data.stops.length - 1)));
+      var x = p.x / 1000 * boxW, y = p.y / 240 * boxH;
+      var el = document.createElement('div');
+      el.className = 'ix2jn-stop';
+      var above = (i % 2 === 0);
+      el.style.left = x + 'px';
+      el.style.top = (above ? Math.max(y - 96, 2) : Math.min(y + 26, boxH - 90)) + 'px';
+      el.innerHTML = '<div class="ix2jn-stop-label">' + esc(s.label || ('Stop ' + (i + 1))) + '</div>' +
+        (s.text ? '<div class="ix2jn-stop-text">' + esc(s.text) + '</div>' : '');
+      stopsBox.appendChild(el);
+      return { x: x, y: y, el: el };
+    });
+    // scale svg to stage
+    svg.setAttribute('width', boxW); svg.setAttribute('height', boxH);
+  }
+  function _ix2jnPlay(root) {
+    _ix2Clear(root);
+    var st = _ix2St(root);
+    var dot = root.querySelector('.ix2jn-dot');
+    var pts = st.jnPts || [];
+    if (!pts.length) return;
+    pts.forEach(function (p) { p.el.classList.remove('in'); });
+    var path = root.querySelector('.ix2jn-path');
+    var L = path.getTotalLength();
+    var boxW = root.querySelector('.ix2jn-stage').clientWidth || 600, boxH = root.querySelector('.ix2jn-stage').clientHeight || 200;
+    function place(i) {
+      var p = path.getPointAtLength(L * (pts.length === 1 ? 1 : i / (pts.length - 1)));
+      dot.setAttribute('cx', p.x / 1000 * boxW); dot.setAttribute('cy', p.y / 240 * boxH);
+    }
+    dot.classList.remove('show');
+    if (window.MO_RM) { pts.forEach(function (p) { p.el.classList.add('in'); }); place(pts.length - 1); dot.classList.add('show'); return; }
+    place(0); dot.classList.add('show');
+    pts.forEach(function (p, i) {
+      _ix2After(root, 300 + i * 950, function () { place(i); p.el.classList.add('in'); });
+    });
+  }
+
+  // ---- I1 decision tree ------------------------------------------------------
+  function _ix2dtRender(root) {
+    var data = _ix2JSON(root, '[data-ix2dt]'); if (!data) return;
+    var st = _ix2St(root);
+    if (st.dtIdx == null) { st.dtIdx = 0; st.dtTrail = []; }
+    var nodeBox = root.querySelector('.ix2dt-node');
+    var trailBox = root.querySelector('.ix2dt-trail');
+    trailBox.innerHTML = st.dtTrail.map(function (s) { return '<span class="ix2dt-crumb">' + esc(s) + '</span>'; }).join('<span class="ix2dt-sep">→</span>');
+    if (st.dtResult != null) {
+      nodeBox.innerHTML = '<div class="ix2dt-result"><div class="ix2dt-result-tag">Outcome</div>' +
+        '<div class="ix2dt-result-text">' + inlineRichHTML(st.dtResult) + '</div>' +
+        '<button type="button" class="ix2st-btn" data-dt-restart>Start again</button></div>';
+      return;
+    }
+    var node = data.nodes[st.dtIdx];
+    if (!node) return;
+    nodeBox.innerHTML = '<div class="ix2dt-q">' + esc(node.q || '') + '</div>' +
+      '<div class="ix2dt-opts">' + _ixArr(node.opts).map(function (o, i) {
+        return '<button type="button" class="ix2dt-opt" data-dt-opt="' + i + '">' + esc(o.t || ('Option ' + (i + 1))) + '</button>';
+      }).join('') + '</div>';
+  }
+
+  // ---- I2 scenario --------------------------------------------------------------
+  function _ix2scRender(root) {
+    var data = _ix2JSON(root, '[data-ix2sc]'); if (!data) return;
+    var st = _ix2St(root);
+    if (st.scIdx == null) { st.scIdx = 0; st.scCons = null; }
+    var dots = root.querySelector('.ix2sc-dots');
+    dots.innerHTML = data.beats.map(function (b, i) {
+      return '<span class="ix2sc-dot' + (i < st.scIdx ? ' done' : '') + (i === st.scIdx ? ' on' : '') + '"></span>';
+    }).join('');
+    var box = root.querySelector('.ix2sc-beat');
+    if (st.scIdx >= data.beats.length) {
+      box.innerHTML = '<div class="ix2sc-end"><div class="ix2dt-result-tag">Scenario complete</div>' +
+        (data.title ? '<div class="ix2sc-end-t">' + esc(data.title) + '</div>' : '') +
+        '<button type="button" class="ix2st-btn" data-sc-restart>Play again</button></div>';
+      return;
+    }
+    var b = data.beats[st.scIdx];
+    var html = (b.tag ? '<div class="ix2sc-tag">' + esc(b.tag) + '</div>' : '') +
+      '<div class="ix2sc-text">' + inlineRichHTML(b.text || '') + '</div>';
+    if (st.scCons != null) {
+      var ok = st.scConsOk;
+      html += '<div class="ix2sc-cons ' + (ok ? 'ok' : 'warn') + '"><div class="ix2sc-cons-tag">' + (ok ? 'Good call' : 'Think again') + '</div>' + inlineRichHTML(st.scCons) + '</div>' +
+        '<button type="button" class="ix2st-btn" data-sc-next>' + (st.scIdx < data.beats.length - 1 ? 'Continue →' : 'Finish') + '</button>';
+    } else {
+      html += '<div class="ix2sc-opts">' + _ixArr(b.opts).map(function (o, i) {
+        return '<button type="button" class="ix2dt-opt" data-sc-opt="' + i + '">' + esc(o.t || ('Option ' + (i + 1))) + '</button>';
+      }).join('') + '</div>';
+    }
+    box.innerHTML = html;
+  }
+
+  // ---- I4 stepper -----------------------------------------------------------------
+  function _ix2stRender(root) {
+    var data = _ix2JSON(root, '[data-ix2st]'); if (!data || !data.steps.length) return;
+    var st = _ix2St(root);
+    if (st.stIdx == null) st.stIdx = 0;
+    var i = Math.min(Math.max(st.stIdx, 0), data.steps.length - 1);
+    st.stIdx = i;
+    var s = data.steps[i];
+    var stage = root.querySelector('.ix2st-stage');
+    var color = s.color || '#B59060';
+    stage.innerHTML = '<div class="ix2st-card">' +
+      '<div class="ix2st-num" style="background:' + esc(color) + ';">' + (i + 1) + '</div>' +
+      (s.img ? '<div class="ix2st-img" style="background-image:url(\'' + esc(s.img) + '\');"></div>' : '') +
+      '<div class="ix2st-t">' + esc(s.t || ('Step ' + (i + 1))) + '</div>' +
+      (s.d ? '<div class="ix2st-d">' + inlineRichHTML(s.d) + '</div>' : '') +
+      '</div>';
+    root.querySelector('.ix2st-count').textContent = (i + 1) + ' / ' + data.steps.length;
+    root.querySelector('[data-st="-1"]').disabled = (i === 0);
+    root.querySelector('[data-st="1"]').disabled = (i === data.steps.length - 1);
+  }
+
+  // ---- I5 matching -------------------------------------------------------------------
+  function _ix2maRender(root) {
+    var data = _ix2JSON(root, '[data-ix2ma]'); if (!data) return;
+    var st = _ix2St(root);
+    st.maSel = null; st.maDone = {};
+    var terms = root.querySelector('.ix2ma-terms');
+    var defs = root.querySelector('.ix2ma-defs');
+    terms.innerHTML = ''; defs.innerHTML = '';
+    data.pairs.forEach(function (p, i) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'ix2ma-item'; b.setAttribute('data-ma-term', i);
+      b.textContent = (Array.isArray(p) ? p[0] : p.term) || '';
+      terms.appendChild(b);
+    });
+    _ix2Shuffle(data.pairs.map(function (p, i) { return i; })).forEach(function (i) {
+      var p = data.pairs[i];
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'ix2ma-item'; b.setAttribute('data-ma-def', i);
+      b.textContent = (Array.isArray(p) ? p[1] : p.def) || '';
+      defs.appendChild(b);
+    });
+    var sc = root.querySelector('.ix2ma-score'); if (sc) sc.textContent = '';
+  }
+
+  // ---- I6 sequencing --------------------------------------------------------------------
+  function _ix2sqRender(root) {
+    var data = _ix2JSON(root, '[data-ix2sq]'); if (!data) return;
+    var st = _ix2St(root);
+    st.sqPicked = [];
+    var pool = root.querySelector('.ix2sq-pool');
+    var order = root.querySelector('.ix2sq-order');
+    pool.innerHTML = ''; order.innerHTML = '';
+    _ix2Shuffle(data.items.map(function (s, i) { return i; })).forEach(function (i) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'ix2sq-chip'; b.setAttribute('data-sq', i);
+      b.textContent = data.items[i];
+      pool.appendChild(b);
+    });
+    order.innerHTML = '<span class="ix2sq-hint">Tap steps above in the order they happen →</span>';
+    var msg = root.querySelector('.ix2sq-msg'); if (msg) msg.textContent = '';
+  }
+
+  // ---- play dispatcher (on-view + replay) -------------------------------------------------
+  window._ix2Play = function (root) {
+    if (root.classList.contains('pb-ix2ho')) _ix2hoPlay(root);
+    else if (root.classList.contains('pb-ix2bu')) _ix2buPlay(root);
+    else if (root.classList.contains('pb-ix2pt')) _ix2ptPlay(root);
+    else if (root.classList.contains('pb-ix2ri')) { if (!root.querySelector('.ix2ri-node')) _ix2riLayout(root); _ix2riPlay(root); }
+    else if (root.classList.contains('pb-ix2jn')) { _ix2jnLayout(root); _ix2jnPlay(root); }
+    else if (root.classList.contains('pb-ix2dt')) _ix2dtRender(root);
+    else if (root.classList.contains('pb-ix2sc')) _ix2scRender(root);
+    else if (root.classList.contains('pb-ix2st')) _ix2stRender(root);
+    else if (root.classList.contains('pb-ix2ma')) _ix2maRender(root);
+    else if (root.classList.contains('pb-ix2sq')) _ix2sqRender(root);
+  };
+  // interactions that need first render even before view
+  function _ix2Init(root) {
+    if (root.classList.contains('pb-ix2dt')) _ix2dtRender(root);
+    else if (root.classList.contains('pb-ix2sc')) _ix2scRender(root);
+    else if (root.classList.contains('pb-ix2st')) _ix2stRender(root);
+    else if (root.classList.contains('pb-ix2ma')) _ix2maRender(root);
+    else if (root.classList.contains('pb-ix2sq')) _ix2sqRender(root);
+    else if (root.classList.contains('pb-ix2ri') && !root.querySelector('.ix2ri-node')) _ix2riLayout(root);
+    else if (root.classList.contains('pb-ix2jn') && !( _ix2St(root).jnPts || []).length) _ix2jnLayout(root);
+  }
+  window._ix2Init = _ix2Init;
+
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target : null;
+    if (!t) return;
+
+    // glossary term popover
+    var g = t.closest('.mo-gloss');
+    if (g) {
+      var was = g.classList.contains('open');
+      document.querySelectorAll('.mo-gloss.open').forEach(function (x) { x.classList.remove('open'); });
+      if (!was) g.classList.add('open');
+      return;
+    }
+    if (!t.closest('.mo-gloss')) {
+      document.querySelectorAll('.mo-gloss.open').forEach(function (x) { x.classList.remove('open'); });
+    }
+
+    // replay / reset
+    if (t.closest('[data-ix2-replay]')) { var r0 = t.closest('.pb-ix'); if (r0) window._ix2Play(r0); return; }
+    if (t.closest('[data-ix2-reset]')) {
+      var rr = t.closest('.pb-ix');
+      if (rr) { delete window.__ix2State[rr.id]; window._ix2Play(rr); }
+      return;
+    }
+
+    // dtree
+    var dto = t.closest('[data-dt-opt]');
+    if (dto) {
+      var dtw = dto.closest('.pb-ix2dt');
+      var dtd = _ix2JSON(dtw, '[data-ix2dt]');
+      var dst = _ix2St(dtw);
+      var opt = _ixArr(dtd.nodes[dst.dtIdx].opts)[Number(dto.getAttribute('data-dt-opt'))];
+      dst.dtTrail.push(opt.t || '');
+      if (opt.result != null && opt.result !== '') dst.dtResult = opt.result;
+      else dst.dtIdx = Number(opt.to) || 0;
+      _ix2dtRender(dtw); return;
+    }
+    if (t.closest('[data-dt-restart]')) { var dtw2 = t.closest('.pb-ix2dt'); delete window.__ix2State[dtw2.id]; _ix2dtRender(dtw2); return; }
+
+    // scenario
+    var sco = t.closest('[data-sc-opt]');
+    if (sco) {
+      var scw = sco.closest('.pb-ix2sc');
+      var scd = _ix2JSON(scw, '[data-ix2sc]');
+      var sst = _ix2St(scw);
+      var so = _ixArr(scd.beats[sst.scIdx].opts)[Number(sco.getAttribute('data-sc-opt'))];
+      sst.scCons = so.cons || ''; sst.scConsOk = !!so.ok;
+      _ix2scRender(scw); return;
+    }
+    if (t.closest('[data-sc-next]')) { var scw2 = t.closest('.pb-ix2sc'); var sst2 = _ix2St(scw2); sst2.scIdx++; sst2.scCons = null; _ix2scRender(scw2); return; }
+    if (t.closest('[data-sc-restart]')) { var scw3 = t.closest('.pb-ix2sc'); delete window.__ix2State[scw3.id]; _ix2scRender(scw3); return; }
+
+    // hotspot
+    var hsd = t.closest('.ix2hs-dot');
+    if (hsd) {
+      var hsw = hsd.closest('.pb-ix2hs');
+      var hi = hsd.getAttribute('data-hs');
+      var pop = hsw.querySelector('[data-hsp="' + hi + '"]');
+      var wasHidden = pop.hidden;
+      hsw.querySelectorAll('.ix2hs-pop').forEach(function (p) { p.hidden = true; });
+      hsw.querySelectorAll('.ix2hs-dot').forEach(function (d) { d.classList.remove('on'); });
+      if (wasHidden) { pop.hidden = false; hsd.classList.add('on'); }
+      return;
+    }
+
+    // stepper
+    var stb = t.closest('[data-st]');
+    if (stb && stb.closest('.pb-ix2st')) {
+      var stw = stb.closest('.pb-ix2st');
+      var sst3 = _ix2St(stw);
+      sst3.stIdx = (sst3.stIdx || 0) + Number(stb.getAttribute('data-st'));
+      _ix2stRender(stw); return;
+    }
+
+    // matching
+    var mterm = t.closest('[data-ma-term]');
+    if (mterm && !mterm.classList.contains('done')) {
+      var mw = mterm.closest('.pb-ix2ma');
+      mw.querySelectorAll('[data-ma-term]').forEach(function (x) { x.classList.remove('sel'); });
+      mterm.classList.add('sel');
+      _ix2St(mw).maSel = mterm.getAttribute('data-ma-term');
+      return;
+    }
+    var mdef = t.closest('[data-ma-def]');
+    if (mdef && !mdef.classList.contains('done')) {
+      var mw2 = mdef.closest('.pb-ix2ma');
+      var mst = _ix2St(mw2);
+      if (mst.maSel == null) { mdef.classList.add('shake'); setTimeout(function () { mdef.classList.remove('shake'); }, 450); return; }
+      var termBtn = mw2.querySelector('[data-ma-term="' + mst.maSel + '"]');
+      if (mdef.getAttribute('data-ma-def') === mst.maSel) {
+        termBtn.classList.remove('sel'); termBtn.classList.add('done'); mdef.classList.add('done');
+        mst.maSel = null;
+        var doneCount = mw2.querySelectorAll('.ix2ma-item.done').length;
+        var total = mw2.querySelectorAll('[data-ma-term]').length;
+        var scEl = mw2.querySelector('.ix2ma-score');
+        if (scEl) scEl.textContent = doneCount / 2 === total ? 'All matched — well done!' : (doneCount / 2) + ' of ' + total + ' matched';
+      } else {
+        mdef.classList.add('shake'); termBtn.classList.add('shake');
+        setTimeout(function () { mdef.classList.remove('shake'); if (termBtn) termBtn.classList.remove('shake'); }, 450);
+      }
+      return;
+    }
+
+    // sequencing
+    var sqc = t.closest('[data-sq]');
+    if (sqc && sqc.closest('.ix2sq-pool')) {
+      var sqw = sqc.closest('.pb-ix2sq');
+      var qst = _ix2St(sqw);
+      var qi = Number(sqc.getAttribute('data-sq'));
+      if (qst.sqPicked.indexOf(qi) !== -1) return;
+      qst.sqPicked.push(qi);
+      sqc.classList.add('picked');
+      var orderBox = sqw.querySelector('.ix2sq-order');
+      var hint = orderBox.querySelector('.ix2sq-hint'); if (hint) hint.remove();
+      var chip = document.createElement('button');
+      chip.type = 'button'; chip.className = 'ix2sq-chip in-order'; chip.setAttribute('data-sq-un', qi);
+      chip.innerHTML = '<span class="ix2sq-n">' + qst.sqPicked.length + '</span>' + esc(sqc.textContent);
+      orderBox.appendChild(chip);
+      return;
+    }
+    var squn = t.closest('[data-sq-un]');
+    if (squn) {
+      var sqw2 = squn.closest('.pb-ix2sq');
+      var qst2 = _ix2St(sqw2);
+      var uqi = Number(squn.getAttribute('data-sq-un'));
+      var pos = qst2.sqPicked.indexOf(uqi);
+      if (pos !== -1) qst2.sqPicked.splice(pos, 1);
+      var poolChip = sqw2.querySelector('.ix2sq-pool [data-sq="' + uqi + '"]');
+      if (poolChip) poolChip.classList.remove('picked');
+      squn.remove();
+      sqw2.querySelectorAll('.ix2sq-order .ix2sq-chip').forEach(function (c, i) {
+        var n = c.querySelector('.ix2sq-n'); if (n) n.textContent = (i + 1);
+        c.setAttribute('data-sq-un', qst2.sqPicked[i]);
+      });
+      if (!qst2.sqPicked.length) sqw2.querySelector('.ix2sq-order').innerHTML = '<span class="ix2sq-hint">Tap steps above in the order they happen →</span>';
+      return;
+    }
+    if (t.closest('[data-sq-check]')) {
+      var sqw3 = t.closest('.pb-ix2sq');
+      var qst3 = _ix2St(sqw3);
+      var sqd = _ix2JSON(sqw3, '[data-ix2sq]');
+      var chips = sqw3.querySelectorAll('.ix2sq-order .ix2sq-chip');
+      var good = 0;
+      chips.forEach(function (c, i) {
+        var ok = qst3.sqPicked[i] === i;
+        c.classList.toggle('ok', ok); c.classList.toggle('bad', !ok);
+        if (ok) good++;
+      });
+      var msg = sqw3.querySelector('.ix2sq-msg');
+      if (msg) msg.textContent = chips.length < sqd.items.length ? 'Place every step first.' :
+        (good === sqd.items.length ? 'Perfect order — well done!' : good + ' of ' + sqd.items.length + ' in the right spot.');
+      return;
+    }
+  });
+}
+
+// -------------------------------------------------------------------------
+// Glossary inline markup — [g:term|definition] inside rich text.
+// Wraps inlineRichHTML; original kept as core for figure/link handling.
+// -------------------------------------------------------------------------
+var _inlineRichCore = inlineRichHTML;
+inlineRichHTML = function (text) {
+  text = String(text == null ? '' : text);
+  if (text.indexOf('[g:') === -1) return _inlineRichCore(text);
+  var out = '', re = /\[g:([^\]|]+)\|([^\]]+)\]/g, last = 0, m;
+  while ((m = re.exec(text))) {
+    out += _inlineRichCore(text.slice(last, m.index));
+    out += '<span class="mo-gloss" tabindex="0">' + esc(m[1]) + '<span class="mo-gloss-pop" role="tooltip">' + esc(m[2]) + '</span></span>';
+    last = m.index + m[0].length;
+  }
+  out += _inlineRichCore(text.slice(last));
+  return out;
+};
+
+// -------------------------------------------------------------------------
+// MOTION LAYER — scroll-triggered reveals, counters, gauge sweep, chart bars,
+// processflow stagger, cinematic chapter opener. Play-once per chapter view;
+// reduced-motion users get the final state immediately.
+// -------------------------------------------------------------------------
+(function () {
+  var RM = window.MO_RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  // Counters — animate the numeric prefix of .pb-stat-num.
+  function _moCount(el) {
+    if (el.dataset.counted) return;
+    el.dataset.counted = '1';
+    var numEl = el.childNodes[0];
+    var txt = el.textContent;
+    var m = txt.match(/^\s*([0-9][0-9,]*(?:\.[0-9]+)?)/);
+    if (!m) return;
+    var target = parseFloat(m[1].replace(/,/g, ''));
+    if (!isFinite(target) || RM) return;
+    var dec = (m[1].split('.')[1] || '').length;
+    var suffixNode = el.querySelector('.pb-stat-unit');
+    var start = null, dur = 1200;
+    function frame(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      var val = (target * eased).toFixed(dec);
+      el.firstChild.nodeValue = val.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    if (el.firstChild && el.firstChild.nodeType === 3) requestAnimationFrame(frame);
+  }
+
+  // Gauge — sweep the needle from -90° to its resting angle.
+  function _moGauge(svg) {
+    if (svg.dataset.gauged) return;
+    svg.dataset.gauged = '1';
+    var needle = svg.querySelector('g[transform^="rotate("]');
+    if (!needle || RM) return;
+    var m = needle.getAttribute('transform').match(/rotate\((-?[0-9.]+)/);
+    if (!m) return;
+    var end = parseFloat(m[1]), start = null, dur = 1100;
+    function frame(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      needle.setAttribute('transform', needle.getAttribute('transform').replace(/rotate\(-?[0-9.]+/, 'rotate(' + (-90 + (end + 90) * eased).toFixed(1)));
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function _moScan() {
+    // ix2 interactions — init those that need first paint, arm play-on-view
+    document.querySelectorAll('.pb-ix2ho,.pb-ix2bu,.pb-ix2pt,.pb-ix2ri,.pb-ix2jn,.pb-ix2dt,.pb-ix2sc,.pb-ix2st,.pb-ix2ma,.pb-ix2sq').forEach(function (r) {
+      if (!r.dataset.ix2Armed) {
+        r.dataset.ix2Armed = '1';
+        window._ix2Init(r);
+        _moObserve(r, function () { window._ix2Play(r); });
+      }
+    });
+    // generic reveal
+    document.querySelectorAll('.pb-ix:not([class*="pb-ix2"]), .pb-stats').forEach(function (el) {
+      if (el.dataset.rvArmed) return;
+      el.dataset.rvArmed = '1';
+      if (RM) return;
+      el.classList.add('mo-rv');
+      _moObserve(el, function () { el.classList.add('in'); });
+    });
+    // statband counters
+    document.querySelectorAll('.pb-stat-num').forEach(function (el) {
+      if (el.dataset.counted) return;
+      _moObserve(el, function () { _moCount(el); });
+    });
+    // gauge sweep
+    document.querySelectorAll('.pb-gauge-svgwrap svg').forEach(function (el) {
+      if (el.dataset.gauged) return;
+      _moObserve(el, function () { _moGauge(el); });
+    });
+    // chart bars — grow on view
+    document.querySelectorAll('.ixchart').forEach(function (svg) {
+      if (svg.dataset.barsArmed) return;
+      svg.dataset.barsArmed = '1';
+      if (RM) return;
+      var bars = svg.querySelectorAll('rect');
+      bars.forEach(function (b) { b.classList.add('mo-bar'); });
+      _moObserve(svg, function () { svg.classList.add('mo-bars-in'); });
+    });
+    // processflow stagger
+    document.querySelectorAll('.pb-ixpf').forEach(function (pf) {
+      if (pf.dataset.stagArmed) return;
+      pf.dataset.stagArmed = '1';
+      if (RM) return;
+      pf.querySelectorAll('.ixpf-step').forEach(function (s, i) { s.style.transitionDelay = (i * 70) + 'ms'; });
+      pf.classList.add('mo-rv');
+      _moObserve(pf, function () { pf.classList.add('in'); });
+    });
+    // cinematic chapter opener
+    document.querySelectorAll('section.chapter .opener').forEach(function (op) {
+      if (op.dataset.opArmed) return;
+      op.dataset.opArmed = '1';
+      if (RM) { op.classList.add('mo-op-play'); return; }
+      _moObserve(op, function () { op.classList.add('mo-op-play'); });
+    });
+  }
+
+  var _moIO = null;
+  function _moObserve(el, cb) {
+    if (RM) { cb(); return; }
+    if (!('IntersectionObserver' in window)) { cb(); return; }
+    if (!_moIO) {
+      _moIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          var f = en.target.__moCb;
+          _moIO.unobserve(en.target);
+          if (f) f();
+        });
+      }, { threshold: 0.25 });
+    }
+    el.__moCb = cb;
+    _moIO.observe(el);
+  }
+
+  // re-scan after every render
+  if (typeof window.applyPlaybook === 'function' && !window.applyPlaybook.__moWrapped) {
+    var _origApply = window.applyPlaybook;
+    var wrapped = function () {
+      var r = _origApply.apply(this, arguments);
+      try { _moScan(); } catch (e) {}
+      return r;
+    };
+    wrapped.__moWrapped = true;
+    window.applyPlaybook = wrapped;
+  }
+  window._moScan = _moScan;
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { try { _moScan(); } catch (e) {} });
+  else { try { _moScan(); } catch (e) {} }
+})();

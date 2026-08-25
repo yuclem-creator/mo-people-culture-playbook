@@ -83,7 +83,18 @@
     { v: 'testline',    l: '15 · Test-design timeline' },
     { v: 'eventcal',    l: '16 · Event calendar timeline' },
     { v: 'kpidash',     l: '17 · KPI dashboard with STLY toggle' },
-    { v: 'compare',     l: '18 · Comparison pair (IS / IS NOT)' }
+    { v: 'compare',     l: '18 · Comparison pair (IS / IS NOT)' },
+    { v: 'handoff',     l: '19 · Handoff animation (token between roles)' },
+    { v: 'buildup',     l: '20 · Build-up animation (parts assemble)' },
+    { v: 'parallel',    l: '21 · Parallel paths animation (with / without)' },
+    { v: 'ripple',      l: '22 · Ripple animation (cause → consequences)' },
+    { v: 'journeydot',  l: '23 · Journey dot animation (travelling path)' },
+    { v: 'dtree',       l: '24 · Decision tree (branching Q&A)' },
+    { v: 'scenario',    l: '25 · Scenario (story beats with choices)' },
+    { v: 'hotspot',     l: '26 · Hotspot image (tap-to-reveal points)' },
+    { v: 'stepper',     l: '27 · Step walkthrough (previous / next)' },
+    { v: 'matching',    l: '28 · Matching pairs exercise' },
+    { v: 'seq',         l: '29 · Sequencing exercise (tap in order)' }
   ];
   var IX_TEMPLATES = {
     processflow: { steps: [
@@ -147,9 +158,41 @@
         'Not a replacement for property-level commercial judgement',
         'Not a pricing system or a set of mandatory rate rules',
         'Not a one-off exercise — the Track stage is continuous' ] } ],
-      note: '' }
+      note: '' },
+    handoff: { token: '●', lanes: [
+      { role: 'Guest', text: 'Makes the request.' },
+      { role: 'Guest Services', text: 'Logs it and hands it over.' },
+      { role: 'Housekeeping', text: 'Delivers and confirms.' } ] },
+    buildup: { img: '', items: [
+      { label: 'Foundation', x: 50, y: 78 }, { label: 'Core', x: 50, y: 52 }, { label: 'Finish', x: 50, y: 26 } ] },
+    parallel: {
+      good: { title: 'With this practice', beats: ['First the guest notices…', 'Then the team responds…', 'Finally the outcome lands.'], verdict: 'The moment is saved.' },
+      bad: { title: 'Without it', beats: ['The cue is missed…', 'The gap widens…', 'The guest leaves unhappy.'], verdict: 'The moment is lost.' } },
+    ripple: { trigger: { label: 'One action', sub: 'at the centre' }, nodes: [
+      { icon: '①', label: 'Immediate effect', cons: 'What happens first', ring: 1 },
+      { icon: '②', label: 'Knock-on effect', cons: 'What follows', ring: 2 },
+      { icon: '③', label: 'Wider impact', cons: 'What it changes', ring: 3 } ] },
+    journeydot: { stops: [
+      { label: 'Start', text: 'Where it begins.' }, { label: 'Middle', text: 'What happens along the way.' }, { label: 'End', text: 'Where it lands.' } ] },
+    dtree: { title: 'Find the right path', nodes: [
+      { q: 'First question?', opts: [ { t: 'Option A', to: 1, result: '' }, { t: 'Option B', to: 0, result: 'Outcome B — do this.' } ] },
+      { q: 'Follow-up question?', opts: [ { t: 'Yes', to: 0, result: 'Outcome A1.' }, { t: 'No', to: 0, result: 'Outcome A2.' } ] } ] },
+    scenario: { title: 'What would you do?', beats: [
+      { tag: 'Beat 1', text: 'The situation unfolds…', opts: [ { t: 'Do the right thing', cons: 'Exactly right.', ok: true }, { t: 'Take a shortcut', cons: 'That creates a problem.', ok: false } ] },
+      { tag: 'Beat 2', text: 'Now it escalates…', opts: [ { t: 'Escalate properly', cons: 'Well handled.', ok: true }, { t: 'Ignore it', cons: 'That makes it worse.', ok: false } ] } ] },
+    hotspot: { img: '', points: [
+      { x: 25, y: 35, t: 'Point one', d: 'What to notice here.' },
+      { x: 60, y: 55, t: 'Point two', d: 'Why it matters.' },
+      { x: 80, y: 25, t: 'Point three', d: 'The detail to remember.' } ] },
+    stepper: { steps: [
+      { t: 'First step', d: 'What to do.', img: '', color: '#B59060' },
+      { t: 'Second step', d: 'What comes next.', img: '', color: '#4E7A6B' },
+      { t: 'Final step', d: 'How it ends.', img: '', color: '#C07A3E' } ] },
+    matching: { title: 'Match each pair', pairs: [
+      ['Term one', 'Its meaning'], ['Term two', 'Its meaning'], ['Term three', 'Its meaning'] ] },
+    seq: { title: 'Put these in order', items: ['First thing', 'Second thing', 'Third thing', 'Last thing'] }
   };
-  // ---- Structured form specs for the 18 interaction kinds ------------------
+  // ---- Structured form specs for the 29 interaction kinds ------------------
   // Each entry: { k: 'fieldKey', l: 'Label', t: 'text'|'area'|'num'|'check'|
   // 'color'|'select'|'csv'|'lines'|'rowscsv'|'group'|'list', ... }.
   // Rendered by ixField() below — no raw JSON needed for normal editing.
@@ -398,6 +441,116 @@
           { t: 'lines', k: 'items', l: 'Checklist points (one per line)' }
         ] },
       { k: 'note', l: 'Note under the pair (optional)', t: 'area' }
+    ],
+    handoff: [
+      { k: 'token', l: 'Token symbol', tip: 'Short label for the moving token, e.g. ● or ✉' },
+      { t: 'list', k: 'lanes', l: 'Lanes (in handoff order)', addLabel: 'Add lane',
+        make: function () { return { role: 'Role', text: '' }; },
+        fields: [
+          { k: 'role', l: 'Role / owner' },
+          { k: 'text', l: 'What they do', t: 'area' }
+        ] }
+    ],
+    buildup: [
+      { k: 'img', l: 'Background image path (optional)', tip: 'e.g. img/my-photo.jpg — leave blank for a plain stage' },
+      { t: 'list', k: 'items', l: 'Components (revealed in order)', addLabel: 'Add component',
+        make: function () { return { label: 'New part', x: 50, y: 50 }; },
+        fields: [
+          { k: 'label', l: 'Label' },
+          { k: 'x', l: 'X position %', t: 'num', tip: '0 = left edge, 100 = right edge' },
+          { k: 'y', l: 'Y position %', t: 'num', tip: '0 = top, 100 = bottom' }
+        ] }
+    ],
+    parallel: [
+      { t: 'group', k: 'good', l: 'Positive path', fields: [
+        { k: 'title', l: 'Column title' },
+        { t: 'lines', k: 'beats', l: 'Beats (one per line)' },
+        { k: 'verdict', l: 'Verdict line' } ] },
+      { t: 'group', k: 'bad', l: 'Negative path', fields: [
+        { k: 'title', l: 'Column title' },
+        { t: 'lines', k: 'beats', l: 'Beats (one per line)' },
+        { k: 'verdict', l: 'Verdict line' } ] }
+    ],
+    ripple: [
+      { t: 'group', k: 'trigger', l: 'Trigger (centre)', fields: [
+        { k: 'label', l: 'Trigger label' },
+        { k: 'sub', l: 'Small sub-label (optional)' } ] },
+      { t: 'list', k: 'nodes', l: 'Consequence nodes', addLabel: 'Add node',
+        make: function () { return { icon: '', label: 'New effect', cons: '', ring: 1 }; },
+        fields: [
+          { k: 'icon', l: 'Icon / symbol (optional)' },
+          { k: 'label', l: 'Label' },
+          { k: 'cons', l: 'Consequence (optional)' },
+          { k: 'ring', l: 'Ring (1 = inner … 3 = outer)', t: 'num' }
+        ] }
+    ],
+    journeydot: [
+      { t: 'list', k: 'stops', l: 'Stops (in journey order)', addLabel: 'Add stop',
+        make: function () { return { label: 'New stop', text: '' }; },
+        fields: [
+          { k: 'label', l: 'Stop label' },
+          { k: 'text', l: 'Short text (optional)' }
+        ] }
+    ],
+    dtree: [
+      { k: 'title', l: 'Title (optional)' },
+      { t: 'list', k: 'nodes', l: 'Nodes', addLabel: 'Add node',
+        make: function () { return { q: 'New question?', opts: [{ t: 'Option', to: 0, result: '' }] }; },
+        fields: [
+          { k: 'q', l: 'Question' },
+          { t: 'list', k: 'opts', l: 'Options', addLabel: 'Add option',
+            make: function () { return { t: 'Option', to: 0, result: '' }; },
+            fields: [
+              { k: 't', l: 'Button label' },
+              { k: 'to', l: 'Go to node # (0-based) — ignored if outcome is set', t: 'num' },
+              { k: 'result', l: 'Outcome text (leave blank to keep branching)', t: 'area' }
+            ] }
+        ] }
+    ],
+    scenario: [
+      { k: 'title', l: 'Title (optional)' },
+      { t: 'list', k: 'beats', l: 'Beats', addLabel: 'Add beat',
+        make: function () { return { tag: 'Beat', text: '', opts: [{ t: 'Choice', cons: '', ok: false }] }; },
+        fields: [
+          { k: 'tag', l: 'Tag (e.g. Beat 1)' },
+          { k: 'text', l: 'Story text', t: 'area' },
+          { t: 'list', k: 'opts', l: 'Choices', addLabel: 'Add choice',
+            make: function () { return { t: 'Choice', cons: '', ok: false }; },
+            fields: [
+              { k: 't', l: 'Choice label' },
+              { k: 'cons', l: 'Consequence text', t: 'area' },
+              { k: 'ok', l: 'This is the right call', t: 'check' }
+            ] }
+        ] }
+    ],
+    hotspot: [
+      { k: 'img', l: 'Image path', tip: 'e.g. img/my-photo.jpg — leave blank for a placeholder stage' },
+      { t: 'list', k: 'points', l: 'Hotspot points', addLabel: 'Add point',
+        make: function () { return { x: 50, y: 50, t: 'Point', d: '' }; },
+        fields: [
+          { k: 't', l: 'Title' },
+          { k: 'd', l: 'Detail text', t: 'area' },
+          { k: 'x', l: 'X position %', t: 'num' },
+          { k: 'y', l: 'Y position %', t: 'num' }
+        ] }
+    ],
+    stepper: [
+      { t: 'list', k: 'steps', l: 'Steps', addLabel: 'Add step',
+        make: function () { return { t: 'New step', d: '', img: '', color: '#B59060' }; },
+        fields: [
+          { k: 't', l: 'Step title' },
+          { k: 'd', l: 'Detail text', t: 'area' },
+          { k: 'img', l: 'Image path (optional)' },
+          { k: 'color', l: 'Number badge colour', t: 'color' }
+        ] }
+    ],
+    matching: [
+      { k: 'title', l: 'Title (optional)' },
+      { t: 'rowscsv', k: 'pairs', l: 'Pairs — term | definition (one per line)' }
+    ],
+    seq: [
+      { k: 'title', l: 'Title (optional)' },
+      { t: 'lines', k: 'items', l: 'Steps in the CORRECT order (one per line)', tip: 'The player shuffles them automatically.' }
     ]
   };
 
@@ -1895,7 +2048,18 @@
     testline: 'Test-design timeline',
     eventcal: 'Event calendar timeline',
     kpidash: 'KPI dashboard (STLY toggle)',
-    compare: 'Comparison pair'
+    compare: 'Comparison pair',
+    handoff: 'Handoff animation',
+    buildup: 'Build-up animation',
+    parallel: 'Parallel paths animation',
+    ripple: 'Ripple animation',
+    journeydot: 'Journey dot animation',
+    dtree: 'Decision tree',
+    scenario: 'Scenario',
+    hotspot: 'Hotspot image',
+    stepper: 'Step walkthrough',
+    matching: 'Matching pairs',
+    seq: 'Sequencing exercise'
   };
 
   function mediaActionsRow(itemsArr) {
@@ -1970,6 +2134,19 @@
         mkIx('cardwall'),
         mkIx('scorecard'),
         mkIx('legendtour')
+      ] },
+      { label: 'Animations & practice', items: [
+        mkIx('handoff'),
+        mkIx('buildup'),
+        mkIx('parallel'),
+        mkIx('ripple'),
+        mkIx('journeydot'),
+        mkIx('dtree'),
+        mkIx('scenario'),
+        mkIx('hotspot'),
+        mkIx('stepper'),
+        mkIx('matching'),
+        mkIx('seq')
       ] }
     ];
 

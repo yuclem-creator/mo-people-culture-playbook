@@ -135,3 +135,43 @@ element counts match and section titles line up; fields with [links](…) or
 [img]/[vid] figures bail to the form; disabled for non-English preview
 languages. W1 attach; W2-W6 per-kind write-throughs; W7 Esc cancels; W8
 fallback + flip behaviour intact. 16/16 PASS. v1–v9 re-run — all PASS.
+
+## v11 — ix2: 11 new interaction kinds + glossary + motion layer (2026-08-26)
+
+`v11/test_ix2.py` — run: `python3 v11/test_ix2.py` (repo-root http.server on :8910).
+
+Adds 11 kinds to the ix system (29 total), all living in the same appended
+block in BOTH mirrored app.js copies (byte-identical tails asserted):
+
+- Concept animations (play-on-view, replay button): handoff (token between
+  role lanes), buildup (parts assemble on a stage), parallel (with/without
+  beats in sync), ripple (trigger → consequence rings), journeydot (dot
+  travels an SVG path revealing stops).
+- Practice interactions: dtree (branching Q&A → outcomes), scenario (story
+  beats with right-call choices), hotspot (tap-to-reveal points), stepper
+  (prev/next walkthrough), matching (pair terms/definitions), seq (tap steps
+  in order, check/reset).
+- Glossary inline markup `[g:term|definition]` inside any rich-text field —
+  dotted term, tap for popover. WYSIWYG bails to the form on `[g:` fields.
+- Motion layer: IntersectionObserver play-once reveals, statband counters,
+  gauge needle sweep, chart-bar grow, processflow stagger, cinematic chapter
+  opener; `prefers-reduced-motion` lands everything in final state. Re-arms
+  after every applyPlaybook.
+- Studio: all 11 in IX_KINDS / IX_TEMPLATES / IX_FORMS / IX_ADD_LABELS and a
+  new "Animations & practice" category (48 one-click buttons, 6 categories).
+- JSON payloads embedded as `<script type="application/json">` with
+  `JSON.stringify(...).replace(/</g,'\\u003c')` — script is raw text, esc()
+  would corrupt it (v1 pattern). Block-scoped `_ix2JSON` helper (v1's
+  `_ixJSON` is scoped to its own wiring block).
+
+X1 render all; X2–X6 animations play; X7–X12 interactions work end to end;
+X13 glossary; X14 motion; X15 mobile 390px zero overflow; X16 mirroring;
+X17 no Studio-only leak; X18 zero page errors. 21/21 PASS.
+
+Full sweep 2026-08-26: v1 9/9 · v2 13/13 · v3 11/11 · v4 9/9 · v5 10/10 ·
+v6 10/10 · v7 19/19 · v8 S1 12/12 + SCORM completion 21/21 · v9 17/17 ·
+v10 16/16 · v11 21/21. Stress: v9+v11 re-run twice — all PASS, stable.
+(v8 part2 carries 5 pre-existing harness quirks — identical results proven
+against the pre-change tree; no page errors anywhere.)
+
+Runs in `runs/2026-08-26-sweep-*.log`, `runs/2026-08-26-stress.log`.

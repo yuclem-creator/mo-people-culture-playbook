@@ -1,0 +1,6 @@
+=== verifier/v8/test_e2e.py ===
+S1: 12 passed, 0 failed
+=== verifier/v8/test_e2e_part2.py ===
+10 passed, 5 failed
+=== verifier/v8/test_scorm_completion.py ===
+21 passed, 0 failed

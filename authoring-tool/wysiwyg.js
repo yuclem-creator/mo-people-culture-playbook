@@ -57,7 +57,7 @@ window.MO_WYSIWYG = (function () {
   function hasRichSyntax(raw) {
     // Fields rendered via inlineRichHTML: bail to the form when the raw text
     // carries links or media figures we cannot round-trip through the DOM.
-    return /\[(img|vid)[\s:\]]|\[[^\]\n]+\]\(https?:\/\//.test(raw || '');
+    return /\[(img|vid)[\s:\]]|\[g:[^\]]*\||\[[^\]\n]+\]\(https?:\/\//.test(raw || '');
   }
 
   // DOM → raw text for s:'text' paragraphs: <strong>/<b> → **, <br> → \n.

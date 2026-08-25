@@ -57,7 +57,7 @@ def route(r):
     return r.continue_()
 
 EXPECTED_CATS = ["Text & media", "Lists & checks", "Steps, timelines & journeys",
-                 "Data & dashboards", "Cards & explorers"]
+                 "Data & dashboards", "Cards & explorers", "Animations & practice"]
 IX_BUTTONS = {
     "processflow": "Decision & exception logic", "horizons": "Horizon stepper / journey map",
     "legendtour": "Legend panel + tooltip tour", "flipcards": "Principle flip cards",
@@ -68,6 +68,12 @@ IX_BUTTONS = {
     "stageflow": "Stage step flow (gated)", "dlcheck": "Template + guided checklist",
     "testline": "Test-design timeline", "eventcal": "Event calendar timeline",
     "kpidash": "KPI dashboard (STLY toggle)", "compare": "Comparison pair",
+    "handoff": "Handoff animation", "buildup": "Build-up animation",
+    "parallel": "Parallel paths animation", "ripple": "Ripple animation",
+    "journeydot": "Journey dot animation", "dtree": "Decision tree",
+    "scenario": "Scenario", "hotspot": "Hotspot image",
+    "stepper": "Step walkthrough", "matching": "Matching pairs",
+    "seq": "Sequencing exercise",
 }
 
 with sync_playwright() as p:
@@ -87,14 +93,14 @@ with sync_playwright() as p:
     pg.wait_for_timeout(1200)
 
     cats = pg.evaluate("() => Array.from(document.querySelectorAll('#inspector .media-cat > summary')).map(s => s.textContent.trim())")
-    check("C1 five categories with approved labels", cats == EXPECTED_CATS, " | ".join(cats))
+    check("C1 six categories with approved labels", cats == EXPECTED_CATS, " | ".join(cats))
 
     btns = pg.evaluate("() => Array.from(document.querySelectorAll('#inspector .media-cat-grid button')).map(x => x.textContent.trim())")
-    check("C2a 37 one-click element buttons", len(btns) == 37, f"{len(btns)} buttons")
+    check("C2a 48 one-click element buttons", len(btns) == 48, f"{len(btns)} buttons")
     check("C2b no 'Add interactive' junk-drawer button", not any("Add interactive" == x.replace("+ ", "") for x in btns))
 
     missing = [l for l in IX_BUTTONS.values() if ("+ Add " + l) not in btns]
-    check("C3 all 18 interactive kinds are first-level buttons", not missing, "missing: " + ", ".join(missing) if missing else "18/18 present")
+    check("C3 all 29 interactive kinds are first-level buttons", not missing, "missing: " + ", ".join(missing) if missing else "29/29 present")
 
     # C4 — insert a test-design timeline, verify kind + starter + styled preview
     pg.click("text=+ Add Test-design timeline")
