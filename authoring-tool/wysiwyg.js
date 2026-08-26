@@ -514,6 +514,31 @@ window.MO_WYSIWYG = (function () {
 
   // ---------- public ----------
   var _retries = 0;
+  var _wipeObserver = null;
+  var _wipeTimer = null;
+  function armWipeWatch() {
+    // Any full re-render wipes our data-wys bindings. Most renders announce
+    // themselves via preview-ready, but not all paths do on slow loads — so
+    // watch the DOM: if every binding disappears while chapters exist,
+    // re-attach (debounced; the guard makes it loop-safe).
+    if (_wipeObserver) _wipeObserver.disconnect();
+    if (typeof MutationObserver === 'undefined' || !doc || !doc.body) return;
+    _wipeObserver = new MutationObserver(function () {
+      if (_wipeTimer) return;
+      _wipeTimer = setTimeout(function () {
+        _wipeTimer = null;
+        try {
+          if (!doc || !doc.querySelectorAll) return;
+          if (doc.querySelectorAll('section.chapter').length &&
+              doc.querySelectorAll('[data-wys]').length === 0) {
+            log('bindings wiped — re-attaching');
+            reattach();
+          }
+        } catch (e) {}
+      }, 800);
+    });
+    _wipeObserver.observe(doc.body, { childList: true, subtree: true });
+  }
   function reattach(br) {
     bridge = br || bridge;
     if (!bridge) return;
@@ -538,6 +563,7 @@ window.MO_WYSIWYG = (function () {
     } else if (marks > 0) {
       _retries = 0;
     }
+    armWipeWatch();
   }
 
   return { reattach: reattach };
