@@ -255,6 +255,26 @@ window.MO_WYSIWYG = (function () {
       return;
     }
 
+    if (it2.s === 'callout') {
+      // Note box / knowledge tip: label + rich text, both editable in place.
+      var cLabel = body.querySelector('.pb-callout-label');
+      if (cLabel) markEditable(cLabel, {
+        key: keyBase + ':label', rich: false, multiline: false,
+        get: function () { return it2.label || ''; },
+        set: function (v) { it2.label = v; }
+      });
+      var cText = body.querySelector('.pb-callout-text');
+      if (cText && !hasRichSyntax(String(it2.text || ''))) {
+        markEditable(cText, {
+          key: keyBase + ':text', rich: true, multiline: true,
+          fromDOM: paraFromDOM,
+          get: function () { return String(it2.text || ''); },
+          set: function (v) { it2.text = v; }
+        });
+      }
+      return;
+    }
+
     if (it2.s === 'checklist') {
       var rows = body.querySelectorAll('.pb-check');
       var items = Array.isArray(it2.items) ? it2.items : [];

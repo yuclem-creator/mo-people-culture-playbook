@@ -153,6 +153,59 @@ with sync_playwright() as p:
     else:
         check("P4 table cell edit inside sub writes through", False, "no table cell found in subs")
 
+    # P7 — callout (note box / knowledge tip) edits in place inside a sub
+    fr.evaluate("() => goTo('ch-6')")
+    pg.wait_for_timeout(2500)
+    fr = frame(pg)
+    co_sel = ".part-topic .pb-callout-text, .part-section .pb-callout-text"
+    has_co = fr.evaluate("""(s) => {
+      const els = [...document.querySelectorAll(s)];
+      const vis = els.find(e => e.offsetParent !== null);
+      if (!vis) return false;
+      vis.setAttribute('data-v12-target', '1');
+      vis.scrollIntoView({block:'center'});
+      return true;
+    }""", co_sel)
+    if has_co:
+        pg.wait_for_timeout(800)
+        before_co = pg.evaluate("""() => {
+          const br = window.MO_WYSIWYG_BRIDGE;
+          const pb = br.pb();
+          const ch = pb.chapters.find(c => c.id === 'ch-6');
+          for (const s of ch.subs) {
+            for (const sec of (br.bodyForChapter({id: s.id}).sections || [])) {
+              const it = (sec.items || []).find(i => i.s === 'callout');
+              if (it) return { subId: s.id, text: it.text };
+            }
+          }
+          return null;
+        }""")
+        fr.locator("[data-v12-target='1']").click()
+        pg.wait_for_timeout(300)
+        pg.keyboard.press("ControlOrMeta+a")
+        pg.keyboard.type("Edited callout text in place.", delay=10)
+        pg.keyboard.press("Tab")
+        pg.wait_for_timeout(1600)
+        model_co = pg.evaluate("""(sid) => {
+          const br = window.MO_WYSIWYG_BRIDGE;
+          for (const sec of (br.bodyForChapter({id: sid}).sections || [])) {
+            const it = (sec.items || []).find(i => i.s === 'callout');
+            if (it) return it.text;
+          }
+          return null;
+        }""", before_co["subId"])
+        fr = frame(pg)
+        dom_co = fr.evaluate("""(s) => {
+          const els = [...document.querySelectorAll(s)];
+          const vis = els.find(e => e.offsetParent !== null);
+          return vis ? vis.textContent : '';
+        }""", co_sel)
+        check("P7 callout text edits in place (no right-hand form needed)",
+              model_co == "Edited callout text in place." and "Edited callout" in (dom_co or ""),
+              f"model={model_co!r}")
+    else:
+        check("P7 callout text edits in place (no right-hand form needed)", False, "no callout in ch-6 subs")
+
     # P5 — flat chapter regression (ch-10 has chapter-level items)
     fr.evaluate("() => goTo('ch-10')")
     pg.wait_for_timeout(2500)
