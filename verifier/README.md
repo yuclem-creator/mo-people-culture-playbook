@@ -201,3 +201,10 @@ P1 binds on part chapters (453 editable on the commercial playbook) ·
 P2 sub section title write-through · P3 sub eyebrow label write-through ·
 P4 table cell edit inside a sub · P5 flat chapters unchanged · P6 no page
 errors. 6/6 PASS. v10 (16/16) + v9 (17/17) re-run — all PASS.
+
+## v13 — On-preview add-element + tasklist/opener editing
+`v13/test_wysiwyg_add_tasklist.py` (port 8910, stubbed Supabase): hover "+"
+handles on every item root open the Studio element picker and splice the new
+element at that exact position (handles live INSIDE item roots so the
+DOM↔model count guards are untouched); tasklist action / note / gate line and
+the chapter opener title / sub edit in place; engine + player stay clean.
