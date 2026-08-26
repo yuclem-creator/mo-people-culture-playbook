@@ -768,6 +768,7 @@
     armPreviewHandshake();
     pendingCreate = readCreateParam();
     pendingEdit = readEditParam();
+    updateBackLink();
     // Per-slug drafts: open the slot for the playbook being entered (edit
     // link), or the last one used. When signed in, the CLOUD draft wins by
     // default (newest timestamp vs the local autosnapshot) — reopening the
@@ -973,6 +974,15 @@
     openNewModal();
   }
 
+  // Back button: land in this playbook's department folder when we know it
+  // (meta.department holds the folder id), else fall back to the hub root.
+  function updateBackLink() {
+    var b = document.getElementById('btnBack');
+    if (!b) return;
+    var dept = (PB && PB.meta && PB.meta.department) || (pendingCreate && pendingCreate.id) || '';
+    b.href = '../index.html' + (dept ? '?dept=' + encodeURIComponent(dept) : '');
+  }
+
   // ---- Edit-from-library flow --------------------------------------------
   // Library playbook cards link here as authoring-tool/?edit=<slug>.
   // The published content is public, so loading works without sign-in;
@@ -1132,6 +1142,7 @@
 
   function setPlaybook(pb) {
     PB = normalize(pb);
+    updateBackLink();
     SEL = null;
     $('#docName').value = (PB.meta && PB.meta.title) || 'Untitled Playbook';
     // Keep the draft slot pointed at THIS playbook (per-slug drafts — each
