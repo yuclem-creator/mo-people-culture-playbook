@@ -35,6 +35,11 @@ window.MO_WYSIWYG = (function () {
     + 'padding:6px 10px;border-radius:999px;cursor:pointer;opacity:0;transition:opacity .15s;}'
     + '.mo-wys-host{position:relative;}'
     + '.mo-wys-host:hover > .mo-wys-formbtn{opacity:1;}'
+    + '.mo-wys-add{position:absolute;left:6px;top:6px;z-index:31;width:22px;height:22px;border-radius:50%;border:1px solid #d8c6a5;background:#fdfcf9;color:#B59060;'
+    + 'font:600 15px/20px system-ui,sans-serif;text-align:center;padding:0;cursor:pointer;opacity:0;transition:opacity .15s,transform .15s,background .15s;}'
+    + '.mo-wys-add-end{top:auto;bottom:6px;}'
+    + '.mo-wys-host:hover > .mo-wys-add{opacity:1;}'
+    + '.mo-wys-add:hover{background:#B59060;color:#fff;transform:scale(1.1);}'
     + '.mo-wys-formbtn:hover{border-color:#B59060;color:#B59060;}'
     + '.mo-wys-bar{position:absolute;z-index:40;display:none;gap:4px;background:#26221c;border-radius:6px;padding:5px;box-shadow:0 8px 24px rgba(0,0,0,.25);}'
     + '.mo-wys-bar.show{display:flex;}'
@@ -196,6 +201,28 @@ window.MO_WYSIWYG = (function () {
     btn.addEventListener('click', function (ev) {
       ev.stopPropagation(); ev.preventDefault();
       bridge.openItem(chId, arr, index);
+    });
+    hostEl.appendChild(btn);
+  }
+
+  // ---------- add-element handles ----------
+  // Hover "+" on an item root inserts a new element at that position via the
+  // Studio picker. Appended INSIDE the item root (never as a .policy-list
+  // child) so the DOM↔model count guards keep passing.
+  function addInsertHandle(hostEl, chId, arr, index, where) {
+    if (!bridge.addElement) return;
+    if (hostEl.querySelector(':scope > .mo-wys-add[data-idx="' + index + '"]')) return;
+    hostEl.classList.add('mo-wys-host');
+    var btn = doc.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mo-wys-add' + (where === 'end' ? ' mo-wys-add-end' : '');
+    btn.setAttribute('data-idx', String(index));
+    btn.title = 'Add element here';
+    btn.textContent = '+';
+    btn.addEventListener('click', function (ev) {
+      ev.stopPropagation(); ev.preventDefault();
+      stopEditing(true);
+      bridge.addElement(chId, arr, index);
     });
     hostEl.appendChild(btn);
   }
@@ -376,6 +403,49 @@ window.MO_WYSIWYG = (function () {
       return;
     }
 
+    if (it2.s === 'tasklist') {
+      // Rows map 1:1 to it.items (the gate row carries data-gate-row and is
+      // excluded). Action text + note edit in place; the row's expand-on-tap
+      // behaviour is suppressed on the editable spans via stopPropagation.
+      var trows = body.querySelectorAll('.pb-task:not([data-gate-row])');
+      var titems = Array.isArray(it2.items) ? it2.items : [];
+      if (trows.length === titems.length) {
+        for (var ti = 0; ti < trows.length; ti++) {
+          (function (row, c, ii) {
+            if (!c || typeof c !== 'object') return;
+            var act = row.querySelector('.pb-task-act');
+            if (act && !hasRichSyntax(String(c.text || ''))) {
+              markEditable(act, {
+                key: keyBase + ':task' + ii, rich: true, multiline: false,
+                fromDOM: paraFromDOM,
+                get: function () { return String(c.text || ''); },
+                set: function (v) { c.text = v; }
+              });
+            }
+            var note = row.querySelector('.pb-task-note');
+            if (note && !hasRichSyntax(String(c.note || ''))) {
+              markEditable(note, {
+                key: keyBase + ':tasknote' + ii, rich: true, multiline: true,
+                fromDOM: paraFromDOM,
+                get: function () { return String(c.note || ''); },
+                set: function (v) { c.note = v; }
+              });
+            }
+          })(trows[ti], titems[ti], ti);
+        }
+      }
+      // Sign-off gate line (plain text) edits in place too.
+      var gate = body.querySelector('.pb-task[data-gate-row] .pb-task-act');
+      if (gate && String(it2.gateText || '').indexOf('<') === -1 && String(it2.gateText || '').trim()) {
+        markEditable(gate, {
+          key: keyBase + ':gate', rich: false, multiline: false,
+          get: function () { return it2.gateText || ''; },
+          set: function (v) { it2.gateText = v; }
+        });
+      }
+      return;
+    }
+
     // Everything else (ix kinds, video, tabs, timeline, callout, images…):
     // keep reader behaviour intact, offer a hover shortcut to the Studio form.
     markFormFallback(body, chId, arr, index, labelFor(it2));
@@ -427,8 +497,10 @@ window.MO_WYSIWYG = (function () {
     var kids = [].slice.call(list.children);
     if (kids.length !== items.length) return;
     kids.forEach(function (kid, ii) {
+      addInsertHandle(kid, chId, items, ii);
       attachItem(kid, items[ii], chId, items, ii, keyBase + ':it' + ii);
     });
+    addInsertHandle(kids[kids.length - 1], chId, items, items.length, 'end');
   }
 
   // Map a set of rendered .policy-section blocks to a model sections array;
@@ -488,6 +560,40 @@ window.MO_WYSIWYG = (function () {
       });
     }
 
+    // Chapter opener header: title / sub / eyebrow edit in place. Each value
+    // may come from a PB.prose override (ch{n}.opener.*) or from the chapter
+    // fields — write back to whichever source the renderer actually used.
+    // Values containing markup (e.g. <br>-formatted titles) are skipped.
+    (function () {
+      var prefix = chId.replace('ch-', 'ch');
+      var prose = (pb && pb.prose) || {};
+      function srcOf(suffix, chapterVal) {
+        var k = prefix + '.opener.' + suffix;
+        var has = prose[k] !== undefined && prose[k] !== null && String(prose[k]).trim() !== '';
+        return { key: k, prose: has, val: has ? String(prose[k]) : String(chapterVal == null ? '' : chapterVal) };
+      }
+      function markOpener(sel, suffix, chapterVal, keyName) {
+        var elx = chEl.querySelector(sel);
+        if (!elx) return;
+        var s = srcOf(suffix, chapterVal);
+        if (!s.val.trim() || s.val.indexOf('<') !== -1) return;
+        markEditable(elx, {
+          key: chId + ':opener:' + keyName, rich: false, multiline: false,
+          get: function () { return s.val; },
+          set: function (v) {
+            if (s.prose) prose[s.key] = v;
+            else if (keyName === 'title') ch.label = v;
+            else if (keyName === 'sub') ch.opener = v;
+            else prose[s.key] = v;
+            s.val = v;
+          }
+        });
+      }
+      markOpener('.opener-title', 'title', ch.label, 'title');
+      markOpener('.opener-sub', 'sub', ch.opener, 'sub');
+      markOpener('.opener-eyebrow', 'eyebrow', '', 'eyebrow');
+    })();
+
     // Chapter-level content elements: item roots are the element children of
     // the spread that precede the first .policy-section (after the intro).
     var items0 = Array.isArray(body.items) ? body.items : [];
@@ -505,8 +611,10 @@ window.MO_WYSIWYG = (function () {
         var roots = before.slice(before.length - items0.length);
         if (roots.length === items0.length) {
           roots.forEach(function (kid, ii) {
+            addInsertHandle(kid, chId, items0, ii);
             attachItem(kid, items0[ii], chId, items0, ii, chId + ':citem' + ii);
           });
+          addInsertHandle(roots[roots.length - 1], chId, items0, items0.length, 'end');
         }
       }
     }

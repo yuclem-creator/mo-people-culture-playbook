@@ -2073,8 +2073,10 @@
     seq: 'Sequencing exercise'
   };
 
-  function mediaActionsRow(itemsArr) {
-    function push(item) { itemsArr.push(item); touch(); renderInspector(); }
+  // Shared element catalog: used by the inspector's add row (append) and by
+  // the on-preview "+" handles (insert at position) so both pickers offer the
+  // exact same elements.
+  function addElementCatalog() {
     function mk(label, make) {
       return { label: '+ Add ' + label, make: make };
     }
@@ -2085,7 +2087,7 @@
         return item;
       } };
     }
-    var CATEGORIES = [
+    return [
       { label: 'Text & media', items: [
         mk('heading', function () { return { s: 'heading', name: 'Heading', text: 'New heading', sub: '' }; }),
         mk('text', function () { return { s: 'text', name: 'Body text', text: 'New paragraph.', lead: false }; }),
@@ -2161,22 +2163,53 @@
       ] }
     ];
 
+  }
+
+  // Renders the catalog as the category grid; onSpec receives the chosen spec.
+  function addElementPickerUI(cats, onSpec) {
     var wrap = el('div', { class: 'media-actions media-cats', style: 'margin-top:8px;' });
-    CATEGORIES.forEach(function (cat) {
+    cats.forEach(function (cat) {
       var det = el('details', { class: 'media-cat', open: true });
       det.appendChild(el('summary', { class: 'media-cat-head' }, [cat.label]));
       var grid = el('div', { class: 'media-cat-grid' });
       cat.items.forEach(function (spec) {
-        grid.appendChild(el('button', { class: 'btn ghost', onclick: function () {
-          if (spec.make) { push(spec.make()); }
-          else if (spec.label === '+ Add image') { addMediaItemTo(itemsArr, 'image'); }
-          else if (spec.label === '+ Add video') { addMediaItemTo(itemsArr, 'video'); }
-        } }, [spec.label]));
+        grid.appendChild(el('button', { class: 'btn ghost', onclick: function () { onSpec(spec); } }, [spec.label]));
       });
       det.appendChild(grid);
       wrap.appendChild(det);
     });
     return wrap;
+  }
+
+  function mediaActionsRow(itemsArr) {
+    function push(item) { itemsArr.push(item); touch(); renderInspector(); }
+    return addElementPickerUI(addElementCatalog(), function (spec) {
+      if (spec.make) { push(spec.make()); }
+      else if (spec.label === '+ Add image') { addMediaItemTo(itemsArr, 'image'); }
+      else if (spec.label === '+ Add video') { addMediaItemTo(itemsArr, 'video'); }
+    });
+  }
+
+  // On-preview "+" handle: pick an element and splice it in at `index` inside
+  // `arr` (a chapter-level or section-level items array), then open its form.
+  function openAddElementPicker(chId, arr, index) {
+    var body = addElementPickerUI(addElementCatalog(), function (spec) {
+      if (spec.make) {
+        var item = spec.make();
+        index = Math.max(0, Math.min(index, arr.length));
+        arr.splice(index, 0, item);
+        touch();
+        closeModal();
+        toast('Element added to the page — edit it in the panel', 'ok');
+        select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL });
+      } else {
+        // Media uploads are asynchronous (file picker) and land at the end.
+        closeModal();
+        addMediaItemTo(arr, spec.label === '+ Add image' ? 'image' : 'video');
+        toast('Media uploads land at the end of the section — use the panel arrows to move them.', 'ok');
+      }
+    });
+    showModal('Add element', body, [{ label: 'Cancel', onClick: function () { closeModal(); } }]);
   }
 
   // addMediaItem with an explicit target array (chapter-level and section-level
@@ -4333,6 +4366,7 @@
     openItem: function (chId, arr, index) {
       select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL });
     },
+    addElement: function (chId, arr, index) { openAddElementPicker(chId, arr, index); },
     touch: touch,
     toast: toast,
     previewLang: function () { return PREVIEW_LANG; }
