@@ -513,6 +513,7 @@ window.MO_WYSIWYG = (function () {
   }
 
   // ---------- public ----------
+  var _retries = 0;
   function reattach(br) {
     bridge = br || bridge;
     if (!bridge) return;
@@ -527,6 +528,16 @@ window.MO_WYSIWYG = (function () {
       try { attachChapter(chapters[i]); } catch (e) { log('attach failed for', chapters[i].id, e); }
     }
     log('attached to', chapters.length, 'chapters');
+    // A late re-render (cloud load, second push) can wipe the bindings after
+    // this attach without another preview-ready reaching us. If nothing bound,
+    // retry a few times — cheap and idempotent.
+    var marks = doc.querySelectorAll('[data-wys]').length;
+    if (marks === 0 && chapters.length && _retries < 4) {
+      _retries++;
+      setTimeout(function () { reattach(); }, 1200);
+    } else if (marks > 0) {
+      _retries = 0;
+    }
   }
 
   return { reattach: reattach };
