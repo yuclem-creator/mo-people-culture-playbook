@@ -175,3 +175,29 @@ v10 16/16 · v11 21/21. Stress: v9+v11 re-run twice — all PASS, stable.
 against the pre-change tree; no page errors anywhere.)
 
 Runs in `runs/2026-08-26-sweep-*.log`, `runs/2026-08-26-stress.log`.
+
+## v12 — WYSIWYG on part/outline chapters (2026-08-26)
+
+`v12/test_wysiwyg_parts.py` — run: `python3 v12/test_wysiwyg_parts.py`
+(repo-root http.server on :8910; reads the commercial playbook JSON).
+
+Bug found in the field: on PDF-imported playbooks with a part → section /
+topic / sub outline (chapter `subs`, bodies under their own ids in
+sectionBodies), the v10 WYSIWYG mapping bailed — chapter body has 0 sections
+while the rendered page shows every sub's `.policy-section`, so the flat
+count guard rejected the whole chapter (0 editable elements on the
+commercial playbook).
+
+Fix (Studio-only, `authoring-tool/wysiwyg.js`): the per-section attach logic
+is factored into `attachSectionBlock` / `attachSectionSet`; on part chapters
+the chapter's own blocks (not nested in a `.part-*` sub spread) map to the
+chapter body, then each sub spread (`div.spread.tight.part-*#subId`) maps to
+`bodyForChapter({id: sub.id})`, and the sub eyebrow label is editable in
+place (writes `sub.label`, updating the rail). Chapter-level items stop
+scanning at the first sub spread. Guards unchanged: count match + title
+verification, per sub.
+
+P1 binds on part chapters (453 editable on the commercial playbook) ·
+P2 sub section title write-through · P3 sub eyebrow label write-through ·
+P4 table cell edit inside a sub · P5 flat chapters unchanged · P6 no page
+errors. 6/6 PASS. v10 (16/16) + v9 (17/17) re-run — all PASS.

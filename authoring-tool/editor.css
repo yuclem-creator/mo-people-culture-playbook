@@ -302,11 +302,9 @@ a{color:var(--gold)}
    The editor was designed as a desktop three-column tool. On narrow screens,
    keep the same DOM and let the shell scroll vertically instead of forcing the
    outline / preview / inspector columns to overflow sideways. */
-.topbar .back-home{flex:0 0 auto;text-decoration:none}
 @media (max-width:900px){
   html,body{height:auto}
   body{overflow-x:hidden}
-  .topbar .back-home .bk-label{display:none}
   .app{height:auto;min-height:100vh;min-height:100dvh;overflow:visible}
   .topbar{
     position:sticky;top:0;height:auto;min-height:56px;flex:0 0 auto;

@@ -369,6 +369,63 @@ window.MO_WYSIWYG = (function () {
   }
 
   // ---------- chapter mapping ----------
+  // Attach one rendered .policy-section block to its model section
+  // (title + blurb paragraphs + items), with title/count guards.
+  function attachSectionBlock(secEl, sec, keyBase, chId) {
+    var h3 = secEl.querySelector('.policy-section-header h3');
+    if (h3) markEditable(h3, {
+      key: keyBase + ':title', rich: false, multiline: false,
+      get: function () { return sec.title || ''; },
+      set: function (v) { sec.title = v; }
+    });
+
+    // Blurb paragraphs (skip ones with links/figures; note chunked layouts
+    // interleave quotes/grids — paragraph ORDER is still source order).
+    var blurbArr = Array.isArray(sec.blurb) ? sec.blurb : (sec.blurb && String(sec.blurb).trim() ? [String(sec.blurb)] : []);
+    var bps = secEl.querySelectorAll('.policy-section-blurb > p');
+    if (bps.length === blurbArr.length) {
+      for (var bi = 0; bi < bps.length; bi++) {
+        (function (pEl, pi) {
+          if (hasRichSyntax(blurbArr[pi])) return;
+          markEditable(pEl, {
+            key: keyBase + ':blurb' + pi, rich: false, multiline: true,
+            get: function () { return blurbArr[pi]; },
+            set: function (v) {
+              if (Array.isArray(sec.blurb)) sec.blurb[pi] = v;
+              else sec.blurb = v;
+              blurbArr[pi] = v;
+            }
+          });
+        })(bps[bi], bi);
+      }
+    }
+
+    // Items: .policy-list children map 1:1 to sec.items.
+    var list = secEl.querySelector('.policy-list');
+    var items = Array.isArray(sec.items) ? sec.items : [];
+    if (!list || !items.length) return;
+    var kids = [].slice.call(list.children);
+    if (kids.length !== items.length) return;
+    kids.forEach(function (kid, ii) {
+      attachItem(kid, items[ii], chId, items, ii, keyBase + ':it' + ii);
+    });
+  }
+
+  // Map a set of rendered .policy-section blocks to a model sections array;
+  // returns true when alignment was verified and blocks were attached.
+  function attachSectionSet(secEls, sections, keyPrefix, chId) {
+    if (secEls.length !== sections.length) return false;
+    for (var v = 0; v < secEls.length; v++) {
+      var h3 = secEls[v].querySelector('.policy-section-header h3');
+      var want = String(sections[v].title || '').trim();
+      if (h3 && want && h3.textContent.trim() !== want) return false;
+    }
+    secEls.forEach(function (secEl, si) {
+      attachSectionBlock(secEl, sections[si], keyPrefix + si, chId);
+    });
+    return true;
+  }
+
   function attachChapter(chEl) {
     var chId = chEl.id;
     if (!chId) return;
@@ -377,60 +434,39 @@ window.MO_WYSIWYG = (function () {
     if (!ch) return;
     var body = bridge.bodyForChapter(ch);
     var sections = Array.isArray(body.sections) ? body.sections : [];
+    var subs = Array.isArray(ch.subs) ? ch.subs : [];
+    var isPart = subs.length > 0;
 
-    // Section blocks, in render order.
-    var secEls = [].slice.call(chEl.querySelectorAll('.policy-section'));
-    if (secEls.length !== sections.length) return; // bespoke/part layout — bail
+    // Section blocks, in render order. On part chapters, blocks nested inside
+    // a sub spread (.part-section/.part-topic/.part-sub) belong to that sub's
+    // own body, not to the chapter body — split the two sets apart.
+    var allSecEls = [].slice.call(chEl.querySelectorAll('.policy-section'));
+    var secEls = isPart
+      ? allSecEls.filter(function (el) { return !el.closest('.part-section, .part-topic, .part-sub'); })
+      : allSecEls;
+    if (!isPart && secEls.length !== sections.length) return; // bespoke layout — bail
+    attachSectionSet(secEls, sections, chId + ':sec', chId);
 
-    // Verify alignment: titles must line up before we trust the mapping.
-    for (var v = 0; v < secEls.length; v++) {
-      var h3 = secEls[v].querySelector('.policy-section-header h3');
-      var want = String(sections[v].title || '').trim();
-      if (h3 && want && h3.textContent.trim() !== want) return;
+    // Part chapter: each sub renders as its own anchored spread
+    // (div.spread.tight.part-*#subId) holding the sub's body sections.
+    if (isPart) {
+      subs.forEach(function (sub, ui) {
+        var subEl = null;
+        try { subEl = chEl.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(sub.id) : sub.id)); } catch (e) { subEl = doc.getElementById(sub.id); }
+        if (!subEl) return;
+        var sBody = bridge.bodyForChapter({ id: sub.id });
+        var sSections = Array.isArray(sBody.sections) ? sBody.sections : [];
+        var sEls = [].slice.call(subEl.querySelectorAll('.policy-section'));
+        attachSectionSet(sEls, sSections, chId + ':' + sub.id + ':sec', chId);
+        // Sub label in the eyebrow is editable in place.
+        var lbl = subEl.querySelector('.section-eyebrow .txt');
+        if (lbl) markEditable(lbl, {
+          key: chId + ':sub' + ui + ':label', rich: false, multiline: false,
+          get: function () { return sub.label || ''; },
+          set: function (v) { sub.label = v; }
+        });
+      });
     }
-
-    secEls.forEach(function (secEl, si) {
-      var sec = sections[si];
-      var keyBase = chId + ':sec' + si;
-
-      var h3 = secEl.querySelector('.policy-section-header h3');
-      if (h3) markEditable(h3, {
-        key: keyBase + ':title', rich: false, multiline: false,
-        get: function () { return sec.title || ''; },
-        set: function (v) { sec.title = v; }
-      });
-
-      // Blurb paragraphs (skip ones with links/figures; note chunked layouts
-      // interleave quotes/grids — paragraph ORDER is still source order).
-      var blurbArr = Array.isArray(sec.blurb) ? sec.blurb : (sec.blurb && String(sec.blurb).trim() ? [String(sec.blurb)] : []);
-      var bps = secEl.querySelectorAll('.policy-section-blurb > p');
-      if (bps.length === blurbArr.length) {
-        for (var bi = 0; bi < bps.length; bi++) {
-          (function (pEl, pi) {
-            if (hasRichSyntax(blurbArr[pi])) return;
-            markEditable(pEl, {
-              key: keyBase + ':blurb' + pi, rich: false, multiline: true,
-              get: function () { return blurbArr[pi]; },
-              set: function (v) {
-                if (Array.isArray(sec.blurb)) sec.blurb[pi] = v;
-                else sec.blurb = v;
-                blurbArr[pi] = v;
-              }
-            });
-          })(bps[bi], bi);
-        }
-      }
-
-      // Items: .policy-list children map 1:1 to sec.items.
-      var list = secEl.querySelector('.policy-list');
-      var items = Array.isArray(sec.items) ? sec.items : [];
-      if (!list || !items.length) return;
-      var kids = [].slice.call(list.children);
-      if (kids.length !== items.length) return;
-      kids.forEach(function (kid, ii) {
-        attachItem(kid, items[ii], chId, items, ii, keyBase + ':it' + ii);
-      });
-    });
 
     // Chapter-level content elements: item roots are the element children of
     // the spread that precede the first .policy-section (after the intro).
@@ -441,8 +477,11 @@ window.MO_WYSIWYG = (function () {
       if (spread) {
         var stopAt = secEls.length ? secEls[0] : null;
         var before = [];
-        for (var n = spread.firstElementChild; n && n !== stopAt; n = n.nextElementSibling) before.push(n);
-        if (!stopAt) before = [].slice.call(spread.children);
+        for (var n = spread.firstElementChild; n && n !== stopAt; n = n.nextElementSibling) {
+          if (isPart && /(^|\s)part-(section|topic|sub)(\s|$)/.test(n.className || '')) break;
+          before.push(n);
+        }
+        if (!stopAt && !isPart) before = [].slice.call(spread.children);
         var roots = before.slice(before.length - items0.length);
         if (roots.length === items0.length) {
           roots.forEach(function (kid, ii) {
