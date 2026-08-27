@@ -30,6 +30,10 @@ window.MO_WYSIWYG = (function () {
     + '.mo-wys-ed:hover{box-shadow:0 0 0 1.5px #d8c6a5;background:#fffdf6;}'
     + '.mo-wys-editing{outline:none;box-shadow:0 0 0 2px #B59060 !important;background:#fffdf6 !important;min-width:48px;min-height:1.2em;display:inline-block;caret-color:#1E1C18;}'
     + '.mo-wys-editing:empty::before{content:"Type here\\2026";color:#a89f8f;pointer-events:none;}'
+    + '.mo-wys-ed:empty{min-height:2.2em;min-width:120px;display:block;cursor:text;}'
+    + '.mo-wys-ed:empty::after{content:"Click to type\\2026";color:#B59060;font-size:12.5px;font-style:italic;pointer-events:none;}'
+    + '.mo-wys-emptyhost{min-height:2.2em;min-width:120px;cursor:text;}'
+    + '.mo-wys-emptyhost:not(.mo-wys-editing)::after{content:"Click to type\\2026";color:#B59060;font-size:12.5px;font-style:italic;pointer-events:none;}'
     + '.mo-wys-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#B59060;margin-left:7px;vertical-align:middle;}'
     + '.mo-wys-formbtn{position:absolute;top:6px;right:6px;z-index:30;border:1px solid #d8c6a5;background:#fdfcf9;color:#8a8272;'
     + 'font:500 10px/1 "Avenir Next LT Pro",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;'
@@ -367,6 +371,24 @@ window.MO_WYSIWYG = (function () {
     if (it2.s === 'text') {
       var paras = String(it2.text || '').split(/\n\s*\n/).map(function (p) { return p.trim(); }).filter(Boolean);
       var ps = body.querySelectorAll('.pb-text > p');
+      if (!paras.length) {
+        // Empty text element: the whole host becomes a click-to-type surface.
+        // fromDOM strips the overlay buttons ("+", form button) that live on
+        // the same node so their labels never leak into the content.
+        var emptyText = (body.matches && body.matches('.pb-text')) ? body : body.querySelector('.pb-text');
+        if (emptyText) markEditable(emptyText, {
+          key: keyBase + ':text', rich: false, multiline: true,
+          fromDOM: function (el) {
+            var c = el.cloneNode(true);
+            [].slice.call(c.querySelectorAll('.mo-wys-add, .mo-wys-formbtn, .mo-wys-dot')).forEach(function (n) { n.parentNode.removeChild(n); });
+            return (c.textContent || '').replace(/\u00a0/g, ' ').trim();
+          },
+          get: function () { return String(it2.text || ''); },
+          set: function (v) { if (typeof it === 'string') arr[index] = v; else it2.text = v; }
+        });
+        if (emptyText) emptyText.classList.add('mo-wys-emptyhost');
+        return;
+      }
       if (ps.length === paras.length) {
         for (var i = 0; i < ps.length; i++) {
           (function (pEl, pi) {

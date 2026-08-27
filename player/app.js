@@ -613,7 +613,9 @@ function policyItemBodyHTML(it) {
   // Body text: standalone prose block. Blank line = new paragraph; optional
   // lead paragraph styling; **bold** inline; weight/colour brand tokens.
   if (it && it.s === 'text') {
-    if (!it.text) return '';
+    // Empty text still renders a (visually invisible) host div so the Studio
+    // canvas keeps a 1:1 item<->node map and the author can click to fill it.
+    if (!it.text) return '<div class="pb-text pb-text--empty"></div>';
     var paras = String(it.text).split(/\n\s*\n/).map(function (p) { return p.trim(); }).filter(Boolean);
     if (!paras.length) return '';
     var tfmt = _pbFmtCls(it);
