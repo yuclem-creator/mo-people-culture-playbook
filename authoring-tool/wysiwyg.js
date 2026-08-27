@@ -24,6 +24,8 @@ window.MO_WYSIWYG = (function () {
   var editing = null;     // { el, commit(), cancel() }
   var editedKeys = {};    // field keys edited this session → gold dot
   var toolbar = null;
+  var itemEls = (typeof WeakMap !== 'undefined') ? new WeakMap() : null;  // item object → canvas root
+  var secEls = (typeof WeakMap !== 'undefined') ? new WeakMap() : null;   // section object → canvas block
 
   var CSS = ''
     + '.mo-wys-ed{cursor:text;border-radius:3px;transition:box-shadow .15s,background .15s;}'
@@ -41,16 +43,17 @@ window.MO_WYSIWYG = (function () {
     + '.mo-wys-host{position:relative;}'
     + '.mo-wys-host:hover > .mo-wys-formbtn{opacity:1;}'
     + '.mo-wys-add{position:absolute;left:6px;top:6px;z-index:31;width:22px;height:22px;border-radius:50%;border:1px solid #d8c6a5;background:#fdfcf9;color:#B59060;'
-    + 'font:600 15px/20px system-ui,sans-serif;text-align:center;padding:0;cursor:pointer;opacity:0;transition:opacity .15s,transform .15s,background .15s;}'
+    + 'font:600 15px/20px system-ui,sans-serif;text-align:center;padding:0;cursor:pointer;opacity:.35;transition:opacity .15s,transform .15s,background .15s;}'
     + '.mo-wys-add-end{top:auto;bottom:6px;}'
     + '.mo-wys-host:hover > .mo-wys-add{opacity:1;}'
     + '.mo-wys-add:hover{background:#B59060;color:#fff;transform:scale(1.1);}'
     + '.mo-wys-del{position:absolute;left:32px;top:6px;z-index:31;width:22px;height:22px;border-radius:50%;border:1px solid #d8c6a5;background:#fdfcf9;color:#a05548;'
-    + 'font:600 14px/20px system-ui,sans-serif;text-align:center;padding:0;cursor:pointer;opacity:0;transition:opacity .15s,transform .15s,background .15s;}'
+    + 'font:600 14px/20px system-ui,sans-serif;text-align:center;padding:0;cursor:pointer;opacity:.35;transition:opacity .15s,transform .15s,background .15s;}'
     + '.mo-wys-host:hover > .mo-wys-del{opacity:1;}'
     + '.mo-wys-del:hover{background:#a05548;color:#fff;transform:scale(1.1);}'
+    + '.mo-wys-flash{outline:3px solid rgba(181,144,96,.55) !important;outline-offset:3px;border-radius:6px;}'
     + '.mo-wys-gap{position:absolute;left:50%;top:-11px;transform:translateX(-50%);z-index:32;height:22px;padding:0 12px;'
-    + 'display:flex;align-items:center;justify-content:center;cursor:ns-resize;opacity:0;transition:opacity .15s;}'
+    + 'display:flex;align-items:center;justify-content:center;cursor:ns-resize;opacity:.35;transition:opacity .15s;}'
     + '.mo-wys-gap span{display:block;width:44px;height:6px;border-radius:3px;background:#d8c6a5;border:1px solid #B59060;}'
     + '.mo-wys-host:hover > .mo-wys-gap{opacity:1;}'
     + '.mo-wys-gap:hover span{background:#B59060;}'
@@ -425,6 +428,18 @@ window.MO_WYSIWYG = (function () {
     var it2 = typeof it === 'string' ? { s: 'policy', text: it } : it;
     addDeleteHandle(rootEl, arr, index);
     addGapHandle(rootEl, it, arr, index);
+    // Panel 2.1: register for panel→canvas flash; clicking the element's
+    // chrome (non-editable area) opens its form in the panel. Editable text
+    // and the +/×/↕ handles stopPropagation, so they never reach this.
+    if (it && typeof it === 'object' && itemEls) itemEls.set(it, rootEl);
+    rootEl.addEventListener('click', function (ev) {
+      if (ev.defaultPrevented) return;
+      // Editable text starts editing instead (its click stops propagation;
+      // this guard also covers the case where rootEl itself is the surface).
+      if (ev.target.closest && ev.target.closest('.mo-wys-ed, .mo-wys-editing, input, textarea, select, video, audio, a, button')) return;
+      stopEditing(true);
+      bridge.openItem(chId, arr, index);
+    });
 
     // Optional element heading (.pb-item-head wraps the body in .pb-item).
     var head = rootEl.querySelector(':scope > .pb-item-head');
@@ -675,6 +690,7 @@ window.MO_WYSIWYG = (function () {
   // Attach one rendered .policy-section block to its model section
   // (title + blurb paragraphs + items), with title/count guards.
   function attachSectionBlock(secEl, sec, keyBase, chId) {
+    if (sec && typeof sec === 'object' && secEls) secEls.set(sec, secEl);
     var h3 = secEl.querySelector('.policy-section-header h3');
     if (h3) markEditable(h3, {
       key: keyBase + ':title', rich: false, multiline: false,
@@ -971,6 +987,16 @@ window.MO_WYSIWYG = (function () {
     }
     armWipeWatch();
   }
+
+  // Panel ↔ canvas sync: flash the canvas block a panel selection is editing.
+  function flashEl(elx) {
+    if (!elx || !elx.scrollIntoView) return;
+    try { elx.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    elx.classList.add('mo-wys-flash');
+    setTimeout(function () { elx.classList.remove('mo-wys-flash'); }, 1400);
+  }
+  window.MO_WYS_FLASH_ITEM = function (it) { if (it && itemEls) flashEl(itemEls.get(it)); };
+  window.MO_WYS_FLASH_SEC = function (sec) { if (sec && secEls) flashEl(secEls.get(sec)); };
 
   return { reattach: reattach };
 })();

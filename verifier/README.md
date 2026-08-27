@@ -243,3 +243,14 @@ Panel 2.0 + drag-to-resize spacing + SCORM desktop/mobile display:
 6. H7 zero page errors; H8 mirrored-copy consistency.
 Note: v17 G5 locator updated to the Panel 2.0 'Intro text' label (same assertion).
 Run: `python3 v18/test_panel_and_spacing.py` (repo-root http.server on :8910).
+
+## v19 — 2026-08-28
+Panel 2.1 — breadcrumbs, inline sections/elements, panel↔canvas sync, affordances:
+1. J1/J1b clickable breadcrumb trail on every drill-down (Chapter › Section › Element); crumb click jumps straight to that level.
+2. J2 sections expand inline (accordion) inside the chapter Content tab; the chapter view stays put.
+3. J3 simple elements expand inline within the section; ix grids open the focused editor (breadcrumb visible).
+4. J4 panel selection flashes the canvas block (.mo-wys-flash), incl. retry after async renders.
+5. J5 clicking an element's chrome on the canvas opens its form in the panel.
+6. J6 ＋ × ↕ affordances faintly visible without hover (opacity .35).
+7. J7 zero page errors; J8 mirrored-copy consistency.
+Run: `python3 v19/test_breadcrumbs_inline_sync.py` (repo-root http.server on :8910).

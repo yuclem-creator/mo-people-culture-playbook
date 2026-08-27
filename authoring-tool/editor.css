@@ -560,3 +560,13 @@ details.adv .field{padding:0 12px}
 details.adv .field:first-of-type{margin-top:10px}
 details.adv .field:last-of-type{margin-bottom:12px}
 body.panel-hidden .col-inspector{display:none}
+
+/* ---- Panel 2.1: breadcrumbs + inline accordion -------------------------- */
+.insp-crumbs{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:10px 0 4px;
+  font-size:12px;color:#8a8272}
+.insp-crumbs .sep{color:#c4bba6}
+.insp-crumbs .cb{border:none;background:none;font:inherit;font-size:12px;color:#96744a;cursor:pointer;padding:1px 2px}
+.insp-crumbs .cb:hover{text-decoration:underline}
+.insp-crumbs .cur{color:#26221C;font-weight:700;font-size:12.5px}
+.inline-wrap .section-label{margin-top:10px}
+.rep-item .inline-wrap{max-height:none}

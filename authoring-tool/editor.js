@@ -1450,6 +1450,17 @@
     highlightTree();
     renderInspector();
     if (sel.chapter && !opts.noNav) gotoPreview(sel.chapter, sel.sub);
+    // Panel 2.1: panel → canvas sync. Flash the element/section on the
+    // canvas so the author always sees what the panel is editing. When we
+    // also navigated, the render is async — retry once after it lands.
+    function flashSel() {
+      try {
+        if (sel.kind === 'item' && window.MO_WYS_FLASH_ITEM) window.MO_WYS_FLASH_ITEM(sel.ref.arr[sel.ref.index]);
+        else if (sel.kind === 'section' && window.MO_WYS_FLASH_SEC) window.MO_WYS_FLASH_SEC(sel.ref.container.sections[sel.ref.index]);
+      } catch (e) {}
+    }
+    flashSel();
+    if (sel.chapter && !opts.noNav) setTimeout(flashSel, 1400);
   }
 
   function renderInspector() {
@@ -1461,10 +1472,53 @@
     }
     if (SEL.kind === 'settings') { renderSettings(box); groupInspectorCards(box); return; }
     if (SEL.kind === 'chapter') { renderChapterInspector(box, SEL); groupInspectorCards(box); tabifyChapterInspector(box); return; }
-    if (SEL.kind === 'lifecycle-sub') { renderLifecycleSub(box, SEL); groupInspectorCards(box); return; }
-    if (SEL.kind === 'part-sub') { renderPartSub(box, SEL); groupInspectorCards(box); return; }
-    if (SEL.kind === 'section') { renderSection(box, SEL); groupInspectorCards(box); return; }
-    if (SEL.kind === 'item') { renderItem(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'lifecycle-sub') { renderCrumbs(box, SEL); renderLifecycleSub(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'part-sub') { renderCrumbs(box, SEL); renderPartSub(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'section') { renderCrumbs(box, SEL); renderSection(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'item') { renderCrumbs(box, SEL); renderItem(box, SEL); groupInspectorCards(box); return; }
+  }
+
+  // ---- Breadcrumbs (Panel 2.1) ---------------------------------------------
+  // Every drill-down shows the full clickable path: Chapter › Sub-topic ›
+  // Section › Element. Each level jumps straight there (select() re-renders
+  // the inspector and navigates the preview).
+  function labelForSel(sel) {
+    if (!sel) return '';
+    if (sel.kind === 'chapter') {
+      var ch = (PB.chapters || []).filter(function (c) { return c.id === sel.id; })[0];
+      return ch ? ((ch.numeral ? 'Ch ' + ch.numeral + ' · ' : '') + (ch.label || ch.id)) : 'Chapter';
+    }
+    if (sel.kind === 'part-sub' || sel.kind === 'lifecycle-sub') {
+      var ch2 = (PB.chapters || []).filter(function (c) { return c.id === sel.chapter; })[0];
+      var sb = ch2 && (ch2.subs || []).filter(function (s) { return s.id === sel.sub; })[0];
+      return sb ? (sb.label || sb.id) : 'Sub-topic';
+    }
+    if (sel.kind === 'section') {
+      var sec = sel.ref && sel.ref.container && sel.ref.container.sections ? sel.ref.container.sections[sel.ref.index] : null;
+      return sec ? ((sec.num ? sec.num + ' ' : '') + (sec.title || 'Untitled section')) : 'Section';
+    }
+    if (sel.kind === 'item') {
+      var it = sel.ref && sel.ref.arr ? sel.ref.arr[sel.ref.index] : null;
+      return it ? (typeof it === 'string' ? (it.slice(0, 40) || '(empty)') : (it.name || symbolLabel(it.s) || 'Element')) : 'Element';
+    }
+    return '';
+  }
+  function renderCrumbs(box, sel) {
+    var chain = [];
+    var cur = sel;
+    var guard = 0;
+    while (cur && guard++ < 8) { chain.unshift(cur); cur = cur.backSel; }
+    if (chain.length < 2) return;
+    var bar = el('div', { class: 'insp-crumbs' });
+    chain.forEach(function (s, i) {
+      if (i) bar.appendChild(el('span', { class: 'sep', text: '›' }));
+      if (i === chain.length - 1) {
+        bar.appendChild(el('span', { class: 'cur', text: labelForSel(s) }));
+      } else {
+        bar.appendChild(el('button', { class: 'cb', onclick: function () { select(s); } }, [labelForSel(s)]));
+      }
+    });
+    box.appendChild(bar);
   }
 
   // Presentation-only regrouping: everything a render* function emits between
@@ -1595,6 +1649,15 @@
           nameOf: function (it) { return typeof it === 'string' ? (it.slice(0, 60) || '(empty)') : (it.name || '(item)'); },
           subOf: function (it) { return typeof it === 'string' ? 'Text' : symbolLabel(it.s); },
           open: function (it, i) { select({ kind: 'item', ref: { arr: body0.items, index: i }, chapter: ch.id, backSel: SEL }); },
+          // Panel 2.1: expand in place; ix grids open the focused editor.
+          inlineEdit: function (it, wrap, i) {
+            if (it && typeof it === 'object' && it.s === 'ix') {
+              select({ kind: 'item', ref: { arr: body0.items, index: i }, chapter: ch.id, backSel: SEL });
+              return;
+            }
+            renderItem(wrap, { kind: 'item', ref: { arr: body0.items, index: i }, chapter: ch.id, backSel: SEL }, true);
+            if (window.MO_WYS_FLASH_ITEM) window.MO_WYS_FLASH_ITEM(it);
+          },
           addLabel: 'Add item',
           make: function () { return { s: 'policy', name: 'New item', blurb: '', url: '' }; }
         });
@@ -2112,14 +2175,20 @@
       nameOf: function (s) { return (s.num ? s.num + '. ' : '') + (s.title || 'Untitled section'); },
       subOf: function (s) { return (s.items ? s.items.length : 0) + ' item(s)'; },
       open: function (s, i) { select({ kind: 'section', ref: { container: container, index: i }, chapter: chapterId || SEL.chapter, sub: subId || SEL.sub, backSel: SEL }); },
+      // Panel 2.1: sections expand in place (accordion) — the common edit
+      // never leaves the chapter view. "Edit ›" still opens the full screen.
+      inlineEdit: function (s, wrap, i) {
+        renderSection(wrap, { kind: 'section', ref: { container: container, index: i }, chapter: chapterId || SEL.chapter, sub: subId || SEL.sub, backSel: SEL }, true);
+        if (window.MO_WYS_FLASH_SEC) window.MO_WYS_FLASH_SEC(s);
+      },
       addLabel: 'Add section',
       make: function () { return { num: String(container.sections.length + 1), title: 'New section', items: [] }; }
     });
   }
 
-  function renderSection(box, sel) {
+  function renderSection(box, sel, noHead) {
     var sec = sel.ref.container.sections[sel.ref.index];
-    inspTitle(box, sec.title || 'Section', 'Section', function () { SEL = sel.backSel; renderInspector(); });
+    if (!noHead) inspTitle(box, sec.title || 'Section', 'Section', function () { SEL = sel.backSel; renderInspector(); });
 
     box.appendChild(sectionLabel('Section'));
     box.appendChild(textField('Number', sec.num || '', function (v) { sec.num = v; touch(); }));
@@ -2146,7 +2215,17 @@
     renderRepeatable(box, sec.items, {
       nameOf: function (it) { return typeof it === 'string' ? (it.slice(0, 60) || '(empty)') : (it.name || '(item)'); },
       subOf: function (it) { return typeof it === 'string' ? 'Text' : (symbolLabel(it.s) + (it.blurb ? ' · ' + it.blurb : '')); },
-      open: function (it, i) { select({ kind: 'item', ref: { arr: sec.items, index: i }, chapter: sel.chapter, sub: sel.sub, backSel: SEL }); },
+      open: function (it, i) { select({ kind: 'item', ref: { arr: sec.items, index: i }, chapter: sel.chapter, sub: sel.sub, backSel: sel }); },
+      // Panel 2.1: simple elements expand in place; structured grids (ix)
+      // open the focused editor instead (breadcrumb keeps the path visible).
+      inlineEdit: function (it, wrap, i) {
+        if (it && typeof it === 'object' && it.s === 'ix') {
+          select({ kind: 'item', ref: { arr: sec.items, index: i }, chapter: sel.chapter, sub: sel.sub, backSel: sel });
+          return;
+        }
+        renderItem(wrap, { kind: 'item', ref: { arr: sec.items, index: i }, chapter: sel.chapter, sub: sel.sub, backSel: sel }, true);
+        if (window.MO_WYS_FLASH_ITEM) window.MO_WYS_FLASH_ITEM(it);
+      },
       addLabel: 'Add item',
       make: function () { return { s: 'policy', name: 'New item', blurb: '', url: '' }; }
     });
@@ -2389,16 +2468,16 @@
     wrap.appendChild(textField('Icon key (optional)', h.icon || '', function (v) { h.icon = v; touch(); }, 'Built-in icon name.'));
   }
 
-  function renderItem(box, sel) {
+  function renderItem(box, sel, noHead) {
     var it = sel.ref.arr[sel.ref.index];
     // Plain-text bullet (e.g. imported list items): edit the text directly.
     if (typeof it === 'string') {
-      inspTitle(box, it.slice(0, 40) || 'Text item', 'Text bullet', function () { SEL = sel.backSel; renderInspector(); });
+      if (!noHead) inspTitle(box, it.slice(0, 40) || 'Text item', 'Text bullet', function () { SEL = sel.backSel; renderInspector(); });
       box.appendChild(sectionLabel('Bullet'));
       box.appendChild(textField('Text', it, function (v) { sel.ref.arr[sel.ref.index] = v; touch(); }, '', true));
       return;
     }
-    inspTitle(box, it.name || 'Item', 'Resource / media / tab item', function () { SEL = sel.backSel; renderInspector(); });
+    if (!noHead) inspTitle(box, it.name || 'Item', 'Resource / media / tab item', function () { SEL = sel.backSel; renderInspector(); });
     box.appendChild(sectionLabel('Item'));
     box.appendChild(selectField('Type', it.s || 'policy', ITEM_SYMBOLS, function (v) { it.s = v; touch(); renderInspector(); }));
     box.appendChild(textField('Name', it.name || '', function (v) { it.name = v; touch(); }));
@@ -3046,7 +3125,7 @@
         var open = row.querySelector('.inline-wrap');
         if (open) { open.remove(); return; }
         var wrap = el('div', { class: 'inline-wrap', style: 'flex-basis:100%;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)' });
-        opts.inlineEdit(item, wrap);
+        opts.inlineEdit(item, wrap, i);
         row.appendChild(wrap);
       });
     }
