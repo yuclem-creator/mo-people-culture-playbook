@@ -194,6 +194,7 @@ window.MO_WYSIWYG = (function () {
   }
 
   function markFormFallback(hostEl, chId, arr, index, label) {
+    if (hostEl.querySelector(':scope > .mo-wys-formbtn')) return;
     hostEl.classList.add('mo-wys-host');
     var btn = doc.createElement('button');
     btn.type = 'button';
@@ -229,6 +230,107 @@ window.MO_WYSIWYG = (function () {
   }
 
   // ---------- item mapping ----------
+  // Inline text editing for the common interactive elements — click the text
+  // in the canvas and type. Structure/lists stay in the Studio form via the
+  // "Edit interaction" button, which is still added below.
+  function attachIxInline(body, it2, chId, arr, index, keyBase) {
+    if (it2.kind === 'flipcards') {
+      var fcards = Array.isArray(it2.cards) ? it2.cards : [];
+      var cardEls = body.querySelectorAll('.ixfc-card');
+      if (cardEls.length !== fcards.length) return;
+      for (var fi = 0; fi < cardEls.length; fi++) {
+        (function (cardEl, c, ii) {
+          if (!c || typeof c !== 'object') return;
+          var t = cardEl.querySelector('.ixfc-title');
+          if (t) markEditable(t, { key: keyBase + ':fc' + ii + 't', rich: false, multiline: false,
+            get: function () { return c.title || ''; }, set: function (v) { c.title = v; } });
+          var bl = cardEl.querySelector('.ixfc-backlabel');
+          if (bl) markEditable(bl, { key: keyBase + ':fc' + ii + 'bl', rich: false, multiline: false,
+            get: function () { return c.backLabel || ''; }, set: function (v) { c.backLabel = v; } });
+          var bk = cardEl.querySelector('.ixfc-backtext');
+          if (bk) markEditable(bk, { key: keyBase + ':fc' + ii + 'b', rich: false, multiline: true,
+            get: function () { return c.back || ''; }, set: function (v) { c.back = v; } });
+        })(cardEls[fi], fcards[fi], fi);
+      }
+      return;
+    }
+    if (it2.kind === 'processflow') {
+      var psteps = Array.isArray(it2.steps) ? it2.steps : [];
+      var pills = body.querySelectorAll('.ixpf-step');
+      var dets = body.querySelectorAll('.ixpf-detail');
+      if (pills.length !== psteps.length) return;
+      for (var pi = 0; pi < psteps.length; pi++) {
+        (function (c, ii) {
+          if (!c || typeof c !== 'object') return;
+          var pill = pills[ii], det = dets[ii];
+          var nm = pill && pill.querySelector('.ixpf-step-name');
+          if (nm) markEditable(nm, { key: keyBase + ':pf' + ii + 'l', rich: false, multiline: false,
+            get: function () { return c.label || ''; }, set: function (v) { c.label = v; } });
+          var ps = pill && pill.querySelector('.ixpf-step-sub');
+          if (ps) markEditable(ps, { key: keyBase + ':pf' + ii + 's', rich: false, multiline: false,
+            get: function () { return c.sub || ''; }, set: function (v) { c.sub = v; } });
+          var dt = det && det.querySelector('.ixpf-d-title');
+          if (dt) markEditable(dt, { key: keyBase + ':pf' + ii + 't', rich: false, multiline: false,
+            get: function () { return c.title || c.label || ''; }, set: function (v) { c.title = v; } });
+          var dx = det && det.querySelector('.ixpf-d-text');
+          if (dx) markEditable(dx, { key: keyBase + ':pf' + ii + 'x', rich: false, multiline: true,
+            get: function () { return c.text || ''; }, set: function (v) { c.text = v; } });
+        })(psteps[pi], pi);
+      }
+      return;
+    }
+    if (it2.kind === 'stagebar') {
+      var sbStages = Array.isArray(it2.stages) ? it2.stages : [];
+      var ticks = body.querySelectorAll('.ixsb-stage');
+      var subHead = body.querySelector('.ixsb-sub-head');
+      if (subHead) markEditable(subHead, { key: keyBase + ':sb:sub', rich: false, multiline: false,
+        get: function () { return it2.sub || ''; }, set: function (v) { it2.sub = v; } });
+      if (ticks.length !== sbStages.length) return;
+      for (var si = 0; si < ticks.length; si++) {
+        (function (c, ii) {
+          if (!c || typeof c !== 'object') return;
+          var lb = ticks[ii].querySelector('.ixsb-lbl');
+          if (lb) markEditable(lb, { key: keyBase + ':sb' + ii + 'l', rich: false, multiline: false,
+            get: function () { return c.label || ''; }, set: function (v) { c.label = v; } });
+          var du = ticks[ii].querySelector('.ixsb-dur');
+          if (du) markEditable(du, { key: keyBase + ':sb' + ii + 'd', rich: false, multiline: false,
+            get: function () { return c.dur || ''; }, set: function (v) { c.dur = v; } });
+          var tx = ticks[ii].querySelector('.ixsb-sub');
+          if (tx) markEditable(tx, { key: keyBase + ':sb' + ii + 't', rich: false, multiline: false,
+            get: function () { return c.text || ''; }, set: function (v) { c.text = v; } });
+        })(sbStages[si], si);
+      }
+      return;
+    }
+    if (it2.kind === 'stepper') {
+      var stSteps = Array.isArray(it2.steps) ? it2.steps : [];
+      var card = body.querySelector('.ix2st-card');
+      if (card) {
+        var sIdx = parseInt(card.getAttribute('data-step-i') || '0', 10) || 0;
+        var cs = stSteps[sIdx];
+        if (cs && typeof cs === 'object') {
+          var stT = card.querySelector('.ix2st-t');
+          if (stT) markEditable(stT, { key: keyBase + ':st' + sIdx + 't', rich: false, multiline: false,
+            get: function () { return cs.t || ''; }, set: function (v) { cs.t = v; } });
+          var stD = card.querySelector('.ix2st-d');
+          if (stD) markEditable(stD, { key: keyBase + ':st' + sIdx + 'd', rich: false, multiline: true,
+            get: function () { return cs.d || ''; }, set: function (v) { cs.d = v; } });
+        }
+      }
+      // Previous / Next re-renders the card — re-attach inline editing to the
+      // fresh card once the new step is drawn.
+      var navBtns = body.querySelectorAll('.ix2st-nav .ix2st-btn');
+      for (var nb = 0; nb < navBtns.length; nb++) {
+        if (navBtns[nb].getAttribute('data-wys-reattach')) continue;
+        navBtns[nb].setAttribute('data-wys-reattach', '1');
+        navBtns[nb].addEventListener('click', function () {
+          setTimeout(function () { attachItem(body, { s: 'ix', kind: 'stepper', steps: stSteps, name: it2.name, head: it2.head, sub: it2.sub }, chId, arr, index, keyBase); }, 90);
+        });
+      }
+      return;
+    }
+  }
+
   function attachItem(rootEl, it, chId, arr, index, keyBase) {
     if (!it || typeof it !== 'string' && !it.s) return;
     var it2 = typeof it === 'string' ? { s: 'policy', text: it } : it;
@@ -447,8 +549,9 @@ window.MO_WYSIWYG = (function () {
       return;
     }
 
-    // Everything else (ix kinds, video, tabs, timeline, callout, images…):
-    // keep reader behaviour intact, offer a hover shortcut to the Studio form.
+    // Interactive elements: wire click-to-edit text on the canvas first…
+    if (it2.s === 'ix') attachIxInline(body, it2, chId, arr, index, keyBase);
+    // …and keep the hover shortcut to the full Studio form for everything.
     markFormFallback(body, chId, arr, index, labelFor(it2));
   };
 

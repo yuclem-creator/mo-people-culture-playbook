@@ -2282,6 +2282,12 @@
     box.appendChild(selectField('Type', it.s || 'policy', ITEM_SYMBOLS, function (v) { it.s = v; touch(); renderInspector(); }));
     box.appendChild(textField('Name', it.name || '', function (v) { it.name = v; touch(); }));
     box.appendChild(textField('Heading above element (optional)', it.head || '', function (v) { it.head = v; touch(); }, 'Shown above this element on the page — leave blank for no heading.'));
+    box.appendChild(selectField('Heading size', it.headSize || '', [
+      { v: '', l: 'Default (24px)' }, { v: 's', l: 'Small (16px)' }, { v: 'm', l: 'Medium (20px)' },
+      { v: 'l', l: 'Large (28px)' }, { v: 'xl', l: 'Extra large (34px)' }
+    ], function (v) { if (v) it.headSize = v; else delete it.headSize; touch(); }));
+    box.appendChild(selectField('Heading colour', it.headColor || '', TEXT_COLORS,
+      function (v) { if (v) it.headColor = v; else delete it.headColor; touch(); }));
     if (it.s === 'ix') {
       if (!it.kind) it.kind = 'processflow';
       if (IX_KINDS.filter(function (k) { return k.v === it.kind; }).length === 0) {

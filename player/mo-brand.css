@@ -773,7 +773,7 @@
 .pb-ix2ri .ix2ri-cons{display:block;font-size:10.5px;color:#6b625a;margin-top:2px;}
 
 /* C5 journey dot */
-.pb-ix2jn .ix2jn-stage{position:relative;height:260px;border-radius:14px;background:#faf7f1;border:1px solid #e5ddd0;overflow:hidden;}
+.pb-ix2jn .ix2jn-stage{position:relative;height:360px;border-radius:14px;background:#faf7f1;border:1px solid #e5ddd0;overflow:hidden;}
 .pb-ix2jn .ix2jn-svg{position:absolute;inset:0;width:100%;height:100%;}
 .pb-ix2jn .ix2jn-path{stroke:#d8c9ae;stroke-width:2;stroke-dasharray:5 6;}
 .pb-ix2jn .ix2jn-dot{fill:#B59060;stroke:#fff;stroke-width:2.5;opacity:0;transition:cx .9s cubic-bezier(.4,0,.2,1),cy .9s cubic-bezier(.4,0,.2,1),opacity .4s;}
@@ -947,3 +947,6 @@
 .pb-ix2jn .ix2jn-stop-text{display:none;}
 .pb-ix2jn .ix2jn-stop:hover,.pb-ix2jn .ix2jn-stop.on,.pb-ix2jn .ix2jn-stop:focus-visible{z-index:6;}
 .pb-ix2jn .ix2jn-stop:hover .ix2jn-stop-text,.pb-ix2jn .ix2jn-stop.on .ix2jn-stop-text,.pb-ix2jn .ix2jn-stop:focus-visible .ix2jn-stop-text{display:block;}
+
+/* journeydot — cap expanded card text so it always fits inside the stage */
+.pb-ix2jn .ix2jn-stop-text{max-height:150px;overflow:auto;}

@@ -386,7 +386,9 @@ function pbChartHTML(it) {
 function policyItemHTML(it) {
   var inner = policyItemBodyHTML(it);
   if (it && it.head && !Array.isArray(it.head) && String(it.head).trim()) {
-    return '<div class="pb-item"><div class="pb-item-head">' + esc(it.head) + '</div>' + inner + '</div>';
+    var _hsz = ({ s: '16px', m: '20px', l: '28px', xl: '34px' })[it.headSize] || '';
+    var _hcl = /^(ink|soft|muted|gold|sage|terra)$/.test(it.headColor || '') ? ' pb-c-' + it.headColor : '';
+    return '<div class="pb-item"><div class="pb-item-head' + _hcl + '"' + (_hsz ? ' style="font-size:' + _hsz + ';"' : '') + '>' + esc(it.head) + '</div>' + inner + '</div>';
   }
   return inner;
 }
@@ -5296,7 +5298,7 @@ if (!window.__ix2Wired) {
       // clamp the card (max-width 150px + translateX(-50%)) so edge stops are never clipped
       var half = 84;
       el.style.left = Math.min(Math.max(x, half), Math.max(boxW - half, half)) + 'px';
-      el.style.top = (above ? Math.max(y - 96, 2) : Math.min(y + 26, boxH - 90)) + 'px';
+      el.style.top = (above ? Math.max(y - 110, 6) : Math.min(y + 30, Math.max(boxH - 264, 6))) + 'px';
       el.innerHTML = '<div class="ix2jn-stop-label">' + esc(s.label || ('Stop ' + (i + 1))) + '</div>' +
         (s.text ? '<div class="ix2jn-stop-text">' + esc(s.text) + '</div>' : '');
       el.setAttribute('tabindex', '0');
@@ -5396,7 +5398,7 @@ if (!window.__ix2Wired) {
     var s = data.steps[i];
     var stage = root.querySelector('.ix2st-stage');
     var color = s.color || '#B59060';
-    stage.innerHTML = '<div class="ix2st-card">' +
+    stage.innerHTML = '<div class="ix2st-card" data-step-i="' + i + '">' +
       '<div class="ix2st-num" style="background:' + esc(color) + ';">' + (i + 1) + '</div>' +
       (s.img ? '<div class="ix2st-img" style="background-image:url(\'' + esc(s.img) + '\');"></div>' : '') +
       '<div class="ix2st-t">' + esc(s.t || ('Step ' + (i + 1))) + '</div>' +
