@@ -1252,7 +1252,10 @@ html[lang="zh-CN"] #mo-ask-fab { letter-spacing: .12em; }
   min-width: 0;
 }
 
-.chapter { display: none; animation: fadeIn 0.35s ease both; }
+.chapter { display: none; animation: chapterIn 0.35s ease; }
+/* opacity-only: a lingering transform keyframe (fill:both) would become the
+   containing block for position:fixed children (lifecycle dock, etc.) */
+@keyframes chapterIn { from { opacity: 0; } to { opacity: 1; } }
 .chapter.on { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
