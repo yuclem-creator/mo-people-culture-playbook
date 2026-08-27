@@ -161,7 +161,8 @@ allowed = ("authoring-tool/editor.js", "authoring-tool/editor.css", "authoring-t
            "authoring-tool/preview-engine/mo-brand.css", "player/mo-brand.css",
            # mobile topbar fix (2026-08-25): language switch + search blew out
            # the <=900px grid, 155px horizontal overflow at 390px — both copies
-           "authoring-tool/preview-engine/index.html", "player/index.html")
+           "authoring-tool/preview-engine/index.html", "player/index.html",
+           "index.html")  # back-nav crumb-home (upstream 28b829e6)
 bad = [c for c in changed if not c.startswith(allowed)]
 check("C6 change scope limited to presentation/storage files", len(bad) == 0, ", ".join(bad) or "in-scope only")
 

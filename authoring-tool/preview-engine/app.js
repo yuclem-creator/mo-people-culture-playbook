@@ -3152,7 +3152,63 @@ function renderGenericChapter(ch, prevId, nextId) {
       ${opener}
       ${body}
       ${chapterNavHTML(prevId, nextId)}
+      ${cycleDockHTML(ch)}
     </section>`;
+}
+
+// ---- Lifecycle step dock ----
+// A chapter may declare ch.cycle = { wid, index } pointing at a lifecycle
+// wheel element (s:'wheel', it.wid) anywhere in the playbook. The dock reads
+// that wheel's stages LIVE at render time — rename, reorder or add stages in
+// the wheel and every linked dock updates automatically. New playbooks get
+// the behaviour simply by adding a wheel and linking step chapters to it.
+function findWheelById(wid) {
+  if (!wid || !PB || !PB.sectionBodies) return null;
+  var bodies = PB.sectionBodies;
+  for (var key in bodies) {
+    var b = bodies[key]; if (!b) continue;
+    var pools = [];
+    if (Array.isArray(b.items)) pools.push(b.items);
+    (Array.isArray(b.sections) ? b.sections : []).forEach(function (s) { if (s && Array.isArray(s.items)) pools.push(s.items); });
+    for (var pi = 0; pi < pools.length; pi++) {
+      for (var ii = 0; ii < pools[pi].length; ii++) {
+        var it = pools[pi][ii];
+        if (it && it.s === 'wheel' && (it.wid === wid || it.name === wid)) return { it: it, chapterId: key };
+      }
+    }
+  }
+  return null;
+}
+
+function cycleDockHTML(ch) {
+  var cyc = ch && ch.cycle;
+  if (!cyc || cyc.index == null || !cyc.wid) return '';
+  var found = findWheelById(cyc.wid);
+  if (!found) return '';
+  var stages = (Array.isArray(found.it.stages) ? found.it.stages : []).filter(function (s) { return s && s.label; });
+  var n = stages.length;
+  if (!n) return '';
+  var idx = Math.max(0, Math.min(Number(cyc.index) || 0, n - 1));
+  var cx = 26, cy = 26, rr = 20, stepA = 360 / n, gap = n > 1 ? 4 : 0;
+  function pt(a) { var rad = (a - 90) * Math.PI / 180; return [cx + rr * Math.cos(rad), cy + rr * Math.sin(rad)]; }
+  var segs = '';
+  for (var i = 0; i < n; i++) {
+    var p0 = pt(i * stepA + gap / 2), p1 = pt((i + 1) * stepA - gap / 2);
+    var large = (stepA - gap) > 180 ? 1 : 0;
+    var on = i === idx;
+    segs += '<path d="M ' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A ' + rr + ' ' + rr + ' 0 ' + large + ' 1 ' +
+      p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + '" fill="none" stroke="' + (on ? '#B59060' : '#8a9a8b') +
+      '" stroke-opacity="' + (on ? '1' : (i < idx ? '.8' : '.38')) + '" stroke-width="7" stroke-linecap="round"/>';
+  }
+  var stageLabel = String(stages[idx].label || '');
+  var hub = String(found.it.hubTitle || found.it.name || '');
+  return '<button type="button" class="pb-cyc-dock" data-goto="' + esc(found.chapterId) + '" ' +
+    'aria-label="Step ' + (idx + 1) + ' of ' + n + ' — ' + esc(stageLabel) + '. Open the ' + esc(hub || 'lifecycle') + ' diagram.">' +
+    '<svg viewBox="0 0 52 52" width="50" height="50" aria-hidden="true">' + segs +
+    '<circle cx="26" cy="26" r="13" fill="#FDFDF3"/>' +
+    '<text x="26" y="30" text-anchor="middle" class="pb-cyc-docknum">' + ('0' + (idx + 1)).slice(-2) + '</text></svg>' +
+    '<span class="pb-cyc-docklbl"><b>Step ' + (idx + 1) + ' of ' + n + '</b>' +
+    esc(stageLabel) + (hub ? ' · ' + esc(hub) : '') + '</span></button>';
 }
 
 // True only for the genuine P&C seed (or a duplicate of it) — NOT merely any

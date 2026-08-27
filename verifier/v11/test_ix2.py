@@ -130,9 +130,11 @@ with sync_playwright() as p:
     pe = open(ROOT + "/authoring-tool/preview-engine/app.js").read()
     pl = open(ROOT + "/player/app.js").read()
     m = re.search(r"var PB_IX_KINDS = \[([^\]]+)\]", pe)
-    kinds = re.findall(r"'([a-z0-9]+)'", m.group(1)) + re.findall(r"PB_IX_KINDS\.push\(([^)]*)\)", pe)[0].replace("'", "").split(",")
+    kinds = re.findall(r"'([a-z0-9]+)'", m.group(1))
+    for push in re.findall(r"PB_IX_KINDS\.push\(([^)]*)\)", pe):
+        kinds += push.replace("'", "").split(",")
     kinds = [k.strip() for k in kinds if k.strip()]
-    check("X16a 29 ix kinds registered", len(set(kinds)) == 29, f"{len(set(kinds))} kinds")
+    check("X16a 30 ix kinds registered (18 + stagebar + 11 ix2)", len(set(kinds)) == 30, f"{len(set(kinds))} kinds")
     tail = pe[pe.index("INTERACTIVE ELEMENTS v2"):]
     check("X16b ix2 block byte-identical in player", "INTERACTIVE ELEMENTS v2" in pl and pl[pl.index("INTERACTIVE ELEMENTS v2"):] == tail)
     css_pe = open(ROOT + "/authoring-tool/preview-engine/mo-brand.css", "rb").read()
@@ -205,7 +207,7 @@ with sync_playwright() as p:
     jn = fr.evaluate("""() => ({ stops: document.querySelectorAll('.ix2jn-stop').length,
         inS: document.querySelectorAll('.ix2jn-stop.in').length,
         dot: document.querySelector('.ix2jn-dot').classList.contains('show'),
-        cx: parseFloat(document.querySelector('.ix2jn-dot').getAttribute('cx')) })""")
+        cx: parseFloat(document.querySelector('.ix2jn-dot').style.left) })""")  # upstream rework: dot is a positioned div now
     check("X6 journey dot travels, stops reveal", jn["stops"] == 3 and jn["inS"] == 3 and jn["dot"] and jn["cx"] > 100, json.dumps(jn))
 
     # X7 — decision tree

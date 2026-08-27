@@ -1523,6 +1523,31 @@
       box.appendChild(checkField('Hide the chapter label on the opener', !!ch.hideLabel, function (v) { ch.hideLabel = v; touch(); }));
       box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
       box.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
+      // Lifecycle step dock: link this chapter to a stage of a lifecycle
+      // wheel. The preview/player renders a persistent mini-ring on the
+      // chapter, built LIVE from that wheel's stages.
+      var wheels = listWheels();
+      if (wheels.length) {
+        box.appendChild(sectionLabel('Lifecycle step'));
+        var curWid = (ch.cycle && ch.cycle.wid) || '';
+        box.appendChild(selectField('Part of a lifecycle', curWid,
+          [{ v: '', l: '\u2014 not a lifecycle step \u2014' }].concat(wheels.map(function (w) {
+            return { v: w.wid, l: (w.it.hubTitle || w.it.name || 'Lifecycle wheel') + ' \u00b7 ' + w.stages.length + ' stages' };
+          })), function (v) {
+            if (!v) { delete ch.cycle; }
+            else { ch.cycle = { wid: v, index: (ch.cycle && ch.cycle.wid === v) ? (ch.cycle.index || 0) : 0 }; }
+            touch(); renderInspector();
+          }));
+        if (curWid) {
+          var w0 = wheels.filter(function (w) { return w.wid === curWid; })[0];
+          if (w0) {
+            box.appendChild(selectField('This chapter is step\u2026', String((ch.cycle && ch.cycle.index) || 0),
+              w0.stages.map(function (s, i) { return { v: String(i), l: 'Step ' + (i + 1) + ' \u2014 ' + (s.label || '') }; }),
+              function (v) { ch.cycle.index = parseInt(v, 10) || 0; touch(); }));
+            box.appendChild(el('div', { class: 'tip', text: 'A mini lifecycle ring is pinned to this chapter highlighting the step. It reads the wheel live \u2014 rename, reorder or add stages in the wheel element and every linked chapter updates.' }));
+          }
+        }
+      }
       var prefix0 = prosePrefixFor(ch, type);
       if (prefix0 && (type === 'standard' || type === 'sections-list' || type === 'lifecycle' || type === 'directory' || type === 'letter' ||
         type === 'part' || type === 'tile-menu' || type === 'card-track' || type === 'process-diagram')) {
@@ -1776,6 +1801,30 @@
         renderSectionsList(box, body, ch.id);
       }
     }
+  }
+
+  // All lifecycle wheels in the playbook (chapter-level or inside any
+  // section, across all bodies incl. part subs). Assigns a stable wid on
+  // first sight so chapters can link to a wheel via ch.cycle.
+  function listWheels() {
+    var out = [];
+    var bodies = PB.sectionBodies || {};
+    Object.keys(bodies).forEach(function (key) {
+      var b = bodies[key]; if (!b) return;
+      var pools = [];
+      if (Array.isArray(b.items)) pools.push(b.items);
+      (Array.isArray(b.sections) ? b.sections : []).forEach(function (s) { if (s && Array.isArray(s.items)) pools.push(s.items); });
+      pools.forEach(function (arr) {
+        arr.forEach(function (it) {
+          if (it && it.s === 'wheel') {
+            if (!it.wid) it.wid = uid('wh');
+            out.push({ wid: it.wid, it: it, chapterId: key,
+              stages: (Array.isArray(it.stages) ? it.stages : []).filter(function (s) { return s && s.label; }) });
+          }
+        });
+      });
+    });
+    return out;
   }
 
   function prosePrefixFor(ch, type) {
@@ -2150,7 +2199,7 @@
           { name: 'Middle tier', sub: '', note: '' },
           { name: 'Foundation', sub: '', note: '' }
         ] }; }),
-        mk('wheel', function () { return { s: 'wheel', name: 'Lifecycle wheel', hubEyebrow: '', hubTitle: 'The lifecycle', stages: [
+        mk('wheel', function () { return { s: 'wheel', name: 'Lifecycle wheel', wid: uid('wh'), hubEyebrow: '', hubTitle: 'The lifecycle', stages: [
           { label: 'Stage one', text: '' }, { label: 'Stage two', text: '' },
           { label: 'Stage three', text: '' }, { label: 'Stage four', text: '' }
         ] }; }),

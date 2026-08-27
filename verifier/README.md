@@ -208,3 +208,10 @@ handles on every item root open the Studio element picker and splice the new
 element at that exact position (handles live INSIDE item roots so the
 DOM↔model count guards are untouched); tasklist action / note / gate line and
 the chapter opener title / sub edit in place; engine + player stay clean.
+
+## v14 — Lifecycle step dock (Concept A)
+`v14/test_cycle_dock.py` (port 8910, stubbed Supabase): chapters linked to a
+lifecycle wheel via ch.cycle={wid,index} render a persistent mini-ring dock
+whose segments are read LIVE from the wheel's stages (rename/reorder/add a
+stage and every linked dock follows); dock click jumps to the wheel chapter;
+Studio chapter inspector links wheel + step; mirrored files stay identical.

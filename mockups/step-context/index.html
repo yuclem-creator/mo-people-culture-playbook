@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step-in-context — design proposals · Commercial &amp; Revenue Playbook</title>
+<style>
+  :root{
+    --paper:#f7f4ec; --paper-warm:#f1ede2; --card:#fffdf8; --ink:#26221c; --ink-mute:#8a8272;
+    --rule:#ddd5c2; --gold:#B59060; --gold-soft:#d8c6a5; --sage:#8a9a8b; --sage-deep:#5f7168;
+    --display:"MO Exceptional",Georgia,"Times New Roman",serif;
+    --body:"Avenir Next LT Pro","Avenir Next",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#e9e4d6;color:var(--ink);font-family:var(--body);padding:48px 24px 120px;}
+  .wrap{max-width:1240px;margin:0 auto;}
+  header.intro{margin:0 auto 56px;max-width:840px;text-align:center;}
+  header.intro .eyebrow{font:600 11px/1 var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+  header.intro h1{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.01em;margin-bottom:14px;}
+  header.intro p{color:var(--ink-mute);font-size:15px;line-height:1.65;}
+
+  .concept{margin:0 auto 96px;}
+  .concept-head{display:flex;align-items:baseline;gap:16px;margin-bottom:10px;}
+  .concept-head .tag{font:700 11px/1 var(--body);letter-spacing:.18em;text-transform:uppercase;color:#fff;background:var(--ink);border-radius:999px;padding:7px 12px;}
+  .concept-head h2{font-family:var(--display);font-weight:400;font-size:24px;}
+  .concept-note{max-width:860px;color:var(--ink-mute);font-size:14px;line-height:1.7;margin-bottom:22px;}
+  .concept-note strong{color:var(--ink);}
+  .proscons{display:flex;gap:24px;flex-wrap:wrap;margin:14px 0 0;max-width:860px;}
+  .proscons div{flex:1;min-width:220px;background:#f4f0e4;border:1px solid var(--rule);border-radius:10px;padding:14px 16px;font-size:12.5px;line-height:1.65;color:var(--ink-mute);}
+  .proscons b{display:block;font:700 10px/1 var(--body);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;}
+  .proscons .pro b{color:var(--sage-deep);}
+  .proscons .con b{color:#a0563f;}
+
+  /* ---- fake playbook screen chrome ---- */
+  .screen{background:var(--paper);border:1px solid var(--rule);border-radius:14px;overflow:hidden;
+    box-shadow:0 24px 60px rgba(38,34,28,.12);position:relative;}
+  .screen .topbar{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--rule);background:var(--card);}
+  .screen .fan{width:34px;height:20px;border-radius:50% 50% 0 0;background:radial-gradient(circle at 50% 100%, var(--gold) 0 40%, transparent 41%);}
+  .screen .brand{font:600 10.5px/1 var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--ink);}
+  .screen .brand span{color:var(--ink-mute);}
+  .screen .lang{margin-left:auto;border:1px solid var(--rule);border-radius:999px;padding:6px 14px;font-size:11px;color:var(--ink-mute);background:#fff;}
+  .screen .layout{display:flex;min-height:520px;}
+  .rail{width:230px;border-right:1px solid var(--rule);padding:26px 0;background:var(--paper);flex-shrink:0;}
+  .rail .cap{font:600 9.5px/1 var(--body);letter-spacing:.24em;color:var(--ink-mute);padding:0 26px 14px;text-transform:uppercase;}
+  .rail .row{padding:10px 26px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);}
+  .rail .row.muted{color:var(--ink-mute);}
+  .rail .row.active{border-left:3px solid var(--gold);background:#f2ecdd;font-weight:600;}
+  .rail .sub{padding:8px 26px 8px 40px;font-size:11.5px;color:var(--ink-mute);letter-spacing:.04em;text-transform:uppercase;}
+  .rail .sub.here{color:var(--ink);font-weight:600;}
+  .stage{flex:1;padding:52px 6% 90px;position:relative;background:
+    linear-gradient(var(--paper),var(--paper));}
+  .stage .kicker{font:600 10.5px/1 var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:26px;}
+  .stage p.lede{max-width:640px;font-size:15.5px;line-height:1.8;color:#3c372d;margin-bottom:34px;}
+  .scorecard{max-width:640px;border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff;}
+  .scorecard .hd{display:flex;justify-content:space-between;background:var(--ink);color:#fff;
+    font:700 10.5px/1 var(--body);letter-spacing:.18em;padding:12px 18px;text-transform:uppercase;}
+  .scorecard .task{display:flex;justify-content:space-between;gap:18px;padding:16px 18px;border-top:1px solid var(--rule);}
+  .scorecard .task b{display:block;font-size:13.5px;margin-bottom:5px;}
+  .scorecard .task span{font-size:11.5px;color:var(--ink-mute);line-height:1.5;}
+  .dots{display:flex;gap:7px;align-items:flex-start;padding-top:3px;}
+  .dots i{width:22px;height:22px;border:1px solid var(--rule);border-radius:50%;font-style:normal;font-size:10.5px;
+    display:flex;align-items:center;justify-content:center;color:var(--ink-mute);background:#fff;}
+  .ask{position:absolute;right:26px;bottom:22px;border:1px solid var(--gold-soft);color:var(--gold);
+    border-radius:999px;padding:9px 18px;font:600 10px/1 var(--body);letter-spacing:.16em;background:#fff;text-transform:uppercase;}
+
+  /* ---- Concept A: mini ring dock ---- */
+  .dock{position:absolute;left:26px;bottom:22px;display:flex;align-items:center;gap:14px;background:var(--card);
+    border:1px solid var(--rule);border-radius:999px;padding:10px 18px 10px 10px;box-shadow:0 10px 30px rgba(38,34,28,.14);}
+  .dock .lbl{font-size:11px;line-height:1.4;color:var(--ink-mute);}
+  .dock .lbl b{display:block;font:700 10px/1.3 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);}
+
+  /* ---- Concept B: pinned stepper bar ---- */
+  .stepbar{position:sticky;top:0;display:flex;align-items:center;gap:0;background:var(--card);border-bottom:1px solid var(--rule);padding:0 22px;z-index:5;}
+  .stepbar .crumb{font:600 10px/1 var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);padding:14px 18px 14px 0;border-right:1px solid var(--rule);margin-right:18px;white-space:nowrap;}
+  .stepbar .steps{display:flex;flex:1;gap:4px;}
+  .stepbar .st{flex:1;display:flex;align-items:center;gap:10px;padding:13px 10px;font-size:11px;color:var(--ink-mute);border-bottom:3px solid transparent;white-space:nowrap;}
+  .stepbar .st i{font-style:normal;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--rule);
+    display:flex;align-items:center;justify-content:center;font-size:9.5px;flex-shrink:0;background:#fff;}
+  .stepbar .st.done{color:var(--sage-deep);}
+  .stepbar .st.done i{background:var(--sage);border-color:var(--sage);color:#fff;}
+  .stepbar .st.now{color:var(--ink);font-weight:700;border-bottom-color:var(--gold);}
+  .stepbar .st.now i{background:var(--gold);border-color:var(--gold);color:#fff;}
+
+  /* ---- Concept C: context card ---- */
+  .ctxcard{max-width:640px;display:flex;gap:22px;align-items:center;background:var(--card);border:1px solid var(--rule);
+    border-left:4px solid var(--gold);border-radius:12px;padding:18px 22px;margin-bottom:34px;box-shadow:0 8px 24px rgba(38,34,28,.06);}
+  .ctxcard .meta{flex:1;}
+  .ctxcard .pos{font:700 10px/1 var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:7px;}
+  .ctxcard .name{font-family:var(--display);font-size:19px;margin-bottom:6px;}
+  .ctxcard .nav{display:flex;gap:14px;font-size:11.5px;color:var(--ink-mute);}
+  .ctxcard .nav b{color:var(--ink);font-weight:600;}
+  .ctxcard .stepdots{display:flex;gap:5px;margin-top:10px;}
+  .ctxcard .stepdots i{width:26px;height:4px;border-radius:2px;background:var(--rule);font-style:normal;}
+  .ctxcard .stepdots i.on{background:var(--gold);}
+
+  /* ---- Concept D: rail lifecycle tree ---- */
+  .rail .cyc{margin:6px 14px 10px 26px;border-left:1px solid var(--rule);padding-left:14px;}
+  .rail .cyc .cs{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);}
+  .rail .cyc .cs i{font-style:normal;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--rule);
+    font-size:8.5px;display:flex;align-items:center;justify-content:center;background:#fff;flex-shrink:0;}
+  .rail .cyc .cs.here{color:var(--ink);font-weight:700;}
+  .rail .cyc .cs.here i{background:var(--gold);border-color:var(--gold);color:#fff;}
+  .rail .cyc .cs.done i{background:var(--sage);border-color:var(--sage);color:#fff;}
+
+  .legend{display:flex;gap:10px;align-items:center;margin:0 0 8px;font-size:12px;color:var(--ink-mute);}
+  .legend .sw{width:14px;height:14px;border-radius:4px;background:var(--gold);}
+  .hot{outline:2.5px solid var(--gold);outline-offset:3px;}
+  footer{margin-top:40px;text-align:center;color:var(--ink-mute);font-size:12px;line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="intro">
+  <div class="eyebrow">Design proposals · not for production</div>
+  <h1>Keeping the lifecycle in view</h1>
+  <p>Four candidate patterns so a learner inside a process step (e.g. Opportunity 1 · Step 1 — Self Assessment)
+  always knows which stage of the IDENTIFY cycle they are in. Each screen below is the same Step 1 page with one
+  device added, highlighted in gold. These are composable — B + D, or A + C, pair well.</p>
+</header>
+
+<!-- ============ CONCEPT A ============ -->
+<section class="concept">
+  <div class="concept-head"><span class="tag">A</span><h2>Persistent mini-ring dock</h2></div>
+  <p class="concept-note">A small, always-on lifecycle ring pinned to the <strong>bottom-left of the reading pane</strong>
+  (mirroring the “Contents” / “Ask the Playbook” floating buttons). The active segment is gold with the step label beside it.
+  Tapping it expands to the full diagram. It survives scrolling, so the anchor is <strong>never off-screen</strong> —
+  this is the only option that is visible 100% of the time.</p>
+  <div class="screen">
+    <div class="topbar"><div class="fan"></div><div class="brand">Mandarin Oriental <span>· Commercial and Revenue Playbook</span></div><div class="lang">English ⌄</div></div>
+    <div class="layout">
+      <div class="rail">
+        <div class="cap">Contents</div>
+        <div class="row muted">Cover</div><div class="row muted">Welcome</div><div class="row muted">Introduction</div>
+        <div class="row muted">Baselining checklist</div><div class="row muted">Opportunity diagram</div>
+        <div class="row active">Opportunities</div>
+        <div class="sub">The 6 opportunity summary</div>
+        <div class="sub">Package design process</div>
+        <div class="sub">3.1 Opportunity 1 summary</div>
+        <div class="sub here">3.2 Assess — understand today's process</div>
+      </div>
+      <div class="stage">
+        <div class="kicker">3.2.1 Packages go-to-market process — assessed on 4 key criteria</div>
+        <p class="lede">The hotel documents its current real-life process and scores it. It is not yet changing anything.
+        Document how your property actually builds packages today. For each of the seven tasks, record which departments
+        are involved, how far ahead of launch it happens…</p>
+        <div class="scorecard">
+          <div class="hd"><span>Task</span><span>Score</span></div>
+          <div class="task"><div><b>Build promotional calendar</b><span>Plan packages for the year ahead · decide which packages may be needed over the coming year and when they should launch</span></div><div class="dots"><i>1</i><i>2</i><i>3</i><i>4</i></div></div>
+          <div class="task"><div><b>Confirm details</b><span>Build package content · agree package inclusions, such as room, breakfast, spa, dining, transfer, or activity</span></div><div class="dots"><i>1</i><i>2</i><i>3</i><i>4</i></div></div>
+          <div class="task"><div><b>“Tempting offer” and allocation form</b><span>Complete proposal · describe the guest offer; calculate final price, discount, and value/revenue allocation</span></div><div class="dots"><i>1</i><i>2</i><i>3</i><i>4</i></div></div>
+        </div>
+        <div class="dock hot">
+          <svg width="52" height="52" viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r="21" fill="none" stroke="#e6dfcc" stroke-width="7"/>
+            <path d="M 26 5 A 21 21 0 0 1 47 26" fill="none" stroke="#B59060" stroke-width="7" stroke-linecap="round"/>
+            <path d="M 47 26 A 21 21 0 0 1 26 47" fill="none" stroke="#8a9a8b" stroke-width="7" opacity=".45"/>
+            <path d="M 26 47 A 21 21 0 0 1 5 26" fill="none" stroke="#8a9a8b" stroke-width="7" opacity=".45"/>
+            <path d="M 5 26 A 21 21 0 0 1 26 5" fill="none" stroke="#8a9a8b" stroke-width="7" opacity=".45"/>
+            <text x="26" y="30" text-anchor="middle" font-family="Georgia" font-size="13" fill="#26221c">01</text>
+          </svg>
+          <div class="lbl"><b>Step 1 of 4</b>Self Assessment · Identify</div>
+        </div>
+        <div class="ask">Ask the Playbook</div>
+      </div>
+    </div>
+  </div>
+  <div class="proscons">
+    <div class="pro"><b>Why it works</b>Always visible, even mid-scroll through a long scorecard. Reinforces the cycle visually (same ring grammar as the diagram). Doubles as a shortcut back to the full diagram.</div>
+    <div class="con"><b>Watch-outs</b>Occupies permanent screen corner — must not collide with the Contents button on small screens (stack or shrink to just the ring).</div>
+  </div>
+</section>
+
+<!-- ============ CONCEPT B ============ -->
+<section class="concept">
+  <div class="concept-head"><span class="tag">B</span><h2>Pinned step bar under the header</h2></div>
+  <p class="concept-note">A slim <strong>sticky stepper</strong> that appears on any chapter that belongs to a lifecycle:
+  breadcrumb on the left (“Opportunity 1 · Identify”), then the four steps as a segmented bar — completed in sage,
+  current in gold with an underline. It reads like a progress bar for the process itself and doubles as navigation
+  between steps.</p>
+  <div class="screen">
+    <div class="topbar"><div class="fan"></div><div class="brand">Mandarin Oriental <span>· Commercial and Revenue Playbook</span></div><div class="lang">English ⌄</div></div>
+    <div class="stepbar hot">
+      <div class="crumb">Opportunity 1 · Identify</div>
+      <div class="steps">
+        <div class="st now"><i>01</i>Self Assessment</div>
+        <div class="st"><i>02</i>Best-in-Class Process</div>
+        <div class="st"><i>03</i>Collaboration Model</div>
+        <div class="st"><i>04</i>Package Lifecycle</div>
+      </div>
+    </div>
+    <div class="layout">
+      <div class="rail">
+        <div class="cap">Contents</div>
+        <div class="row muted">Cover</div><div class="row muted">Welcome</div><div class="row muted">Introduction</div>
+        <div class="row muted">Baselining checklist</div><div class="row muted">Opportunity diagram</div>
+        <div class="row active">Opportunities</div>
+        <div class="sub here">3.2 Assess — understand today's process</div>
+      </div>
+      <div class="stage">
+        <div class="kicker">3.2.1 Packages go-to-market process — assessed on 4 key criteria</div>
+        <p class="lede">The hotel documents its current real-life process and scores it. It is not yet changing anything…</p>
+        <div class="scorecard">
+          <div class="hd"><span>Task</span><span>Score</span></div>
+          <div class="task"><div><b>Build promotional calendar</b><span>Plan packages for the year ahead · decide which packages may be needed and when they should launch</span></div><div class="dots"><i>1</i><i>2</i><i>3</i><i>4</i></div></div>
+          <div class="task"><div><b>Confirm details</b><span>Build package content · agree package inclusions, such as room, breakfast, spa, dining</span></div><div class="dots"><i>1</i><i>2</i><i>3</i><i>4</i></div></div>
+        </div>
+        <div class="ask">Ask the Playbook</div>
+      </div>
+    </div>
+  </div>
+  <div class="proscons">
+    <div class="pro"><b>Why it works</b>Names every step (not just a number), shows done/current/todo at a glance, and gives one-tap step hopping. Familiar pattern — zero learning curve.</div>
+    <div class="con"><b>Watch-outs</b>Adds ~46px of permanent chrome; on mobile it needs to collapse to “Step 1 of 4 ⌄”. Linear bar loses the circular “cycle” metaphor.</div>
+  </div>
+</section>
+
+<!-- ============ CONCEPT C ============ -->
+<section class="concept">
+  <div class="concept-head"><span class="tag">C</span><h2>“You are here” context card</h2></div>
+  <p class="concept-note">A <strong>context card at the top of every step page</strong>: mini-ring on the left, position
+  (“Step 1 of 4 · Identify”), the step name in display type, and prev/next step links. No new chrome — it is part of the
+  content, so it costs nothing on mobile and can carry a one-line “what this step is for”.</p>
+  <div class="screen">
+    <div class="topbar"><div class="fan"></div><div class="brand">Mandarin Oriental <span>· Commercial and Revenue Playbook</span></div><div class="lang">English ⌄</div></div>
+    <div class="layout">
+      <div class="rail">
+        <div class="cap">Contents</div>
+        <div class="row muted">Cover</div><div class="row muted">Welcome</div><div class="row muted">Introduction</div>
+        <div class="row active">Opportunities</div>
+        <div class="sub here">3.2 Assess — understand today's process</div>
+      </div>
+      <div class="stage">
+        <div class="ctxcard hot">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="29" fill="none" stroke="#e6dfcc" stroke-width="9"/>
+            <path d="M 36 7 A 29 29 0 0 1 65 36" fill="none" stroke="#B59060" stroke-width="9"/>
+            <path d="M 65 36 A 29 29 0 0 1 36 65" fill="none" stroke="#8a9a8b" stroke-width="9" opacity=".4"/>
+            <path d="M 36 65 A 29 29 0 0 1 7 36" fill="none" stroke="#8a9a8b" stroke-width="9" opacity=".4"/>
+            <path d="M 7 36 A 29 29 0 0 1 36 7" fill="none" stroke="#8a9a8b" stroke-width="9" opacity=".4"/>
+            <text x="36" y="33" text-anchor="middle" font-family="Georgia" font-size="15" fill="#26221c">01</text>
+            <text x="36" y="47" text-anchor="middle" font-family="system-ui" font-size="7" letter-spacing="1.5" fill="#8a8272">OF 4</text>
+          </svg>
+          <div class="meta">
+            <div class="pos">Opportunity 1 · Identify — Step 1 of 4</div>
+            <div class="name">Self Assessment</div>
+            <div class="nav"><span>← <b>Package design process</b></span><span>Next: <b>02 Best-in-Class Process</b> →</span></div>
+            <div class="stepdots"><i class="on"></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="kicker">3.2.1 Packages go-to-market process — assessed on 4 key criteria</div>
+        <p class="lede">The hotel documents its current real-life process and scores it. It is not yet changing anything…</p>
+        <div class="scorecard">
+          <div class="hd"><span>Task</span><span>Score</span></div>
+          <div class="task"><div><b>Build promotional calendar</b><span>Plan packages for the year ahead · decide which packages may be needed and when they should launch</span></div><div class="dots"><i>1</i><i>2</i><i>3</i><i>4</i></div></div>
+        </div>
+        <div class="ask">Ask the Playbook</div>
+      </div>
+    </div>
+  </div>
+  <div class="proscons">
+    <div class="pro"><b>Why it works</b>Richest context (position, name, prev/next, mini-ring) with zero persistent chrome. Cheapest to build — it is just a content block at the top of each step chapter, and authors control it per page.</div>
+    <div class="con"><b>Watch-outs</b>Scrolls away — once the learner is halfway down the scorecard it is gone (pair with A if persistence matters).</div>
+  </div>
+</section>
+
+<!-- ============ CONCEPT D ============ -->
+<section class="concept">
+  <div class="concept-head"><span class="tag">D</span><h2>Contents rail: lifecycle tree with live marker</h2></div>
+  <p class="concept-note">Extend the <strong>left Contents rail</strong>: under the active section, the four lifecycle
+  steps render as a nested mini-tree with numbered dots — completed sage, <strong>current gold</strong>. The rail already
+  tracks “where in the playbook”; this makes it also track “where in the cycle”, at zero cost to the reading pane.</p>
+  <div class="screen">
+    <div class="topbar"><div class="fan"></div><div class="brand">Mandarin Oriental <span>· Commercial and Revenue Playbook</span></div><div class="lang">English ⌄</div></div>
+    <div class="layout">
+      <div class="rail">
+        <div class="cap">Contents</div>
+        <div class="row muted">Cover</div><div class="row muted">Welcome</div><div class="row muted">Introduction</div>
+        <div class="row muted">Baselining checklist</div><div class="row muted">Opportunity diagram</div>
+        <div class="row active">Opportunities</div>
+        <div class="sub">The 6 opportunity summary</div>
+        <div class="sub">Package design process</div>
+        <div class="sub">3.1 Opportunity 1 summary</div>
+        <div class="sub here">3.2 Assess — understand today's process</div>
+        <div class="cyc hot">
+          <div class="cs here"><i>1</i>Self Assessment</div>
+          <div class="cs"><i>2</i>Best-in-Class Process</div>
+          <div class="cs"><i>3</i>Collaboration Model</div>
+          <div class="cs"><i>4</i>Package Lifecycle</div>
+        </div>
+        <div class="sub">3.3 Design — build the package</div>
+      </div>
+      <div class="stage">
+        <div class="kicker">3.2.1 Packages go-to-market process — assessed on 4 key criteria</div>
+        <p class="lede">The hotel documents its current real-life process and scores it. It is not yet changing anything…</p>
+        <div class="scorecard">
+          <div class="hd"><span>Task</span><span>Score</span></div>
+          <div class="task"><div><b>Build promotional calendar</b><span>Plan packages for the year ahead · decide which packages may be needed and when they should launch</span></div><div class="dots"><i>1</i><i>2</i><i>3</i><i>4</i></div></div>
+          <div class="task"><div><b>Confirm details</b><span>Build package content · agree package inclusions, such as room, breakfast, spa, dining</span></div><div class="dots"><i>1</i><i>2</i><i>3</i><i>4</i></div></div>
+        </div>
+        <div class="ask">Ask the Playbook</div>
+      </div>
+    </div>
+  </div>
+  <div class="proscons">
+    <div class="pro"><b>Why it works</b>Lives where orientation already lives; also makes the four steps directly navigable from anywhere. Great companion to A or C.</div>
+    <div class="con"><b>Watch-outs</b>The rail collapses on narrow screens, so it cannot be the only device. Only visible when the learner looks left.</div>
+  </div>
+</section>
+
+<footer>
+  Recommendation: <strong>C + A</strong> — the context card gives rich orientation on arrival, the mini-ring dock keeps
+  the anchor alive while scrolling. Add D in the same release if the rail tree is cheap (it reuses the same step model).<br>
+  Mockups only — nothing here touches the production engine.
+</footer>
+
+</div>
+</body>
+</html>

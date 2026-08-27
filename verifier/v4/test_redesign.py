@@ -115,7 +115,10 @@ allowed_prefixes = ("authoring-tool/editor.js", "authoring-tool/editor.css", "au
                     "authoring-tool/preview-engine/mo-brand.css", "player/mo-brand.css",
                     # mobile topbar fix (2026-08-25): language switch + search blew out
                     # the <=900px grid, 155px horizontal overflow at 390px — both copies
-                    "authoring-tool/preview-engine/index.html", "player/index.html")
+                    "authoring-tool/preview-engine/index.html", "player/index.html",
+                    # back-nav (2026-08-26, upstream commit 28b829e6): crumb-home
+                    # button in the root hub page — deliberate, kept
+                    "index.html")
 bad = [c for c in changed if not c.startswith(allowed_prefixes)]
 check("R5 change scope limited to known presentation/storage files", len(bad) == 0, ", ".join(bad) or "in-scope only")
 
