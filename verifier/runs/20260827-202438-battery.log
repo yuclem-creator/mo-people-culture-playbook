@@ -1,0 +1,19 @@
+v1/test_storage.py -> 
+v2/test_storage_v2.py -> 
+v3/test_never_again.py -> 
+v4/test_redesign.py -> 
+v5/test_ix_styles.py -> 10 passed, 0 failed
+v6/test_categorical_add.py -> 
+v7/test_text_and_compare.py -> 19 passed, 0 failed
+v8/test_e2e.py -> S1: 12 passed, 0 failed
+v8/test_scorm_completion.py -> 18 passed, 3 failed
+v9/test_full_qa.py -> 
+v10/test_wysiwyg.py -> 16 passed, 0 failed
+v11/test_ix2.py -> ===== v11 ix2: 21 passed, 0 failed =====
+v12/test_wysiwyg_parts.py -> 
+v13/test_wysiwyg_add_tasklist.py -> 9 passed, 0 failed
+v14/test_cycle_dock.py -> 11 passed, 0 failed
+v16/test_dock_headings_scorecard.py -> ===== v16: 13 passed, 0 failed =====
+v17/test_delete_and_insert.py -> ===== v17: 7 passed, 0 failed =====
+
+ALL PASS

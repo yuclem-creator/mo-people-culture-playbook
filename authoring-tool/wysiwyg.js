@@ -45,6 +45,10 @@ window.MO_WYSIWYG = (function () {
     + '.mo-wys-add-end{top:auto;bottom:6px;}'
     + '.mo-wys-host:hover > .mo-wys-add{opacity:1;}'
     + '.mo-wys-add:hover{background:#B59060;color:#fff;transform:scale(1.1);}'
+    + '.mo-wys-del{position:absolute;left:32px;top:6px;z-index:31;width:22px;height:22px;border-radius:50%;border:1px solid #d8c6a5;background:#fdfcf9;color:#a05548;'
+    + 'font:600 14px/20px system-ui,sans-serif;text-align:center;padding:0;cursor:pointer;opacity:0;transition:opacity .15s,transform .15s,background .15s;}'
+    + '.mo-wys-host:hover > .mo-wys-del{opacity:1;}'
+    + '.mo-wys-del:hover{background:#a05548;color:#fff;transform:scale(1.1);}'
     + '.mo-wys-formbtn:hover{border-color:#B59060;color:#B59060;}'
     + '.mo-wys-bar{position:absolute;z-index:40;display:none;gap:4px;background:#26221c;border-radius:6px;padding:5px;box-shadow:0 8px 24px rgba(0,0,0,.25);}'
     + '.mo-wys-bar.show{display:flex;}'
@@ -118,6 +122,16 @@ window.MO_WYSIWYG = (function () {
         if (committed) return; committed = true;
         var raw = (opts.fromDOM || plainFromDOM)(el).trim();
         var orig = String(opts.get() == null ? '' : opts.get()).trim();
+        // Delete-on-empty: clearing an array-backed entry (intro paragraph,
+        // blurb line, "## " heading) removes the entry entirely — this is the
+        // on-canvas way to delete a heading or paragraph you added in place.
+        if (raw === '' && orig !== '' && typeof opts.onEmpty === 'function') {
+          opts.onEmpty();
+          editedKeys[opts.key] = true;
+          bridge.touch();
+          if (bridge.toast) bridge.toast('Removed — saved to draft', 'ok');
+          return;
+        }
         if (raw !== orig) {
           opts.set(raw);
           editedKeys[opts.key] = true;
@@ -233,6 +247,25 @@ window.MO_WYSIWYG = (function () {
     hostEl.appendChild(btn);
   }
 
+  // Hover "×" on an item root deletes the whole element (with a confirm on
+  // the Studio side). Sits next to the "+" insert handle.
+  function addDeleteHandle(hostEl, arr, index) {
+    if (!bridge.deleteElement) return;
+    if (hostEl.querySelector(':scope > .mo-wys-del')) return;
+    hostEl.classList.add('mo-wys-host');
+    var btn = doc.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mo-wys-del';
+    btn.title = 'Delete this element';
+    btn.textContent = '×';
+    btn.addEventListener('click', function (ev) {
+      ev.stopPropagation(); ev.preventDefault();
+      stopEditing(false);
+      bridge.deleteElement(arr, index);
+    });
+    hostEl.appendChild(btn);
+  }
+
   // ---------- item mapping ----------
   // Inline text editing for the common interactive elements — click the text
   // in the canvas and type. Structure/lists stay in the Studio form via the
@@ -338,6 +371,7 @@ window.MO_WYSIWYG = (function () {
   function attachItem(rootEl, it, chId, arr, index, keyBase) {
     if (!it || typeof it !== 'string' && !it.s) return;
     var it2 = typeof it === 'string' ? { s: 'policy', text: it } : it;
+    addDeleteHandle(rootEl, arr, index);
 
     // Optional element heading (.pb-item-head wraps the body in .pb-item).
     var head = rootEl.querySelector(':scope > .pb-item-head');
@@ -380,7 +414,7 @@ window.MO_WYSIWYG = (function () {
           key: keyBase + ':text', rich: false, multiline: true,
           fromDOM: function (el) {
             var c = el.cloneNode(true);
-            [].slice.call(c.querySelectorAll('.mo-wys-add, .mo-wys-formbtn, .mo-wys-dot')).forEach(function (n) { n.parentNode.removeChild(n); });
+            [].slice.call(c.querySelectorAll('.mo-wys-add, .mo-wys-formbtn, .mo-wys-dot, .mo-wys-del')).forEach(function (n) { n.parentNode.removeChild(n); });
             return (c.textContent || '').replace(/\u00a0/g, ' ').trim();
           },
           get: function () { return String(it2.text || ''); },
@@ -615,6 +649,10 @@ window.MO_WYSIWYG = (function () {
               if (Array.isArray(sec.blurb)) sec.blurb[pi] = nv;
               else sec.blurb = nv;
               blurbArr[pi] = nv;
+            },
+            onEmpty: function () {
+              if (Array.isArray(sec.blurb)) { sec.blurb.splice(pi, 1); blurbArr.splice(pi, 1); }
+              else { sec.blurb = ''; blurbArr = []; }
             }
           });
         })(bps[bi], bi);
@@ -649,22 +687,29 @@ window.MO_WYSIWYG = (function () {
     if (!introEl || !bodyObj) return;
     var entries = Array.isArray(bodyObj.intro) ? bodyObj.intro : [];
     if (!entries.length) return;
-    var nodes = [].slice.call(introEl.querySelectorAll('p, li'));
+    var nodes = [].slice.call(introEl.querySelectorAll('p, li, h4.pb-para-h'));
     var used = [];
     entries.forEach(function (entry, ei) {
-      var txt = String(entry && typeof entry === 'object' ? (entry.text || '') : entry).trim();
+      var raw = String(entry && typeof entry === 'object' ? (entry.text || '') : entry);
+      var isH = typeof entry === 'string' && /^##\s+/.test(entry);
+      var txt = (isH ? raw.replace(/^##\s+/, '') : raw).trim();
       if (!txt) return;
       var node = null, nodeIdx = -1;
       for (var ni = 0; ni < nodes.length; ni++) {
         if (used.indexOf(ni) !== -1) continue;
+        if (isH !== (nodes[ni].tagName === 'H4')) continue;
         if (nodes[ni].textContent.trim() === txt) { node = nodes[ni]; nodeIdx = ni; break; }
       }
       if (!node) return;
       used.push(nodeIdx);
       markEditable(node, {
-        key: keyBase + ':intro' + ei, rich: false, multiline: true,
-        get: function () { return String(entry && typeof entry === 'object' ? (entry.text || '') : entry); },
-        set: function (v) { if (entry && typeof entry === 'object') entry.text = v; else entries[ei] = v; }
+        key: keyBase + ':intro' + ei, rich: false, multiline: !isH,
+        get: function () { return isH ? raw.replace(/^##\s+/, '') : raw; },
+        set: function (v) {
+          if (!isH && entry && typeof entry === 'object') entry.text = v;
+          else entries[ei] = isH ? '## ' + v : v;
+        },
+        onEmpty: function () { entries.splice(ei, 1); }
       });
     });
   }
@@ -705,6 +750,16 @@ window.MO_WYSIWYG = (function () {
     var chIntro = [].slice.call(chEl.querySelectorAll('.sub-intro'))
       .filter(function (el) { return !el.closest('.part-section, .part-topic, .part-sub'); })[0];
     attachIntro(chIntro, body, chId);
+    // Chapter-intro add handle: inserts into the chapter body's top-level
+    // items, created lazily so intro-only chapters stay clean. Part chapters
+    // get it too — their chapter body (intro + items + sections) renders
+    // above the sub-topic spreads.
+    if (chIntro) {
+      addInsertHandle(chIntro, chId, function () {
+        if (!Array.isArray(body.items)) body.items = [];
+        return body.items;
+      }, 0);
+    }
 
     // Part chapter: each sub renders as its own anchored spread
     // (div.spread.tight.part-*#subId) holding the sub's body sections.
@@ -718,6 +773,20 @@ window.MO_WYSIWYG = (function () {
         var sEls = [].slice.call(subEl.querySelectorAll('.policy-section'));
         attachSectionSet(sEls, sSections, chId + ':' + sub.id + ':sec', chId);
         attachIntro(subEl.querySelector('.sub-intro'), sBody, chId + ':' + sub.id);
+        // Add-element handle on the sub's intro/eyebrow area: inserts at the
+        // start of the sub's first section, lazily creating that section only
+        // if the author actually adds something (subs with intro text only
+        // previously had no way to add elements on-canvas at all).
+        var subHost = subEl.querySelector('.sub-intro') || subEl.querySelector('.section-eyebrow');
+        if (subHost) {
+          addInsertHandle(subHost, chId, function () {
+            var b = bridge.bodyForChapter({ id: sub.id });
+            b.sections = Array.isArray(b.sections) ? b.sections : (b.sections = []);
+            if (!b.sections.length) b.sections.push({ num: '', title: '', items: [] });
+            if (!Array.isArray(b.sections[0].items)) b.sections[0].items = [];
+            return b.sections[0].items;
+          }, 0);
+        }
         // Sub label in the eyebrow is editable in place.
         var lbl = subEl.querySelector('.section-eyebrow .txt');
         if (lbl) markEditable(lbl, {

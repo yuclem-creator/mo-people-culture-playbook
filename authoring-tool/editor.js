@@ -2270,20 +2270,26 @@
 
   // On-preview "+" handle: pick an element and splice it in at `index` inside
   // `arr` (a chapter-level or section-level items array), then open its form.
+  // arr may be a FUNCTION resolved lazily at click time — used by on-canvas
+  // "+" handles on areas with no items array yet (e.g. a sub-topic with only
+  // intro text): the resolver creates the container (a first section) only
+  // when the author actually adds something.
   function openAddElementPicker(chId, arr, index) {
     var body = addElementPickerUI(addElementCatalog(), function (spec) {
+      var target = (typeof arr === 'function') ? arr() : arr;
+      if (!target || !Array.isArray(target)) { toast('Could not find a place to add this element.', 'err'); return; }
       if (spec.make) {
         var item = spec.make();
-        index = Math.max(0, Math.min(index, arr.length));
-        arr.splice(index, 0, item);
+        index = Math.max(0, Math.min(index, target.length));
+        target.splice(index, 0, item);
         touch();
         closeModal();
         toast('Element added to the page — edit it in the panel', 'ok');
-        select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL });
+        select({ kind: 'item', ref: { arr: target, index: index }, chapter: chId, backSel: SEL });
       } else {
         // Media uploads are asynchronous (file picker) and land at the end.
         closeModal();
-        addMediaItemTo(arr, spec.label === '+ Add image' ? 'image' : 'video');
+        addMediaItemTo(target, spec.label === '+ Add image' ? 'image' : 'video');
         toast('Media uploads land at the end of the section — use the panel arrows to move them.', 'ok');
       }
     });
@@ -3013,6 +3019,13 @@
         el('button', { class: 'btn ghost', onclick: function () {
           var v = ta.value;
           var pos = (typeof ta.selectionStart === 'number' && ta.selectionStart >= 0) ? ta.selectionStart : v.length;
+          // Headings are whole-paragraph blocks — never split the text at the
+          // raw cursor. Snap the insertion point to the end of the current line
+          // so a heading can never land mid-word / mid-paragraph.
+          if (pos < v.length && v[pos] !== '\n') {
+            var nl = v.indexOf('\n', pos);
+            pos = (nl === -1) ? v.length : nl;
+          }
           var before = v.slice(0, pos).replace(/\s+$/, '');
           var after = v.slice(pos).replace(/^\s+/, '');
           ta.value = (before ? before + '\n\n' : '') + '## New heading' + (after ? '\n\n' + after : '');
@@ -4474,6 +4487,14 @@
       select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL }, { noNav: true });
     },
     addElement: function (chId, arr, index) { openAddElementPicker(chId, arr, index); },
+    deleteElement: function (arr, index) {
+      var target = (typeof arr === 'function') ? arr() : arr;
+      if (!target || !Array.isArray(target) || !target[index]) return;
+      if (!window.confirm('Delete this element from the page?')) return;
+      target.splice(index, 1);
+      touch();
+      toast('Element deleted', 'ok');
+    },
     touch: touch,
     toast: toast,
     previewLang: function () { return PREVIEW_LANG; }

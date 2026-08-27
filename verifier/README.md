@@ -222,3 +222,13 @@ chapter with linked subs renders ONE fixed dock that follows the scroll and
 highlights the step whose sub spread is in view. Studio sub inspector gets
 the same link UI. Wheel lookup maps sectionBodies keys back to chapter+sub
 so the dock click lands on the wheel even when it lives inside a part.
+
+## v17 — 2026-08-27
+On-canvas delete + universal insert handles + heading-button snap:
+1. G1 delete-on-empty: clearing a '## ' heading / paragraph on-canvas removes the entry.
+2. G2 item roots carry a hover '×' delete handle (confirm, then splice + touch).
+3. G3 part sub-topic intro areas carry a '+' insert handle (into the first section's items, created lazily).
+4. G4 part-chapter intro carries a '+' insert handle (was non-part only).
+5. G5 inspector '＋ Heading' snaps insertion to the end of the current line (never splits mid-word).
+6. G6 zero page errors; G7 mirrored-copy consistency.
+Run: `python3 v17/test_delete_and_insert.py` (repo-root http.server on :8910).
