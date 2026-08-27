@@ -595,31 +595,42 @@ window.MO_WYSIWYG = (function () {
       set: function (v) { sec.title = v; }
     });
 
-    // Blurb paragraphs (skip ones with links/figures; note chunked layouts
-    // interleave quotes/grids — paragraph ORDER is still source order).
+    // Blurb paragraphs AND "## " heading lines (skip ones with links/figures;
+    // note chunked layouts interleave quotes/grids — paragraph ORDER is still
+    // source order). Headings render as h4.pb-para-h, so count both.
     var blurbArr = Array.isArray(sec.blurb) ? sec.blurb : (sec.blurb && String(sec.blurb).trim() ? [String(sec.blurb)] : []);
-    var bps = secEl.querySelectorAll('.policy-section-blurb > p');
+    var bps = secEl.querySelectorAll('.policy-section-blurb > p, .policy-section-blurb > h4.pb-para-h');
     if (bps.length === blurbArr.length) {
       for (var bi = 0; bi < bps.length; bi++) {
         (function (pEl, pi) {
           if (hasRichSyntax(blurbArr[pi])) return;
+          var isH = /^##\s+/.test(String(blurbArr[pi]));
+          if (isH && !pEl.classList.contains('pb-para-h')) return;
+          if (!isH && pEl.tagName !== 'P') return;
           markEditable(pEl, {
-            key: keyBase + ':blurb' + pi, rich: false, multiline: true,
-            get: function () { return blurbArr[pi]; },
+            key: keyBase + ':blurb' + pi, rich: false, multiline: !isH,
+            get: function () { return isH ? String(blurbArr[pi]).replace(/^##\s+/, '') : blurbArr[pi]; },
             set: function (v) {
-              if (Array.isArray(sec.blurb)) sec.blurb[pi] = v;
-              else sec.blurb = v;
-              blurbArr[pi] = v;
+              var nv = isH ? '## ' + v : v;
+              if (Array.isArray(sec.blurb)) sec.blurb[pi] = nv;
+              else sec.blurb = nv;
+              blurbArr[pi] = nv;
             }
           });
         })(bps[bi], bi);
       }
     }
 
-    // Items: .policy-list children map 1:1 to sec.items.
+    // Items: .policy-list children map 1:1 to sec.items. A section with NO
+    // items yet (intro-only) still gets an insert handle on the section block
+    // itself, so a first element (e.g. a heading) can be added on-canvas.
     var list = secEl.querySelector('.policy-list');
-    var items = Array.isArray(sec.items) ? sec.items : [];
-    if (!list || !items.length) return;
+    if (!Array.isArray(sec.items)) sec.items = [];
+    var items = sec.items;
+    if (!list || !items.length) {
+      addInsertHandle(secEl, chId, items, 0, 'end');
+      return;
+    }
     var kids = [].slice.call(list.children);
     if (kids.length !== items.length) return;
     kids.forEach(function (kid, ii) {
@@ -753,7 +764,15 @@ window.MO_WYSIWYG = (function () {
 
     // Chapter-level content elements: item roots are the element children of
     // the spread that precede the first .policy-section (after the intro).
-    var items0 = Array.isArray(body.items) ? body.items : [];
+    // A chapter with NO chapter-level items yet still offers an insert handle
+    // on the spread (not on part chapters — their content lives in the subs).
+    var items0 = Array.isArray(body.items) ? body.items : (body.items = []);
+    if (!items0.length && !isPart) {
+      var spread0 = secEls.length ? secEls[0].parentElement : chEl.querySelector('.spread');
+      if (spread0 && !spread0.classList.contains('part-section') && !spread0.classList.contains('part-topic') && !spread0.classList.contains('part-sub')) {
+        addInsertHandle(spread0, chId, items0, 0, 'end');
+      }
+    }
     if (items0.length) {
       var spread = secEls.length ? secEls[0].parentElement
         : chEl.querySelector('.spread');

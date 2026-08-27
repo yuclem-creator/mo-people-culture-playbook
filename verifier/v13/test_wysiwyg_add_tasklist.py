@@ -4,6 +4,9 @@
 Proves, with stubbed Supabase:
 A1  insert handles: every item root in a section list carries a hover "+"
     (inside the root, never as a .policy-list child — count guards intact);
+    since v16 a chapter with zero chapter-level items ALSO gets one insert
+    handle on the spread itself (so a first element can be added on-canvas),
+    hence 4 handles in this fixture (3 item handles + 1 spread handle);
 A2  add element: clicking "+" opens the picker modal in Studio, picking
     "heading" splices it at that exact index and the preview re-renders;
 A3  tasklist action text edits in place and writes the model;
@@ -106,7 +109,7 @@ with sync_playwright() as p:
         gate: document.querySelectorAll('[data-gate-row] .pb-task-act[data-wys]').length,
         openerTitle: document.querySelectorAll('.opener-title[data-wys]').length,
         openerSub: document.querySelectorAll('.opener-sub[data-wys]').length })""")
-    check("A1 handles + bindings present", res["handles"] == 3 and res["stray"] == 0
+    check("A1 handles + bindings present", res["handles"] == 4 and res["stray"] == 0
           and res["taskAct"] == 3 and res["taskNote"] == 1 and res["gate"] == 1  # taskAct includes the gate row
           and res["openerTitle"] == 1 and res["openerSub"] == 1, json.dumps(res))
 

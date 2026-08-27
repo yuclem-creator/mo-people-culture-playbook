@@ -878,12 +878,25 @@ function featureQuoteHTML(quote) {
     </figure>`;
 }
 
+// Shared paragraph-line renderer: a line starting with "## " becomes a proper
+// section heading (h4.pb-para-h) anywhere paragraph arrays are rendered —
+// chapter/sub intros, section blurbs, transition notes. Everything else stays
+// an ordinary paragraph. Returns '' for the heading case sentinel handling at
+// call sites that need the raw string check (they call isParaHeading first).
+function isParaHeading(p) {
+  return typeof p === 'string' && /^##\s+\S/.test(p);
+}
+function paraLineHTML(p) {
+  if (isParaHeading(p)) return `<h4 class="pb-para-h">${inlineRichHTML(String(p).replace(/^##\s+/, ''))}</h4>`;
+  return `<p>${inlineRichHTML(p)}</p>`;
+}
+
 // Render blurb paragraphs, optionally split into two chunks so a feature quote /
 // highlight grid can be interleaved (splitAfter = # of paragraphs before break).
 function blurbChunkHTML(paras, from, to) {
   const slice = paras.slice(from, to);
   if (!slice.length) return '';
-  return `<div class="policy-section-blurb">${slice.map(p => `<p>${esc(p)}</p>`).join('')}</div>`;
+  return `<div class="policy-section-blurb">${slice.map(p => isParaHeading(p) ? paraLineHTML(p) : `<p>${esc(p)}</p>`).join('')}</div>`;
 }
 
 // Section (numbered Heading) — optional intro blurb, resource accordions, optional transition.
@@ -909,7 +922,7 @@ function sectionHTML(sec) {
       + blurbChunkHTML(blurbParas, splitAt, blurbParas.length);
   } else {
     blurb = blurbParas.length
-      ? `<div class="policy-section-blurb">${blurbParas.map(p => `<p>${inlineRichHTML(p)}</p>`).join('')}</div>`
+      ? `<div class="policy-section-blurb">${blurbParas.map(p => paraLineHTML(p)).join('')}</div>`
       : '';
   }
   // The verbatim source "transition" sentence is promoted into an editorial
@@ -926,13 +939,13 @@ function sectionHTML(sec) {
   // text (NOT quoted), so only the key sentence is elevated into a quote.
   const transitionPreParas = asParas(sec.transition_pre);
   const transitionPre = transitionPreParas.length
-    ? `<div class="policy-section-blurb policy-section-blurb--before">${transitionPreParas.map(p => `<p>${inlineRichHTML(p)}</p>`).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--before">${transitionPreParas.map(p => paraLineHTML(p)).join('')}</div>`
     : '';
   // Verbatim supporting sentences that follow the pull-quote — rendered as
   // ordinary body text (NOT quoted), so only the key sentence stays a quote.
   const transitionBodyParas = asParas(sec.transition_body);
   const transitionBody = transitionBodyParas.length
-    ? `<div class="policy-section-blurb policy-section-blurb--after">${transitionBodyParas.map(p => `<p>${inlineRichHTML(p)}</p>`).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--after">${transitionBodyParas.map(p => paraLineHTML(p)).join('')}</div>`
     : '';
   const numHTML = sec.num ? `<span class="num">${esc(sec.num)}.</span>` : '';
   const iconHTML = `<span class="policy-section-icon" aria-hidden="true">${sectionIcon(sec.title)}</span>`;
@@ -1474,6 +1487,12 @@ function subIntroHTML(c) {
     };
     let collecting = false;
     c.intro.forEach(p => {
+      // "## Heading" lines become proper headings, anywhere in the intro flow.
+      if (isParaHeading(p)) {
+        flush(); collecting = false;
+        html += paraLineHTML(p);
+        return;
+      }
       if (p && typeof p === 'object') {
         flush(); collecting = false;
         const cls = 'sub-intro-lead' + (p.size ? ' intro-' + p.size : '') + (p.font === 'display' ? ' intro-display' : '');
@@ -3252,9 +3271,30 @@ function cycleDockSetState(dock, idx) {
 // Re-arm dock scroll-following after every render. The single fixed dock on a
 // chapter highlights the step whose sub spread is most in view; chapters with
 // only their own ch.cycle stay static (no anchored entries to observe).
+// Pin the dock's horizontal position to the chapter's content column (the
+// .spread's text edge), so the pill sits under the body copy rather than out
+// by the contents rail. Falls back to the CSS left:22px when no spread found.
+function cycleDockPlace(dock) {
+  if (window.innerWidth <= 640) { dock.style.left = ''; return; } // mobile: CSS rules
+  var ch = dock.closest('.chapter');
+  var spread = ch && ch.querySelector('.spread');
+  if (!spread) { dock.style.left = ''; return; }
+  var r = spread.getBoundingClientRect();
+  var padL = parseFloat((window.getComputedStyle ? getComputedStyle(spread).paddingLeft : '0')) || 0;
+  dock.style.left = Math.max(12, Math.round(r.left + padL)) + 'px';
+}
+function cycleDockPlaceAll() {
+  document.querySelectorAll('.pb-cyc-dock').forEach(cycleDockPlace);
+}
+if (typeof window !== 'undefined' && !window._cycDockResizeWired) {
+  window._cycDockResizeWired = true;
+  window.addEventListener('resize', function () { try { cycleDockPlaceAll(); } catch (e) {} });
+}
+
 var _cycDockObserver = null;
 function cycleDockScan() {
   if (_cycDockObserver) { _cycDockObserver.disconnect(); _cycDockObserver = null; }
+  try { cycleDockPlaceAll(); } catch (e) {}
   if (typeof IntersectionObserver === 'undefined') return;
   var ratios = {};
   _cycDockObserver = new IntersectionObserver(function (ents) {
@@ -3419,6 +3459,10 @@ function goTo(chapterId, subId, opts) {
       introVideo.pause();
     }
   }
+
+  // Re-arm the lifecycle dock: the freshly shown chapter's spread may sit at a
+  // different left offset, and newly visible subs feed the scroll-follow.
+  try { cycleDockScan(); } catch (e) {}
 }
 
 // ---- Search --------------------------------------------------------

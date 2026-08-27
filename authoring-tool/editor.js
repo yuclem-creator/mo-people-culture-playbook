@@ -3005,11 +3005,23 @@
       field.querySelectorAll('.para-media-row').forEach(function (r) { r.remove(); });
       field.appendChild(paraMediaRow(field.querySelector('textarea')));
     }, 'Each blank line starts a new paragraph.', true);
-    var hint = el('div', { class: 'tip', text: 'Add images inline with the buttons below (they insert an [img:…] marker at your cursor), or type [img:name], [img:left name], [img:right name] on their own line.' });
+    var hint = el('div', { class: 'tip', text: 'Start a line with "## " to make it a heading. Add images inline with the buttons below (they insert an [img:…] marker at your cursor), or type [img:name], [img:left name], [img:right name] on their own line.' });
     field.appendChild(hint);
     var ta = field.querySelector('textarea');
     if (ta) {
       field.appendChild(el('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;' }, [
+        el('button', { class: 'btn ghost', onclick: function () {
+          var v = ta.value;
+          var pos = (typeof ta.selectionStart === 'number' && ta.selectionStart >= 0) ? ta.selectionStart : v.length;
+          var before = v.slice(0, pos).replace(/\s+$/, '');
+          var after = v.slice(pos).replace(/^\s+/, '');
+          ta.value = (before ? before + '\n\n' : '') + '## New heading' + (after ? '\n\n' + after : '');
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+          // Select "New heading" so the author can type straight over it.
+          var hs = (before ? before.length + 2 : 0) + 3;
+          ta.focus(); ta.setSelectionRange(hs, hs + 11);
+          toast('Heading inserted — type over it, or start any line with "## ".', 'ok');
+        } }, ['＋ Heading']),
         el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, ''); } }, ['＋ Image under text']),
         el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'left'); } }, ['＋ Image left of text']),
         el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'right'); } }, ['＋ Image right of text']),
