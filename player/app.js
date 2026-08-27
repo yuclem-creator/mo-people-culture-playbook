@@ -5036,8 +5036,7 @@ Object.assign(PB_IX_RENDER, {
       '<script type="application/json" data-ix2jn>' + JSON.stringify({ stops: stops }).replace(/</g, '\\u003c') + '</script>' +
       '<div class="ix2jn-stage"><svg class="ix2jn-svg" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">' +
         '<path class="ix2jn-path" d="M20,200 C180,60 340,220 500,120 C660,20 820,180 980,80" fill="none"/>' +
-        '<circle class="ix2jn-dot" r="9" cx="20" cy="200"/>' +
-      '</svg><div class="ix2jn-stops"></div></div>' +
+      '</svg><div class="ix2jn-dot" aria-hidden="true"></div><div class="ix2jn-stops"></div></div>' +
       '<div class="ix2-bar"><button type="button" class="ix2-replay" data-ix2-replay>↻ Replay</button></div>' +
       '</div>';
   },
@@ -5299,7 +5298,7 @@ if (!window.__ix2Wired) {
     var boxW = root.querySelector('.ix2jn-stage').clientWidth || 600, boxH = root.querySelector('.ix2jn-stage').clientHeight || 200;
     function place(i) {
       var p = path.getPointAtLength(L * (pts.length === 1 ? 1 : i / (pts.length - 1)));
-      dot.setAttribute('cx', p.x / 1000 * boxW); dot.setAttribute('cy', p.y / 240 * boxH);
+      dot.style.left = (p.x / 1000 * boxW) + 'px'; dot.style.top = (p.y / 240 * boxH) + 'px';
     }
     dot.classList.remove('show');
     if (window.MO_RM) { pts.forEach(function (p) { p.el.classList.add('in'); }); place(pts.length - 1); dot.classList.add('show'); return; }

@@ -776,7 +776,7 @@
 .pb-ix2jn .ix2jn-stage{position:relative;height:360px;border-radius:14px;background:#faf7f1;border:1px solid #e5ddd0;overflow:hidden;}
 .pb-ix2jn .ix2jn-svg{position:absolute;inset:0;width:100%;height:100%;}
 .pb-ix2jn .ix2jn-path{stroke:#d8c9ae;stroke-width:2;stroke-dasharray:5 6;}
-.pb-ix2jn .ix2jn-dot{fill:#B59060;stroke:#fff;stroke-width:2.5;opacity:0;transition:cx .9s cubic-bezier(.4,0,.2,1),cy .9s cubic-bezier(.4,0,.2,1),opacity .4s;}
+.pb-ix2jn .ix2jn-dot{position:absolute;width:18px;height:18px;border-radius:50%;background:#B59060;border:2.5px solid #fff;transform:translate(-50%,-50%);opacity:0;transition:left .9s cubic-bezier(.4,0,.2,1),top .9s cubic-bezier(.4,0,.2,1),opacity .4s;z-index:2;}
 .pb-ix2jn .ix2jn-dot.show{opacity:1;}
 .pb-ix2jn .ix2jn-stop{position:absolute;transform:translate(-50%,0) translateY(8px);opacity:0;background:#fff;border:1px solid #d8cfc2;border-radius:10px;padding:7px 11px;max-width:150px;transition:opacity .5s,transform .5s;box-shadow:0 2px 8px rgba(43,38,34,.08);}
 .pb-ix2jn .ix2jn-stop.in{opacity:1;transform:translate(-50%,0);}

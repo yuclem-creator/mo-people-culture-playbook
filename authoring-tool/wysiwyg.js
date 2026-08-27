@@ -609,6 +609,33 @@ window.MO_WYSIWYG = (function () {
 
   // Map a set of rendered .policy-section blocks to a model sections array;
   // returns true when alignment was verified and blocks were attached.
+  // Section / sub intro paragraphs (body.intro — strings or {text,size,font}
+  // objects) editable in place. Rendered paragraphs are matched to entries by
+  // their text so the lead/bullet regrouping in subIntroHTML can't break the map.
+  function attachIntro(introEl, bodyObj, keyBase) {
+    if (!introEl || !bodyObj) return;
+    var entries = Array.isArray(bodyObj.intro) ? bodyObj.intro : [];
+    if (!entries.length) return;
+    var nodes = [].slice.call(introEl.querySelectorAll('p, li'));
+    var used = [];
+    entries.forEach(function (entry, ei) {
+      var txt = String(entry && typeof entry === 'object' ? (entry.text || '') : entry).trim();
+      if (!txt) return;
+      var node = null, nodeIdx = -1;
+      for (var ni = 0; ni < nodes.length; ni++) {
+        if (used.indexOf(ni) !== -1) continue;
+        if (nodes[ni].textContent.trim() === txt) { node = nodes[ni]; nodeIdx = ni; break; }
+      }
+      if (!node) return;
+      used.push(nodeIdx);
+      markEditable(node, {
+        key: keyBase + ':intro' + ei, rich: false, multiline: true,
+        get: function () { return String(entry && typeof entry === 'object' ? (entry.text || '') : entry); },
+        set: function (v) { if (entry && typeof entry === 'object') entry.text = v; else entries[ei] = v; }
+      });
+    });
+  }
+
   function attachSectionSet(secEls, sections, keyPrefix, chId) {
     if (secEls.length !== sections.length) return false;
     for (var v = 0; v < secEls.length; v++) {
@@ -642,6 +669,9 @@ window.MO_WYSIWYG = (function () {
       : allSecEls;
     if (!isPart && secEls.length !== sections.length) return; // bespoke layout — bail
     attachSectionSet(secEls, sections, chId + ':sec', chId);
+    var chIntro = [].slice.call(chEl.querySelectorAll('.sub-intro'))
+      .filter(function (el) { return !el.closest('.part-section, .part-topic, .part-sub'); })[0];
+    attachIntro(chIntro, body, chId);
 
     // Part chapter: each sub renders as its own anchored spread
     // (div.spread.tight.part-*#subId) holding the sub's body sections.
@@ -654,6 +684,7 @@ window.MO_WYSIWYG = (function () {
         var sSections = Array.isArray(sBody.sections) ? sBody.sections : [];
         var sEls = [].slice.call(subEl.querySelectorAll('.policy-section'));
         attachSectionSet(sEls, sSections, chId + ':' + sub.id + ':sec', chId);
+        attachIntro(subEl.querySelector('.sub-intro'), sBody, chId + ':' + sub.id);
         // Sub label in the eyebrow is editable in place.
         var lbl = subEl.querySelector('.section-eyebrow .txt');
         if (lbl) markEditable(lbl, {
