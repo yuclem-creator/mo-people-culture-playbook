@@ -897,3 +897,37 @@
   .pb-ix2bu .ix2bu-item,.pb-ix2pt .ix2pt-beat,.pb-ix2pt .ix2pt-verdict,.pb-ix2ri .ix2ri-trigger,.pb-ix2ri .ix2ri-node,.pb-ix2ri .ix2ri-ring,.pb-ix2jn .ix2jn-stop{transition:none !important;}
   .pb-ix2hs .ix2hs-dot{animation:none;}
 }
+
+/* mobile safety: tables and ix gadgets must never widen the page */
+.pb-tablewrap{overflow-x:auto;max-width:100%;}
+.pb-ix{max-width:100%;}
+.pb-ix .pb-table{min-width:0;}
+.policy-list>*{min-width:0;}
+.pb-ix, .pb-tablewrap{min-width:0;}
+.ixcp-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+.ixcp-col{min-width:0;overflow-wrap:break-word;}
+@media (max-width:640px){.ixcp-grid{grid-template-columns:minmax(0,1fr);}}
+
+/* stagebar — slim gradient timeline */
+.pb-ixsb{margin:18px 0;}
+.ixsb-head{font-family:var(--mo-display);font-size:20px;color:var(--ink,#1E1C18);margin-bottom:2px;}
+.ixsb-sub-head{font-size:12.5px;color:#8b8578;margin-bottom:26px;letter-spacing:.04em;}
+.ixsb-trackwrap{position:relative;height:64px;margin-top:6px;}
+.ixsb-track{position:absolute;left:0;right:0;top:26px;height:6px;border-radius:3px;background:#E7E1D3;}
+.ixsb-fill{position:absolute;left:0;top:26px;height:6px;border-radius:3px;background:linear-gradient(90deg,#B59060,#4E7A6B);}
+.ixsb-stage{position:absolute;top:0;transform:translateX(-50%);text-align:center;min-width:90px;}
+.ixsb-dot{display:block;width:12px;height:12px;border-radius:50%;background:#B59060;border:2px solid #fff;margin:22px auto 6px;position:relative;z-index:1;}
+.ixsb-lbl{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1E1C18;}
+.ixsb-dur{display:block;font-size:11px;color:#8b8578;}
+.ixsb-sub{display:block;font-size:11px;color:#8b8578;}
+.ixsb-stage.grey .ixsb-dot{background:#C9C2B2;}
+.ixsb-stage.grey .ixsb-lbl{color:#B4AC9B;}
+.ixsb-stage.grey .ixsb-dur,.ixsb-stage.grey .ixsb-sub{color:#C9C2B2;}
+.ixsb-stage:first-child{transform:none;text-align:left;}
+.ixsb-stage:first-child .ixsb-dot{margin-left:0;}
+.ixsb-stage:last-child{transform:translateX(-100%);text-align:right;}
+.ixsb-stage:last-child .ixsb-dot{margin-right:0;}
+/* adjustable subheadings / intros */
+.intro-display{font-family:var(--mo-display);}
+.intro-s{font-size:14px;} .intro-m{font-size:17px;} .intro-l{font-size:21px;} .intro-xl{font-size:26px;line-height:1.35;}
+@media (max-width:640px){.ixsb-stage{min-width:64px;} .ixsb-lbl{font-size:9.5px;}}

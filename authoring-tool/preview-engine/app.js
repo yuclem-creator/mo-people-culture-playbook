@@ -604,7 +604,7 @@ function policyItemBodyHTML(it) {
     var hfmt = _pbFmtCls(it);
     return `<div class="pb-heading">
       ${it.sub ? `<div class="pb-heading-sub">${esc(it.sub)}</div>` : ''}
-      <h2 class="pb-heading-text${hfmt}">${esc(it.text)}</h2>
+      <h2 class="pb-heading-text${hfmt}"${it.font === 'display' || it.size ? ` style="${it.font === 'display' ? 'font-family:var(--mo-display);' : ''}${it.size ? 'font-size:' + ({s:'15px',m:'18px',l:'22px',xl:'28px'}[it.size] || it.size) + ';"' : ''}"` : ''}>${esc(it.text)}</h2>
       <span class="pb-heading-rule" aria-hidden="true"></span>
     </div>`;
   }
@@ -1470,6 +1470,12 @@ function subIntroHTML(c) {
     };
     let collecting = false;
     c.intro.forEach(p => {
+      if (p && typeof p === 'object') {
+        flush(); collecting = false;
+        const cls = 'sub-intro-lead' + (p.size ? ' intro-' + p.size : '') + (p.font === 'display' ? ' intro-display' : '');
+        html += `<p class="${cls}">${esc(p.text || '')}</p>`;
+        return;
+      }
       const isLead = /:\s*$/.test(p);
       if (isLead) {
         flush();
@@ -4937,6 +4943,33 @@ if (!window.__ixWired) {
 //  hotspot, stepper, matching, seq) + glossary inline markup + motion layer.
 // Appended block — registered by push/assign, no edits to the v1 code above.
 // =========================================================================
+PB_IX_KINDS.push('stagebar');
+Object.assign(PB_IX_RENDER, {
+  // 30. Stage bar — slim timeline bar with editable gradient fill; stages from
+  // greyFrom index render muted (e.g. the Track stage).
+  stagebar: function (it) {
+    var stages = _ixArr(it.stages);
+    if (!stages.length) return '<div class="pb-ix pb-chart-empty">Add stages to build this timeline.</div>';
+    var fill = Math.min(100, Math.max(0, parseFloat(it.fill != null ? it.fill : 75)));
+    var greyFrom = (it.greyFrom != null) ? parseInt(it.greyFrom, 10) : stages.length; // 0-based; stages at/after are muted
+    var ticks = stages.map(function (s, i) {
+      var left = stages.length > 1 ? (i / (stages.length - 1)) * 100 : 50;
+      var grey = i >= greyFrom;
+      return '<div class="ixsb-stage' + (grey ? ' grey' : '') + '" style="left:' + left + '%;">' +
+        '<span class="ixsb-dot"></span>' +
+        '<span class="ixsb-lbl">' + esc(s.label || '') + '</span>' +
+        (s.dur ? '<span class="ixsb-dur">' + esc(s.dur) + '</span>' : '') +
+        (s.text ? '<span class="ixsb-sub">' + esc(s.text) + '</span>' : '') +
+        '</div>';
+    }).join('');
+    return '<div class="pb-ix pb-ixsb">' +
+      (it.head ? '<div class="ixsb-head">' + esc(it.head) + '</div>' : '') +
+      (it.sub ? '<div class="ixsb-sub-head">' + esc(it.sub) + '</div>' : '') +
+      '<div class="ixsb-trackwrap"><div class="ixsb-track"></div>' +
+      '<div class="ixsb-fill" style="width:' + fill + '%;"></div>' + ticks + '</div>' +
+      '</div>';
+  },
+});
 PB_IX_KINDS.push('handoff','buildup','parallel','ripple','journeydot','dtree','scenario','hotspot','stepper','matching','seq');
 
 Object.assign(PB_IX_RENDER, {

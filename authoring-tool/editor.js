@@ -94,6 +94,7 @@
     { v: 'hotspot',     l: '26 · Hotspot image (tap-to-reveal points)' },
     { v: 'stepper',     l: '27 · Step walkthrough (previous / next)' },
     { v: 'matching',    l: '28 · Matching pairs exercise' },
+    { v: 'stagebar',  l: '30 · Stage bar timeline (gradient fill, greyed Track)' },
     { v: 'seq',         l: '29 · Sequencing exercise (tap in order)' }
   ];
   var IX_TEMPLATES = {
