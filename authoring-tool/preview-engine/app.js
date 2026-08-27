@@ -3291,6 +3291,15 @@ if (typeof window !== 'undefined' && !window._cycDockResizeWired) {
   window.addEventListener('resize', function () { try { cycleDockPlaceAll(); } catch (e) {} });
 }
 
+// A dock is visible only while one of its LINKED anchors is actually on screen
+// (it "belongs" to those sections, not the whole chapter). Entries with no
+// anchor are chapter-level links — those docks stay visible for the whole
+// chapter, as before.
+function cycleDockVisibility(dock, entries, ratios) {
+  var any = entries.some(function (e) { return !e.a || (ratios[e.a] || 0) > 0; });
+  dock.classList.toggle('pb-cyc-dock--hidden', !any);
+}
+
 var _cycDockObserver = null;
 function cycleDockScan() {
   if (_cycDockObserver) { _cycDockObserver.disconnect(); _cycDockObserver = null; }
@@ -3309,13 +3318,17 @@ function cycleDockScan() {
         if (r > bestR) { bestR = r; best = e; }
       });
       if (best) cycleDockSetState(dock, best.i);
+      cycleDockVisibility(dock, entries, ratios);
     });
-  }, { threshold: [0.15, 0.35, 0.55, 0.75] });
+  }, { threshold: [0, 0.15, 0.35, 0.55, 0.75] });
   document.querySelectorAll('.pb-cyc-dock[data-cycentries]').forEach(function (dock) {
     var entries;
     try { entries = JSON.parse(dock.getAttribute('data-cycentries') || '[]'); } catch (e) { return; }
-    entries.forEach(function (e) {
-      if (!e.a) return;
+    var anchored = entries.filter(function (e) { return !!e.a; });
+    // Start hidden until the observer reports; a chapter-level link (no
+    // anchor) keeps the dock visible throughout.
+    dock.classList.toggle('pb-cyc-dock--hidden', anchored.length > 0 && entries.length === anchored.length);
+    anchored.forEach(function (e) {
       var elx = document.getElementById(e.a);
       if (elx) _cycDockObserver.observe(elx);
     });

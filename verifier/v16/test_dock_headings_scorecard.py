@@ -41,13 +41,13 @@ def make_pb():
                 {"id": "sub-h1", "label": "Heading sub", "depth": 3,
                  "cycle": {"wid": "wh-a", "index": 0}},
             ]},
-            {"id": "ch-b", "label": "Beta", "numeral": "2"},
+            {"id": "ch-b", "label": "Beta", "numeral": "2", "cycle": {"wid": "wh-a", "index": 1}},
             {"id": "ch-w", "label": "Wheel", "numeral": "3"},
         ],
         "sectionBodies": {
             "ch-a": {"intro": [], "sections": []},
-            "sec-h0": {"intro": [], "sections": []},
-            "top-h0": {"intro": [], "sections": []},
+            "sec-h0": {"intro": ["Filler paragraph to push the linked sub below the fold. " * 8] * 6, "sections": []},
+            "top-h0": {"intro": ["More filler so the linked sub starts off-screen. " * 8] * 6, "sections": []},
             "sub-h1": {"intro": ["Opening paragraph.", "## My Heading", "Trailing paragraph."],
                        "sections": [
                            {"num": "1", "title": "Sec One",
@@ -201,6 +201,39 @@ with sync_playwright() as p:
     check("F8 scorecard circles centre numerals",
           d8 and "flex" in d8["display"] and d8["ai"] == "center" and d8["jc"] == "center",
           d8)
+
+    # F11 dock scoped to its linked section: at the chapter top (sub below the
+    # fold) the dock is hidden…
+    fr.evaluate("() => { goTo('ch-a'); window.scrollTo(0, 0); }")
+    pg.wait_for_timeout(1500)
+    d11 = fr.evaluate("""() => {
+      const dock = document.querySelector('.chapter#ch-a .pb-cyc-dock');
+      const sub = document.getElementById('sub-h1');
+      const r = sub ? sub.getBoundingClientRect() : null;
+      return { hidden: dock && dock.classList.contains('pb-cyc-dock--hidden'),
+               subTop: r ? Math.round(r.top) : null, vh: window.innerHeight };
+    }""")
+    check("F11 dock hidden before its linked section is on screen",
+          bool(d11["hidden"]) and d11["subTop"] and d11["subTop"] > d11["vh"] * 0.8,
+          d11)
+
+    # F12 …and appears once that section scrolls into view
+    fr.evaluate("() => { const el = document.getElementById('sub-h1'); if (el) el.scrollIntoView({ block: 'start' }); }")
+    pg.wait_for_timeout(1500)
+    d12 = fr.evaluate("""() => {
+      const dock = document.querySelector('.chapter#ch-a .pb-cyc-dock');
+      return dock && !dock.classList.contains('pb-cyc-dock--hidden');
+    }""")
+    check("F12 dock appears when its linked section scrolls into view", bool(d12), d12)
+
+    # F13 chapter-level link (no anchor) keeps the dock visible throughout
+    fr.evaluate("() => { goTo('ch-b'); window.scrollTo(0, 0); }")
+    pg.wait_for_timeout(1500)
+    d13 = fr.evaluate("""() => {
+      const dock = document.querySelector('.chapter#ch-b .pb-cyc-dock');
+      return dock && !dock.classList.contains('pb-cyc-dock--hidden');
+    }""")
+    check("F13 chapter-level link keeps dock visible", bool(d13), d13)
 
     check("F10 zero page errors", not errs, errs[:2])
 
