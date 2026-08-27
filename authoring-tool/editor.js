@@ -576,6 +576,164 @@
   function ixLoadStarter(it) {
     var tpl = IX_TEMPLATES[it.kind] || {};
     Object.keys(it).forEach(function (k) { if (['s', 'name', 'head', 'kind'].indexOf(k) === -1) delete it[k]; });
+    Object.keys(tpl).forEach(function (k) { it[k] = JSON.parse(JSON.stringify(tpl[k])); });
+  }
+
+  // Schema-driven field renderer — shared by top-level fields, groups and
+  // inline list rows so every kind gets real form controls.
+  function ixField(box, obj, f) {
+    if (!f) return;
+    if (f.t === 'group') {
+      if (!obj[f.k] || typeof obj[f.k] !== 'object' || Array.isArray(obj[f.k])) obj[f.k] = {};
+      box.appendChild(sectionLabel(f.l));
+      (f.fields || []).forEach(function (sf) { ixField(box, obj[f.k], sf); });
+      return;
+    }
+    if (f.t === 'list') {
+      if (!Array.isArray(obj[f.k])) obj[f.k] = [];
+      box.appendChild(sectionLabel(f.l));
+      renderRepeatable(box, obj[f.k], {
+        nameOf: f.nameOf || ixNameOf,
+        addLabel: f.addLabel, make: f.make,
+        onChange: function () {},
+        inlineEdit: f.fields ? function (item, wrap) {
+          (f.fields || []).forEach(function (sf) { ixField(wrap, item, sf); });
+        } : null
+      });
+      return;
+    }
+    if (f.t === 'csv') {
+      var arr = Array.isArray(obj[f.k]) ? obj[f.k] : [];
+      box.appendChild(textField(f.l, arr.join(', '), function (v) {
+        obj[f.k] = v.split(',').map(function (s) { s = s.trim(); return f.num ? (parseFloat(s) || 0) : s; })
+          .filter(function (s, i, a) { return f.num ? (i < a.length) : s !== ''; });
+        touch();
+      }, f.tip));
+      return;
+    }
+    if (f.t === 'lines') {
+      var ls = Array.isArray(obj[f.k]) ? obj[f.k] : [];
+      box.appendChild(textField(f.l, ls.join('\n'), function (v) {
+        obj[f.k] = v.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+        touch();
+      }, f.tip || 'One per line.', true));
+      return;
+    }
+    if (f.t === 'rowscsv') {
+      var rows = Array.isArray(obj[f.k]) ? obj[f.k] : [];
+      box.appendChild(textField(f.l, rows.map(function (r) { return (Array.isArray(r) ? r : [r]).join(' | '); }).join('\n'), function (v) {
+        obj[f.k] = v.split('\n')
+          .map(function (ln) { return ln.split('|').map(function (c) { return c.trim(); }); })
+          .filter(function (r) { return r.join('').trim() !== ''; });
+        touch();
+      }, f.tip || 'One row per line — separate cells with |', true));
+      return;
+    }
+    if (f.t === 'check') { box.appendChild(checkField(f.l, !!obj[f.k], function (v) { obj[f.k] = v; touch(); })); return; }
+    if (f.t === 'num') {
+      box.appendChild(textField(f.l, obj[f.k] == null ? '' : String(obj[f.k]), function (v) {
+        obj[f.k] = v.trim() === '' ? null : (parseFloat(v) || 0); touch();
+      }, f.tip));
+      return;
+    }
+    if (f.t === 'select') { box.appendChild(selectField(f.l, obj[f.k] || '', f.opts || [], function (v) { obj[f.k] = v; touch(); })); return; }
+    if (f.t === 'color') {
+      var wrap = el('div', { class: 'field' }, [el('label', {}, [f.l])]);
+      var row = el('div', { style: 'display:flex;gap:8px;align-items:center;' });
+      var hexOk = function (v) { return /^#[0-9a-fA-F]{6}$/.test(v || ''); };
+      var cp = el('input', { type: 'color', value: hexOk(obj[f.k]) ? obj[f.k] : '#B59060',
+        style: 'width:44px;height:34px;padding:2px;border:1px solid var(--line);background:var(--paper);border-radius:4px;cursor:pointer;' });
+      var tx = el('input', { type: 'text', value: obj[f.k] || '', placeholder: '#B59060', style: 'flex:1;' });
+      cp.addEventListener('input', function () { tx.value = cp.value; obj[f.k] = cp.value; touch(); });
+      tx.addEventListener('input', function () { obj[f.k] = tx.value.trim(); if (hexOk(tx.value.trim())) cp.value = tx.value.trim(); touch(); });
+      row.appendChild(cp); row.appendChild(tx); wrap.appendChild(row); box.appendChild(wrap);
+      return;
+    }
+    // text (default) / area
+    box.appendChild(textField(f.l, obj[f.k] == null ? '' : String(obj[f.k]), function (v) { obj[f.k] = v; touch(); }, f.tip, f.t === 'area'));
+  }
+
+  function ixRenderForm(box, it) {
+    var spec = IX_FORMS[it.kind] || [];
+    if (!spec.length) {
+      box.appendChild(el('div', { class: 'note', text: 'No form for this kind yet — use the raw JSON below.' }));
+      return;
+    }
+    spec.forEach(function (f) { ixField(box, it, f); });
+  }
+
+
+  // =========================================================================
+  // Boot
+  // =========================================================================
+  window.addEventListener('message', function (ev) {
+    var d = ev.data || {};
+    if (d.type === 'preview-boot' || d.type === 'preview-ready') {
+      previewReady = true;
+      if (pendingPush) { pendingPush = false; pushPreview(); }
+      // (Re)attach the WYSIWYG click-to-edit layer to the freshly rendered DOM.
+      if (d.type === 'preview-ready' && window.MO_WYSIWYG && window.MO_WYSIWYG_BRIDGE) {
+        try { window.MO_WYSIWYG.reattach(window.MO_WYSIWYG_BRIDGE); } catch (err) {}
+      }
+    } else if (d.type === 'preview-error') {
+      toast('Preview error: ' + d.message, 'err');
+    } else if (d.type === 'studio-select' && d.id) {
+      // A menu tile (or the menu header) was clicked in the preview — open the
+      // matching chapter's inspector so the editor follows the preview.
+      var ch = PB.chapters.filter(function (c) { return c.id === d.id; })[0];
+      if (ch) {
+        var t = ch.type || (ch.id === 'ch-1' ? 'letter' : ch.id === 'ch-2' ? 'directory' :
+          ch.hasSubs ? 'lifecycle' : ch.id === 'intro' ? 'intro-video' : ch.id === 'cover' ? 'cover' : 'standard');
+        // Open the editor for the chapter WITHOUT navigating the preview —
+        // the user stays on the menu page and edits tiles from the side panel.
+        select({ kind: 'chapter', id: ch.id, type: t, chapter: ch.id }, { noNav: true });
+      }
+    } else if (d.type === 'preview-lang') {
+      // The reader picked a language inside the preview (entry overlay or
+      // masthead switch) — mirror it in the toolbar and re-push merged content.
+      PREVIEW_LANG = d.lang || 'en';
+      syncPreviewLangSelect();
+      pushPreview(true);
+    }
+  });
+
+  // =========================================================================
+  // Multilingual (Phase 1)
+  // ----------------------------------------------------------------------------
+  // English is the source of truth. meta.languages declares the available
+  // languages; PB.i18n[code] holds a full-structure overlay JSON whose strings
+  // replace the English ones at load time (deep merge — missing or empty
+  // strings fall back to English). publish.js uploads each overlay as
+  // playbook-data.<code>.json next to playbook-data.json.
+  // =========================================================================
+  var LANG_CHOICES = [
+    { code: 'zh-CN', label: '简体中文 (Simplified Chinese)' },
+    { code: 'zh-TW', label: '繁體中文 (Traditional Chinese)' },
+    { code: 'ja', label: '日本語 (Japanese)' },
+    { code: 'ko', label: '한국어 (Korean)' },
+    { code: 'th', label: 'ไทย (Thai)' },
+    { code: 'id', label: 'Bahasa Indonesia' },
+    { code: 'ms', label: 'Bahasa Melayu' },
+    { code: 'fr', label: 'Français (French)' },
+    { code: 'de', label: 'Deutsch (German)' },
+    { code: 'es', label: 'Español (Spanish)' },
+    { code: 'ar', label: 'العربية (Arabic — RTL)' }
+  ];
+  var PREVIEW_LANG = 'en';
+
+  function deepMergeLang(base, over) {
+    if (over == null) return base;
+    if (typeof over === 'string') return over.trim() === '' ? base : over;
+    if (typeof over !== 'object') return over;
+    if (Array.isArray(over)) {
+      var src = Array.isArray(base) ? base : [];
+      return over.map(function (item, i) {
+        return i < src.length ? deepMergeLang(src[i], item) : item;
+      });
+    }
+    var out = {};
+    var bObj = (base && typeof base === 'object' && !Array.isArray(base)) ? base : {};
+    Object.keys(bObj).forEach(function (k) { out[k] = bObj[k]; });
     Object.keys(over).forEach(function (k) { out[k] = deepMergeLang(bObj[k], over[k]); });
     return out;
   }
