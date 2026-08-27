@@ -604,7 +604,7 @@ function policyItemBodyHTML(it) {
     var hfmt = _pbFmtCls(it);
     return `<div class="pb-heading">
       ${it.sub ? `<div class="pb-heading-sub">${esc(it.sub)}</div>` : ''}
-      <h2 class="pb-heading-text${hfmt}"${it.font === 'display' || it.size ? ` style="${it.font === 'display' ? 'font-family:var(--mo-display);' : ''}${it.size ? 'font-size:' + ({s:'15px',m:'18px',l:'22px',xl:'28px'}[it.size] || it.size) + ';"' : ''}"` : ''}>${esc(it.text)}</h2>
+      <h2 class="pb-heading-text${hfmt}"${it.font === 'display' || it.size ? ` style="${it.font === 'display' ? 'font-family:var(--mo-display);' : ''}${it.size ? 'font-size:' + ({s:'18px',m:'22px',l:'28px',xl:'34px'}[it.size] || it.size) + ';"' : ''}"` : ''}>${esc(it.text)}</h2>
       <span class="pb-heading-rule" aria-hidden="true"></span>
     </div>`;
   }
@@ -3226,7 +3226,7 @@ function resolveAssets(root) {
 // ---- Navigation ----------------------------------------------------
 let currentChapter = 'cover';
 
-function goTo(chapterId, subId) {
+function goTo(chapterId, subId, opts) {
   document.querySelectorAll('.chapter').forEach(c => c.classList.remove('on'));
   const el = document.getElementById(chapterId);
   if (el) el.classList.add('on');
@@ -3239,6 +3239,7 @@ function goTo(chapterId, subId) {
 
   // scroll
   requestAnimationFrame(() => {
+    if (opts && opts.keepY != null) { window.scrollTo(0, opts.keepY); return; }
     if (subId) {
       const s = document.getElementById(subId);
       if (s) { s.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
@@ -4137,13 +4138,16 @@ function applyPlaybook(next, opts) {
   applyTypography();
   var keep = opts.chapter || currentChapter || 'cover';
   var keepSub = opts.sub || null;
+  // Studio live-edit: re-rendering after an edit must not jump the page back
+  // to the top — remember the scroll position when staying on the same chapter.
+  var keepY = (opts.keepScroll && keep === currentChapter) ? window.scrollY : null;
   try {
     renderRail();
     renderAll();
     initSearch();
     wireEvents();
     // restore position (chapter may no longer exist -> fall back to cover)
-    if (document.getElementById(keep)) goTo(keep, keepSub);
+    if (document.getElementById(keep)) goTo(keep, keepSub, keepY != null ? { keepY: keepY } : undefined);
     else goTo('cover');
     // restore reader state AFTER the fresh DOM exists — checklist ticks,
     // task-list ticks + gates, and their progress bars (previously this ran
@@ -4179,7 +4183,7 @@ window.addEventListener('message', function (ev) {
         document.documentElement.lang = d.lang || 'en';
       } catch (e) {}
     }
-    applyPlaybook(d.playbook, { chapter: d.chapter, sub: d.sub });
+    applyPlaybook(d.playbook, { chapter: d.chapter, sub: d.sub, keepScroll: true });
     if (window.parent !== window) window.parent.postMessage({ type: 'preview-ready' }, '*');
   } else if (d.type === 'goto') {
     goTo(d.chapter, d.sub);
@@ -4308,7 +4312,7 @@ var PB_IX_RENDER = {
       (legend.length ? '<div class="ixfc-legend">' + legend.map(function (l, i) {
         return '<span class="ixfc-leg"><span class="ixlg-sw" style="background:' + esc(l.color || _IX_COLORS[i % _IX_COLORS.length]) + ';"></span>' + esc(l.label || '') + '</span>';
       }).join('') + '</div>' : '') +
-      '<div class="ixfc-grid">' + cards.map(function (c, i) {
+      '<div class="ixfc-grid' + (parseInt(it.cols, 10) === 2 ? ' cols-2' : '') + '">' + cards.map(function (c, i) {
         var chips = _ixArr(c.chips);
         return '<button type="button" class="ixfc-card" data-fc>' +
           '<span class="ixfc-face ixfc-front" style="' + (dark && c.themeColor ? 'border-top-color:' + esc(c.themeColor) + ';' : '') + '">' +

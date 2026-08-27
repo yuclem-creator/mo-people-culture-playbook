@@ -931,3 +931,7 @@
 .intro-display{font-family:var(--mo-display);}
 .intro-s{font-size:14px;} .intro-m{font-size:17px;} .intro-l{font-size:21px;} .intro-xl{font-size:26px;line-height:1.35;}
 @media (max-width:640px){.ixsb-stage{min-width:64px;} .ixsb-lbl{font-size:9.5px;}}
+
+/* flipcards — optional fixed 2x2 grid (set Cards per row = 2 in Studio) */
+.ixfc-grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr));}
+@media(max-width:640px){.ixfc-grid.cols-2{grid-template-columns:minmax(0,1fr);}}
