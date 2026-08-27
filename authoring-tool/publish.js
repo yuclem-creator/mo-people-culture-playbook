@@ -137,7 +137,33 @@
       seenRef[p] = true; return true;
     });
 
-    var total = assetPaths.length + bundledPaths.length + 2; // + playbook-data.json + version.json
+    // Lane-sync media: bare upload_* references (e.g. cover.bg = "upload_123.jpg")
+    // whose dataURLs are no longer in pb.assets — typical when publishing from a
+    // Studio session that was reloaded from the cloud draft. The binaries still
+    // live in the DRAFT lane from the last full save, so when PUBLISHING we copy
+    // them across instead of shipping a published lane full of 404s.
+    var coveredBare = {};
+    assetPaths.concat(bundledPaths).forEach(function (p) { coveredBare[p.replace(/^(img|video)\//, '')] = true; });
+    var laneSyncNames = [];
+    if (stage === 'published') {
+      var seenLane = {};
+      (function scanLane(node) {
+        if (node == null) return;
+        if (typeof node === 'string') {
+          if (/^upload_[A-Za-z0-9_\-.]+\.(jpg|jpeg|png|webp|gif|svg|mp4|webm)$/i.test(node) &&
+              !coveredBare[node] && !seenLane[node]) {
+            seenLane[node] = true;
+            laneSyncNames.push(node);
+          }
+          return;
+        }
+        if (Array.isArray(node)) { node.forEach(scanLane); return; }
+        if (typeof node === 'object') { Object.keys(node).forEach(function (k) { scanLane(node[k]); }); }
+      })(ext.playbook);
+    }
+    var draftAssetBase = cfg.url + '/storage/v1/object/public/' + bucket + '/drafts/' + slug + '/assets/';
+
+    var total = assetPaths.length + bundledPaths.length + laneSyncNames.length + 2; // + playbook-data.json + version.json
     var done = 0;
     function tick() { done++; onProgress(done, total); }
 
@@ -214,8 +240,40 @@
       });
     }, Promise.resolve());
 
+    var uploadLaneSync = laneSyncNames.reduce(function (chain, name) {
+      return chain.then(function () {
+        return fetch(draftAssetBase + name).then(function (res) {
+          if (!res.ok) {
+            failedAssets.push({ path: name, reason: 'not found in the draft lane either (HTTP ' + res.status + '). Re-upload this media in Studio, save, then publish again.' });
+            tick();
+            return;
+          }
+          return res.blob().then(function (blob) {
+            if (blob.size > ASSET_HARD_LIMIT) {
+              failedAssets.push({ path: name, reason: Math.round(blob.size / 1048576) + 'MB — over the 50MB cloud limit. Run Settings → Optimise media, then save again.' });
+              tick();
+              return;
+            }
+            return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + name, blob, {
+              upsert: true, contentType: guessMime(name)
+            }).then(function (r) {
+              if (r.error) failedAssets.push({ path: name, reason: r.error.message });
+              tick();
+            }, function (e) {
+              failedAssets.push({ path: name, reason: (e && e.message) || String(e) });
+              tick();
+            });
+          });
+        }, function (e) {
+          failedAssets.push({ path: name, reason: 'draft-lane copy failed: ' + ((e && e.message) || String(e)) });
+          tick();
+        });
+      });
+    }, Promise.resolve());
+
     return uploadAssets
       .then(function () { return uploadBundled; })
+      .then(function () { return uploadLaneSync; })
       .then(function () {
         var blob = new Blob([JSON.stringify(playbookForUpload)], { type: 'application/json' });
         return sbUpload.storage.from(bucket).upload(basePath + 'playbook-data.json', blob, {
