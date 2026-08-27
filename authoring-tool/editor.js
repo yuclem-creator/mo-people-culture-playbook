@@ -1526,28 +1526,7 @@
       // Lifecycle step dock: link this chapter to a stage of a lifecycle
       // wheel. The preview/player renders a persistent mini-ring on the
       // chapter, built LIVE from that wheel's stages.
-      var wheels = listWheels();
-      if (wheels.length) {
-        box.appendChild(sectionLabel('Lifecycle step'));
-        var curWid = (ch.cycle && ch.cycle.wid) || '';
-        box.appendChild(selectField('Part of a lifecycle', curWid,
-          [{ v: '', l: '\u2014 not a lifecycle step \u2014' }].concat(wheels.map(function (w) {
-            return { v: w.wid, l: (w.it.hubTitle || w.it.name || 'Lifecycle wheel') + ' \u00b7 ' + w.stages.length + ' stages' };
-          })), function (v) {
-            if (!v) { delete ch.cycle; }
-            else { ch.cycle = { wid: v, index: (ch.cycle && ch.cycle.wid === v) ? (ch.cycle.index || 0) : 0 }; }
-            touch(); renderInspector();
-          }));
-        if (curWid) {
-          var w0 = wheels.filter(function (w) { return w.wid === curWid; })[0];
-          if (w0) {
-            box.appendChild(selectField('This chapter is step\u2026', String((ch.cycle && ch.cycle.index) || 0),
-              w0.stages.map(function (s, i) { return { v: String(i), l: 'Step ' + (i + 1) + ' \u2014 ' + (s.label || '') }; }),
-              function (v) { ch.cycle.index = parseInt(v, 10) || 0; touch(); }));
-            box.appendChild(el('div', { class: 'tip', text: 'A mini lifecycle ring is pinned to this chapter highlighting the step. It reads the wheel live \u2014 rename, reorder or add stages in the wheel element and every linked chapter updates.' }));
-          }
-        }
-      }
+      appendCycleLinkUI(box, ch);
       var prefix0 = prosePrefixFor(ch, type);
       if (prefix0 && (type === 'standard' || type === 'sections-list' || type === 'lifecycle' || type === 'directory' || type === 'letter' ||
         type === 'part' || type === 'tile-menu' || type === 'card-track' || type === 'process-diagram')) {
@@ -1827,6 +1806,33 @@
     return out;
   }
 
+  // Lifecycle-link UI shared by the chapter inspector and the part-sub
+  // inspector: pick a wheel + which step this owner (chapter or sub) is.
+  // The engine renders the mini-ring dock live from the wheel's stages.
+  function appendCycleLinkUI(box, owner) {
+    var wheels = listWheels();
+    if (!wheels.length) return;
+    box.appendChild(sectionLabel('Lifecycle step'));
+    var curWid = (owner.cycle && owner.cycle.wid) || '';
+    box.appendChild(selectField('Part of a lifecycle', curWid,
+      [{ v: '', l: '\u2014 not a lifecycle step \u2014' }].concat(wheels.map(function (w) {
+        return { v: w.wid, l: (w.it.hubTitle || w.it.name || 'Lifecycle wheel') + ' \u00b7 ' + w.stages.length + ' stages' };
+      })), function (v) {
+        if (!v) { delete owner.cycle; }
+        else { owner.cycle = { wid: v, index: (owner.cycle && owner.cycle.wid === v) ? (owner.cycle.index || 0) : 0 }; }
+        touch(); renderInspector();
+      }));
+    if (curWid) {
+      var w0 = wheels.filter(function (w) { return w.wid === curWid; })[0];
+      if (w0) {
+        box.appendChild(selectField('This is step\u2026', String((owner.cycle && owner.cycle.index) || 0),
+          w0.stages.map(function (s, i) { return { v: String(i), l: 'Step ' + (i + 1) + ' \u2014 ' + (s.label || '') }; }),
+          function (v) { owner.cycle.index = parseInt(v, 10) || 0; touch(); }));
+        box.appendChild(el('div', { class: 'tip', text: 'A mini lifecycle ring is pinned to this page highlighting the step. It reads the wheel live \u2014 rename, reorder or add stages in the wheel element and every linked page updates.' }));
+      }
+    }
+  }
+
   function prosePrefixFor(ch, type) {
     if (type === 'cover') return 'cover';
     if (type === 'intro-video') return 'intro';
@@ -1924,6 +1930,9 @@
     box.appendChild(sectionLabel(isSection ? 'Section' : 'Sub-topic'));
     box.appendChild(textField('Label', sub.label || '', function (v) { sub.label = v; touch(); renderTree(); },
       isSection ? 'Shown as the first indent level under the part.' : 'Shown double-indented under its section.'));
+    // Lifecycle step link for this sub — on part chapters the fixed dock
+    // follows the scroll across linked subs and highlights the step in view.
+    appendCycleLinkUI(box, sub);
     box.appendChild(paraArrayField('Intro paragraphs', content.intro || [], function (arr) { content.intro = arr; touch(); }));
     // helper: entries belonging to a sub = the run of deeper entries that
     // follow it in the flat subs list (until the next same-or-shallower depth)

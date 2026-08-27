@@ -37,7 +37,11 @@ def make_pb():
         "chapters": [
             {"id": "ch-1", "numeral": "I", "label": "The Diagram"},
             {"id": "ch-2", "numeral": "II", "label": "Step One Chapter", "cycle": {"wid": "wh-test", "index": 0}},
-            {"id": "ch-3", "numeral": "III", "label": "Step Three Chapter", "cycle": {"wid": "wh-test", "index": 2}}
+            {"id": "ch-3", "numeral": "III", "label": "Step Three Chapter", "cycle": {"wid": "wh-test", "index": 2}},
+            {"id": "ch-4", "numeral": "IV", "label": "Steps Part", "type": "part", "subs": [
+                {"id": "sub-alpha", "label": "Step Alpha", "depth": 2, "cycle": {"wid": "wh-part", "index": 0}},
+                {"id": "sub-beta", "label": "Step Beta", "depth": 2, "cycle": {"wid": "wh-part", "index": 1}}
+            ]}
         ],
         "sectionBodies": {
             "ch-1": {"intro": [], "items": [
@@ -51,7 +55,17 @@ def make_pb():
                 {"num": "1", "title": "Score your process", "blurb": "Blurb.", "items": [
                     {"s": "text", "text": "Step one content."}]}]},
             "ch-3": {"intro": [], "sections": [
-                {"num": "1", "title": "Work together", "blurb": "", "items": []}]}
+                {"num": "1", "title": "Work together", "blurb": "", "items": []}]},
+            "ch-4": {"intro": [], "sections": []},
+            "sub-alpha": {"intro": [], "items": [
+                {"s": "wheel", "name": "PartCycle", "wid": "wh-part", "hubTitle": "PartCycle", "stages": [
+                    {"label": "Alpha Stage", "text": ""}, {"label": "Beta Stage", "text": ""}]},
+                {"s": "text", "text": "Alpha filler. " * 400}],
+                          "sections": []},
+            "sub-beta": {"intro": [], "sections": [
+                {"num": "1", "title": "Beta section", "blurb": "", "items": [
+                    {"s": "text", "text": "Beta filler. " * 400},
+                    {"s": "text", "text": "More beta filler. " * 400}]}]}
         },
         "lifecycle": [], "journey": [], "seniorMgmt": [], "pcLeaders": [], "beliefs": [],
         "menuDesc": {}, "lifecycleContent": {}, "ch4": {"sections": []}, "ch5": {"sections": []},
@@ -156,6 +170,20 @@ with sync_playwright() as p:
     pg.wait_for_timeout(1200)
     active = fr.evaluate("() => { const on = document.querySelector('section.chapter.on'); return on ? on.id : ''; }")
     check("D5 dock click opens the lifecycle diagram chapter", active == "ch-1", active)
+
+    # D9 — part chapter: one fixed dock follows the scroll across linked subs
+    fr.evaluate("() => goTo('ch-4')")
+    pg.wait_for_timeout(2000)
+    fr = frame(pg)
+    d4 = dock_state(fr, "ch-4")
+    check("D9 part chapter renders one dock from sub links",
+          d4.get("present") and d4["segs"] == 2 and d4["num"] == "01", json.dumps(d4))
+    fr.evaluate("() => { const el = document.getElementById('sub-beta'); if (el) el.scrollIntoView({block:'start'}); }")
+    pg.wait_for_timeout(1500)
+    fr = frame(pg)
+    d4b = dock_state(fr, "ch-4")
+    check("D9b dock follows scroll to the sub in view (step 02)",
+          d4b.get("num") == "02" and "Beta Stage" in (d4b.get("label") or ""), json.dumps(d4b))
 
     # D6 — Studio inspector link UI
     pg.evaluate("""() => {

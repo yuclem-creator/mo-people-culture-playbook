@@ -215,3 +215,10 @@ lifecycle wheel via ch.cycle={wid,index} render a persistent mini-ring dock
 whose segments are read LIVE from the wheel's stages (rename/reorder/add a
 stage and every linked dock follows); dock click jumps to the wheel chapter;
 Studio chapter inspector links wheel + step; mirrored files stay identical.
+
+## v14b — Lifecycle dock: sub-level links + scroll-follow
+v14 extended (11 checks): part subs can carry cycle={wid,index} too; a part
+chapter with linked subs renders ONE fixed dock that follows the scroll and
+highlights the step whose sub spread is in view. Studio sub inspector gets
+the same link UI. Wheel lookup maps sectionBodies keys back to chapter+sub
+so the dock click lands on the wheel even when it lives inside a part.

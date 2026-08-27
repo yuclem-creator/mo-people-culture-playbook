@@ -3157,11 +3157,12 @@ function renderGenericChapter(ch, prevId, nextId) {
 }
 
 // ---- Lifecycle step dock ----
-// A chapter may declare ch.cycle = { wid, index } pointing at a lifecycle
-// wheel element (s:'wheel', it.wid) anywhere in the playbook. The dock reads
-// that wheel's stages LIVE at render time — rename, reorder or add stages in
-// the wheel and every linked dock updates automatically. New playbooks get
-// the behaviour simply by adding a wheel and linking step chapters to it.
+// Chapters AND part subs may declare cycle = { wid, index } pointing at a
+// lifecycle wheel element (s:'wheel', it.wid) anywhere in the playbook. The
+// dock reads that wheel's stages LIVE at render time — rename, reorder or add
+// stages in the wheel and every linked dock updates automatically. On part
+// chapters with several linked subs, one fixed dock follows the scroll and
+// highlights the step whose spread is currently in view.
 function findWheelById(wid) {
   if (!wid || !PB || !PB.sectionBodies) return null;
   var bodies = PB.sectionBodies;
@@ -3173,7 +3174,15 @@ function findWheelById(wid) {
     for (var pi = 0; pi < pools.length; pi++) {
       for (var ii = 0; ii < pools[pi].length; ii++) {
         var it = pools[pi][ii];
-        if (it && it.s === 'wheel' && (it.wid === wid || it.name === wid)) return { it: it, chapterId: key };
+        if (it && it.s === 'wheel' && (it.wid === wid || it.name === wid)) {
+          // map the body key back to its chapter (+ sub, when nested in a part)
+          var loc = { chapterId: key, subId: '' };
+          (PB.chapters || []).forEach(function (ch) {
+            if (ch.id === key) { loc.chapterId = ch.id; loc.subId = ''; }
+            (Array.isArray(ch.subs) ? ch.subs : []).forEach(function (s) { if (s.id === key) { loc.chapterId = ch.id; loc.subId = s.id; } });
+          });
+          return { it: it, chapterId: loc.chapterId, subId: loc.subId };
+        }
       }
     }
   }
@@ -3181,34 +3190,96 @@ function findWheelById(wid) {
 }
 
 function cycleDockHTML(ch) {
-  var cyc = ch && ch.cycle;
-  if (!cyc || cyc.index == null || !cyc.wid) return '';
-  var found = findWheelById(cyc.wid);
+  if (!ch) return '';
+  var entries = [];
+  if (ch.cycle && ch.cycle.wid && ch.cycle.index != null) entries.push({ a: '', i: Number(ch.cycle.index) || 0, wid: ch.cycle.wid });
+  (Array.isArray(ch.subs) ? ch.subs : []).forEach(function (s) {
+    if (s && s.cycle && s.cycle.wid && s.cycle.index != null) entries.push({ a: s.id, i: Number(s.cycle.index) || 0, wid: s.cycle.wid });
+  });
+  if (!entries.length) return '';
+  var found = findWheelById(entries[0].wid);
   if (!found) return '';
   var stages = (Array.isArray(found.it.stages) ? found.it.stages : []).filter(function (s) { return s && s.label; });
   var n = stages.length;
   if (!n) return '';
-  var idx = Math.max(0, Math.min(Number(cyc.index) || 0, n - 1));
+  entries.forEach(function (e) { e.i = Math.max(0, Math.min(e.i, n - 1)); });
   var cx = 26, cy = 26, rr = 20, stepA = 360 / n, gap = n > 1 ? 4 : 0;
   function pt(a) { var rad = (a - 90) * Math.PI / 180; return [cx + rr * Math.cos(rad), cy + rr * Math.sin(rad)]; }
   var segs = '';
   for (var i = 0; i < n; i++) {
     var p0 = pt(i * stepA + gap / 2), p1 = pt((i + 1) * stepA - gap / 2);
     var large = (stepA - gap) > 180 ? 1 : 0;
-    var on = i === idx;
-    segs += '<path d="M ' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A ' + rr + ' ' + rr + ' 0 ' + large + ' 1 ' +
+    var on = i === entries[0].i;
+    segs += '<path class="pb-cyc-seg" data-i="' + i + '" d="M ' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A ' + rr + ' ' + rr + ' 0 ' + large + ' 1 ' +
       p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + '" fill="none" stroke="' + (on ? '#B59060' : '#8a9a8b') +
-      '" stroke-opacity="' + (on ? '1' : (i < idx ? '.8' : '.38')) + '" stroke-width="7" stroke-linecap="round"/>';
+      '" stroke-opacity="' + (on ? '1' : '.38') + '" stroke-width="7" stroke-linecap="round"/>';
   }
-  var stageLabel = String(stages[idx].label || '');
+  var labels = stages.map(function (s) { return String(s.label || ''); });
   var hub = String(found.it.hubTitle || found.it.name || '');
-  return '<button type="button" class="pb-cyc-dock" data-goto="' + esc(found.chapterId) + '" ' +
-    'aria-label="Step ' + (idx + 1) + ' of ' + n + ' — ' + esc(stageLabel) + '. Open the ' + esc(hub || 'lifecycle') + ' diagram.">' +
+  var first = entries[0];
+  return '<button type="button" class="pb-cyc-dock"' +
+    ' data-goto="' + esc(found.chapterId) + '"' + (found.subId ? ' data-sub="' + esc(found.subId) + '"' : '') +
+    ' data-cycentries="' + esc(JSON.stringify(entries.map(function (e) { return { a: e.a, i: e.i }; }))) + '"' +
+    ' data-cyclabels="' + esc(JSON.stringify(labels)) + '"' +
+    ' data-cychub="' + esc(hub) + '"' +
+    ' aria-label="Step ' + (first.i + 1) + ' of ' + n + ' — ' + esc(labels[first.i]) + '. Open the ' + esc(hub || 'lifecycle') + ' diagram.">' +
     '<svg viewBox="0 0 52 52" width="50" height="50" aria-hidden="true">' + segs +
     '<circle cx="26" cy="26" r="13" fill="#FDFDF3"/>' +
-    '<text x="26" y="30" text-anchor="middle" class="pb-cyc-docknum">' + ('0' + (idx + 1)).slice(-2) + '</text></svg>' +
-    '<span class="pb-cyc-docklbl"><b>Step ' + (idx + 1) + ' of ' + n + '</b>' +
-    esc(stageLabel) + (hub ? ' · ' + esc(hub) : '') + '</span></button>';
+    '<text x="26" y="30" text-anchor="middle" class="pb-cyc-docknum">' + ('0' + (first.i + 1)).slice(-2) + '</text></svg>' +
+    '<span class="pb-cyc-docklbl"><b class="pb-cyc-step">Step ' + (first.i + 1) + ' of ' + n + '</b>' +
+    '<span class="pb-cyc-name">' + esc(labels[first.i]) + (hub ? ' · ' + esc(hub) : '') + '</span></span></button>';
+}
+
+function cycleDockSetState(dock, idx) {
+  var labels = [];
+  try { labels = JSON.parse(dock.getAttribute('data-cyclabels') || '[]'); } catch (e) {}
+  var hub = dock.getAttribute('data-cychub') || '';
+  var n = labels.length || dock.querySelectorAll('.pb-cyc-seg').length;
+  dock.querySelectorAll('.pb-cyc-seg').forEach(function (seg) {
+    var on = Number(seg.getAttribute('data-i')) === idx;
+    seg.setAttribute('stroke', on ? '#B59060' : '#8a9a8b');
+    seg.setAttribute('stroke-opacity', on ? '1' : '.38');
+  });
+  var num = dock.querySelector('.pb-cyc-docknum');
+  if (num) num.textContent = ('0' + (idx + 1)).slice(-2);
+  var step = dock.querySelector('.pb-cyc-step');
+  if (step) step.textContent = 'Step ' + (idx + 1) + ' of ' + n;
+  var name = dock.querySelector('.pb-cyc-name');
+  if (name) name.textContent = (labels[idx] || '') + (hub ? ' · ' + hub : '');
+  dock.setAttribute('aria-label', 'Step ' + (idx + 1) + ' of ' + n + ' — ' + (labels[idx] || '') + '. Open the ' + (hub || 'lifecycle') + ' diagram.');
+}
+
+// Re-arm dock scroll-following after every render. The single fixed dock on a
+// chapter highlights the step whose sub spread is most in view; chapters with
+// only their own ch.cycle stay static (no anchored entries to observe).
+var _cycDockObserver = null;
+function cycleDockScan() {
+  if (_cycDockObserver) { _cycDockObserver.disconnect(); _cycDockObserver = null; }
+  if (typeof IntersectionObserver === 'undefined') return;
+  var ratios = {};
+  _cycDockObserver = new IntersectionObserver(function (ents) {
+    ents.forEach(function (en) { ratios[en.target.id] = en.intersectionRatio; });
+    document.querySelectorAll('.pb-cyc-dock[data-cycentries]').forEach(function (dock) {
+      var entries;
+      try { entries = JSON.parse(dock.getAttribute('data-cycentries') || '[]'); } catch (e) { return; }
+      var best = null, bestR = 0;
+      entries.forEach(function (e) {
+        if (!e.a) return;
+        var r = ratios[e.a] || 0;
+        if (r > bestR) { bestR = r; best = e; }
+      });
+      if (best) cycleDockSetState(dock, best.i);
+    });
+  }, { threshold: [0.15, 0.35, 0.55, 0.75] });
+  document.querySelectorAll('.pb-cyc-dock[data-cycentries]').forEach(function (dock) {
+    var entries;
+    try { entries = JSON.parse(dock.getAttribute('data-cycentries') || '[]'); } catch (e) { return; }
+    entries.forEach(function (e) {
+      if (!e.a) return;
+      var elx = document.getElementById(e.a);
+      if (elx) _cycDockObserver.observe(elx);
+    });
+  });
 }
 
 // True only for the genuine P&C seed (or a duplicate of it) — NOT merely any
@@ -4248,6 +4319,19 @@ function applyPlaybook(next, opts) {
   }
 }
 window.applyPlaybook = applyPlaybook;
+
+// Re-arm lifecycle dock scroll-following after every full render (mirrors the
+// motion-layer hook below; both wrappers call through).
+(function () {
+  var rawApply = window.applyPlaybook;
+  window.applyPlaybook = function (pb, opts) {
+    var r = rawApply(pb, opts);
+    try { cycleDockScan(); } catch (e) {}
+    return r;
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { try { cycleDockScan(); } catch (e) {} });
+  else { try { cycleDockScan(); } catch (e) {} }
+})();
 
 window.addEventListener('message', function (ev) {
   var d = ev.data || {};
