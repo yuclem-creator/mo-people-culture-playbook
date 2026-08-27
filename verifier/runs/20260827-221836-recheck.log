@@ -1,0 +1,12 @@
+=== v1/test_storage.py
+9/9 passed
+=== v2/test_storage_v2.py
+13/13 passed
+=== v3/test_never_again.py
+11/11 passed
+=== v4/test_redesign.py
+9/9 passed
+=== v5/test_ix_styles.py
+10 passed, 0 failed
+=== v6/test_categorical_add.py
+10 passed, 0 failed

@@ -63,6 +63,8 @@
         <select id="pvLang" title="Preview language"
                 style="display:none;margin-right:10px;border:1px solid #d8d4cb;border-radius:3px;padding:4px 8px;font:inherit;font-size:12px;background:#fff;"></select>
         <span id="pvStatus" style="color:#6b665d"></span>
+        <button class="btn ghost" id="btnPanel" title="Hide or show the editor panel (canvas editing keeps working)"
+                style="padding:3px 10px;margin-left:8px">Hide panel</button>
       </div>
       <div class="preview-wrap">
         <iframe id="preview" class="preview-frame" title="Playbook preview"
@@ -72,7 +74,7 @@
 
     <!-- Right: inspector -->
     <aside class="col col-inspector" aria-label="Inspector">
-      <div class="col-head"><span>Editor</span><span class="hint">Content only</span></div>
+      <div class="col-head"><span>Editor</span><span class="hint">Content · Design · Settings</span></div>
       <div id="inspector" class="inspector">
         <div class="empty">Select an item in the outline to edit its content.</div>
       </div>

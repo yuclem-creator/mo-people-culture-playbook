@@ -1460,7 +1460,7 @@
       return;
     }
     if (SEL.kind === 'settings') { renderSettings(box); groupInspectorCards(box); return; }
-    if (SEL.kind === 'chapter') { renderChapterInspector(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'chapter') { renderChapterInspector(box, SEL); groupInspectorCards(box); tabifyChapterInspector(box); return; }
     if (SEL.kind === 'lifecycle-sub') { renderLifecycleSub(box, SEL); groupInspectorCards(box); return; }
     if (SEL.kind === 'part-sub') { renderPartSub(box, SEL); groupInspectorCards(box); return; }
     if (SEL.kind === 'section') { renderSection(box, SEL); groupInspectorCards(box); return; }
@@ -1493,6 +1493,53 @@
     if (crumb) box.appendChild(el('div', { class: 'insp-crumb', text: crumb }));
   }
 
+  // Panel 2.0: after the cards are grouped, the chapter inspector is split
+  // into three tabs — Content (daily work), Design (opener & menu), Settings
+  // (lifecycle link, reorder, danger zone). Cards not explicitly routed stay
+  // in Content, so type-specific cards need no changes here. The active tab
+  // persists across re-renders (e.g. after a list reorder).
+  var INSP_TAB = 'content';
+  function tabifyChapterInspector(box) {
+    var cards = [].slice.call(box.querySelectorAll(':scope > .card'));
+    if (!cards.length) return;
+    var bar = el('div', { class: 'insp-tabs' });
+    var panes = {
+      content: el('div', { class: 'insp-pane', 'data-pane': 'content' }),
+      design: el('div', { class: 'insp-pane', 'data-pane': 'design' }),
+      settings: el('div', { class: 'insp-pane', 'data-pane': 'settings' })
+    };
+    [['content', 'Content'], ['design', 'Design'], ['settings', 'Settings']].forEach(function (t) {
+      bar.appendChild(el('button', {
+        class: t[0] === INSP_TAB ? 'on' : '', 'data-tab': t[0],
+        onclick: function () {
+          INSP_TAB = t[0];
+          [].forEach.call(bar.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.dataset.tab === t[0]); });
+          Object.keys(panes).forEach(function (k) { panes[k].style.display = k === t[0] ? '' : 'none'; });
+        }
+      }, [t[1]]));
+    });
+    cards.forEach(function (card) {
+      var head = card.querySelector('.card-head');
+      var label = head ? head.textContent.trim() : '';
+      if (/^Opener & menu/.test(label)) panes.design.appendChild(card);
+      else if (/^Lifecycle step/.test(label)) panes.settings.appendChild(card);
+      else panes.content.appendChild(card);
+    });
+    // Reorder / delete actions belong to Settings.
+    var actions = box.querySelector(':scope > .ch-actions');
+    if (actions) panes.settings.appendChild(actions);
+    Object.keys(panes).forEach(function (k) {
+      if (!panes[k].childNodes.length) {
+        panes[k].appendChild(el('div', { class: 'empty', text: k === 'design'
+          ? 'Nothing to design for this chapter type.'
+          : 'Nothing here for this chapter type.' }));
+      }
+      panes[k].style.display = k === INSP_TAB ? '' : 'none';
+      box.appendChild(panes[k]);
+    });
+    box.insertBefore(bar, box.querySelector('.insp-pane'));
+  }
+
   // ---- Chapter inspector --------------------------------------------------
   function renderChapterInspector(box, sel) {
     var ch = PB.chapters.filter(function (c) { return c.id === sel.id; })[0];
@@ -1518,11 +1565,13 @@
       // Chapter number / label: the numeral drives the default "Chapter N"
       // opener label, the rail number and the Contents-tile eyebrow. A custom
       // label replaces the opener label verbatim; blank numeral hides all.
-      box.appendChild(textField('Chapter number (e.g. 04 or XI — blank hides it)', ch.numeral || '', function (v) { ch.numeral = v.trim(); touch(); renderTree(); }, 'Shown on the opener as “Chapter N”, in the rail and on the Contents tile.'));
-      box.appendChild(textField('Custom chapter label (optional)', ch.labelText || '', function (v) { ch.labelText = v.trim(); touch(); }, 'Replaces “Chapter N” on the opener, e.g. “Section 3 · Opportunity 5”.'));
-      box.appendChild(checkField('Hide the chapter label on the opener', !!ch.hideLabel, function (v) { ch.hideLabel = v; touch(); }));
-      box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
-      box.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
+      // Panel 2.0: these rarely-touched labelling options collapse away.
+      var adv = el('details', { class: 'adv' }, [el('summary', {}, ['Chapter numbering & labels'])]);
+      adv.appendChild(textField('Chapter number (e.g. 04 or XI — blank hides it)', ch.numeral || '', function (v) { ch.numeral = v.trim(); touch(); renderTree(); }, 'Shown on the opener as “Chapter N”, in the rail and on the Contents tile.'));
+      adv.appendChild(textField('Custom chapter label (optional)', ch.labelText || '', function (v) { ch.labelText = v.trim(); touch(); }, 'Replaces “Chapter N” on the opener, e.g. “Section 3 · Opportunity 5”.'));
+      adv.appendChild(checkField('Hide the chapter label on the opener', !!ch.hideLabel, function (v) { ch.hideLabel = v; touch(); }));
+      adv.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
+      box.appendChild(adv);
       // Lifecycle step dock: link this chapter to a stage of a lifecycle
       // wheel. The preview/player renders a persistent mini-ring on the
       // chapter, built LIVE from that wheel's stages.
@@ -1530,10 +1579,13 @@
       var prefix0 = prosePrefixFor(ch, type);
       if (prefix0 && (type === 'standard' || type === 'sections-list' || type === 'lifecycle' || type === 'directory' || type === 'letter' ||
         type === 'part' || type === 'tile-menu' || type === 'card-track' || type === 'process-diagram')) {
+        box.appendChild(sectionLabel('Opener & menu'));
         box.appendChild(imageField('Opener image (header + menu tile)', PB.prose[prefix0 + '.opener.bg'] || '', function (fn) { PB.prose[prefix0 + '.opener.bg'] = fn; touch(); }));
         box.appendChild(videoField('Opener video (above the text)', PB.prose[prefix0 + '.opener.video'] || '', function (fn) { PB.prose[prefix0 + '.opener.video'] = fn; touch(); }));
+        box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
         var body0 = bodyForChapter(ch);
-        box.appendChild(paraArrayField('Opening paragraph(s)', body0.intro || [], function (arr) { body0.intro = arr; touch(); }));
+        box.appendChild(sectionLabel('Opening words'));
+        box.appendChild(paraArrayField('Intro text', body0.intro || [], function (arr) { body0.intro = arr; touch(); }));
         // Chapter-level content elements (tables, knowledge tips, timelines,
         // checklists, task lists, media) — render under the opening
         // paragraphs, above the sections.
@@ -1547,6 +1599,11 @@
           make: function () { return { s: 'policy', name: 'New item', blurb: '', url: '' }; }
         });
         box.appendChild(mediaActionsRow(body0.items));
+      } else {
+        // Chapters without an opener-prefix (e.g. lifecycle wheel hosts) still
+        // get the menu tile text under Design.
+        box.appendChild(sectionLabel('Opener & menu'));
+        box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
       }
       // Tile-menu chapters: the tiles are the whole point — title, text,
       // optional image and the chapter each tile links to.
@@ -2352,6 +2409,13 @@
     ], function (v) { if (v) it.headSize = v; else delete it.headSize; touch(); }));
     box.appendChild(selectField('Heading colour', it.headColor || '', TEXT_COLORS,
       function (v) { if (v) it.headColor = v; else delete it.headColor; touch(); }));
+    box.appendChild(textField('Space above this element (px)', (typeof it.gap === 'number' && it.gap) ? String(it.gap) : '',
+      function (v) {
+        var n = parseInt(v, 10);
+        if (isNaN(n) || n === 0) delete it.gap;
+        else it.gap = Math.max(-80, Math.min(240, n));
+        touch();
+      }, 'Extra space above the element — negative values close white space up. Or drag the grip at the element’s top edge in the preview (double-click the grip to reset).'));
     if (it.s === 'ix') {
       if (!it.kind) it.kind = 'processflow';
       if (IX_KINDS.filter(function (k) { return k.v === it.kind; }).length === 0) {
@@ -4017,6 +4081,11 @@
     $('#btnVersions').addEventListener('click', doVersionsClick);
     $('#pvDesktop').addEventListener('click', function () { setPreviewWidth(false); });
     $('#pvMobile').addEventListener('click', function () { setPreviewWidth(true); });
+    // Panel 2.0: collapse the inspector for full-width canvas editing.
+    $('#btnPanel').addEventListener('click', function () {
+      var hidden = document.body.classList.toggle('panel-hidden');
+      this.textContent = hidden ? 'Show panel' : 'Hide panel';
+    });
     var pvLang = $('#pvLang');
     if (pvLang) pvLang.addEventListener('change', function () {
       PREVIEW_LANG = pvLang.value || 'en';

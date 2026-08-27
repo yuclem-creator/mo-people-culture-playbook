@@ -1,0 +1,6 @@
+v8/test_scorm_completion.py -> 21 passed, 0 failed 
+v9/test_full_qa.py -> 17 passed, 0 failed 
+v10/test_wysiwyg.py -> 16 passed, 0 failed 
+v11/test_ix2.py -> ===== v11 ix2: 21 passed, 0 failed ===== 
+v12/test_wysiwyg_parts.py -> ===== v12 WYSIWYG parts: 7 passed, 0 failed ===== 
+v13/test_wysiwyg_add_tasklist.py -> 9 passed, 0 failed 

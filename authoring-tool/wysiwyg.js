@@ -49,6 +49,11 @@ window.MO_WYSIWYG = (function () {
     + 'font:600 14px/20px system-ui,sans-serif;text-align:center;padding:0;cursor:pointer;opacity:0;transition:opacity .15s,transform .15s,background .15s;}'
     + '.mo-wys-host:hover > .mo-wys-del{opacity:1;}'
     + '.mo-wys-del:hover{background:#a05548;color:#fff;transform:scale(1.1);}'
+    + '.mo-wys-gap{position:absolute;left:50%;top:-11px;transform:translateX(-50%);z-index:32;height:22px;padding:0 12px;'
+    + 'display:flex;align-items:center;justify-content:center;cursor:ns-resize;opacity:0;transition:opacity .15s;}'
+    + '.mo-wys-gap span{display:block;width:44px;height:6px;border-radius:3px;background:#d8c6a5;border:1px solid #B59060;}'
+    + '.mo-wys-host:hover > .mo-wys-gap{opacity:1;}'
+    + '.mo-wys-gap:hover span{background:#B59060;}'
     + '.mo-wys-formbtn:hover{border-color:#B59060;color:#B59060;}'
     + '.mo-wys-bar{position:absolute;z-index:40;display:none;gap:4px;background:#26221c;border-radius:6px;padding:5px;box-shadow:0 8px 24px rgba(0,0,0,.25);}'
     + '.mo-wys-bar.show{display:flex;}'
@@ -266,6 +271,53 @@ window.MO_WYSIWYG = (function () {
     hostEl.appendChild(btn);
   }
 
+  // Hover grip at the element's top edge: drag vertically to change the
+  // space ABOVE this element (model: it.gap, px; clamped −80…240, positive
+  // opens space, negative closes white space). Double-click resets to 0.
+  // Live-updates the canvas during the drag, commits to the model on release.
+  function addGapHandle(hostEl, it, arr, index) {
+    if (!it || typeof it !== 'object') return;  // plain string items can't carry gap
+    if (hostEl.querySelector(':scope > .mo-wys-gap')) return;
+    hostEl.classList.add('mo-wys-host');
+    var g = doc.createElement('div');
+    g.className = 'mo-wys-gap';
+    g.title = 'Drag to adjust the space above this element · double-click to reset';
+    g.appendChild(doc.createElement('span'));
+    function applyGap(elx, v) {
+      if (v >= 0) { elx.style.marginTop = ''; elx.style.paddingTop = v + 'px'; }
+      else { elx.style.paddingTop = ''; elx.style.marginTop = v + 'px'; }
+    }
+    g.addEventListener('click', function (ev) { ev.stopPropagation(); ev.preventDefault(); });
+    g.addEventListener('dblclick', function (ev) {
+      ev.stopPropagation(); ev.preventDefault();
+      it.gap = 0; bridge.touch();
+      if (bridge.toast) bridge.toast('Spacing reset to default', 'ok');
+    });
+    g.addEventListener('mousedown', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      stopEditing(true);
+      var startY = ev.clientY;
+      var startGap = (typeof it.gap === 'number') ? it.gap : 0;
+      var val = startGap, moved = false;
+      function mv(e) {
+        val = Math.max(-80, Math.min(240, Math.round(startGap + (e.clientY - startY))));
+        moved = true;
+        applyGap(hostEl, val);
+      }
+      function up() {
+        doc.removeEventListener('mousemove', mv);
+        doc.removeEventListener('mouseup', up);
+        if (!moved) return;
+        it.gap = val;
+        bridge.touch();
+        if (bridge.toast) bridge.toast(val ? 'Space above: ' + val + 'px' : 'Spacing reset to default', 'ok');
+      }
+      doc.addEventListener('mousemove', mv);
+      doc.addEventListener('mouseup', up);
+    });
+    hostEl.appendChild(g);
+  }
+
   // ---------- item mapping ----------
   // Inline text editing for the common interactive elements — click the text
   // in the canvas and type. Structure/lists stay in the Studio form via the
@@ -372,6 +424,7 @@ window.MO_WYSIWYG = (function () {
     if (!it || typeof it !== 'string' && !it.s) return;
     var it2 = typeof it === 'string' ? { s: 'policy', text: it } : it;
     addDeleteHandle(rootEl, arr, index);
+    addGapHandle(rootEl, it, arr, index);
 
     // Optional element heading (.pb-item-head wraps the body in .pb-item).
     var head = rootEl.querySelector(':scope > .pb-item-head');

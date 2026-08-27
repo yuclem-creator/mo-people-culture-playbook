@@ -232,3 +232,14 @@ On-canvas delete + universal insert handles + heading-button snap:
 5. G5 inspector '＋ Heading' snaps insertion to the end of the current line (never splits mid-word).
 6. G6 zero page errors; G7 mirrored-copy consistency.
 Run: `python3 v17/test_delete_and_insert.py` (repo-root http.server on :8910).
+
+## v18 — 2026-08-27
+Panel 2.0 + drag-to-resize spacing + SCORM desktop/mobile display:
+1. H1/H1b chapter inspector tabs (Content/Design/Settings), collapsed numbering & labels group, card routing, active tab persists across re-renders.
+2. H2 'Hide panel' toggle (body.panel-hidden).
+3. H3 drag grip at an element's top edge sets it.gap and re-renders a .pb-gap wrapper.
+4. H4 item form exposes 'Space above this element (px)'.
+5. H5/H6 player (= what SCORM serves) renders .pb-gap at desktop 1300px and mobile 390px, scorecard circles stay centred, no horizontal overflow.
+6. H7 zero page errors; H8 mirrored-copy consistency.
+Note: v17 G5 locator updated to the Panel 2.0 'Intro text' label (same assertion).
+Run: `python3 v18/test_panel_and_spacing.py` (repo-root http.server on :8910).

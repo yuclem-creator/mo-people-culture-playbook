@@ -1,0 +1,4 @@
+v14/test_cycle_dock.py -> 11 passed, 0 failed 
+v16/test_dock_headings_scorecard.py -> ===== v16: 13 passed, 0 failed ===== 
+v17/test_delete_and_insert.py -> 
+v18/test_panel_and_spacing.py -> ===== v18: 9 passed, 0 failed ===== 

@@ -544,3 +544,19 @@ a{color:var(--gold)}
   .savedby-chip{order:11;flex:1 1 100%;max-width:none;text-align:right}
   .auth-chip{order:12;flex:1 1 100%;justify-content:flex-end}
 }
+
+/* ---- Panel 2.0: inspector tabs, collapsed advanced group, panel toggle --- */
+.insp-tabs{display:flex;gap:2px;margin:10px 0 14px;border-bottom:1px solid var(--hairline,#e4dcc9)}
+.insp-tabs button{border:none;background:none;font:600 12px/1 inherit;letter-spacing:.05em;
+  color:#8a8272;padding:9px 12px;cursor:pointer;border-bottom:2px solid transparent}
+.insp-tabs button.on{color:#96744a;border-bottom-color:#B59060}
+.insp-pane{min-height:60px}
+details.adv{border:1px solid var(--hairline,#e4dcc9);border-radius:8px;background:#fff;margin:10px 0}
+details.adv>summary{padding:9px 12px;font-size:12px;font-weight:600;color:#5a5344;cursor:pointer;list-style:none}
+details.adv>summary::-webkit-details-marker{display:none}
+details.adv>summary::after{content:"▾";float:right;color:#B59060}
+details.adv:not([open])>summary::after{content:"▸"}
+details.adv .field{padding:0 12px}
+details.adv .field:first-of-type{margin-top:10px}
+details.adv .field:last-of-type{margin-bottom:12px}
+body.panel-hidden .col-inspector{display:none}

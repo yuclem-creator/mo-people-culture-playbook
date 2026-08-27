@@ -385,12 +385,22 @@ function pbChartHTML(it) {
 // Studio inspector — rendered above the element regardless of its type.
 function policyItemHTML(it) {
   var inner = policyItemBodyHTML(it);
+  var out;
   if (it && it.head && !Array.isArray(it.head) && String(it.head).trim()) {
     var _hsz = ({ s: '16px', m: '20px', l: '28px', xl: '34px' })[it.headSize] || '';
     var _hcl = /^(ink|soft|muted|gold|sage|terra)$/.test(it.headColor || '') ? ' pb-c-' + it.headColor : '';
-    return '<div class="pb-item"><div class="pb-item-head' + _hcl + '"' + (_hsz ? ' style="font-size:' + _hsz + ';"' : '') + '>' + esc(it.head) + '</div>' + inner + '</div>';
+    out = '<div class="pb-item"><div class="pb-item-head' + _hcl + '"' + (_hsz ? ' style="font-size:' + _hsz + ';"' : '') + '>' + esc(it.head) + '</div>' + inner + '</div>';
+  } else {
+    out = inner;
   }
-  return inner;
+  // Author-adjustable spacing: it.gap is extra space above the element in px
+  // (set by the drag handle in Studio). Positive gaps use padding (exact, no
+  // margin-collapsing); negative gaps use margin to close white space up.
+  if (it && typeof it.gap === 'number' && it.gap) {
+    var _gst = it.gap > 0 ? 'padding-top:' + it.gap + 'px' : 'margin-top:' + it.gap + 'px';
+    return '<div class="pb-gap" style="' + _gst + '">' + out + '</div>';
+  }
+  return out;
 }
 
 function policyItemBodyHTML(it) {

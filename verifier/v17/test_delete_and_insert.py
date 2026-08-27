@@ -10,7 +10,8 @@ G3  a part sub-topic's intro area carries a '+' insert handle (previously
 G4  a PART chapter's intro area carries a '+' insert handle (was gated to
     non-part chapters);
 G5  the inspector '＋ Heading' button snaps insertion to the end of the
-    current line — a mid-word cursor can no longer split a word/paragraph;
+    current line — a mid-word cursor can no longer split a word/paragraph
+    (locator updated to the Panel 2.0 'Intro text' label, same check);
 G6  zero page errors throughout;
 G7  mirrored copies: mo-brand.css byte-identical, app.js divergence only in
     the known Studio-wiring lines.
@@ -154,7 +155,7 @@ with sync_playwright() as p:
     # G5 '＋ Heading' button snaps to end of line (no mid-word split)
     pg.click("#tree >> text=Delta")
     pg.wait_for_timeout(1200)
-    fld = pg.locator("#inspector .field", has_text="Opening paragraph(s)").first
+    fld = pg.locator("#inspector .field", has_text="Intro text").first
     ta = fld.locator("textarea")
     ta.evaluate("(el) => { el.focus(); el.setSelectionRange(15, 15); }")  # mid-word in "documents"
     fld.locator("button", has_text="＋ Heading").click()
