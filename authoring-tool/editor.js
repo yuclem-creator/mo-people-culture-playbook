@@ -112,7 +112,7 @@
     flipcards: { cards: [
       { num: '01', title: 'Position in public', backLabel: 'Principle 01', back: 'Maintain the competitive price positioning in the open market.' },
       { num: '02', title: 'Every discount needs a fence', backLabel: 'Principle 02', back: 'Discounts are accompanied by an appropriate fence.', chips: ['Advance booking windows', 'Length of stay'] }] },
-    stagebar: { head: 'Overall timeline', sub: '', fill: 75, greyFrom: 4, stages: [
+    stagebar: { sub: 'Overall timeline', fill: 75, greyFrom: 4, stages: [
       { label: 'Summary', dur: '', text: '' }, { label: 'Assess', dur: '', text: '' },
       { label: 'Adjust', dur: '', text: '' }, { label: 'Test & rollout', dur: '', text: '' },
       { label: 'Track', dur: '', text: '' }] },
@@ -559,7 +559,6 @@
       { t: 'lines', k: 'items', l: 'Steps in the CORRECT order (one per line)', tip: 'The player shuffles them automatically.' }
     ],
     stagebar: [
-      { k: 'head', l: 'Heading above the bar (optional)' },
       { k: 'sub', l: 'Small line under the heading (optional)', tip: 'e.g. Overall timeline' },
       { t: 'list', k: 'stages', l: 'Stages', addLabel: 'Add stage',
         make: function () { return { label: 'New stage', dur: '', text: '' }; },
@@ -1232,8 +1231,10 @@
     if (!previewReady) { pendingPush = true; return; }
     var frame = $('#preview');
     var msg = { type: 'set-playbook', playbook: playbookForPreview(), lang: PREVIEW_LANG };
+    // Only an explicit keep (boot / structural change) may steer the preview.
+    // Plain edit pushes deliberately carry no chapter: the preview re-renders
+    // in place and keeps the author's exact scroll position.
     if (keep) { msg.chapter = keep.chapter; msg.sub = keep.sub; }
-    else if (SEL && SEL.chapter) { msg.chapter = SEL.chapter; msg.sub = SEL.sub; }
     frame.contentWindow.postMessage(msg, '*');
   }
   var pushTimer = null;

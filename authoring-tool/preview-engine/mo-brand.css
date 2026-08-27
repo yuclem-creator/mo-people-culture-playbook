@@ -941,3 +941,9 @@
 .ixfc-grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr));}
 @media(max-width:900px){.ixfc-grid.cols-4{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:640px){.ixfc-grid.cols-3{grid-template-columns:minmax(0,1fr);}}
+
+/* journeydot — compact label cards; full text reveals on hover / tap */
+.pb-ix2jn .ix2jn-stop{cursor:pointer;}
+.pb-ix2jn .ix2jn-stop-text{display:none;}
+.pb-ix2jn .ix2jn-stop:hover,.pb-ix2jn .ix2jn-stop.on,.pb-ix2jn .ix2jn-stop:focus-visible{z-index:6;}
+.pb-ix2jn .ix2jn-stop:hover .ix2jn-stop-text,.pb-ix2jn .ix2jn-stop.on .ix2jn-stop-text,.pb-ix2jn .ix2jn-stop:focus-visible .ix2jn-stop-text{display:block;}

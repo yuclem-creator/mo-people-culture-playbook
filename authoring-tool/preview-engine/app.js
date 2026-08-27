@@ -4967,7 +4967,6 @@ Object.assign(PB_IX_RENDER, {
         '</div>';
     }).join('');
     return '<div class="pb-ix pb-ixsb">' +
-      (it.head ? '<div class="ixsb-head">' + esc(it.head) + '</div>' : '') +
       (it.sub ? '<div class="ixsb-sub-head">' + esc(it.sub) + '</div>' : '') +
       '<div class="ixsb-trackwrap"><div class="ixsb-track"></div>' +
       '<div class="ixsb-fill" style="width:' + fill + '%;"></div>' + ticks + '</div>' +
@@ -5300,6 +5299,12 @@ if (!window.__ix2Wired) {
       el.style.top = (above ? Math.max(y - 96, 2) : Math.min(y + 26, boxH - 90)) + 'px';
       el.innerHTML = '<div class="ix2jn-stop-label">' + esc(s.label || ('Stop ' + (i + 1))) + '</div>' +
         (s.text ? '<div class="ix2jn-stop-text">' + esc(s.text) + '</div>' : '');
+      el.setAttribute('tabindex', '0');
+      el.addEventListener('click', function () {
+        var was = el.classList.contains('on');
+        stopsBox.querySelectorAll('.ix2jn-stop.on').forEach(function (o) { o.classList.remove('on'); });
+        if (!was) el.classList.add('on');
+      });
       stopsBox.appendChild(el);
       return { x: x, y: y, el: el };
     });
