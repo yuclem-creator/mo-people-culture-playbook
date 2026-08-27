@@ -254,7 +254,7 @@
           { k: 'back', l: 'Back — text', t: 'area' },
           { k: 'chips', l: 'Chips on the back (comma separated)', t: 'csv' }
         ] },
-      { k: 'cols', l: 'Cards per row', t: 'select', opts: [{ v: '', l: 'Auto (fills the row)' }, { v: '2', l: '2 × 2 grid' }] }
+      { k: 'cols', l: 'Cards per row', t: 'select', opts: [{ v: '', l: 'Auto (fills the row)' }, { v: '2', l: '2 per row (2 × 2 grid)' }, { v: '3', l: '3 per row' }, { v: '4', l: '4 per row' }] }
     ],
     cardwall: [
       { t: 'list', k: 'legend', l: 'Theme legend (optional)', addLabel: 'Add legend entry',
@@ -2564,6 +2564,8 @@
         { v: '', l: 'Default (30px)' }, { v: 's', l: 'Small (18px)' }, { v: 'm', l: 'Medium (22px)' },
         { v: 'l', l: 'Large (28px)' }, { v: 'xl', l: 'Extra large (34px)' }
       ], function (v) { if (v) it.size = v; else delete it.size; touch(); }));
+      box.appendChild(checkField('Show divider line under heading', !it.hideRule,
+        function (v) { if (v) delete it.hideRule; else it.hideRule = true; touch(); }));
       appendTextFormatFields(box, it);
       return;
     }
@@ -4390,7 +4392,9 @@
     pb: function () { return PB; },
     bodyForChapter: bodyForChapter,
     openItem: function (chId, arr, index) {
-      select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL });
+      // noNav: the author is already looking at this exact element in the
+      // preview — navigating would yank the page back to the chapter top.
+      select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL }, { noNav: true });
     },
     addElement: function (chId, arr, index) { openAddElementPicker(chId, arr, index); },
     touch: touch,

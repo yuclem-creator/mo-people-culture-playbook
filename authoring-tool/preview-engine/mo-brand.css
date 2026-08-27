@@ -380,7 +380,7 @@
 .ixfc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
 /* Adaptive last row: a lone odd card stretches full-width as a rectangle,
    so no dead gap ever shows (even counts never stretch). */
-.ixfc-grid > .ixfc-card:last-child:nth-child(odd){grid-column:1 / -1;min-height:150px}
+.ixfc-grid:not(.cols-2):not(.cols-3):not(.cols-4) > .ixfc-card:last-child:nth-child(odd){grid-column:1 / -1;min-height:150px}
 .ixfc-card{
   position:relative;display:block;border:0;background:none;padding:0;cursor:pointer;
   min-height:190px;perspective:900px;text-align:left;
@@ -935,3 +935,9 @@
 /* flipcards — optional fixed 2x2 grid (set Cards per row = 2 in Studio) */
 .ixfc-grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr));}
 @media(max-width:640px){.ixfc-grid.cols-2{grid-template-columns:minmax(0,1fr);}}
+
+/* flipcards — fixed 3- and 4-per-row grids (Cards per row in Studio) */
+.ixfc-grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.ixfc-grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr));}
+@media(max-width:900px){.ixfc-grid.cols-4{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:640px){.ixfc-grid.cols-3{grid-template-columns:minmax(0,1fr);}}

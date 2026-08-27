@@ -605,7 +605,7 @@ function policyItemBodyHTML(it) {
     return `<div class="pb-heading">
       ${it.sub ? `<div class="pb-heading-sub">${esc(it.sub)}</div>` : ''}
       <h2 class="pb-heading-text${hfmt}"${it.font === 'display' || it.size ? ` style="${it.font === 'display' ? 'font-family:var(--mo-display);' : ''}${it.size ? 'font-size:' + ({s:'18px',m:'22px',l:'28px',xl:'34px'}[it.size] || it.size) + ';"' : ''}"` : ''}>${esc(it.text)}</h2>
-      <span class="pb-heading-rule" aria-hidden="true"></span>
+      ${!it.hideRule ? '<span class="pb-heading-rule" aria-hidden="true"></span>' : ''}
     </div>`;
   }
   // Body text: standalone prose block. Blank line = new paragraph; optional
@@ -4312,7 +4312,7 @@ var PB_IX_RENDER = {
       (legend.length ? '<div class="ixfc-legend">' + legend.map(function (l, i) {
         return '<span class="ixfc-leg"><span class="ixlg-sw" style="background:' + esc(l.color || _IX_COLORS[i % _IX_COLORS.length]) + ';"></span>' + esc(l.label || '') + '</span>';
       }).join('') + '</div>' : '') +
-      '<div class="ixfc-grid' + (parseInt(it.cols, 10) === 2 ? ' cols-2' : '') + '">' + cards.map(function (c, i) {
+      '<div class="ixfc-grid' + ([2,3,4].indexOf(parseInt(it.cols, 10)) >= 0 ? ' cols-' + parseInt(it.cols, 10) : '') + '">' + cards.map(function (c, i) {
         var chips = _ixArr(c.chips);
         return '<button type="button" class="ixfc-card" data-fc>' +
           '<span class="ixfc-face ixfc-front" style="' + (dark && c.themeColor ? 'border-top-color:' + esc(c.themeColor) + ';' : '') + '">' +
@@ -5268,7 +5268,9 @@ if (!window.__ix2Wired) {
       var el = document.createElement('div');
       el.className = 'ix2jn-stop';
       var above = (i % 2 === 0);
-      el.style.left = x + 'px';
+      // clamp the card (max-width 150px + translateX(-50%)) so edge stops are never clipped
+      var half = 84;
+      el.style.left = Math.min(Math.max(x, half), Math.max(boxW - half, half)) + 'px';
       el.style.top = (above ? Math.max(y - 96, 2) : Math.min(y + 26, boxH - 90)) + 'px';
       el.innerHTML = '<div class="ix2jn-stop-label">' + esc(s.label || ('Stop ' + (i + 1))) + '</div>' +
         (s.text ? '<div class="ix2jn-stop-text">' + esc(s.text) + '</div>' : '');
