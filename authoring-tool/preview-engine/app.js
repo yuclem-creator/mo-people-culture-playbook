@@ -385,22 +385,12 @@ function pbChartHTML(it) {
 // Studio inspector — rendered above the element regardless of its type.
 function policyItemHTML(it) {
   var inner = policyItemBodyHTML(it);
-  var out;
   if (it && it.head && !Array.isArray(it.head) && String(it.head).trim()) {
     var _hsz = ({ s: '16px', m: '20px', l: '28px', xl: '34px' })[it.headSize] || '';
     var _hcl = /^(ink|soft|muted|gold|sage|terra)$/.test(it.headColor || '') ? ' pb-c-' + it.headColor : '';
-    out = '<div class="pb-item"><div class="pb-item-head' + _hcl + '"' + (_hsz ? ' style="font-size:' + _hsz + ';"' : '') + '>' + esc(it.head) + '</div>' + inner + '</div>';
-  } else {
-    out = inner;
+    return '<div class="pb-item"><div class="pb-item-head' + _hcl + '"' + (_hsz ? ' style="font-size:' + _hsz + ';"' : '') + '>' + esc(it.head) + '</div>' + inner + '</div>';
   }
-  // Author-adjustable spacing: it.gap is extra space above the element in px
-  // (set by the drag handle in Studio). Positive gaps use padding (exact, no
-  // margin-collapsing); negative gaps use margin to close white space up.
-  if (it && typeof it.gap === 'number' && it.gap) {
-    var _gst = it.gap > 0 ? 'padding-top:' + it.gap + 'px' : 'margin-top:' + it.gap + 'px';
-    return '<div class="pb-gap" style="' + _gst + '">' + out + '</div>';
-  }
-  return out;
+  return inner;
 }
 
 function policyItemBodyHTML(it) {
@@ -888,25 +878,12 @@ function featureQuoteHTML(quote) {
     </figure>`;
 }
 
-// Shared paragraph-line renderer: a line starting with "## " becomes a proper
-// section heading (h4.pb-para-h) anywhere paragraph arrays are rendered —
-// chapter/sub intros, section blurbs, transition notes. Everything else stays
-// an ordinary paragraph. Returns '' for the heading case sentinel handling at
-// call sites that need the raw string check (they call isParaHeading first).
-function isParaHeading(p) {
-  return typeof p === 'string' && /^##\s+\S/.test(p);
-}
-function paraLineHTML(p) {
-  if (isParaHeading(p)) return `<h4 class="pb-para-h">${inlineRichHTML(String(p).replace(/^##\s+/, ''))}</h4>`;
-  return `<p>${inlineRichHTML(p)}</p>`;
-}
-
 // Render blurb paragraphs, optionally split into two chunks so a feature quote /
 // highlight grid can be interleaved (splitAfter = # of paragraphs before break).
 function blurbChunkHTML(paras, from, to) {
   const slice = paras.slice(from, to);
   if (!slice.length) return '';
-  return `<div class="policy-section-blurb">${slice.map(p => isParaHeading(p) ? paraLineHTML(p) : `<p>${esc(p)}</p>`).join('')}</div>`;
+  return `<div class="policy-section-blurb">${slice.map(p => `<p>${esc(p)}</p>`).join('')}</div>`;
 }
 
 // Section (numbered Heading) — optional intro blurb, resource accordions, optional transition.
@@ -932,7 +909,7 @@ function sectionHTML(sec) {
       + blurbChunkHTML(blurbParas, splitAt, blurbParas.length);
   } else {
     blurb = blurbParas.length
-      ? `<div class="policy-section-blurb">${blurbParas.map(p => paraLineHTML(p)).join('')}</div>`
+      ? `<div class="policy-section-blurb">${blurbParas.map(p => `<p>${inlineRichHTML(p)}</p>`).join('')}</div>`
       : '';
   }
   // The verbatim source "transition" sentence is promoted into an editorial
@@ -949,13 +926,13 @@ function sectionHTML(sec) {
   // text (NOT quoted), so only the key sentence is elevated into a quote.
   const transitionPreParas = asParas(sec.transition_pre);
   const transitionPre = transitionPreParas.length
-    ? `<div class="policy-section-blurb policy-section-blurb--before">${transitionPreParas.map(p => paraLineHTML(p)).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--before">${transitionPreParas.map(p => `<p>${inlineRichHTML(p)}</p>`).join('')}</div>`
     : '';
   // Verbatim supporting sentences that follow the pull-quote — rendered as
   // ordinary body text (NOT quoted), so only the key sentence stays a quote.
   const transitionBodyParas = asParas(sec.transition_body);
   const transitionBody = transitionBodyParas.length
-    ? `<div class="policy-section-blurb policy-section-blurb--after">${transitionBodyParas.map(p => paraLineHTML(p)).join('')}</div>`
+    ? `<div class="policy-section-blurb policy-section-blurb--after">${transitionBodyParas.map(p => `<p>${inlineRichHTML(p)}</p>`).join('')}</div>`
     : '';
   const numHTML = sec.num ? `<span class="num">${esc(sec.num)}.</span>` : '';
   const iconHTML = `<span class="policy-section-icon" aria-hidden="true">${sectionIcon(sec.title)}</span>`;
@@ -1497,12 +1474,6 @@ function subIntroHTML(c) {
     };
     let collecting = false;
     c.intro.forEach(p => {
-      // "## Heading" lines become proper headings, anywhere in the intro flow.
-      if (isParaHeading(p)) {
-        flush(); collecting = false;
-        html += paraLineHTML(p);
-        return;
-      }
       if (p && typeof p === 'object') {
         flush(); collecting = false;
         const cls = 'sub-intro-lead' + (p.size ? ' intro-' + p.size : '') + (p.font === 'display' ? ' intro-display' : '');
@@ -3181,168 +3152,7 @@ function renderGenericChapter(ch, prevId, nextId) {
       ${opener}
       ${body}
       ${chapterNavHTML(prevId, nextId)}
-      ${cycleDockHTML(ch)}
     </section>`;
-}
-
-// ---- Lifecycle step dock ----
-// Chapters AND part subs may declare cycle = { wid, index } pointing at a
-// lifecycle wheel element (s:'wheel', it.wid) anywhere in the playbook. The
-// dock reads that wheel's stages LIVE at render time — rename, reorder or add
-// stages in the wheel and every linked dock updates automatically. On part
-// chapters with several linked subs, one fixed dock follows the scroll and
-// highlights the step whose spread is currently in view.
-function findWheelById(wid) {
-  if (!wid || !PB || !PB.sectionBodies) return null;
-  var bodies = PB.sectionBodies;
-  for (var key in bodies) {
-    var b = bodies[key]; if (!b) continue;
-    var pools = [];
-    if (Array.isArray(b.items)) pools.push(b.items);
-    (Array.isArray(b.sections) ? b.sections : []).forEach(function (s) { if (s && Array.isArray(s.items)) pools.push(s.items); });
-    for (var pi = 0; pi < pools.length; pi++) {
-      for (var ii = 0; ii < pools[pi].length; ii++) {
-        var it = pools[pi][ii];
-        if (it && it.s === 'wheel' && (it.wid === wid || it.name === wid)) {
-          // map the body key back to its chapter (+ sub, when nested in a part)
-          var loc = { chapterId: key, subId: '' };
-          (PB.chapters || []).forEach(function (ch) {
-            if (ch.id === key) { loc.chapterId = ch.id; loc.subId = ''; }
-            (Array.isArray(ch.subs) ? ch.subs : []).forEach(function (s) { if (s.id === key) { loc.chapterId = ch.id; loc.subId = s.id; } });
-          });
-          return { it: it, chapterId: loc.chapterId, subId: loc.subId };
-        }
-      }
-    }
-  }
-  return null;
-}
-
-function cycleDockHTML(ch) {
-  if (!ch) return '';
-  var entries = [];
-  if (ch.cycle && ch.cycle.wid && ch.cycle.index != null) entries.push({ a: '', i: Number(ch.cycle.index) || 0, wid: ch.cycle.wid });
-  (Array.isArray(ch.subs) ? ch.subs : []).forEach(function (s) {
-    if (s && s.cycle && s.cycle.wid && s.cycle.index != null) entries.push({ a: s.id, i: Number(s.cycle.index) || 0, wid: s.cycle.wid });
-  });
-  if (!entries.length) return '';
-  var found = findWheelById(entries[0].wid);
-  if (!found) return '';
-  var stages = (Array.isArray(found.it.stages) ? found.it.stages : []).filter(function (s) { return s && s.label; });
-  var n = stages.length;
-  if (!n) return '';
-  entries.forEach(function (e) { e.i = Math.max(0, Math.min(e.i, n - 1)); });
-  var cx = 26, cy = 26, rr = 20, stepA = 360 / n, gap = n > 1 ? 4 : 0;
-  function pt(a) { var rad = (a - 90) * Math.PI / 180; return [cx + rr * Math.cos(rad), cy + rr * Math.sin(rad)]; }
-  var segs = '';
-  for (var i = 0; i < n; i++) {
-    var p0 = pt(i * stepA + gap / 2), p1 = pt((i + 1) * stepA - gap / 2);
-    var large = (stepA - gap) > 180 ? 1 : 0;
-    var on = i === entries[0].i;
-    segs += '<path class="pb-cyc-seg" data-i="' + i + '" d="M ' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A ' + rr + ' ' + rr + ' 0 ' + large + ' 1 ' +
-      p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + '" fill="none" stroke="' + (on ? '#B59060' : '#8a9a8b') +
-      '" stroke-opacity="' + (on ? '1' : '.38') + '" stroke-width="7" stroke-linecap="round"/>';
-  }
-  var labels = stages.map(function (s) { return String(s.label || ''); });
-  var hub = String(found.it.hubTitle || found.it.name || '');
-  var first = entries[0];
-  return '<button type="button" class="pb-cyc-dock"' +
-    ' data-goto="' + esc(found.chapterId) + '"' + (found.subId ? ' data-sub="' + esc(found.subId) + '"' : '') +
-    ' data-cycentries="' + esc(JSON.stringify(entries.map(function (e) { return { a: e.a, i: e.i }; }))) + '"' +
-    ' data-cyclabels="' + esc(JSON.stringify(labels)) + '"' +
-    ' data-cychub="' + esc(hub) + '"' +
-    ' aria-label="Step ' + (first.i + 1) + ' of ' + n + ' — ' + esc(labels[first.i]) + '. Open the ' + esc(hub || 'lifecycle') + ' diagram.">' +
-    '<svg viewBox="0 0 52 52" width="50" height="50" aria-hidden="true">' + segs +
-    '<circle cx="26" cy="26" r="13" fill="#FDFDF3"/>' +
-    '<text x="26" y="30" text-anchor="middle" class="pb-cyc-docknum">' + ('0' + (first.i + 1)).slice(-2) + '</text></svg>' +
-    '<span class="pb-cyc-docklbl"><b class="pb-cyc-step">Step ' + (first.i + 1) + ' of ' + n + '</b>' +
-    '<span class="pb-cyc-name">' + esc(labels[first.i]) + (hub ? ' · ' + esc(hub) : '') + '</span></span></button>';
-}
-
-function cycleDockSetState(dock, idx) {
-  var labels = [];
-  try { labels = JSON.parse(dock.getAttribute('data-cyclabels') || '[]'); } catch (e) {}
-  var hub = dock.getAttribute('data-cychub') || '';
-  var n = labels.length || dock.querySelectorAll('.pb-cyc-seg').length;
-  dock.querySelectorAll('.pb-cyc-seg').forEach(function (seg) {
-    var on = Number(seg.getAttribute('data-i')) === idx;
-    seg.setAttribute('stroke', on ? '#B59060' : '#8a9a8b');
-    seg.setAttribute('stroke-opacity', on ? '1' : '.38');
-  });
-  var num = dock.querySelector('.pb-cyc-docknum');
-  if (num) num.textContent = ('0' + (idx + 1)).slice(-2);
-  var step = dock.querySelector('.pb-cyc-step');
-  if (step) step.textContent = 'Step ' + (idx + 1) + ' of ' + n;
-  var name = dock.querySelector('.pb-cyc-name');
-  if (name) name.textContent = (labels[idx] || '') + (hub ? ' · ' + hub : '');
-  dock.setAttribute('aria-label', 'Step ' + (idx + 1) + ' of ' + n + ' — ' + (labels[idx] || '') + '. Open the ' + (hub || 'lifecycle') + ' diagram.');
-}
-
-// Re-arm dock scroll-following after every render. The single fixed dock on a
-// chapter highlights the step whose sub spread is most in view; chapters with
-// only their own ch.cycle stay static (no anchored entries to observe).
-// Pin the dock's horizontal position to the chapter's content column (the
-// .spread's text edge), so the pill sits under the body copy rather than out
-// by the contents rail. Falls back to the CSS left:22px when no spread found.
-function cycleDockPlace(dock) {
-  if (window.innerWidth <= 640) { dock.style.left = ''; return; } // mobile: CSS rules
-  var ch = dock.closest('.chapter');
-  var spread = ch && ch.querySelector('.spread');
-  if (!spread) { dock.style.left = ''; return; }
-  var r = spread.getBoundingClientRect();
-  var padL = parseFloat((window.getComputedStyle ? getComputedStyle(spread).paddingLeft : '0')) || 0;
-  dock.style.left = Math.max(12, Math.round(r.left + padL)) + 'px';
-}
-function cycleDockPlaceAll() {
-  document.querySelectorAll('.pb-cyc-dock').forEach(cycleDockPlace);
-}
-if (typeof window !== 'undefined' && !window._cycDockResizeWired) {
-  window._cycDockResizeWired = true;
-  window.addEventListener('resize', function () { try { cycleDockPlaceAll(); } catch (e) {} });
-}
-
-// A dock is visible only while one of its LINKED anchors is actually on screen
-// (it "belongs" to those sections, not the whole chapter). Entries with no
-// anchor are chapter-level links — those docks stay visible for the whole
-// chapter, as before.
-function cycleDockVisibility(dock, entries, ratios) {
-  var any = entries.some(function (e) { return !e.a || (ratios[e.a] || 0) > 0; });
-  dock.classList.toggle('pb-cyc-dock--hidden', !any);
-}
-
-var _cycDockObserver = null;
-function cycleDockScan() {
-  if (_cycDockObserver) { _cycDockObserver.disconnect(); _cycDockObserver = null; }
-  try { cycleDockPlaceAll(); } catch (e) {}
-  if (typeof IntersectionObserver === 'undefined') return;
-  var ratios = {};
-  _cycDockObserver = new IntersectionObserver(function (ents) {
-    ents.forEach(function (en) { ratios[en.target.id] = en.intersectionRatio; });
-    document.querySelectorAll('.pb-cyc-dock[data-cycentries]').forEach(function (dock) {
-      var entries;
-      try { entries = JSON.parse(dock.getAttribute('data-cycentries') || '[]'); } catch (e) { return; }
-      var best = null, bestR = 0;
-      entries.forEach(function (e) {
-        if (!e.a) return;
-        var r = ratios[e.a] || 0;
-        if (r > bestR) { bestR = r; best = e; }
-      });
-      if (best) cycleDockSetState(dock, best.i);
-      cycleDockVisibility(dock, entries, ratios);
-    });
-  }, { threshold: [0, 0.15, 0.35, 0.55, 0.75] });
-  document.querySelectorAll('.pb-cyc-dock[data-cycentries]').forEach(function (dock) {
-    var entries;
-    try { entries = JSON.parse(dock.getAttribute('data-cycentries') || '[]'); } catch (e) { return; }
-    var anchored = entries.filter(function (e) { return !!e.a; });
-    // Start hidden until the observer reports; a chapter-level link (no
-    // anchor) keeps the dock visible throughout.
-    dock.classList.toggle('pb-cyc-dock--hidden', anchored.length > 0 && entries.length === anchored.length);
-    anchored.forEach(function (e) {
-      var elx = document.getElementById(e.a);
-      if (elx) _cycDockObserver.observe(elx);
-    });
-  });
 }
 
 // True only for the genuine P&C seed (or a duplicate of it) — NOT merely any
@@ -3482,10 +3292,6 @@ function goTo(chapterId, subId, opts) {
       introVideo.pause();
     }
   }
-
-  // Re-arm the lifecycle dock: the freshly shown chapter's spread may sit at a
-  // different left offset, and newly visible subs feed the scroll-follow.
-  try { cycleDockScan(); } catch (e) {}
 }
 
 // ---- Search --------------------------------------------------------
@@ -4387,19 +4193,6 @@ function applyPlaybook(next, opts) {
 }
 window.applyPlaybook = applyPlaybook;
 
-// Re-arm lifecycle dock scroll-following after every full render (mirrors the
-// motion-layer hook below; both wrappers call through).
-(function () {
-  var rawApply = window.applyPlaybook;
-  window.applyPlaybook = function (pb, opts) {
-    var r = rawApply(pb, opts);
-    try { cycleDockScan(); } catch (e) {}
-    return r;
-  };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { try { cycleDockScan(); } catch (e) {} });
-  else { try { cycleDockScan(); } catch (e) {} }
-})();
-
 window.addEventListener('message', function (ev) {
   var d = ev.data || {};
   if (d.type === 'editor-ping') {
@@ -4760,7 +4553,7 @@ var PB_IX_RENDER = {
         (f.text ? '<div class="ixdl-f-text">' + inlineRichHTML(f.text) + '</div>' : '') +
         (f.url ? '<a class="ixdl-btn" href="' + esc(f.url) + '" download>' + esc(f.button || 'Download workbook') + '</a>' : '<span class="ixdl-btn disabled">' + esc(f.button || 'Download workbook') + '</span>') +
       '</div>' +
-      (items.length ? '<div class="ixdl-list"><div class="ixdl-l-title">' + esc(it.listTitle || 'Guided checklist') + '</div>' +
+      (items.length && !it.hideList ? '<div class="ixdl-list"><div class="ixdl-l-title">' + esc(it.listTitle || 'Guided checklist') + '</div>' +
         items.map(function (c, i) {
           return '<div class="ixdl-item" data-dl-i="' + i + '"><button type="button" class="ixdl-check" aria-label="Toggle item ' + (i + 1) + '"><span>✓</span></button>' +
             '<span class="ixdl-text">' + inlineRichHTML(c.text || '') + '</span>' +
