@@ -601,7 +601,7 @@ function policyItemBodyHTML(it) {
   // (clip-path driven, keyboard accessible), with optional text cards below.
   if (it && it.s === 'beforeafter') {
     const bL = it.beforeLabel || 'Before', aL = it.afterLabel || 'After';
-    const slider = (it.beforeImg && it.afterImg) ? `<figure class="pb-ba" style="--ba:50%;">
+    const slider = (it.layout !== 'pair' && it.beforeImg && it.afterImg) ? `<figure class="pb-ba" style="--ba:50%;">
         <img class="pb-ba-base" src="img/${esc(it.afterImg)}" alt="${esc(aL)}" draggable="false" />
         <img class="pb-ba-top" src="img/${esc(it.beforeImg)}" alt="${esc(bL)}" draggable="false" />
         <span class="pb-ba-tag pb-ba-tag--b">${esc(bL)}</span>
@@ -612,12 +612,16 @@ function policyItemBodyHTML(it) {
       return String(text || '').split('\n').map(function (ln) { return ln.trim(); }).filter(Boolean)
         .map(function (ln) { return `<div class="pb-ba-line"><span class="pb-ba-mark">${mark}</span><span>${inlineRichHTML(ln)}</span></div>`; }).join('');
     };
+    const pair = (it.layout === 'pair' && it.beforeImg && it.afterImg) ? `<div class="pb-ba-pair">
+        <figure class="pb-ba-shot"><img src="img/${esc(it.beforeImg)}" alt="${esc(bL)}" loading="lazy" /><span class="pb-ba-tag pb-ba-tag--b">${esc(bL)}</span></figure>
+        <figure class="pb-ba-shot"><img src="img/${esc(it.afterImg)}" alt="${esc(aL)}" loading="lazy" /><span class="pb-ba-tag pb-ba-tag--a">${esc(aL)}</span></figure>
+      </div>` : '';
     const cards = (it.beforeText || it.afterText) ? `<div class="pb-ba-cards">
         <div class="pb-ba-card pb-ba-card--b"><div class="pb-ba-eyebrow">${esc(bL)}</div><div class="pb-ba-cardtext">${rows(it.beforeText, '—')}</div></div>
         <div class="pb-ba-card pb-ba-card--a"><div class="pb-ba-eyebrow">${esc(aL)}</div><div class="pb-ba-cardtext">${rows(it.afterText, '✓')}</div></div>
       </div>` : '';
-    if (!slider && !cards) return `<div class="pb-bawrap pb-ba-empty">Add before / after images or text to build this comparison.</div>`;
-    return `<div class="pb-bawrap">${slider}${cards}</div>`;
+    if (!slider && !pair && !cards) return `<div class="pb-bawrap pb-ba-empty">Add before / after images or text to build this comparison.</div>`;
+    return `<div class="pb-bawrap">${slider || ''}${pair}${cards}</div>`;
   }
   // Heading: a standalone section heading for pacing long pages.
   if (it && it.s === 'heading') {
@@ -4447,7 +4451,7 @@ if (window.parent !== window) {
 // INTERACTIVE ELEMENTS (s:'ix') — 17 kinds, schema: it.kind + payload fields.
 // Renderers only; all wiring is delegated at the bottom of this block.
 // =========================================================================
-var PB_IX_KINDS = ['processflow','horizons','legendtour','flipcards','mixbars','xtable','benchdash','alloc','tabx','scorecard','typedist','stageflow','dlcheck','testline','eventcal','kpidash','cardwall','compare'];
+var PB_IX_KINDS = ['processflow','horizons','legendtour','flipcards','mixbars','xtable','pkgmatrix','benchdash','alloc','tabx','scorecard','typedist','stageflow','dlcheck','testline','eventcal','kpidash','cardwall','compare'];
 
 // Weight/colour brand-token classes shared by s:'text' and s:'heading'.
 function _pbFmtCls(it) {
@@ -4620,16 +4624,41 @@ var PB_IX_RENDER = {
     if (!head.length && Array.isArray(it.head)) head = _ixArr(it.head); // back-compat: early payloads used head[]
     if (!rows.length) return '<div class="pb-ix pb-chart-empty">Add rows to build this table.</div>';
     var tid = _ixId('ixxt');
-    return '<div class="pb-ix pb-ixxt" id="' + tid + '" data-sort="-1" data-dir="1">' +
+    var hl = _ixArr(it.highlightRows).map(function (x) { return Number(x); });
+    var wrapCls = 'pb-ix pb-ixxt' + (it.compact ? ' ixxt-compact' : '') + (it.fit ? ' ixxt-fit' : '');
+    return '<div class="' + wrapCls + '" id="' + tid + '" data-sort="-1" data-dir="1">' +
       '<input type="search" class="ixxt-filter" placeholder="' + esc(it.filterLabel || 'Filter…') + '" data-xt-filter />' +
       '<div class="pb-tablewrap"><table class="pb-table ixxt-table">' +
         (head.length ? '<thead><tr>' + head.map(function (h, i) { return '<th><button type="button" class="ixxt-sort" data-xt-sort="' + i + '">' + esc(h) + '<span class="ixxt-arrow" aria-hidden="true"></span></button></th>'; }).join('') + '</tr></thead>' : '') +
-        '<tbody>' + rows.map(function (r) {
-          return '<tr>' + (Array.isArray(r) ? r : [r]).map(function (c, ci) { return '<td data-th="' + esc(head[ci] || '') + '">' + inlineRichHTML(String(c || '')) + '</td>'; }).join('') + '</tr>';
+        '<tbody>' + rows.map(function (r, ri) {
+          return '<tr' + (hl.indexOf(ri + 1) >= 0 ? ' class="ixxt-hl"' : '') + '>' + (Array.isArray(r) ? r : [r]).map(function (c, ci) { return '<td data-th="' + esc(head[ci] || '') + '">' + inlineRichHTML(String(c || '')) + '</td>'; }).join('') + '</tr>';
         }).join('') + '</tbody>' +
       '</table></div>' +
       '<div class="ixxt-count" data-xt-count>' + rows.length + ' of ' + rows.length + ' shown</div>' +
+      (hl.length && it.highlightLabel ? '<div class="ixxt-hl-legend"><span class="ixxt-hl-sw" aria-hidden="true"></span><span>' + inlineRichHTML(it.highlightLabel) + '</span></div>' : '') +
       '</div>';
+  },
+
+  // 6b. Package matrix — package type x Usage x Scope grid, with an optional
+  // gold 'good to know' note inside each scope column.
+  pkgmatrix: function (it) {
+    var rows = _ixArr(it.rows);
+    if (!rows.length) return '<div class="pb-ix pb-chart-empty">Add rows to build this matrix.</div>';
+    return '<div class="pb-ix pb-ixpm">' +
+      (it.title ? '<div class="ixpm-title">' + esc(it.title) + '</div>' : '') +
+      '<div class="ixpm-head"><span>' + esc(it.rowHeader || 'Package type') + '</span><span>' + esc(it.col1 || 'Usage') + '</span><span>' + esc(it.col2 || 'Scope') + '</span></div>' +
+      rows.map(function (r) {
+        var scopes = _ixArr(r.scope);
+        return '<div class="ixpm-row">' +
+          '<div class="ixpm-type">' + esc(r.label || '') + '</div>' +
+          '<div class="ixpm-usage">' + inlineRichHTML(r.usage || '') + '</div>' +
+          '<div class="ixpm-scope">' +
+            scopes.map(function (s) { return '<div class="ixpm-scope-item">' + inlineRichHTML(s) + '</div>'; }).join('') +
+            (r.note ? '<div class="ixpm-note"><span class="ixpm-note-label">' + esc(it.noteLabel || 'Good to know') + '</span><span>' + inlineRichHTML(r.note) + '</span></div>' : '') +
+          '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
   },
 
   // 7. Benchmark dashboard — KPI cards + trend + tips.

@@ -119,6 +119,8 @@
     mixbars: { legend: [{ label: 'Package', color: '#A4523F' }, { label: 'Offers', color: '#C07A3E' }, { label: 'Retail', color: '#4E7A6B' }],
       rows: [{ label: 'Row one', meta: 'ADR 1,240 · 860 room nights', segs: [55, 20, 25], detail: '' }], note: '' },
     xtable: { cols: ['Section', '#', 'Opportunity', 'Owner'], rows: [['1', '1', 'First row', 'Owner']], filterLabel: '' },
+    pkgmatrix: { rows: [
+      { label: 'Base Rate', usage: 'What this package type is for', scope: ['1. Group wide mandatory'], note: '' }] },
     benchdash: { kpis: [{ label: 'RGI', value: '97', sub: 'vs compset', down: true, bar: 40 }],
       trend: { title: 'Index evolution by month', sub: 'this year vs STLY', labels: ['J','F','M','A','M','J','J','A','S','O','N','D'],
         series: [{ name: 'This year', color: '#A4523F', values: [100,101,99,97,95,96,93,92,95,98,100,101] },
@@ -288,7 +290,25 @@
     xtable: [
       { k: 'cols', l: 'Column headers (comma separated)', t: 'csv' },
       { k: 'rows', l: 'Rows', t: 'rowscsv', tip: 'One row per line — separate cells with |' },
-      { k: 'filterLabel', l: 'Filter placeholder', tip: 'e.g. "Filter opportunities…"' }
+      { k: 'filterLabel', l: 'Filter placeholder', tip: 'e.g. "Filter opportunities…"' },
+      { k: 'highlightRows', l: 'Highlighted row numbers (comma separated, 1 = first data row)', t: 'csv', num: true },
+      { k: 'highlightLabel', l: 'Highlight legend label', tip: 'Shown under the table next to a gold swatch' },
+      { k: 'compact', l: 'Compact cells (smaller type)', t: 'check' },
+      { k: 'fit', l: 'Fit to width (no horizontal scroll)', t: 'check' }
+    ],
+    pkgmatrix: [
+      { k: 'title', l: 'Title (optional)' },
+      { k: 'col1', l: 'Second column header', tip: 'Default: Usage' },
+      { k: 'col2', l: 'Third column header', tip: 'Default: Scope' },
+      { k: 'noteLabel', l: 'Note label', tip: 'Default: Good to know' },
+      { t: 'list', k: 'rows', l: 'Package types', addLabel: 'Add package type',
+        make: function () { return { label: 'Package type', usage: '', scope: [], note: '' }; },
+        fields: [
+          { k: 'label', l: 'Package type' },
+          { k: 'usage', l: 'Usage', t: 'area' },
+          { k: 'scope', l: 'Scope entries (one per line)', t: 'lines' },
+          { k: 'note', l: 'Good-to-know note (optional)', t: 'area' }
+        ] }
     ],
     benchdash: [
       { t: 'list', k: 'kpis', l: 'KPI cards', addLabel: 'Add KPI',
@@ -2265,6 +2285,7 @@
     flipcards: 'Principle flip cards',
     mixbars: 'Stacked-bar mix explorer',
     xtable: 'Interactive table explorer',
+    pkgmatrix: 'Package type matrix (usage + scope)',
     benchdash: 'Benchmark dashboard',
     alloc: 'Discount allocation chart',
     tabx: 'Tabbed data explorer',
@@ -2766,7 +2787,10 @@
     if (it.s === 'beforeafter') {
       box.appendChild(textField('Before label', it.beforeLabel || 'Before', function (v) { it.beforeLabel = v; touch(); }));
       box.appendChild(textField('After label', it.afterLabel || 'After', function (v) { it.afterLabel = v; touch(); }));
-      box.appendChild(sectionLabel('Images (optional — enables the drag slider)'));
+      box.appendChild(selectField('Image layout', it.layout || '', [
+        { v: '', l: 'Drag slider (overlay compare)' }, { v: 'pair', l: 'Side-by-side pair' }
+      ], function (v) { if (v) it.layout = v; else delete it.layout; touch(); }));
+      box.appendChild(sectionLabel('Images (optional — enables the images)'));
       box.appendChild(imageField('Before image', it.beforeImg || '', function (fn) { it.beforeImg = fn; touch(); }));
       box.appendChild(imageField('After image', it.afterImg || '', function (fn) { it.afterImg = fn; touch(); }));
       box.appendChild(sectionLabel('Text cards (optional)'));
