@@ -4624,6 +4624,35 @@
   // =========================================================================
   function touch() { pushPreviewDebounced(); }
 
+  // Resolve the proper parent trail for an items array, so canvas-opened
+  // elements get a real breadcrumb (Chapter › Sub-topic › Section) instead of
+  // whatever happened to be selected before the click.
+  function parentSelForArr(chId, arr) {
+    var target = (typeof arr === 'function') ? arr() : arr;
+    var base = { kind: 'chapter', id: chId };
+    if (PB.chapters && !(PB.chapters || []).some(function (c) { return c.id === chId; })) {
+      // chId is a sub-topic id — find its parent chapter for the right kind
+      var parent = null;
+      (PB.chapters || []).forEach(function (c) {
+        (c.subs || []).forEach(function (s) { if (s.id === chId) parent = c; });
+      });
+      if (parent) {
+        var ptype = parent.type || 'standard';
+        base = { kind: ptype === 'lifecycle' ? 'lifecycle-sub' : 'part-sub', id: chId, chapter: parent.id, sub: chId };
+      }
+    }
+    var body = PB.sectionBodies ? PB.sectionBodies[chId] : null;
+    if (!body || !target) return base;
+    if (body.items === target) return base;
+    var secs = body.sections || [];
+    for (var i = 0; i < secs.length; i++) {
+      if (secs[i] && secs[i].items === target) {
+        return { kind: 'section', ref: { container: body, index: i }, chapter: chId, backSel: base };
+      }
+    }
+    return base;
+  }
+
   // Bridge exposed to authoring-tool/wysiwyg.js (Studio-only click-to-edit
   // layer). Keeps the editing logic in its own module while giving it narrow
   // access to the model, the item-form opener and the standard save path.
@@ -4633,7 +4662,7 @@
     openItem: function (chId, arr, index) {
       // noNav: the author is already looking at this exact element in the
       // preview — navigating would yank the page back to the chapter top.
-      select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL }, { noNav: true });
+      select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: parentSelForArr(chId, arr) }, { noNav: true });
     },
     addElement: function (chId, arr, index) { openAddElementPicker(chId, arr, index); },
     deleteElement: function (arr, index) {
@@ -4643,6 +4672,15 @@
       target.splice(index, 1);
       touch();
       toast('Element deleted', 'ok');
+    },
+    moveElement: function (arr, from, to) {
+      var target = (typeof arr === 'function') ? arr() : arr;
+      if (!target || !Array.isArray(target)) return;
+      if (from < 0 || from >= target.length || to < 0 || to >= target.length || from === to) return;
+      var it = target.splice(from, 1)[0];
+      target.splice(to, 0, it);
+      touch();
+      toast('Element moved', 'ok');
     },
     touch: touch,
     toast: toast,

@@ -51,6 +51,13 @@ window.MO_WYSIWYG = (function () {
     + 'font:600 14px/20px system-ui,sans-serif;text-align:center;padding:0;cursor:pointer;opacity:.35;transition:opacity .15s,transform .15s,background .15s;}'
     + '.mo-wys-host:hover > .mo-wys-del{opacity:1;}'
     + '.mo-wys-del:hover{background:#a05548;color:#fff;transform:scale(1.1);}'
+    + '.mo-wys-move{position:absolute;left:58px;top:6px;z-index:31;width:22px;height:22px;border-radius:50%;border:1px solid #d8c6a5;background:#fdfcf9;color:#8a8272;'
+    + 'font:600 12px/20px system-ui,sans-serif;text-align:center;padding:0;cursor:grab;opacity:.35;transition:opacity .15s,transform .15s,background .15s;}'
+    + '.mo-wys-host:hover > .mo-wys-move{opacity:1;}'
+    + '.mo-wys-move:hover{background:#8a8272;color:#fff;transform:scale(1.1);}'
+    + '.mo-wys-move:active{cursor:grabbing;}'
+    + '.mo-wys-dragging{opacity:.45;}'
+    + '.mo-wys-dropline{height:0;border-top:3px solid #B59060;border-radius:2px;margin:2px 0;pointer-events:none;}'
     + '.mo-wys-flash{outline:3px solid rgba(181,144,96,.55) !important;outline-offset:3px;border-radius:6px;}'
     + '.mo-wys-gap{position:absolute;left:50%;top:-11px;transform:translateX(-50%);z-index:32;height:22px;padding:0 12px;'
     + 'display:flex;align-items:center;justify-content:center;cursor:ns-resize;opacity:.35;transition:opacity .15s;}'
@@ -321,6 +328,71 @@ window.MO_WYSIWYG = (function () {
     hostEl.appendChild(g);
   }
 
+  // Hover "⠿" grip next to the × / + handles: drag vertically to reorder the
+  // element within its own list. A gold drop-line shows the landing spot while
+  // dragging; the model is updated on release (the preview then re-renders, so
+  // every handle rebinds to the fresh indices). Elements move within their own
+  // section only — moving across sections stays a panel job.
+  function addMoveHandle(hostEl, arr, index) {
+    if (!bridge.moveElement) return;
+    if (hostEl.querySelector(':scope > .mo-wys-move')) return;
+    hostEl.classList.add('mo-wys-host');
+    var g = doc.createElement('button');
+    g.type = 'button';
+    g.className = 'mo-wys-move';
+    g.title = 'Drag to move this element up or down';
+    g.textContent = '⠿';
+    g.addEventListener('click', function (ev) { ev.stopPropagation(); ev.preventDefault(); });
+    g.addEventListener('mousedown', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      stopEditing(true);
+      var parent = hostEl.parentElement;
+      if (!parent) return;
+      var sibs = [].slice.call(parent.children).filter(function (n) {
+        return n.classList && n.classList.contains('mo-wys-item');
+      });
+      var from = sibs.indexOf(hostEl);
+      if (from === -1 || sibs.length < 2) return;
+      var rects = sibs.map(function (n) { return n.getBoundingClientRect(); });
+      var line = doc.createElement('div');
+      line.className = 'mo-wys-dropline';
+      var to = from, moved = false;
+      hostEl.classList.add('mo-wys-dragging');
+      function placeLine(t) {
+        if (line.parentNode) line.parentNode.removeChild(line);
+        if (t >= sibs.length) {
+          var last = sibs[sibs.length - 1];
+          last.parentNode.insertBefore(line, last.nextSibling);
+        } else {
+          parent.insertBefore(line, sibs[t]);
+        }
+      }
+      function mv(e) {
+        moved = true;
+        var t = sibs.length;
+        for (var i = 0; i < sibs.length; i++) {
+          var mid = rects[i].top + rects[i].height / 2;
+          if (e.clientY < mid) { t = i; break; }
+        }
+        to = t;
+        placeLine(t);
+      }
+      function up() {
+        doc.removeEventListener('mousemove', mv);
+        doc.removeEventListener('mouseup', up);
+        hostEl.classList.remove('mo-wys-dragging');
+        if (line.parentNode) line.parentNode.removeChild(line);
+        if (!moved) return;
+        if (to === from || to === from + 1) return;  // dropped back in place
+        var target = (to > from) ? to - 1 : to;  // removal shifts later indices down
+        bridge.moveElement(arr, from, target);
+      }
+      doc.addEventListener('mousemove', mv);
+      doc.addEventListener('mouseup', up);
+    });
+    hostEl.appendChild(g);
+  }
+
   // ---------- item mapping ----------
   // Inline text editing for the common interactive elements — click the text
   // in the canvas and type. Structure/lists stay in the Studio form via the
@@ -426,8 +498,10 @@ window.MO_WYSIWYG = (function () {
   function attachItem(rootEl, it, chId, arr, index, keyBase) {
     if (!it || typeof it !== 'string' && !it.s) return;
     var it2 = typeof it === 'string' ? { s: 'policy', text: it } : it;
+    rootEl.classList.add('mo-wys-item');
     addDeleteHandle(rootEl, arr, index);
     addGapHandle(rootEl, it, arr, index);
+    addMoveHandle(rootEl, arr, index);
     // Panel 2.1: register for panel→canvas flash; clicking the element's
     // chrome (non-editable area) opens its form in the panel. Editable text
     // and the +/×/↕ handles stopPropagation, so they never reach this.
@@ -482,7 +556,7 @@ window.MO_WYSIWYG = (function () {
           key: keyBase + ':text', rich: false, multiline: true,
           fromDOM: function (el) {
             var c = el.cloneNode(true);
-            [].slice.call(c.querySelectorAll('.mo-wys-add, .mo-wys-formbtn, .mo-wys-dot, .mo-wys-del')).forEach(function (n) { n.parentNode.removeChild(n); });
+            [].slice.call(c.querySelectorAll('.mo-wys-add, .mo-wys-formbtn, .mo-wys-dot, .mo-wys-del, .mo-wys-move, .mo-wys-gap')).forEach(function (n) { n.parentNode.removeChild(n); });
             return (c.textContent || '').replace(/\u00a0/g, ' ').trim();
           },
           get: function () { return String(it2.text || ''); },
