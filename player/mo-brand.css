@@ -499,7 +499,6 @@
 .ixsc-picks{display:inline-flex;gap:5px}
 .ixsc-pick{
   width:28px;height:28px;border-radius:50%;border:1px solid #d9d2c4;background:#fff;
-  display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;
   font-size:12px;font-weight:600;color:#8b8578;cursor:pointer;
 }
 .ixsc-pick:hover{border-color:#B59060;color:#8a6b3f}
@@ -913,25 +912,31 @@
 .pb-ixsb{margin:18px 0;}
 .ixsb-head{font-family:var(--mo-display);font-size:20px;color:var(--ink,#1E1C18);margin-bottom:2px;}
 .ixsb-sub-head{font-size:12.5px;color:#8b8578;margin-bottom:26px;letter-spacing:.04em;}
-.ixsb-trackwrap{position:relative;height:64px;margin-top:6px;}
-.ixsb-track{position:absolute;left:0;right:0;top:26px;height:6px;border-radius:3px;background:#E7E1D3;}
-.ixsb-fill{position:absolute;left:0;top:26px;height:6px;border-radius:3px;background:linear-gradient(90deg,#B59060,#4E7A6B);}
-.ixsb-stage{position:absolute;top:0;transform:translateX(-50%);text-align:center;min-width:90px;}
-.ixsb-dot{display:block;width:12px;height:12px;border-radius:50%;background:#B59060;border:2px solid #fff;margin:22px auto 6px;position:relative;z-index:1;}
+.ixsb-trackwrap{position:relative;margin-top:6px;display:flex;align-items:flex-start;padding-top:34px;}
+.ixsb-track{position:absolute;left:0;right:0;top:8px;height:6px;border-radius:3px;background:#E7E1D3;}
+.ixsb-fill{position:absolute;left:0;top:8px;height:6px;border-radius:3px;background:linear-gradient(90deg,#B59060,#4E7A6B);}
+.ixsb-stage{position:static;flex:1 1 0;min-width:0;text-align:center;padding:0 8px;}
+.ixsb-dot{display:block;width:12px;height:12px;border-radius:50%;background:#B59060;border:2px solid #fff;margin:-31px auto 8px;position:relative;z-index:1;}
 .ixsb-lbl{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1E1C18;}
 .ixsb-dur{display:block;font-size:11px;color:#8b8578;}
 .ixsb-sub{display:block;font-size:11px;color:#8b8578;}
 .ixsb-stage.grey .ixsb-dot{background:#C9C2B2;}
 .ixsb-stage.grey .ixsb-lbl{color:#B4AC9B;}
 .ixsb-stage.grey .ixsb-dur,.ixsb-stage.grey .ixsb-sub{color:#C9C2B2;}
-.ixsb-stage:first-child{transform:none;text-align:left;}
+.ixsb-stage:first-child{text-align:left;padding-left:0;}
 .ixsb-stage:first-child .ixsb-dot{margin-left:0;}
-.ixsb-stage:last-child{transform:translateX(-100%);text-align:right;}
+.ixsb-stage:last-child{text-align:right;padding-right:0;}
 .ixsb-stage:last-child .ixsb-dot{margin-right:0;}
 /* adjustable subheadings / intros */
 .intro-display{font-family:var(--mo-display);}
 .intro-s{font-size:14px;} .intro-m{font-size:17px;} .intro-l{font-size:21px;} .intro-xl{font-size:26px;line-height:1.35;}
-@media (max-width:640px){.ixsb-stage{min-width:64px;} .ixsb-lbl{font-size:9.5px;}}
+@media (max-width:640px){
+  .ixsb-trackwrap{flex-direction:column;padding-top:0;padding-left:22px;border-left:3px solid #E7E1D3;}
+  .ixsb-track,.ixsb-fill{display:none;}
+  .ixsb-stage,.ixsb-stage:first-child,.ixsb-stage:last-child{position:relative;left:auto!important;text-align:left;padding:0 0 16px;margin:0;}
+  .ixsb-stage .ixsb-dot{position:absolute;left:-29px;top:2px;margin:0;}
+  .ixsb-lbl{font-size:11px;}
+}
 
 /* flipcards — optional fixed 2x2 grid (set Cards per row = 2 in Studio) */
 .ixfc-grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr));}
@@ -951,33 +956,3 @@
 
 /* journeydot — cap expanded card text so it always fits inside the stage */
 .pb-ix2jn .ix2jn-stop-text{max-height:150px;overflow:auto;}
-
-/* ============================================================================
-   Lifecycle step dock — persistent mini-ring shown on chapters linked to a
-   lifecycle wheel via ch.cycle. Fixed bottom-left of the reading pane; the
-   label collapses to just the ring on narrow screens.
-   ============================================================================ */
-.pb-cyc-dock{position:fixed;left:22px;bottom:22px;z-index:70;display:flex;align-items:center;gap:12px;
-  background:#FDFCF6;border:1px solid #DDD5C2;border-radius:999px;padding:8px 18px 8px 7px;
-  box-shadow:0 10px 30px rgba(38,34,28,.14);cursor:pointer;font:inherit;text-align:left;
-  transition:border-color .15s, box-shadow .15s;}
-.pb-cyc-dock:hover{border-color:#B59060;box-shadow:0 12px 34px rgba(38,34,28,.2);}
-.pb-cyc-docknum{font-family:var(--mo-display);font-size:13px;fill:#26221C;}
-.pb-cyc-docklbl{font-size:11px;line-height:1.45;color:#8A8272;font-family:var(--mo-body, "Avenir Next LT Pro", system-ui, sans-serif);}
-.pb-cyc-docklbl b{display:block;font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#26221C;}
-@media (max-width:640px){
-  .pb-cyc-dock{left:12px;bottom:12px;padding:6px;gap:0;}
-  .pb-cyc-docklbl{display:none;}
-}
-
-/* Paragraph-array headings: a "## …" line in any intro/blurb/paragraph field
-   renders as this sub-heading — works in chapter intros, sub-topic intros and
-   section blurbs alike. */
-.pb-para-h{font-family:var(--mo-display);font-size:21px;font-weight:700;color:#26221C;
-  margin:30px 0 4px;letter-spacing:-.01em;line-height:1.3;}
-.policy-section-blurb .pb-para-h:first-child, .sub-intro .pb-para-h:first-child{margin-top:6px;}
-
-/* Dock visibility: the pill only appears while its linked section is on
-   screen (fades/slides in and out). Chapter-level links stay visible. */
-.pb-cyc-dock{transition:opacity .22s ease, transform .22s ease, border-color .2s ease, box-shadow .2s ease;}
-.pb-cyc-dock--hidden{opacity:0;pointer-events:none;transform:translateY(8px);}
