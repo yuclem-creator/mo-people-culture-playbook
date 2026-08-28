@@ -767,7 +767,7 @@ function policyItemBodyHTML(it) {
   // interactive hotspots (numbered pins revealing popup text on click).
   if (it && it.s === 'image') {
     const hs = Array.isArray(it.hotspots) ? it.hotspots : [];
-    const imgHtml = `<img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;display:block;" />`;
+    const imgHtml = `<img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;display:block;${it.full ? 'width:100%;' : ''}" />`;
     if (!hs.length) {
       return `<figure class="policy-image" style="margin:16px 0;">${imgHtml}
         ${it.name ? `<figcaption style="font-size:12px;color:var(--ink-mute);margin-top:8px;">${esc(it.name)}</figcaption>` : ''}
@@ -775,7 +775,7 @@ function policyItemBodyHTML(it) {
     }
     const showAll = it.hotspotsMode === 'show';
     return `<figure class="policy-image hotspot-figure" data-hotspots-mode="${showAll ? 'show' : 'reveal'}" style="margin:16px 0;">
-      <div class="hotspot-wrap" style="position:relative;display:inline-block;max-width:100%;">
+      <div class="hotspot-wrap" style="position:relative;${it.full ? 'display:block;' : 'display:inline-block;'}max-width:100%;">
         ${imgHtml}
         ${hs.map(function (h, i) {
           return `

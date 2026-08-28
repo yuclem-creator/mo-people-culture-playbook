@@ -2578,7 +2578,13 @@
           finish(dataUrl, false);
         });
       } }, ['Replace ' + it.s + '…']));
-      if (it.s === 'image') renderHotspotEditor(box, it);
+      if (it.s === 'image') {
+        box.appendChild(selectField('Width', it.full ? 'full' : 'auto', [
+          { v: 'auto', l: 'Natural size (up to column width)' },
+          { v: 'full', l: 'Stretch to full column width' }
+        ], function (v) { it.full = (v === 'full'); touch(); }));
+        renderHotspotEditor(box, it);
+      }
       return;
     }
     if (it.s === 'tabs') {
