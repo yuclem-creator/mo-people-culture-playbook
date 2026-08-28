@@ -335,6 +335,8 @@
           { k: 'usedin', l: 'Small line above title', tip: 'e.g. Used in 5.2.5' },
           { k: 'title', l: 'Title' },
           { k: 'text', l: 'Body text', t: 'area' },
+          { k: 'noteLabel', l: 'Note label (optional)', tip: 'e.g. Good to know' },
+          { k: 'note', l: 'Note / knowledge tip inside this tab (optional)', t: 'area' },
           { k: 'url', l: 'Link URL (optional)' },
           { k: 'linkLabel', l: 'Link label (optional)' }
         ] }
@@ -2673,6 +2675,8 @@
         inlineEdit: function (c, wrap) {
           wrap.appendChild(textField('Task text', c.text || '', function (v) { c.text = v; touch(); }, '', true));
           wrap.appendChild(textField('Details note (optional — readers tap the row to expand)', c.note || '', function (v) { c.note = v; touch(); }, '', true));
+          wrap.appendChild(checkField('Keep this note expanded (no tap needed)', !!c.noteOpen, function (v) { c.noteOpen = v; touch(); }));
+          wrap.appendChild(checkField('Italicise this note (knowledge-tip style)', !!c.noteItalic, function (v) { c.noteItalic = v; touch(); }));
           c.pills = c.pills || [];
           wrap.appendChild(sectionLabel('Reference pills (' + c.pills.length + ')'));
           renderRepeatable(wrap, c.pills, {

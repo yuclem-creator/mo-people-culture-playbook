@@ -436,6 +436,15 @@ function policyItemBodyHTML(it) {
       <tbody>${rows.map(r => `<tr>${(Array.isArray(r) ? r : [r]).map((c, ci) => `<td data-th="${esc(head[ci] || '')}">${inlineRichHTML(String(c || ''))}</td>`).join('')}</tr>`).join('')}</tbody>
     </table></div>`;
   }
+  // Split: render two child elements side by side (left/right), stacking on
+  // narrow screens. Children use the same schemas as top-level items.
+  if (it && it.s === 'split') {
+    var lw = parseFloat(it.ratio) || 60;
+    return '<div class="pb-split">' +
+      '<div class="pb-split-col" style="flex:0 1 ' + lw + '%">' + (it.left ? policyItemBodyHTML(it.left) : '') + '</div>' +
+      '<div class="pb-split-col" style="flex:1 1 0">' + (it.right ? policyItemBodyHTML(it.right) : '') + '</div>' +
+      '</div>';
+  }
   // Callout: a labelled panel — note (warm neutral, gold bar) or warning
   // (red-tinted, for controls and constraints).
   if (it && it.s === 'callout') {
@@ -529,7 +538,7 @@ function policyItemBodyHTML(it) {
       ${it.showProgress !== false ? `<div class="pb-tl-progress"><div class="pb-tl-bar"><div class="pb-tl-fill" style="width:0%"></div></div><div class="pb-tl-count">0 of ${total} complete</div></div>` : ''}
       ${items.map(function (c, i) {
         return `
-        <div class="pb-task" data-task="${cid}-${i}">
+        <div class="pb-task${c.noteOpen ? ' open' : ''}" data-task="${cid}-${i}">
           <span class="pb-task-num">${i + 1}</span>
           <div class="pb-task-body">
             <div class="pb-task-act">${inlineRichHTML(c.text || '')}</div>
@@ -538,7 +547,7 @@ function policyItemBodyHTML(it) {
                 ? `<button type="button" class="pb-task-pill ${esc(p2.tone || 'gold')}" data-goto="${esc(p2.target)}">${esc(p2.text || 'See')}</button>`
                 : `<span class="pb-task-pill ${esc(p2.tone || 'gold')}">${esc(p2.text || '')}</span>`;
             }).join('')}</div>` : ''}
-            ${c.note ? `<div class="pb-task-note">${inlineRichHTML(c.note)}</div>` : ''}
+            ${c.note ? `<div class="pb-task-note"${c.noteItalic ? ' style="font-style:italic"' : ''}>${inlineRichHTML(c.note)}</div>` : ''}
           </div>
           <button type="button" class="pb-task-check" aria-label="Mark task ${i + 1} done"><span>✓</span></button>
         </div>`;
@@ -1462,6 +1471,11 @@ function inlineRichHTML(text) {
     last = m.index + m[0].length;
   }
   out += esc(text.slice(last));
+  // Author tokens: [[dot:green|gold|red]] renders a small coloured status dot,
+  // [[tick]] a gold check mark (used for KPI availability legends and tick grids).
+  out = out.replace(/\[\[dot:(green|gold|red)\]\]/g, function (_m, c) {
+    return '<span class="pb-dot pb-dot--' + c + '" aria-hidden="true"></span>';
+  }).replace(/\[\[tick\]\]/g, '<span class="pb-tick" aria-hidden="true">\u2713</span>');
   return out;
 }
 
@@ -4654,6 +4668,7 @@ var PB_IX_RENDER = {
           (t.usedin ? '<div class="ixtx-usedin">' + esc(t.usedin) + '</div>' : '') +
           '<div class="ixtx-title">' + esc(t.title || t.label || '') + '</div>' +
           (t.text ? '<div class="ixtx-text">' + inlineRichHTML(t.text) + '</div>' : '') +
+          (t.note ? '<div class="pb-callout pb-callout--tip ixtx-note"><div class="pb-callout-label">' + esc(t.noteLabel || 'Note') + '</div><div class="pb-callout-text">' + inlineRichHTML(t.note) + '</div></div>' : '') +
           (t.url ? '<a class="ixtx-link" href="' + esc(t.url) + '" target="_blank" rel="noopener noreferrer">' + esc(t.linkLabel || 'Open resource →') + '</a>' : '') +
           '</div>';
       }).join('') + '</div>';
@@ -4770,7 +4785,7 @@ var PB_IX_RENDER = {
     return '<div class="pb-ix pb-ixec">' +
       '<div class="ixec-trackwrap"><div class="ixec-track" aria-hidden="true"></div>' +
         pins.map(function (p, i) {
-          return '<button type="button" class="ixec-pin' + (i === 0 ? ' on' : '') + '" data-ec="' + i + '" style="left:' + (pins.length > 1 ? (3 + (i / (pins.length - 1)) * 90) : 50) + '%;">' +
+          return '<button type="button" class="ixec-pin' + (i === 0 ? ' on' : '') + '" data-ec="' + i + '" style="left:' + (pins.length > 1 ? (3 + (i / (pins.length - 1)) * (it.end ? 76 : 90)) : 50) + '%;">' +
             '<span class="ixec-at">' + esc(p.at || '') + '</span><span class="ixec-dot">' + (i + 1) + '</span><span class="ixec-lbl">' + esc(p.label || '') + '</span></button>';
         }).join('') +
         (it.end ? '<span class="ixec-end"><span class="ixec-end-date">' + esc(it.end.date || '') + '</span><span class="ixec-end-lbl">' + esc(it.end.label || '') + '</span></span>' : '') +

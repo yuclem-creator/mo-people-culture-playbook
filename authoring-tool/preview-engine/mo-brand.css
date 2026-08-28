@@ -987,3 +987,14 @@
    screen (fades/slides in and out). Chapter-level links stay visible. */
 .pb-cyc-dock{transition:opacity .22s ease, transform .22s ease, border-color .2s ease, box-shadow .2s ease;}
 .pb-cyc-dock--hidden{opacity:0;pointer-events:none;transform:translateY(8px);}
+
+/* v22 — status dots, gold tick, split layout */
+.pb-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.pb-dot--green { background: #4E7A6B; }
+.pb-dot--gold { background: #C9A879; }
+.pb-dot--red { background: #A4523F; }
+.pb-tick { color: #B59060; font-weight: 700; }
+.pb-split { display: flex; gap: 28px; align-items: flex-start; margin: 16px 0; }
+.pb-split-col { min-width: 0; }
+.pb-split-col > *:first-child { margin-top: 0; }
+@media (max-width: 860px) { .pb-split { flex-direction: column; } .pb-split-col { flex: 1 1 auto !important; width: 100%; } }
