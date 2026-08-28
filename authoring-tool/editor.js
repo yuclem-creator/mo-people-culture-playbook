@@ -1451,6 +1451,17 @@
     highlightTree();
     renderInspector();
     if (sel.chapter && !opts.noNav) gotoPreview(sel.chapter, sel.sub);
+    // Panel 2.1: panel → canvas sync. Flash the element/section on the
+    // canvas so the author always sees what the panel is editing. When we
+    // also navigated, the render is async — retry once after it lands.
+    function flashSel() {
+      try {
+        if (sel.kind === 'item' && window.MO_WYS_FLASH_ITEM) window.MO_WYS_FLASH_ITEM(sel.ref.arr[sel.ref.index]);
+        else if (sel.kind === 'section' && window.MO_WYS_FLASH_SEC) window.MO_WYS_FLASH_SEC(sel.ref.container.sections[sel.ref.index]);
+      } catch (e) {}
+    }
+    flashSel();
+    if (sel.chapter && !opts.noNav) setTimeout(flashSel, 1400);
   }
 
   function renderInspector() {
@@ -1461,11 +1472,54 @@
       return;
     }
     if (SEL.kind === 'settings') { renderSettings(box); groupInspectorCards(box); return; }
-    if (SEL.kind === 'chapter') { renderChapterInspector(box, SEL); groupInspectorCards(box); return; }
-    if (SEL.kind === 'lifecycle-sub') { renderLifecycleSub(box, SEL); groupInspectorCards(box); return; }
-    if (SEL.kind === 'part-sub') { renderPartSub(box, SEL); groupInspectorCards(box); return; }
-    if (SEL.kind === 'section') { renderSection(box, SEL); groupInspectorCards(box); return; }
-    if (SEL.kind === 'item') { renderItem(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'chapter') { renderChapterInspector(box, SEL); groupInspectorCards(box); tabifyChapterInspector(box); return; }
+    if (SEL.kind === 'lifecycle-sub') { renderCrumbs(box, SEL); renderLifecycleSub(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'part-sub') { renderCrumbs(box, SEL); renderPartSub(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'section') { renderCrumbs(box, SEL); renderSection(box, SEL); groupInspectorCards(box); return; }
+    if (SEL.kind === 'item') { renderCrumbs(box, SEL); renderItem(box, SEL); groupInspectorCards(box); return; }
+  }
+
+  // ---- Breadcrumbs (Panel 2.1) ---------------------------------------------
+  // Every drill-down shows the full clickable path: Chapter › Sub-topic ›
+  // Section › Element. Each level jumps straight there (select() re-renders
+  // the inspector and navigates the preview).
+  function labelForSel(sel) {
+    if (!sel) return '';
+    if (sel.kind === 'chapter') {
+      var ch = (PB.chapters || []).filter(function (c) { return c.id === sel.id; })[0];
+      return ch ? ((ch.numeral ? 'Ch ' + ch.numeral + ' · ' : '') + (ch.label || ch.id)) : 'Chapter';
+    }
+    if (sel.kind === 'part-sub' || sel.kind === 'lifecycle-sub') {
+      var ch2 = (PB.chapters || []).filter(function (c) { return c.id === sel.chapter; })[0];
+      var sb = ch2 && (ch2.subs || []).filter(function (s) { return s.id === sel.sub; })[0];
+      return sb ? (sb.label || sb.id) : 'Sub-topic';
+    }
+    if (sel.kind === 'section') {
+      var sec = sel.ref && sel.ref.container && sel.ref.container.sections ? sel.ref.container.sections[sel.ref.index] : null;
+      return sec ? ((sec.num ? sec.num + ' ' : '') + (sec.title || 'Untitled section')) : 'Section';
+    }
+    if (sel.kind === 'item') {
+      var it = sel.ref && sel.ref.arr ? sel.ref.arr[sel.ref.index] : null;
+      return it ? (typeof it === 'string' ? (it.slice(0, 40) || '(empty)') : (it.name || symbolLabel(it.s) || 'Element')) : 'Element';
+    }
+    return '';
+  }
+  function renderCrumbs(box, sel) {
+    var chain = [];
+    var cur = sel;
+    var guard = 0;
+    while (cur && guard++ < 8) { chain.unshift(cur); cur = cur.backSel; }
+    if (chain.length < 2) return;
+    var bar = el('div', { class: 'insp-crumbs' });
+    chain.forEach(function (s, i) {
+      if (i) bar.appendChild(el('span', { class: 'sep', text: '›' }));
+      if (i === chain.length - 1) {
+        bar.appendChild(el('span', { class: 'cur', text: labelForSel(s) }));
+      } else {
+        bar.appendChild(el('button', { class: 'cb', onclick: function () { select(s); } }, [labelForSel(s)]));
+      }
+    });
+    box.appendChild(bar);
   }
 
   // Presentation-only regrouping: everything a render* function emits between
@@ -1494,6 +1548,53 @@
     if (crumb) box.appendChild(el('div', { class: 'insp-crumb', text: crumb }));
   }
 
+  // Panel 2.0: after the cards are grouped, the chapter inspector is split
+  // into three tabs — Content (daily work), Design (opener & menu), Settings
+  // (lifecycle link, reorder, danger zone). Cards not explicitly routed stay
+  // in Content, so type-specific cards need no changes here. The active tab
+  // persists across re-renders (e.g. after a list reorder).
+  var INSP_TAB = 'content';
+  function tabifyChapterInspector(box) {
+    var cards = [].slice.call(box.querySelectorAll(':scope > .card'));
+    if (!cards.length) return;
+    var bar = el('div', { class: 'insp-tabs' });
+    var panes = {
+      content: el('div', { class: 'insp-pane', 'data-pane': 'content' }),
+      design: el('div', { class: 'insp-pane', 'data-pane': 'design' }),
+      settings: el('div', { class: 'insp-pane', 'data-pane': 'settings' })
+    };
+    [['content', 'Content'], ['design', 'Design'], ['settings', 'Settings']].forEach(function (t) {
+      bar.appendChild(el('button', {
+        class: t[0] === INSP_TAB ? 'on' : '', 'data-tab': t[0],
+        onclick: function () {
+          INSP_TAB = t[0];
+          [].forEach.call(bar.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.dataset.tab === t[0]); });
+          Object.keys(panes).forEach(function (k) { panes[k].style.display = k === t[0] ? '' : 'none'; });
+        }
+      }, [t[1]]));
+    });
+    cards.forEach(function (card) {
+      var head = card.querySelector('.card-head');
+      var label = head ? head.textContent.trim() : '';
+      if (/^Opener & menu/.test(label)) panes.design.appendChild(card);
+      else if (/^Lifecycle step/.test(label)) panes.settings.appendChild(card);
+      else panes.content.appendChild(card);
+    });
+    // Reorder / delete actions belong to Settings.
+    var actions = box.querySelector(':scope > .ch-actions');
+    if (actions) panes.settings.appendChild(actions);
+    Object.keys(panes).forEach(function (k) {
+      if (!panes[k].childNodes.length) {
+        panes[k].appendChild(el('div', { class: 'empty', text: k === 'design'
+          ? 'Nothing to design for this chapter type.'
+          : 'Nothing here for this chapter type.' }));
+      }
+      panes[k].style.display = k === INSP_TAB ? '' : 'none';
+      box.appendChild(panes[k]);
+    });
+    box.insertBefore(bar, box.querySelector('.insp-pane'));
+  }
+
   // ---- Chapter inspector --------------------------------------------------
   function renderChapterInspector(box, sel) {
     var ch = PB.chapters.filter(function (c) { return c.id === sel.id; })[0];
@@ -1519,18 +1620,27 @@
       // Chapter number / label: the numeral drives the default "Chapter N"
       // opener label, the rail number and the Contents-tile eyebrow. A custom
       // label replaces the opener label verbatim; blank numeral hides all.
-      box.appendChild(textField('Chapter number (e.g. 04 or XI — blank hides it)', ch.numeral || '', function (v) { ch.numeral = v.trim(); touch(); renderTree(); }, 'Shown on the opener as “Chapter N”, in the rail and on the Contents tile.'));
-      box.appendChild(textField('Custom chapter label (optional)', ch.labelText || '', function (v) { ch.labelText = v.trim(); touch(); }, 'Replaces “Chapter N” on the opener, e.g. “Section 3 · Opportunity 5”.'));
-      box.appendChild(checkField('Hide the chapter label on the opener', !!ch.hideLabel, function (v) { ch.hideLabel = v; touch(); }));
-      box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
-      box.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
+      // Panel 2.0: these rarely-touched labelling options collapse away.
+      var adv = el('details', { class: 'adv' }, [el('summary', {}, ['Chapter numbering & labels'])]);
+      adv.appendChild(textField('Chapter number (e.g. 04 or XI — blank hides it)', ch.numeral || '', function (v) { ch.numeral = v.trim(); touch(); renderTree(); }, 'Shown on the opener as “Chapter N”, in the rail and on the Contents tile.'));
+      adv.appendChild(textField('Custom chapter label (optional)', ch.labelText || '', function (v) { ch.labelText = v.trim(); touch(); }, 'Replaces “Chapter N” on the opener, e.g. “Section 3 · Opportunity 5”.'));
+      adv.appendChild(checkField('Hide the chapter label on the opener', !!ch.hideLabel, function (v) { ch.hideLabel = v; touch(); }));
+      adv.appendChild(textField('Opener sub-line', ch.opener || '', function (v) { ch.opener = v; touch(); }, 'Shown under the title on the chapter\u2019s opening page.', true));
+      box.appendChild(adv);
+      // Lifecycle step dock: link this chapter to a stage of a lifecycle
+      // wheel. The preview/player renders a persistent mini-ring on the
+      // chapter, built LIVE from that wheel's stages.
+      appendCycleLinkUI(box, ch);
       var prefix0 = prosePrefixFor(ch, type);
       if (prefix0 && (type === 'standard' || type === 'sections-list' || type === 'lifecycle' || type === 'directory' || type === 'letter' ||
         type === 'part' || type === 'tile-menu' || type === 'card-track' || type === 'process-diagram')) {
+        box.appendChild(sectionLabel('Opener & menu'));
         box.appendChild(imageField('Opener image (header + menu tile)', PB.prose[prefix0 + '.opener.bg'] || '', function (fn) { PB.prose[prefix0 + '.opener.bg'] = fn; touch(); }));
         box.appendChild(videoField('Opener video (above the text)', PB.prose[prefix0 + '.opener.video'] || '', function (fn) { PB.prose[prefix0 + '.opener.video'] = fn; touch(); }));
+        box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
         var body0 = bodyForChapter(ch);
-        box.appendChild(paraArrayField('Opening paragraph(s)', body0.intro || [], function (arr) { body0.intro = arr; touch(); }));
+        box.appendChild(sectionLabel('Opening words'));
+        box.appendChild(paraArrayField('Intro text', body0.intro || [], function (arr) { body0.intro = arr; touch(); }));
         // Chapter-level content elements (tables, knowledge tips, timelines,
         // checklists, task lists, media) — render under the opening
         // paragraphs, above the sections.
@@ -1540,10 +1650,24 @@
           nameOf: function (it) { return typeof it === 'string' ? (it.slice(0, 60) || '(empty)') : (it.name || '(item)'); },
           subOf: function (it) { return typeof it === 'string' ? 'Text' : symbolLabel(it.s); },
           open: function (it, i) { select({ kind: 'item', ref: { arr: body0.items, index: i }, chapter: ch.id, backSel: SEL }); },
+          // Panel 2.1: expand in place; ix grids open the focused editor.
+          inlineEdit: function (it, wrap, i) {
+            if (it && typeof it === 'object' && it.s === 'ix') {
+              select({ kind: 'item', ref: { arr: body0.items, index: i }, chapter: ch.id, backSel: SEL });
+              return;
+            }
+            renderItem(wrap, { kind: 'item', ref: { arr: body0.items, index: i }, chapter: ch.id, backSel: SEL }, true);
+            if (window.MO_WYS_FLASH_ITEM) window.MO_WYS_FLASH_ITEM(it);
+          },
           addLabel: 'Add item',
           make: function () { return { s: 'policy', name: 'New item', blurb: '', url: '' }; }
         });
         box.appendChild(mediaActionsRow(body0.items));
+      } else {
+        // Chapters without an opener-prefix (e.g. lifecycle wheel hosts) still
+        // get the menu tile text under Design.
+        box.appendChild(sectionLabel('Opener & menu'));
+        box.appendChild(textField('Menu tile text', PB.menuDesc[ch.id] || '', function (v) { PB.menuDesc[ch.id] = v; touch(); }, 'Shown on this chapter\u2019s tile on the Contents page.', true));
       }
       // Tile-menu chapters: the tiles are the whole point — title, text,
       // optional image and the chapter each tile links to.
@@ -1779,6 +1903,57 @@
     }
   }
 
+  // All lifecycle wheels in the playbook (chapter-level or inside any
+  // section, across all bodies incl. part subs). Assigns a stable wid on
+  // first sight so chapters can link to a wheel via ch.cycle.
+  function listWheels() {
+    var out = [];
+    var bodies = PB.sectionBodies || {};
+    Object.keys(bodies).forEach(function (key) {
+      var b = bodies[key]; if (!b) return;
+      var pools = [];
+      if (Array.isArray(b.items)) pools.push(b.items);
+      (Array.isArray(b.sections) ? b.sections : []).forEach(function (s) { if (s && Array.isArray(s.items)) pools.push(s.items); });
+      pools.forEach(function (arr) {
+        arr.forEach(function (it) {
+          if (it && it.s === 'wheel') {
+            if (!it.wid) it.wid = uid('wh');
+            out.push({ wid: it.wid, it: it, chapterId: key,
+              stages: (Array.isArray(it.stages) ? it.stages : []).filter(function (s) { return s && s.label; }) });
+          }
+        });
+      });
+    });
+    return out;
+  }
+
+  // Lifecycle-link UI shared by the chapter inspector and the part-sub
+  // inspector: pick a wheel + which step this owner (chapter or sub) is.
+  // The engine renders the mini-ring dock live from the wheel's stages.
+  function appendCycleLinkUI(box, owner) {
+    var wheels = listWheels();
+    if (!wheels.length) return;
+    box.appendChild(sectionLabel('Lifecycle step'));
+    var curWid = (owner.cycle && owner.cycle.wid) || '';
+    box.appendChild(selectField('Part of a lifecycle', curWid,
+      [{ v: '', l: '\u2014 not a lifecycle step \u2014' }].concat(wheels.map(function (w) {
+        return { v: w.wid, l: (w.it.hubTitle || w.it.name || 'Lifecycle wheel') + ' \u00b7 ' + w.stages.length + ' stages' };
+      })), function (v) {
+        if (!v) { delete owner.cycle; }
+        else { owner.cycle = { wid: v, index: (owner.cycle && owner.cycle.wid === v) ? (owner.cycle.index || 0) : 0 }; }
+        touch(); renderInspector();
+      }));
+    if (curWid) {
+      var w0 = wheels.filter(function (w) { return w.wid === curWid; })[0];
+      if (w0) {
+        box.appendChild(selectField('This is step\u2026', String((owner.cycle && owner.cycle.index) || 0),
+          w0.stages.map(function (s, i) { return { v: String(i), l: 'Step ' + (i + 1) + ' \u2014 ' + (s.label || '') }; }),
+          function (v) { owner.cycle.index = parseInt(v, 10) || 0; touch(); }));
+        box.appendChild(el('div', { class: 'tip', text: 'A mini lifecycle ring is pinned to this page highlighting the step. It reads the wheel live \u2014 rename, reorder or add stages in the wheel element and every linked page updates.' }));
+      }
+    }
+  }
+
   function prosePrefixFor(ch, type) {
     if (type === 'cover') return 'cover';
     if (type === 'intro-video') return 'intro';
@@ -1876,6 +2051,9 @@
     box.appendChild(sectionLabel(isSection ? 'Section' : 'Sub-topic'));
     box.appendChild(textField('Label', sub.label || '', function (v) { sub.label = v; touch(); renderTree(); },
       isSection ? 'Shown as the first indent level under the part.' : 'Shown double-indented under its section.'));
+    // Lifecycle step link for this sub — on part chapters the fixed dock
+    // follows the scroll across linked subs and highlights the step in view.
+    appendCycleLinkUI(box, sub);
     box.appendChild(paraArrayField('Intro paragraphs', content.intro || [], function (arr) { content.intro = arr; touch(); }));
     // helper: entries belonging to a sub = the run of deeper entries that
     // follow it in the flat subs list (until the next same-or-shallower depth)
@@ -1998,14 +2176,20 @@
       nameOf: function (s) { return (s.num ? s.num + '. ' : '') + (s.title || 'Untitled section'); },
       subOf: function (s) { return (s.items ? s.items.length : 0) + ' item(s)'; },
       open: function (s, i) { select({ kind: 'section', ref: { container: container, index: i }, chapter: chapterId || SEL.chapter, sub: subId || SEL.sub, backSel: SEL }); },
+      // Panel 2.1: sections expand in place (accordion) — the common edit
+      // never leaves the chapter view. "Edit ›" still opens the full screen.
+      inlineEdit: function (s, wrap, i) {
+        renderSection(wrap, { kind: 'section', ref: { container: container, index: i }, chapter: chapterId || SEL.chapter, sub: subId || SEL.sub, backSel: SEL }, true);
+        if (window.MO_WYS_FLASH_SEC) window.MO_WYS_FLASH_SEC(s);
+      },
       addLabel: 'Add section',
       make: function () { return { num: String(container.sections.length + 1), title: 'New section', items: [] }; }
     });
   }
 
-  function renderSection(box, sel) {
+  function renderSection(box, sel, noHead) {
     var sec = sel.ref.container.sections[sel.ref.index];
-    inspTitle(box, sec.title || 'Section', 'Section', function () { SEL = sel.backSel; renderInspector(); });
+    if (!noHead) inspTitle(box, sec.title || 'Section', 'Section', function () { SEL = sel.backSel; renderInspector(); });
 
     box.appendChild(sectionLabel('Section'));
     box.appendChild(textField('Number', sec.num || '', function (v) { sec.num = v; touch(); }));
@@ -2032,7 +2216,17 @@
     renderRepeatable(box, sec.items, {
       nameOf: function (it) { return typeof it === 'string' ? (it.slice(0, 60) || '(empty)') : (it.name || '(item)'); },
       subOf: function (it) { return typeof it === 'string' ? 'Text' : (symbolLabel(it.s) + (it.blurb ? ' · ' + it.blurb : '')); },
-      open: function (it, i) { select({ kind: 'item', ref: { arr: sec.items, index: i }, chapter: sel.chapter, sub: sel.sub, backSel: SEL }); },
+      open: function (it, i) { select({ kind: 'item', ref: { arr: sec.items, index: i }, chapter: sel.chapter, sub: sel.sub, backSel: sel }); },
+      // Panel 2.1: simple elements expand in place; structured grids (ix)
+      // open the focused editor instead (breadcrumb keeps the path visible).
+      inlineEdit: function (it, wrap, i) {
+        if (it && typeof it === 'object' && it.s === 'ix') {
+          select({ kind: 'item', ref: { arr: sec.items, index: i }, chapter: sel.chapter, sub: sel.sub, backSel: sel });
+          return;
+        }
+        renderItem(wrap, { kind: 'item', ref: { arr: sec.items, index: i }, chapter: sel.chapter, sub: sel.sub, backSel: sel }, true);
+        if (window.MO_WYS_FLASH_ITEM) window.MO_WYS_FLASH_ITEM(it);
+      },
       addLabel: 'Add item',
       make: function () { return { s: 'policy', name: 'New item', blurb: '', url: '' }; }
     });
@@ -2151,7 +2345,7 @@
           { name: 'Middle tier', sub: '', note: '' },
           { name: 'Foundation', sub: '', note: '' }
         ] }; }),
-        mk('wheel', function () { return { s: 'wheel', name: 'Lifecycle wheel', hubEyebrow: '', hubTitle: 'The lifecycle', stages: [
+        mk('wheel', function () { return { s: 'wheel', name: 'Lifecycle wheel', wid: uid('wh'), hubEyebrow: '', hubTitle: 'The lifecycle', stages: [
           { label: 'Stage one', text: '' }, { label: 'Stage two', text: '' },
           { label: 'Stage three', text: '' }, { label: 'Stage four', text: '' }
         ] }; }),
@@ -2213,20 +2407,26 @@
 
   // On-preview "+" handle: pick an element and splice it in at `index` inside
   // `arr` (a chapter-level or section-level items array), then open its form.
+  // arr may be a FUNCTION resolved lazily at click time — used by on-canvas
+  // "+" handles on areas with no items array yet (e.g. a sub-topic with only
+  // intro text): the resolver creates the container (a first section) only
+  // when the author actually adds something.
   function openAddElementPicker(chId, arr, index) {
     var body = addElementPickerUI(addElementCatalog(), function (spec) {
+      var target = (typeof arr === 'function') ? arr() : arr;
+      if (!target || !Array.isArray(target)) { toast('Could not find a place to add this element.', 'err'); return; }
       if (spec.make) {
         var item = spec.make();
-        index = Math.max(0, Math.min(index, arr.length));
-        arr.splice(index, 0, item);
+        index = Math.max(0, Math.min(index, target.length));
+        target.splice(index, 0, item);
         touch();
         closeModal();
         toast('Element added to the page — edit it in the panel', 'ok');
-        select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL });
+        select({ kind: 'item', ref: { arr: target, index: index }, chapter: chId, backSel: SEL });
       } else {
         // Media uploads are asynchronous (file picker) and land at the end.
         closeModal();
-        addMediaItemTo(arr, spec.label === '+ Add image' ? 'image' : 'video');
+        addMediaItemTo(target, spec.label === '+ Add image' ? 'image' : 'video');
         toast('Media uploads land at the end of the section — use the panel arrows to move them.', 'ok');
       }
     });
@@ -2269,16 +2469,16 @@
     wrap.appendChild(textField('Icon key (optional)', h.icon || '', function (v) { h.icon = v; touch(); }, 'Built-in icon name.'));
   }
 
-  function renderItem(box, sel) {
+  function renderItem(box, sel, noHead) {
     var it = sel.ref.arr[sel.ref.index];
     // Plain-text bullet (e.g. imported list items): edit the text directly.
     if (typeof it === 'string') {
-      inspTitle(box, it.slice(0, 40) || 'Text item', 'Text bullet', function () { SEL = sel.backSel; renderInspector(); });
+      if (!noHead) inspTitle(box, it.slice(0, 40) || 'Text item', 'Text bullet', function () { SEL = sel.backSel; renderInspector(); });
       box.appendChild(sectionLabel('Bullet'));
       box.appendChild(textField('Text', it, function (v) { sel.ref.arr[sel.ref.index] = v; touch(); }, '', true));
       return;
     }
-    inspTitle(box, it.name || 'Item', 'Resource / media / tab item', function () { SEL = sel.backSel; renderInspector(); });
+    if (!noHead) inspTitle(box, it.name || 'Item', 'Resource / media / tab item', function () { SEL = sel.backSel; renderInspector(); });
     box.appendChild(sectionLabel('Item'));
     box.appendChild(selectField('Type', it.s || 'policy', ITEM_SYMBOLS, function (v) { it.s = v; touch(); renderInspector(); }));
     box.appendChild(textField('Name', it.name || '', function (v) { it.name = v; touch(); }));
@@ -2289,6 +2489,13 @@
     ], function (v) { if (v) it.headSize = v; else delete it.headSize; touch(); }));
     box.appendChild(selectField('Heading colour', it.headColor || '', TEXT_COLORS,
       function (v) { if (v) it.headColor = v; else delete it.headColor; touch(); }));
+    box.appendChild(textField('Space above this element (px)', (typeof it.gap === 'number' && it.gap) ? String(it.gap) : '',
+      function (v) {
+        var n = parseInt(v, 10);
+        if (isNaN(n) || n === 0) delete it.gap;
+        else it.gap = Math.max(-80, Math.min(240, n));
+        touch();
+      }, 'Extra space above the element — negative values close white space up. Or drag the grip at the element’s top edge in the preview (double-click the grip to reset).'));
     if (it.s === 'ix') {
       if (!it.kind) it.kind = 'processflow';
       if (IX_KINDS.filter(function (k) { return k.v === it.kind; }).length === 0) {
@@ -2919,7 +3126,7 @@
         var open = row.querySelector('.inline-wrap');
         if (open) { open.remove(); return; }
         var wrap = el('div', { class: 'inline-wrap', style: 'flex-basis:100%;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)' });
-        opts.inlineEdit(item, wrap);
+        opts.inlineEdit(item, wrap, i);
         row.appendChild(wrap);
       });
     }
@@ -2948,11 +3155,30 @@
       field.querySelectorAll('.para-media-row').forEach(function (r) { r.remove(); });
       field.appendChild(paraMediaRow(field.querySelector('textarea')));
     }, 'Each blank line starts a new paragraph.', true);
-    var hint = el('div', { class: 'tip', text: 'Add images inline with the buttons below (they insert an [img:…] marker at your cursor), or type [img:name], [img:left name], [img:right name] on their own line.' });
+    var hint = el('div', { class: 'tip', text: 'Start a line with "## " to make it a heading. Add images inline with the buttons below (they insert an [img:…] marker at your cursor), or type [img:name], [img:left name], [img:right name] on their own line.' });
     field.appendChild(hint);
     var ta = field.querySelector('textarea');
     if (ta) {
       field.appendChild(el('div', { style: 'display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;' }, [
+        el('button', { class: 'btn ghost', onclick: function () {
+          var v = ta.value;
+          var pos = (typeof ta.selectionStart === 'number' && ta.selectionStart >= 0) ? ta.selectionStart : v.length;
+          // Headings are whole-paragraph blocks — never split the text at the
+          // raw cursor. Snap the insertion point to the end of the current line
+          // so a heading can never land mid-word / mid-paragraph.
+          if (pos < v.length && v[pos] !== '\n') {
+            var nl = v.indexOf('\n', pos);
+            pos = (nl === -1) ? v.length : nl;
+          }
+          var before = v.slice(0, pos).replace(/\s+$/, '');
+          var after = v.slice(pos).replace(/^\s+/, '');
+          ta.value = (before ? before + '\n\n' : '') + '## New heading' + (after ? '\n\n' + after : '');
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+          // Select "New heading" so the author can type straight over it.
+          var hs = (before ? before.length + 2 : 0) + 3;
+          ta.focus(); ta.setSelectionRange(hs, hs + 11);
+          toast('Heading inserted — type over it, or start any line with "## ".', 'ok');
+        } }, ['＋ Heading']),
         el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, ''); } }, ['＋ Image under text']),
         el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'left'); } }, ['＋ Image left of text']),
         el('button', { class: 'btn ghost', onclick: function () { insertInlineImage(ta, 'right'); } }, ['＋ Image right of text']),
@@ -3935,6 +4161,11 @@
     $('#btnVersions').addEventListener('click', doVersionsClick);
     $('#pvDesktop').addEventListener('click', function () { setPreviewWidth(false); });
     $('#pvMobile').addEventListener('click', function () { setPreviewWidth(true); });
+    // Panel 2.0: collapse the inspector for full-width canvas editing.
+    $('#btnPanel').addEventListener('click', function () {
+      var hidden = document.body.classList.toggle('panel-hidden');
+      this.textContent = hidden ? 'Show panel' : 'Hide panel';
+    });
     var pvLang = $('#pvLang');
     if (pvLang) pvLang.addEventListener('change', function () {
       PREVIEW_LANG = pvLang.value || 'en';
@@ -4405,6 +4636,14 @@
       select({ kind: 'item', ref: { arr: arr, index: index }, chapter: chId, backSel: SEL }, { noNav: true });
     },
     addElement: function (chId, arr, index) { openAddElementPicker(chId, arr, index); },
+    deleteElement: function (arr, index) {
+      var target = (typeof arr === 'function') ? arr() : arr;
+      if (!target || !Array.isArray(target) || !target[index]) return;
+      if (!window.confirm('Delete this element from the page?')) return;
+      target.splice(index, 1);
+      touch();
+      toast('Element deleted', 'ok');
+    },
     touch: touch,
     toast: toast,
     previewLang: function () { return PREVIEW_LANG; }
