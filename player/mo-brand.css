@@ -1037,3 +1037,6 @@
 .pb-ba-shot .pb-ba-tag--b { left: 10px; }
 .pb-ba-shot .pb-ba-tag--a { right: 10px; }
 @media (max-width: 720px) { .pb-ba-pair { grid-template-columns: 1fr; } }
+
+.ixxt-fit .ixxt-sort { display: inline; white-space: normal; text-align: left; }
+.ixxt-fit .ixxt-table th { overflow-wrap: anywhere; }
