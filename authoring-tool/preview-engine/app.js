@@ -734,16 +734,35 @@ function policyItemBodyHTML(it) {
     const wcx = 260, wcy = 260, r1 = 132, r2 = 242, wgap = 2.4;
     const wpt = function (r, a) { const rad = (a - 90) * Math.PI / 180; return [wcx + r * Math.cos(rad), wcy + r * Math.sin(rad)]; };
     const wn = stages.length, step = 360 / wn;
+    const wid = 'wh' + (window.__wheelSeq = (window.__wheelSeq || 0) + 1);
+    const labelR = (r1 + r2) / 2 + 13, numR = (r1 + r2) / 2 - 20;
+    let wdefs = '';
     const segs = stages.map(function (s, i) {
       const a0 = i * step + wgap / 2, a1 = (i + 1) * step - wgap / 2;
       const p0 = wpt(r2, a0), p1 = wpt(r2, a1), p2 = wpt(r1, a1), p3 = wpt(r1, a0);
       const large = (a1 - a0) > 180 ? 1 : 0;
-      const lp = wpt((r1 + r2) / 2, (a0 + a1) / 2);
+      const am = (a0 + a1) / 2;
+      const np = wpt(numR, am);
+      // Curved label follows the arc so the full wording stays on the ring —
+      // straight centred text spilled off the segment edges and was clipped
+      // against the page background. Bottom-half arcs run in reverse so the
+      // text never renders upside down.
+      const pad = Math.min(4, step * 0.08);
+      const ta0 = a0 + pad, ta1 = a1 - pad;
+      const flip = am > 90 && am < 270;
+      const q0 = wpt(labelR, flip ? ta1 : ta0), q1 = wpt(labelR, flip ? ta0 : ta1);
+      const pid = wid + '-wt' + i;
+      wdefs += `<path id="${pid}" d="M ${q0[0].toFixed(1)} ${q0[1].toFixed(1)} A ${labelR} ${labelR} 0 0 ${flip ? 0 : 1} ${q1[0].toFixed(1)} ${q1[1].toFixed(1)}" fill="none"/>`;
+      const label = String(s.label).toUpperCase();
+      const arcLen = labelR * (ta1 - ta0) * Math.PI / 180;
+      let fs = 9;
+      const est = label.length * 0.72 * 9;
+      if (est > arcLen) fs = Math.max(6.2, 9 * arcLen / est);
       return `<path class="pb-wheel-seg${i === 0 ? ' on' : ''}" data-wi="${i}" tabindex="0" role="button" aria-label="${esc(s.label)}"
         d="M ${p0[0].toFixed(1)} ${p0[1].toFixed(1)} A ${r2} ${r2} 0 ${large} 1 ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} L ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} A ${r1} ${r1} 0 ${large} 0 ${p3[0].toFixed(1)} ${p3[1].toFixed(1)} Z"
         fill="${['#7C917F','#5C7062','#8FA294','#6E8274','#A9BBAC','#93A896'][i % 6]}"/>` +
-        `<text class="pb-wheel-num" x="${lp[0].toFixed(1)}" y="${(lp[1] - 2).toFixed(1)}" text-anchor="middle">${('0' + (i + 1)).slice(-2)}</text>` +
-        `<text class="pb-wheel-lbl" x="${lp[0].toFixed(1)}" y="${(lp[1] + 13).toFixed(1)}" text-anchor="middle">${esc(String(s.label).toUpperCase())}</text>`;
+        `<text class="pb-wheel-num" x="${np[0].toFixed(1)}" y="${(np[1] + 4).toFixed(1)}" text-anchor="middle">${('0' + (i + 1)).slice(-2)}</text>` +
+        `<text class="pb-wheel-lbl" style="font-size:${fs.toFixed(1)}px"><textPath href="#${pid}" startOffset="50%" text-anchor="middle">${esc(label)}</textPath></text>`;
     }).join('');
     const cards = stages.map(function (s, i) {
       return `<div class="pb-wheel-stage" data-wc="${i}" style="display:${i === 0 ? 'block' : 'none'};">
@@ -754,7 +773,7 @@ function policyItemBodyHTML(it) {
     }).join('');
     return `<div class="pb-wheelwrap">
       <div class="pb-wheel">
-        <svg viewBox="0 0 520 520">${segs}<circle cx="${wcx}" cy="${wcy}" r="118" fill="#FDFDF3" stroke="#E3E0D3"/></svg>
+        <svg viewBox="0 0 520 520"><defs>${wdefs}</defs>${segs}<circle cx="${wcx}" cy="${wcy}" r="118" fill="#FDFDF3" stroke="#E3E0D3"/></svg>
         <div class="pb-wheel-hub">
           ${it.hubEyebrow ? `<div class="h-eyebrow">${esc(it.hubEyebrow)}</div>` : ''}
           <div class="h-title">${esc(it.hubTitle || it.name || '')}</div>
@@ -3611,6 +3630,25 @@ function updateBookmarkCount() {
   if (el) el.textContent = bookmarks.length;
 }
 
+// In the Studio preview, clicking a menu tile opens that chapter's editor on
+// the right WITHOUT navigating away from the menu — editing happens in the
+// side panel. The capture phase suppresses the normal data-goto navigation
+// for tiles/header only; every other link still navigates as usual.
+if (!window.__menuSelectWired) {
+  window.__menuSelectWired = true;
+  document.addEventListener('click', function (e) {
+    if (!window.__inStudio || window.parent === window) return;
+    var card = e.target && e.target.closest ? e.target.closest('.menu-card') : null;
+    var hdr = e.target && e.target.closest ? e.target.closest('.chapter#menu .spread-header') : null;
+    var id = card ? card.getAttribute('data-goto') : (hdr ? 'cover' : null);
+    if (id) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.parent.postMessage({ type: 'studio-select', id: id }, '*');
+    }
+  }, true);
+}
+
 // ---- Progress bar -------------------------------------------------
 function initProgress() {
   const bar = document.getElementById('progress');
@@ -3633,25 +3671,6 @@ function showWheelCaption(subId) {
   document.querySelectorAll('.wheel-slice').forEach(sl => {
     sl.classList.toggle('is-active', sl.dataset.sub === subId);
   });
-}
-
-// In the Studio preview, clicking a menu tile opens that chapter's editor on
-// the right WITHOUT navigating away from the menu — editing happens in the
-// side panel. The capture phase suppresses the normal data-goto navigation
-// for tiles/header only; every other link still navigates as usual.
-if (!window.__menuSelectWired) {
-  window.__menuSelectWired = true;
-  document.addEventListener('click', function (e) {
-    if (!window.__inStudio || window.parent === window) return;
-    var card = e.target && e.target.closest ? e.target.closest('.menu-card') : null;
-    var hdr = e.target && e.target.closest ? e.target.closest('.chapter#menu .spread-header') : null;
-    var id = card ? card.getAttribute('data-goto') : (hdr ? 'cover' : null);
-    if (id) {
-      e.preventDefault();
-      e.stopPropagation();
-      window.parent.postMessage({ type: 'studio-select', id: id }, '*');
-    }
-  }, true);
 }
 
 // Video codec hint: if a video element fails to load (typically iPhone HEVC,
@@ -4310,7 +4329,6 @@ function applyChromeLang() {
   var rf = document.querySelector('.rail-footer h4');
   if (rf) rf.textContent = UI('aboutEdition');
 }
-
 function switchPlaybookLang(code) {
   try { localStorage.setItem(langStorageKey(), code); } catch (e) {}
   if (window.parent !== window) {
@@ -4428,7 +4446,6 @@ window.addEventListener('message', function (ev) {
   var d = ev.data || {};
   if (d.type === 'editor-ping') {
     // The editor (re)announces itself — reply so it knows we are listening.
-    window.__inStudio = true;
     if (window.parent !== window) window.parent.postMessage({ type: 'preview-boot' }, '*');
     return;
   }
@@ -4452,11 +4469,6 @@ if (window.parent !== window) {
   window.parent.postMessage({ type: 'preview-boot' }, '*');
 }
 
-
-// =========================================================================
-// INTERACTIVE ELEMENTS (s:'ix') — 17 kinds, schema: it.kind + payload fields.
-// Renderers only; all wiring is delegated at the bottom of this block.
-// =========================================================================
 var PB_IX_KINDS = ['processflow','horizons','legendtour','flipcards','mixbars','xtable','pkgmatrix','benchdash','alloc','tabx','scorecard','typedist','stageflow','dlcheck','testline','eventcal','kpidash','cardwall','compare'];
 
 // Weight/colour brand-token classes shared by s:'text' and s:'heading'.
