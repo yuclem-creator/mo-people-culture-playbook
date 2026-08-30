@@ -3444,6 +3444,12 @@ function goTo(chapterId, subId, opts) {
   if (el) el.classList.add('on');
   currentChapter = chapterId;
 
+  // Re-arm cinematic entrances (chapter opener title/eyebrow, reveal blocks)
+  // for the freshly shown page. The boot-time motion scan can run before
+  // chapter markup exists in the web player, leaving opener titles stuck at
+  // opacity:0 — rescanning on every navigation guarantees they arm and play.
+  if (window._moScan) { try { window._moScan(); } catch (e) {} }
+
   // rail active state
   document.querySelectorAll('.rail-link').forEach(b => b.classList.toggle('active', b.dataset.chapter === chapterId));
   document.querySelectorAll('.rail-sub').forEach(u => u.classList.toggle('on', u.dataset.parent === chapterId));
