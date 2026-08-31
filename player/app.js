@@ -5334,7 +5334,7 @@ Object.assign(PB_IX_RENDER, {
     var wid = _ixId('ix2ho');
     return '<div class="pb-ix pb-ix2ho" id="' + wid + '">' +
       '<script type="application/json" data-ix2ho>' + JSON.stringify({ lanes: lanes, token: it.token || '' }).replace(/</g, '\\u003c') + '</script>' +
-      '<div class="ix2ho-stage">' +
+      '<div class="ix2ho-stage' + (String(it.token || '').trim() ? ' hastext' : '') + '">' +
         '<div class="ix2ho-token" aria-hidden="true"><span>' + esc(it.token || '●') + '</span></div>' +
         lanes.map(function (l, i) {
           return '<div class="ix2ho-lane" data-lane="' + i + '">' +

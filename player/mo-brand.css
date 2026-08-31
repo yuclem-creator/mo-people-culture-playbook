@@ -1117,3 +1117,9 @@
 .ixec-pin:nth-of-type(odd) .ixec-lbl{top:calc(100% + 36px);}
 .ixec-end{top:6px;max-width:150px;}
 .ixec-end-lbl{max-width:150px;text-align:right;line-height:1.35;}
+
+/* ix2ho handoff token with a text label: widen the gutter and render the token
+   as a pill that fits its label, so the text never spills over the lane cards.
+   (.pb-ix prefix wins the specificity tie vs the base two-class rules.) */
+.pb-ix .ix2ho-stage.hastext{padding-left:150px;}
+.pb-ix .ix2ho-stage.hastext .ix2ho-token{left:0;width:auto;min-width:36px;height:26px;border-radius:999px;padding:0 12px;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:600;white-space:nowrap;}
