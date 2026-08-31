@@ -1437,7 +1437,15 @@ function inlineVideoHTML(text) {
 // key) render wherever that image appears inline. Same markup and behaviour
 // as item-level hotspot figures.
 function assetHotspotsFor(kind, name) {
-  var rec = PB && PB.assetHotspots && PB.assetHotspots[kind + '/' + name];
+  var all = PB && PB.assetHotspots;
+  if (!all) return null;
+  // Remote loaders rewrite asset keys in place to full bucket URLs
+  // (img/<file> -> https://…/assets/<file>), so match by filename suffix too.
+  var rec = all[kind + '/' + name];
+  if (!rec) {
+    var suffix = '/' + name;
+    for (var k in all) { if (k.slice(-suffix.length) === suffix) { rec = all[k]; break; } }
+  }
   return rec && Array.isArray(rec.hotspots) && rec.hotspots.length ? rec : null;
 }
 function hotspotFigureHTML(imgSrc, rec, caption, extraCls) {
