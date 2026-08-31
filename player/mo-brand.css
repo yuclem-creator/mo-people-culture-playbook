@@ -378,10 +378,9 @@
 /* ---- 4 / 10. Flip cards + dark card wall --------------------------------- */
 .ixfc-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px}
 .ixfc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-/* Dark card wall keeps its 1-2-2-1 rhythm: a lone odd card spans full width.
-   Light flip cards never stretch — a lone last card holds its grid column so
-   the whole set stays neat and aligned. */
-.pb-ixfc.dark .ixfc-grid:not(.cols-2):not(.cols-3):not(.cols-4) > .ixfc-card:last-child:nth-child(odd){grid-column:1 / -1;min-height:150px}
+/* Adaptive last row: a lone odd card stretches full-width as a rectangle,
+   so no dead gap ever shows (even counts never stretch). */
+.ixfc-grid:not(.cols-2):not(.cols-3):not(.cols-4) > .ixfc-card:last-child:nth-child(odd){grid-column:1 / -1;min-height:150px}
 .ixfc-card{
   position:relative;display:block;border:0;background:none;padding:0;cursor:pointer;
   min-height:190px;perspective:900px;text-align:left;
@@ -1048,12 +1047,8 @@
    line breaks between bullets. With plain inline rendering the lines ran
    together with no gap, looking crammed. Each <br> now acts as a small
    block spacer, line-height is relaxed, and list items get breathing room. */
-.ix2ho-lane-text, .ix2pt-beat, .ix2dt-result-text, .ix2hs-pop-d,
-.ix2sc-cons, .ix2sc-text, .ix2st-d, .ixal-q-text, .ixal-step,
-.ixbd-tip, .ixdl-f-text, .ixec-exception, .ixhz-d-text, .ixlg-row,
-.ixpf-b-text, .ixpf-d-example, .ixpf-d-text, .ixpm-note,
-.ixpm-scope-item, .ixpm-usage, .ixsc-t-note, .ixsf-text,
-.ixtl-card, .ixtl-text, .ixtx-text, .ixtx-note, .pb-ix-note{line-height:1.62;}
+.pb-ix .ix2ho-lane-text, .pb-ix .ix2pt-beat, .pb-ix .ix2dt-result-text, .pb-ix .ix2hs-pop-d, .pb-ix .ix2sc-cons, .pb-ix .ix2sc-text, .pb-ix .ix2st-d, .pb-ix .ixal-q-text, .pb-ix .ixal-step, .pb-ix .ixbd-tip, .pb-ix .ixdl-f-text, .pb-ix .ixec-exception, .pb-ix .ixhz-d-text, .pb-ix .ixlg-row, .pb-ix .ixpf-b-text, .pb-ix .ixpf-d-example, .pb-ix .ixpf-d-text, .pb-ix .ixpm-note, .pb-ix .ixpm-scope-item, .pb-ix .ixpm-usage, .pb-ix .ixsc-t-note, .pb-ix .ixsf-text, .pb-ix .ixtl-card, .pb-ix .ixtl-text, .pb-ix .ixtx-text, .pb-ix .ixtx-note, .pb-ix .pb-ix-note
+{line-height:1.62;}
 .ix2ho-lane-text br, .ix2pt-beat br, .ix2dt-result-text br, .ix2hs-pop-d br,
 .ix2sc-cons br, .ix2sc-text br, .ix2st-d br, .ixal-q-text br, .ixal-step br,
 .ixbd-tip br, .ixdl-f-text br, .ixec-exception br, .ixhz-d-text br, .ixlg-row br,
