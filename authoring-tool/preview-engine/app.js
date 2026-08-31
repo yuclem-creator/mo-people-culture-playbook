@@ -3548,6 +3548,11 @@ function resolveAssets(root) {
 let currentChapter = 'cover';
 
 function goTo(chapterId, subId, opts) {
+  // Pause any media still playing on the page you're leaving — chapters are
+  // hidden, not unmounted, so a playing <video> would keep its audio running
+  // over the next chapter otherwise. Position is kept, so returning resumes
+  // where the learner left off.
+  document.querySelectorAll('video, audio').forEach(m => { if (!m.paused) m.pause(); });
   document.querySelectorAll('.chapter').forEach(c => c.classList.remove('on'));
   const el = document.getElementById(chapterId);
   if (el) el.classList.add('on');
