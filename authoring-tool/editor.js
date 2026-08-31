@@ -433,7 +433,7 @@
           { k: 'at', l: 'When', tip: 'e.g. Sep, -90 d, +1 mo' },
           { k: 'label', l: 'Pin label' },
           { k: 'title', l: 'Detail title' },
-          { k: 'bullets', l: 'Detail bullets (one per line)', t: 'lines' }
+          { k: 'bullets', l: 'Detail text — one bullet per line; start a line with \'> \' for a plain sentence (no bullet)', t: 'lines' }
         ] },
       { t: 'group', k: 'end', l: 'End marker', fields: [
         { k: 'date', l: 'Date', tip: 'e.g. 25 Dec' }, { k: 'label', l: 'Label', tip: 'e.g. Stay date' }

@@ -1437,15 +1437,7 @@ function inlineVideoHTML(text) {
 // key) render wherever that image appears inline. Same markup and behaviour
 // as item-level hotspot figures.
 function assetHotspotsFor(kind, name) {
-  var all = PB && PB.assetHotspots;
-  if (!all) return null;
-  // Remote loaders rewrite asset keys in place to full bucket URLs
-  // (img/<file> -> https://…/assets/<file>), so match by filename suffix too.
-  var rec = all[kind + '/' + name];
-  if (!rec) {
-    var suffix = '/' + name;
-    for (var k in all) { if (k.slice(-suffix.length) === suffix) { rec = all[k]; break; } }
-  }
+  var rec = PB && PB.assetHotspots && PB.assetHotspots[kind + '/' + name];
   return rec && Array.isArray(rec.hotspots) && rec.hotspots.length ? rec : null;
 }
 function hotspotFigureHTML(imgSrc, rec, caption, extraCls) {
@@ -4930,7 +4922,13 @@ var PB_IX_RENDER = {
         return '<div class="ixec-detail" data-ecd="' + i + '" style="display:' + (i === 0 ? 'block' : 'none') + ';">' +
           '<div class="ixec-d-eyebrow">' + esc([p.at, p.label].filter(Boolean).join(' · ')) + '</div>' +
           '<div class="ixec-d-title">' + esc(p.title || p.label || '') + '</div>' +
-          (bl.length ? '<ul class="ixec-d-list">' + bl.map(function (b2) { return '<li>' + inlineRichHTML(b2) + '</li>'; }).join('') + '</ul>' : '') +
+          (bl.length ? '<ul class="ixec-d-list">' + bl.map(function (b2) {
+            var bs = String(b2 == null ? '' : b2);
+            // Authoring option: start a line with "> " for a plain sentence
+            // without a bullet; any other line renders as a normal bullet.
+            if (bs.indexOf('> ') === 0) return '<li class="ixec-d-plain">' + inlineRichHTML(bs.slice(2)) + '</li>';
+            return '<li>' + inlineRichHTML(bs) + '</li>';
+          }).join('') + '</ul>' : '') +
           '</div>';
       }).join('') +
       (it.exception ? '<div class="ixec-exception"><b>' + esc(it.exceptionLabel || 'Timing exception') + '</b> — ' + inlineRichHTML(it.exception) + '</div>' : '') +
