@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Mandarin Oriental · Playbook Library</title>
 <link rel="icon" href="data:," />
-<link rel="stylesheet" href="player/mo-brand.css?v=1788173990" />
+<link rel="stylesheet" href="player/mo-brand.css?v=1788174636" />
 <style>
 /* ============================================================
    MANDARIN ORIENTAL — PLAYBOOK LIBRARY HUB v2
@@ -282,7 +282,7 @@ section.shelf:last-of-type { padding-bottom: 72px; }
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="authoring-tool/supabase-config.js?v=1788173990"></script>
+<script src="authoring-tool/supabase-config.js?v=1788174636"></script>
 <script>
 (function () {
   'use strict';
@@ -354,7 +354,9 @@ section.shelf:last-of-type { padding-bottom: 72px; }
   /* ---- hero ------------------------------------------------------ */
   function renderHero() {
     var pub = state.playbooks.filter(function (p) { return p.status !== 'draft'; });
-    var latest = state.playbooks.slice().sort(function (a, b) {
+    // Hero follows the latest PUBLISHED playbook — a more recently saved draft
+    // must never blank the hero image or become the "latest update" face.
+    var latest = pub.slice().sort(function (a, b) {
       return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
     })[0];
     var latestLabel = '';
