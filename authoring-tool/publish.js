@@ -322,10 +322,25 @@
     var bucket = cfg.bucket || 'playbook-content';
     var idxPublicUrl = cfg.url + '/storage/v1/object/public/' + bucket + '/published/index.json';
     return fetch(idxPublicUrl + '?t=' + Date.now())
-      .then(function (r) { return r.ok ? r.json() : { playbooks: [] }; })
-      .catch(function () { return { playbooks: [] }; })
+      .then(function (r) {
+        // SAFETY: if the shared index cannot be read, DO NOT write it back.
+        // Falling back to an empty list here previously meant a single failed
+        // fetch (or a fresh publish racing another session) would overwrite
+        // published/index.json with just this one playbook — wiping every
+        // other playbook off the hub. Abort instead and leave the index as-is.
+        // A genuine 404 (no index yet — first-ever publish) is the one case
+        // where starting a fresh list is correct.
+        if (r.status === 404) return { playbooks: [] };
+        if (!r.ok) { console.warn('[publish] library index update skipped: index unreadable (HTTP ' + r.status + ')'); return null; }
+        return r.json().catch(function () { return null; });
+      })
+      .catch(function () { return null; })
       .then(function (idx) {
-        var list = (idx && Array.isArray(idx.playbooks)) ? idx.playbooks : [];
+        if (!idx || !Array.isArray(idx.playbooks)) {
+          console.warn('[publish] library index update skipped: existing index not readable — preserving it untouched.');
+          return;
+        }
+        var list = idx.playbooks;
         var existing = null;
         list = list.filter(function (p) {
           if (p && p.slug === slug) { existing = p; return false; }
