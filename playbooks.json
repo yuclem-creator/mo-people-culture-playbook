@@ -53,6 +53,35 @@
       "department": "people-culture",
       "edition": "Edition · July 2026",
       "description": "The Group People & Culture playbook — our culture, policies, the colleague lifecycle, and the resources that guide how we lead and work."
+    },
+    {
+      "slug": "general-manager-move-in-programme",
+      "title": "General Manager Move-In Programme",
+      "department": "people-culture",
+      "edition": "Edition · August 2026",
+      "description": ""
+    },
+    {
+      "slug": "commercial-and-revenue-playbook",
+      "title": "Commercial and Revenue Playbook",
+      "department": "commercial-revenue",
+      "edition": "Edition",
+      "description": ""
+    },
+    {
+      "slug": "finance-playbook",
+      "title": "Finance Playbook",
+      "department": "finance",
+      "edition": "Edition",
+      "description": ""
+    },
+    {
+      "slug": "masters-of-craft",
+      "title": "Masters of Craft",
+      "department": "people-culture",
+      "edition": "Edition",
+      "description": "",
+      "status": "draft"
     }
   ]
 }
