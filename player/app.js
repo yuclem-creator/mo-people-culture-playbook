@@ -746,23 +746,51 @@ function policyItemBodyHTML(it) {
       // Curved label follows the arc so the full wording stays on the ring —
       // straight centred text spilled off the segment edges and was clipped
       // against the page background. Bottom-half arcs run in reverse so the
-      // text never renders upside down.
+      // text never renders upside down. WIDE segments (2-slice wheels) are
+      // the exception: a curved label runs vertically along the flank there,
+      // so the wording is rendered horizontally, word-wrapped to fit inside
+      // the ring thickness instead.
       const pad = Math.min(4, step * 0.08);
       const ta0 = a0 + pad, ta1 = a1 - pad;
       const flip = am > 90 && am < 270;
-      const q0 = wpt(labelR, flip ? ta1 : ta0), q1 = wpt(labelR, flip ? ta0 : ta1);
-      const pid = wid + '-wt' + i;
-      wdefs += `<path id="${pid}" d="M ${q0[0].toFixed(1)} ${q0[1].toFixed(1)} A ${labelR} ${labelR} 0 0 ${flip ? 0 : 1} ${q1[0].toFixed(1)} ${q1[1].toFixed(1)}" fill="none"/>`;
       const label = String(s.label).toUpperCase();
-      const arcLen = labelR * (ta1 - ta0) * Math.PI / 180;
-      let fs = 9;
-      const est = label.length * 0.72 * 9;
-      if (est > arcLen) fs = Math.max(6.2, 9 * arcLen / est);
+      const midR = (r1 + r2) / 2;
+      let numSvg, labelSvg;
+      if (step >= 150) {
+        const maxW = r2 - r1 - 24;
+        const fs2 = 10.5;
+        const perLine = Math.max(6, Math.floor(maxW / (0.62 * fs2)));
+        const words = label.split(/\s+/);
+        const lines = [];
+        let cur = '';
+        words.forEach(function (w) {
+          const cand = cur ? cur + ' ' + w : w;
+          if (cand.length <= perLine) cur = cand;
+          else { if (cur) lines.push(cur); cur = w; }
+        });
+        if (cur) lines.push(cur);
+        const cp = wpt(midR, am);
+        const lh = fs2 * 1.3;
+        const y0 = cp[1] - ((lines.length - 1) * lh) / 2 + fs2 * 0.35;
+        numSvg = `<text class="pb-wheel-num" x="${cp[0].toFixed(1)}" y="${(y0 - lh * 0.9).toFixed(1)}" text-anchor="middle">${('0' + (i + 1)).slice(-2)}</text>`;
+        labelSvg = `<text class="pb-wheel-lbl" style="font-size:${fs2}px" text-anchor="middle">` +
+          lines.map(function (ln, li) { return `<tspan x="${cp[0].toFixed(1)}" y="${(y0 + li * lh).toFixed(1)}">${esc(ln)}</tspan>`; }).join('') +
+          `</text>`;
+      } else {
+        const q0 = wpt(labelR, flip ? ta1 : ta0), q1 = wpt(labelR, flip ? ta0 : ta1);
+        const pid = wid + '-wt' + i;
+        wdefs += `<path id="${pid}" d="M ${q0[0].toFixed(1)} ${q0[1].toFixed(1)} A ${labelR} ${labelR} 0 0 ${flip ? 0 : 1} ${q1[0].toFixed(1)} ${q1[1].toFixed(1)}" fill="none"/>`;
+        const arcLen = labelR * (ta1 - ta0) * Math.PI / 180;
+        let fs = 9;
+        const est = label.length * 0.72 * 9;
+        if (est > arcLen) fs = Math.max(6.2, 9 * arcLen / est);
+        numSvg = `<text class="pb-wheel-num" x="${np[0].toFixed(1)}" y="${(np[1] + 4).toFixed(1)}" text-anchor="middle">${('0' + (i + 1)).slice(-2)}</text>`;
+        labelSvg = `<text class="pb-wheel-lbl" style="font-size:${fs.toFixed(1)}px"><textPath href="#${pid}" startOffset="50%" text-anchor="middle">${esc(label)}</textPath></text>`;
+      }
       return `<path class="pb-wheel-seg${i === 0 ? ' on' : ''}" data-wi="${i}" tabindex="0" role="button" aria-label="${esc(s.label)}"
         d="M ${p0[0].toFixed(1)} ${p0[1].toFixed(1)} A ${r2} ${r2} 0 ${large} 1 ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} L ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} A ${r1} ${r1} 0 ${large} 0 ${p3[0].toFixed(1)} ${p3[1].toFixed(1)} Z"
         fill="${['#7C917F','#5C7062','#8FA294','#6E8274','#A9BBAC','#93A896'][i % 6]}"/>` +
-        `<text class="pb-wheel-num" x="${np[0].toFixed(1)}" y="${(np[1] + 4).toFixed(1)}" text-anchor="middle">${('0' + (i + 1)).slice(-2)}</text>` +
-        `<text class="pb-wheel-lbl" style="font-size:${fs.toFixed(1)}px"><textPath href="#${pid}" startOffset="50%" text-anchor="middle">${esc(label)}</textPath></text>`;
+        numSvg + labelSvg;
     }).join('');
     const cards = stages.map(function (s, i) {
       return `<div class="pb-wheel-stage" data-wc="${i}" style="display:${i === 0 ? 'block' : 'none'};">
