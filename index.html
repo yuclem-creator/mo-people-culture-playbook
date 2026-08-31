@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Mandarin Oriental · Playbook Library</title>
 <link rel="icon" href="data:," />
-<link rel="stylesheet" href="player/mo-brand.css?v=1788177623" />
+<link rel="stylesheet" href="player/mo-brand.css?v=1788177956" />
 <style>
 /* ============================================================
    MANDARIN ORIENTAL — PLAYBOOK LIBRARY HUB v2
@@ -282,7 +282,7 @@ section.shelf:last-of-type { padding-bottom: 72px; }
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="authoring-tool/supabase-config.js?v=1788177623"></script>
+<script src="authoring-tool/supabase-config.js?v=1788177956"></script>
 <script>
 (function () {
   'use strict';
@@ -575,35 +575,11 @@ section.shelf:last-of-type { padding-bottom: 72px; }
         if (!idx || !Array.isArray(idx.playbooks)) return;
         idx.playbooks.forEach(function (p) {
           if (!p || !p.slug) return;
-          // Normalise: some publish paths write a slightly different entry
-          // shape (e.g. capitalised department, publishedAt instead of
-          // updatedAt, no status). Fold everything into the hub's own shape
-          // so a foreign entry can never break rendering or spawn phantom
-          // departments.
-          var norm = {
-            slug: p.slug,
-            title: p.title || p.slug,
-            department: p.department ? String(p.department).toLowerCase().trim() : '',
-            edition: p.edition || '',
-            description: p.description || '',
-            status: p.status === 'draft' ? 'draft' : 'published',
-            updatedAt: p.updatedAt || p.publishedAt || ''
-          };
-          var ex = null;
-          state.playbooks.forEach(function (x) { if (x.slug === norm.slug) ex = x; });
-          if (ex) {
-            // Bucket entry refreshes the static registry entry (status/stamp
-            // changes after a publish) — but the static entry guarantees the
-            // playbook stays listed even if the shared index is clobbered.
-            ['title', 'edition', 'description', 'status', 'updatedAt'].forEach(function (k) {
-              if (norm[k]) ex[k] = norm[k];
-            });
-            if (norm.department) ex.department = norm.department;
-          } else {
-            state.playbooks.push(norm);
+          if (!state.playbooks.some(function (x) { return x.slug === p.slug; })) {
+            state.playbooks.push(p);
           }
-          if (norm.department && !state.departments.some(function (d) { return d.id === norm.department; })) {
-            state.departments.push({ id: norm.department, name: humanizeDept(norm.department), description: '' });
+          if (p.department && !state.departments.some(function (d) { return d.id === p.department; })) {
+            state.departments.push({ id: p.department, name: humanizeDept(p.department), description: '' });
           }
         });
       })

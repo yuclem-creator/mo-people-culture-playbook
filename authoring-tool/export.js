@@ -93,9 +93,11 @@
     // put scorm_api + required pages right before </head> (api must exist early)
     var out = indexSrc.replace('</head>', head + '</head>');
     // load playbook-data.js before app.js; scorm_hook.js after app.js
-    out = out.replace('<script src="playbook-content.js"><\/script>',
+    // (regexes tolerate the cache-busting "?v=<epoch>" stamps preview-engine/
+    // index.html carries — plain string replaces silently no-op on stamped tags)
+    out = out.replace(/<script src="playbook-content\.js(\?v=\d+)?"><\/script>/,
       '<script src="playbook-data.js"><\/script>\n<script src="playbook-content.js"><\/script>');
-    out = out.replace('<script src="app.js"><\/script>',
+    out = out.replace(/<script src="app\.js(\?v=\d+)?"><\/script>/,
       '<script src="app.js"><\/script>\n<script src="ask.js"><\/script>\n<script src="scorm_hook.js"><\/script>');
     return out;
   }

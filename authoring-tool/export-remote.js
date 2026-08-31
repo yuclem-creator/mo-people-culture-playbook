@@ -15,10 +15,19 @@
   'use strict';
 
   function buildManifestForRemote(manifestSrc, meta, helpers) {
-    // Same substitutions as the offline manifest, but the remote package
-    // doesn't ship playbook-data.js/playbook-content.js as bundled resources
-    // in the same way — it still lists every file physically in the zip.
-    return helpers.buildManifest(manifestSrc, meta);
+    // Same title/identifier/mastery substitutions as the offline manifest, but
+    // the resource file list must name what the remote package actually ships:
+    // no playbook-data.js (content is fetched from the cloud at launch) —
+    // remote-config.js, remote-loader.js and fallback-playbook-data.js take
+    // its place in the package.
+    var out = helpers.buildManifest(manifestSrc, meta);
+    out = out.replace('      <file href="playbook-data.js"/>\n', '');
+    out = out.replace('<file href="playbook-content.js"/>',
+      '<file href="remote-config.js"/>\n' +
+      '      <file href="remote-loader.js"/>\n' +
+      '      <file href="fallback-playbook-data.js"/>\n' +
+      '      <file href="playbook-content.js"/>');
+    return out;
   }
 
   window.buildRemoteScormPackage = function (pb, requiredPages, slug, cb) {
@@ -186,13 +195,16 @@
     // correct order (playbook-content.js then app.js), replacing them with a
     // single remote-loader.js tag that loads scorm_api.js/playbook-content.js/
     // app.js/scorm_hook.js only once the PLAYBOOK content has resolved.
-    var bothTags = /<script src="playbook-content\.js"><\/script>\s*\n<script src="app\.js"><\/script>/;
+    // Regexes tolerate the cache-busting "?v=<epoch>" stamps preview-engine/
+    // index.html carries — the previous plain-string version silently no-op'd
+    // on stamped tags, leaving the offline chain in the remote package.
+    var bothTags = /<script src="playbook-content\.js(\?v=\d+)?"><\/script>\s*\n<script src="app\.js(\?v=\d+)?"><\/script>/;
     if (bothTags.test(out)) {
       out = out.replace(bothTags, '<script src="remote-loader.js"><\/script>');
     } else {
       // Fallback: remove whichever tags are present individually, then add loader once.
-      out = out.replace('<script src="playbook-content.js"><\/script>', '');
-      out = out.replace('<script src="app.js"><\/script>', '<script src="remote-loader.js"><\/script>');
+      out = out.replace(/<script src="playbook-content\.js(\?v=\d+)?"><\/script>/, '');
+      out = out.replace(/<script src="app\.js(\?v=\d+)?"><\/script>/, '<script src="remote-loader.js"><\/script>');
     }
     return out;
   }
