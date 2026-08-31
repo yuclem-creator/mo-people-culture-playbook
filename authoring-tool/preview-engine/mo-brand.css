@@ -699,7 +699,7 @@
 .ixcp-col.isnot .ixcp-mark{background:rgba(164,82,63,.12);color:#A4523F}
 
 /* ---- Body text element (s:'text') + weight/colour tokens ----------------- */
-.pb-text{max-width:680px;font-family:var(--mo-body);font-size:15px;line-height:1.75;color:#232323}
+.pb-text{font-family:var(--mo-body);font-size:15px;line-height:1.75;color:#232323}
 .pb-text p{margin:0 0 14px}
 .pb-text p:last-child{margin-bottom:0}
 .pb-text p.pb-text-lead{font-size:17.5px;line-height:1.7;color:#45403a}

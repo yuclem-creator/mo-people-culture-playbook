@@ -203,7 +203,7 @@
       if (i >= paths.length) { cb(); return; }
       var path = paths[i++];
       var s = document.createElement('script');
-      s.src = path + '?v=1788182213';
+      s.src = path + '?v=1788182900';
       s.onload = function () {
         // app.js normally boots itself on DOMContentLoaded, which has already
         // fired by the time we inject it — call init() ourselves then.

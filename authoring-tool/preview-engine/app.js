@@ -814,7 +814,7 @@ function policyItemBodyHTML(it) {
   // interactive hotspots (numbered pins revealing popup text on click).
   if (it && it.s === 'image') {
     const hs = Array.isArray(it.hotspots) ? it.hotspots : [];
-    const imgHtml = `<img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;display:block;${it.full ? 'width:100%;' : ''}" />`;
+    const imgHtml = `<img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;display:block;${it.full === false ? '' : 'width:100%;'}" />`;
     if (!hs.length) {
       return `<figure class="policy-image" style="margin:16px 0;">${imgHtml}
         ${it.name ? `<figcaption style="font-size:12px;color:var(--ink-mute);margin-top:8px;">${esc(it.name)}</figcaption>` : ''}
@@ -822,7 +822,7 @@ function policyItemBodyHTML(it) {
     }
     const showAll = it.hotspotsMode === 'show';
     return `<figure class="policy-image hotspot-figure" data-hotspots-mode="${showAll ? 'show' : 'reveal'}" style="margin:16px 0;">
-      <div class="hotspot-wrap" style="position:relative;${it.full ? 'display:block;' : 'display:inline-block;'}max-width:100%;">
+      <div class="hotspot-wrap" style="position:relative;${it.full === false ? 'display:inline-block;' : 'display:block;'}max-width:100%;">
         ${imgHtml}
         ${hs.map(function (h, i) {
           return `
@@ -1480,8 +1480,8 @@ function hotspotFigureHTML(imgSrc, rec, caption, extraCls) {
   var hs = rec.hotspots;
   var showAll = rec.hotspotsMode === 'show';
   return '<figure class="policy-image hotspot-figure' + (extraCls ? ' ' + extraCls : '') + '" data-hotspots-mode="' + (showAll ? 'show' : 'reveal') + '" style="margin:16px 0;">'
-    + '<div class="hotspot-wrap" style="position:relative;display:inline-block;max-width:100%;">'
-    + '<img src="' + imgSrc + '" alt="' + esc(caption || '') + '" style="max-width:100%;display:block;" />'
+    + '<div class="hotspot-wrap" style="position:relative;display:block;max-width:100%;">'
+    + '<img src="' + imgSrc + '" alt="' + esc(caption || '') + '" style="max-width:100%;width:100%;display:block;" />'
     + hs.map(function (h, i) {
         return '<button type="button" class="hotspot-dot' + (showAll ? ' on' : '') + '" data-hotspot="' + i + '" style="position:absolute;left:' + h.x + '%;top:' + h.y + '%;">' + (i + 1) + '</button>'
           + '<div class="hotspot-pop' + (showAll ? ' show' : '') + '" data-hotspot-pop="' + i + '" style="left:' + h.x + '%;top:' + h.y + '%;">'
