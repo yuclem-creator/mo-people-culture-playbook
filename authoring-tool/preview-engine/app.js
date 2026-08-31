@@ -5449,23 +5449,22 @@ Object.assign(PB_IX_RENDER, {
   relayflow: function (it) {
     var steps = _ixArr(it.steps);
     if (!steps.length) return '<div class="pb-ix pb-chart-empty">Add steps to build this relay.</div>';
+    // Ledger strip: one ruled row per process — who owns what, and what they
+    // hand over next. The handoff lives in its own aligned column instead of
+    // floating between cards; rows stack on narrow screens. Still pure
+    // markup + CSS (no JS state), edited via the same Studio form.
+    var anyHandoff = steps.some(function (s) { return !!(s.handoff || '').trim(); });
     var html = '<div class="pb-ix pb-ixrf">' +
       (it.title ? '<div class="ix2-title">' + esc(it.title) + '</div>' : '') +
-      '<div class="ixrf-track">';
+      '<div class="ixrf-ledger' + (anyHandoff ? '' : ' ixrf-nohand') + '">' +
+      '<div class="ixrf-head" aria-hidden="true"><span>Step · Role</span><span>Owns</span><span>Hands over</span></div>';
     steps.forEach(function (s, i) {
-      if (i) {
-        var h = steps[i - 1].handoff || '';
-        html += '<div class="ixrf-link" style="--rfi:' + i + '">' +
-          '<span class="ixrf-line" aria-hidden="true"></span>' +
-          (h
-            ? '<span class="ixrf-chip"><span class="ixrf-chip-eyebrow">Handoff</span><span class="ixrf-chip-text">' + inlineRichHTML(h) + '</span></span>'
-            : '<span class="ixrf-arrow" aria-hidden="true">&rarr;</span>') +
-          '</div>';
-      }
-      html += '<div class="ixrf-step" style="--rfi:' + i + '">' +
-        '<div class="ixrf-num">' + ('0' + (i + 1)).slice(-2) + '</div>' +
-        '<div class="ixrf-label">' + esc(s.label || ('Process ' + (i + 1))) + '</div>' +
-        (s.text ? '<div class="ixrf-text">' + inlineRichHTML(s.text) + '</div>' : '') +
+      var h = (s.handoff || '').trim();
+      html += '<div class="ixrf-row" style="--rfi:' + i + '">' +
+        '<div class="ixrf-who"><span class="ixrf-num">' + ('0' + (i + 1)).slice(-2) + '</span>' +
+        '<span class="ixrf-label">' + esc(s.label || ('Process ' + (i + 1))) + '</span></div>' +
+        '<div class="ixrf-owns">' + (s.text ? inlineRichHTML(s.text) : '') + '</div>' +
+        '<div class="ixrf-gives">' + (h ? '<span class="ixrf-pill">' + inlineRichHTML(h) + '</span>' : '') + '</div>' +
         '</div>';
     });
     html += '</div></div>';

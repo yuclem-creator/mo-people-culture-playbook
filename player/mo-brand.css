@@ -787,27 +787,29 @@
 .pb-ix2jn .ix2jn-stop-label{font-size:12px;font-weight:700;color:#8f6d3f;}
 .pb-ix2jn .ix2jn-stop-text{font-size:11px;color:#6b625a;margin-top:2px;line-height:1.4;}
 
-/* C6 relay flow — process cards with labelled handoff points between them.
-   Mobile-first vertical relay; wide column gets a label rail; very wide
-   screens switch to a horizontal relay. */
-.pb-ixrf .ixrf-track{display:flex;flex-direction:column;margin:14px 0;}
-.pb-ixrf .ixrf-step{background:#faf7f1;border:1px solid #e5ddd0;border-radius:14px;padding:14px 16px;animation:ixrf-in .55s cubic-bezier(.4,0,.2,1) both;animation-delay:calc(var(--rfi,0)*.09s);}
-.pb-ixrf .ixrf-num{font-size:11px;font-weight:700;letter-spacing:.14em;color:#B59060;}
-.pb-ixrf .ixrf-label{font-size:15px;font-weight:700;color:#2b2622;line-height:1.25;margin:5px 0 7px;overflow-wrap:break-word;}
-.pb-ixrf .ixrf-text{font-size:12.5px;line-height:1.55;color:#6b625a;overflow-wrap:break-word;}
-.pb-ixrf .ixrf-link{position:relative;flex:none;height:72px;display:flex;align-items:center;justify-content:center;animation:ixrf-in .55s cubic-bezier(.4,0,.2,1) both;animation-delay:calc(var(--rfi,0)*.09s - .04s);}
-.pb-ixrf .ixrf-line{position:absolute;left:50%;top:0;bottom:0;border-left:2px dotted #d8c9ae;}
-.pb-ixrf .ixrf-chip{position:relative;z-index:1;background:#fff;border:1px solid #B59060;border-radius:10px;padding:6px 12px;max-width:240px;text-align:center;box-shadow:0 2px 8px rgba(43,38,34,.08);}
-.pb-ixrf .ixrf-chip-eyebrow{display:block;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B59060;}
-.pb-ixrf .ixrf-chip-text{display:block;font-size:11px;font-weight:600;line-height:1.35;color:#8f6d3f;margin-top:2px;}
-.pb-ixrf .ixrf-arrow{position:relative;z-index:1;background:#faf7f1;color:#B59060;font-weight:700;padding:0 5px;}
+/* C6 relay flow — ledger strip: one ruled row per process step (who / owns /
+   hands over). The handoff lives in its own aligned column; rows stack on
+   narrow screens. */
+.pb-ixrf .ixrf-ledger{margin:14px 0;}
+.pb-ixrf .ixrf-head,.pb-ixrf .ixrf-row{display:grid;grid-template-columns:225px 1fr 250px;gap:22px;align-items:start;}
+.pb-ixrf .ixrf-head{padding:0 6px 9px;border-bottom:1px solid #e5ddd0;font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#B59060;}
+.pb-ixrf .ixrf-row{padding:15px 6px 16px;border-bottom:1px solid #efe8dc;animation:ixrf-in .45s ease both;animation-delay:calc(var(--rfi,0)*.07s);transition:background .2s;}
+.pb-ixrf .ixrf-row:last-child{border-bottom:0;}
+.pb-ixrf .ixrf-row:hover{background:#fbf8f2;}
+.pb-ixrf .ixrf-who{display:flex;align-items:baseline;gap:12px;}
+.pb-ixrf .ixrf-num{font-family:"MO Exceptional",Georgia,serif;font-size:23px;line-height:1;color:#B59060;flex:none;}
+.pb-ixrf .ixrf-label{font-size:14.5px;font-weight:700;color:#2b2622;line-height:1.3;overflow-wrap:break-word;}
+.pb-ixrf .ixrf-owns{font-size:13px;line-height:1.62;color:#6b625a;padding-top:3px;overflow-wrap:break-word;}
+.pb-ixrf .ixrf-pill{display:inline-block;background:#fff;border:1px solid #B59060;border-radius:10px;padding:8px 12px;font-size:11.5px;font-weight:600;line-height:1.45;color:#8f6d3f;overflow-wrap:break-word;}
+.pb-ixrf .ixrf-nohand .ixrf-head,.pb-ixrf .ixrf-nohand .ixrf-row{grid-template-columns:225px 1fr;}
+.pb-ixrf .ixrf-nohand .ixrf-gives,.pb-ixrf .ixrf-nohand .ixrf-head span:last-child{display:none;}
 @keyframes ixrf-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
-/* wide reading column — label rail left, text right, cards stay compact */
-@media (min-width:1100px){
-  .pb-ixrf .ixrf-step{display:grid;grid-template-columns:230px 1fr;column-gap:22px;align-items:start;}
-  .pb-ixrf .ixrf-num{grid-column:1;grid-row:1;}
-  .pb-ixrf .ixrf-label{grid-column:1;grid-row:2;margin:4px 0 0;}
-  .pb-ixrf .ixrf-text{grid-column:2;grid-row:1 / span 2;font-size:13px;}
+/* narrow screens — rows stack, column headers hide */
+@media (max-width:1080px){
+  .pb-ixrf .ixrf-head{display:none;}
+  .pb-ixrf .ixrf-head,.pb-ixrf .ixrf-row{grid-template-columns:1fr;gap:8px;}
+  .pb-ixrf .ixrf-row{padding:14px 4px 15px;}
+  .pb-ixrf .ixrf-owns{padding-top:0;}
 }
 
 /* I1 decision tree */
@@ -923,7 +925,7 @@
   .opener .opener-numeral,.opener .opener-eyebrow,.opener .opener-title,.opener .opener-sub{opacity:1 !important;transform:none !important;transition:none !important;}
   .pb-ix2bu .ix2bu-item,.pb-ix2pt .ix2pt-beat,.pb-ix2pt .ix2pt-verdict,.pb-ix2ri .ix2ri-trigger,.pb-ix2ri .ix2ri-node,.pb-ix2ri .ix2ri-ring,.pb-ix2jn .ix2jn-stop{transition:none !important;}
   .pb-ix2hs .ix2hs-dot{animation:none;}
-  .pb-ixrf .ixrf-step,.pb-ixrf .ixrf-link{animation:none !important;}
+  .pb-ixrf .ixrf-row{animation:none !important;}
 }
 
 /* mobile safety: tables and ix gadgets must never widen the page */
