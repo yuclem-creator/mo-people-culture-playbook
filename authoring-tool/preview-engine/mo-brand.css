@@ -378,10 +378,9 @@
 /* ---- 4 / 10. Flip cards + dark card wall --------------------------------- */
 .ixfc-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px}
 .ixfc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-/* Dark card wall keeps its 1-2-2-1 rhythm: a lone odd card spans full width.
-   Light flip cards never stretch — a lone last card holds its grid column so
-   the whole set stays neat and aligned. */
-.pb-ixfc.dark .ixfc-grid:not(.cols-2):not(.cols-3):not(.cols-4) > .ixfc-card:last-child:nth-child(odd){grid-column:1 / -1;min-height:150px}
+/* Adaptive last row: a lone odd card stretches full-width as a rectangle,
+   so no dead gap ever shows (even counts never stretch). */
+.ixfc-grid:not(.cols-2):not(.cols-3):not(.cols-4) > .ixfc-card:last-child:nth-child(odd){grid-column:1 / -1;min-height:150px}
 .ixfc-card{
   position:relative;display:block;border:0;background:none;padding:0;cursor:pointer;
   min-height:190px;perspective:900px;text-align:left;
@@ -1041,3 +1040,23 @@
 
 .ixxt-fit .ixxt-sort { display: inline; white-space: normal; text-align: left; }
 .ixxt-fit .ixxt-table th { overflow-wrap: anywhere; }
+
+/* ---- Interactive elements: bullet & line spacing --------------------------
+   Text bodies inside interactive elements (handoff lanes, parallel beats,
+   decision-tree results, scenario/steps cards, etc.) are authored with hard
+   line breaks between bullets. With plain inline rendering the lines ran
+   together with no gap, looking crammed. Each <br> now acts as a small
+   block spacer, line-height is relaxed, and list items get breathing room. */
+.ix2ho-lane-text, .ix2pt-beat, .ix2dt-result-text, .ix2hs-pop-d,
+.ix2sc-cons, .ix2sc-text, .ix2st-d, .ixal-q-text, .ixal-step,
+.ixbd-tip, .ixdl-f-text, .ixec-exception, .ixhz-d-text, .ixlg-row,
+.ixpf-b-text, .ixpf-d-example, .ixpf-d-text, .ixpm-note,
+.ixpm-scope-item, .ixpm-usage, .ixsc-t-note, .ixsf-text,
+.ixtl-card, .ixtl-text, .ixtx-text, .ixtx-note, .pb-ix-note{line-height:1.62;}
+.ix2ho-lane-text br, .ix2pt-beat br, .ix2dt-result-text br, .ix2hs-pop-d br,
+.ix2sc-cons br, .ix2sc-text br, .ix2st-d br, .ixal-q-text br, .ixal-step br,
+.ixbd-tip br, .ixdl-f-text br, .ixec-exception br, .ixhz-d-text br, .ixlg-row br,
+.ixpf-b-text br, .ixpf-d-example br, .ixpf-d-text br, .ixpm-note br,
+.ixpm-scope-item br, .ixpm-usage br, .ixsc-t-note br, .ixsf-text br,
+.ixtl-card br, .ixtl-text br, .ixtx-text br, .ixtx-note br, .pb-ix-note br{display:block;content:"";margin-top:7px;}
+.pb-ix li{margin:.38em 0;}
