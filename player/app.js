@@ -1465,7 +1465,15 @@ function inlineVideoHTML(text) {
 // key) render wherever that image appears inline. Same markup and behaviour
 // as item-level hotspot figures.
 function assetHotspotsFor(kind, name) {
-  var rec = PB && PB.assetHotspots && PB.assetHotspots[kind + '/' + name];
+  var all = PB && PB.assetHotspots;
+  if (!all) return null;
+  // Remote loaders rewrite asset keys in place to full bucket URLs
+  // (img/<file> -> https://.../assets/<file>), so match by filename suffix too.
+  var rec = all[kind + '/' + name];
+  if (!rec) {
+    var suffix = '/' + name;
+    for (var k in all) { if (k.slice(-suffix.length) === suffix) { rec = all[k]; break; } }
+  }
   return rec && Array.isArray(rec.hotspots) && rec.hotspots.length ? rec : null;
 }
 function hotspotFigureHTML(imgSrc, rec, caption, extraCls) {
@@ -5315,7 +5323,7 @@ Object.assign(PB_IX_RENDER, {
       '</div>';
   },
 });
-PB_IX_KINDS.push('handoff','buildup','parallel','ripple','journeydot','dtree','scenario','hotspot','stepper','matching','seq');
+PB_IX_KINDS.push('handoff','buildup','parallel','ripple','journeydot','dtree','scenario','hotspot','stepper','matching','seq','relayflow');
 
 Object.assign(PB_IX_RENDER, {
 
@@ -5405,6 +5413,35 @@ Object.assign(PB_IX_RENDER, {
       '</svg><div class="ix2jn-dot" aria-hidden="true"></div><div class="ix2jn-stops"></div></div>' +
       '<div class="ix2-bar"><button type="button" class="ix2-replay" data-ix2-replay>↻ Replay</button></div>' +
       '</div>';
+  },
+
+  // C6 — Relay flow: process cards in reading order, with a labelled handoff
+  // point sitting on the connector between each pair. Pure markup + CSS —
+  // every step and handoff is always visible, no JS state.
+  relayflow: function (it) {
+    var steps = _ixArr(it.steps);
+    if (!steps.length) return '<div class="pb-ix pb-chart-empty">Add steps to build this relay.</div>';
+    var html = '<div class="pb-ix pb-ixrf">' +
+      (it.title ? '<div class="ix2-title">' + esc(it.title) + '</div>' : '') +
+      '<div class="ixrf-track">';
+    steps.forEach(function (s, i) {
+      if (i) {
+        var h = steps[i - 1].handoff || '';
+        html += '<div class="ixrf-link" style="--rfi:' + i + '">' +
+          '<span class="ixrf-line" aria-hidden="true"></span>' +
+          (h
+            ? '<span class="ixrf-chip"><span class="ixrf-chip-eyebrow">Handoff</span><span class="ixrf-chip-text">' + inlineRichHTML(h) + '</span></span>'
+            : '<span class="ixrf-arrow" aria-hidden="true">&rarr;</span>') +
+          '</div>';
+      }
+      html += '<div class="ixrf-step" style="--rfi:' + i + '">' +
+        '<div class="ixrf-num">' + ('0' + (i + 1)).slice(-2) + '</div>' +
+        '<div class="ixrf-label">' + esc(s.label || ('Process ' + (i + 1))) + '</div>' +
+        (s.text ? '<div class="ixrf-text">' + inlineRichHTML(s.text) + '</div>' : '') +
+        '</div>';
+    });
+    html += '</div></div>';
+    return html;
   },
 
   // I1 — Decision tree: answer questions to reach an outcome.

@@ -95,7 +95,8 @@
     { v: 'stepper',     l: '27 · Step walkthrough (previous / next)' },
     { v: 'matching',    l: '28 · Matching pairs exercise' },
     { v: 'stagebar',  l: '30 · Stage bar timeline (gradient fill, greyed Track)' },
-    { v: 'seq',         l: '29 · Sequencing exercise (tap in order)' }
+    { v: 'seq',         l: '29 · Sequencing exercise (tap in order)' },
+    { v: 'relayflow', l: '31 · Process relay (steps + handoff points)' }
   ];
   var IX_TEMPLATES = {
     processflow: { steps: [
@@ -181,6 +182,10 @@
       { icon: '③', label: 'Wider impact', cons: 'What it changes', ring: 3 } ] },
     journeydot: { stops: [
       { label: 'Start', text: 'Where it begins.' }, { label: 'Middle', text: 'What happens along the way.' }, { label: 'End', text: 'Where it lands.' } ] },
+    relayflow: { steps: [
+      { label: 'Process 1', text: 'What this role does.', handoff: 'What passes to the next step' },
+      { label: 'Process 2', text: 'What this role does.', handoff: 'What passes to the next step' },
+      { label: 'Process 3', text: 'What this role does.' } ] },
     dtree: { title: 'Find the right path', nodes: [
       { q: 'First question?', opts: [ { t: 'Option A', to: 1, result: '' }, { t: 'Option B', to: 0, result: 'Outcome B — do this.' } ] },
       { q: 'Follow-up question?', opts: [ { t: 'Yes', to: 0, result: 'Outcome A1.' }, { t: 'No', to: 0, result: 'Outcome A2.' } ] } ] },
@@ -519,6 +524,16 @@
         fields: [
           { k: 'label', l: 'Stop label' },
           { k: 'text', l: 'Short text (optional)' }
+        ] }
+    ],
+    relayflow: [
+      { k: 'title', l: 'Title (optional)' },
+      { t: 'list', k: 'steps', l: 'Process steps (in order)', addLabel: 'Add step',
+        make: function () { return { label: 'New process', text: '', handoff: '' }; },
+        fields: [
+          { k: 'label', l: 'Process name' },
+          { k: 'text', l: 'What happens here', t: 'area' },
+          { k: 'handoff', l: 'Handoff to the next step (optional)', tip: 'Shown on the connector after this step — leave blank on the last step' }
         ] }
     ],
     dtree: [
@@ -2303,6 +2318,7 @@
     parallel: 'Parallel paths animation',
     ripple: 'Ripple animation',
     journeydot: 'Journey dot animation',
+    relayflow: 'Process relay (handoffs)',
     dtree: 'Decision tree',
     scenario: 'Scenario',
     hotspot: 'Hotspot image',
@@ -2351,6 +2367,7 @@
         ] }; }),
         mk('before / after', function () { return { s: 'beforeafter', name: 'Before / after', beforeLabel: 'Before', afterLabel: 'After', beforeText: '', afterText: '', beforeImg: '', afterImg: '' }; }),
         mkIx('processflow'),
+        mkIx('relayflow'),
         mkIx('horizons'),
         mkIx('stageflow'),
         mkIx('testline'),
