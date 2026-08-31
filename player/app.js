@@ -3255,6 +3255,26 @@ function findWheelById(wid) {
   return null;
 }
 
+function cycSegsHTML(n, onIdx) {
+  var cx = 26, cy = 26, rr = 20, stepA = 360 / n, gap = n > 1 ? 4 : 0;
+  function pt(a) { var rad = (a - 90) * Math.PI / 180; return [cx + rr * Math.cos(rad), cy + rr * Math.sin(rad)]; }
+  var segs = '';
+  for (var i = 0; i < n; i++) {
+    var p0 = pt(i * stepA + gap / 2), p1 = pt((i + 1) * stepA - gap / 2);
+    var large = (stepA - gap) > 180 ? 1 : 0;
+    var on = i === onIdx;
+    segs += '<path class="pb-cyc-seg" data-i="' + i + '" d="M ' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A ' + rr + ' ' + rr + ' 0 ' + large + ' 1 ' +
+      p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + '" fill="none" stroke="' + (on ? '#B59060' : '#8a9a8b') +
+      '" stroke-opacity="' + (on ? '1' : '.38') + '" stroke-width="7" stroke-linecap="round"/>';
+  }
+  return segs;
+}
+function cycRingInnerHTML(n, onIdx) {
+  return cycSegsHTML(n, onIdx) +
+    '<circle cx="26" cy="26" r="13" fill="#FDFDF3"/>' +
+    '<text x="26" y="30" text-anchor="middle" class="pb-cyc-docknum">' + ('0' + (onIdx + 1)).slice(-2) + '</text>';
+}
+
 function cycleDockHTML(ch) {
   if (!ch) return '';
   var entries = [];
@@ -3268,24 +3288,35 @@ function cycleDockHTML(ch) {
   var stages = (Array.isArray(found.it.stages) ? found.it.stages : []).filter(function (s) { return s && s.label; });
   var n = stages.length;
   if (!n) return '';
-  entries.forEach(function (e) { e.i = Math.max(0, Math.min(e.i, n - 1)); });
-  var cx = 26, cy = 26, rr = 20, stepA = 360 / n, gap = n > 1 ? 4 : 0;
-  function pt(a) { var rad = (a - 90) * Math.PI / 180; return [cx + rr * Math.cos(rad), cy + rr * Math.sin(rad)]; }
-  var segs = '';
-  for (var i = 0; i < n; i++) {
-    var p0 = pt(i * stepA + gap / 2), p1 = pt((i + 1) * stepA - gap / 2);
-    var large = (stepA - gap) > 180 ? 1 : 0;
-    var on = i === entries[0].i;
-    segs += '<path class="pb-cyc-seg" data-i="' + i + '" d="M ' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A ' + rr + ' ' + rr + ' 0 ' + large + ' 1 ' +
-      p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + '" fill="none" stroke="' + (on ? '#B59060' : '#8a9a8b') +
-      '" stroke-opacity="' + (on ? '1' : '.38') + '" stroke-width="7" stroke-linecap="round"/>';
-  }
+  // Multi-wheel chapters: gather every referenced wheel so the dock can
+  // re-label, re-count and re-target itself as the reader scrolls between
+  // wheels. Previously only the FIRST wheel's labels were embedded, so a
+  // chapter whose sections belong to different wheels showed the wrong
+  // step count and wording.
+  var wheelsMap = {};
+  entries.forEach(function (e) {
+    if (!e.wid || wheelsMap[e.wid]) return;
+    var f = findWheelById(e.wid);
+    if (!f) return;
+    var st = (Array.isArray(f.it.stages) ? f.it.stages : []).filter(function (s) { return s && s.label; });
+    wheelsMap[e.wid] = { hub: String(f.it.hubTitle || f.it.name || ''),
+      labels: st.map(function (s) { return String(s.label || ''); }),
+      ch: f.chapterId, sub: f.subId };
+  });
+  entries.forEach(function (e) {
+    var wm = wheelsMap[e.wid];
+    var m = wm && wm.labels.length ? wm.labels.length : n;
+    e.i = Math.max(0, Math.min(e.i, m - 1));
+  });
+  var segs = cycSegsHTML(n, entries[0].i);
   var labels = stages.map(function (s) { return String(s.label || ''); });
   var hub = String(found.it.hubTitle || found.it.name || '');
   var first = entries[0];
   return '<button type="button" class="pb-cyc-dock"' +
     ' data-goto="' + esc(found.chapterId) + '"' + (found.subId ? ' data-sub="' + esc(found.subId) + '"' : '') +
-    ' data-cycentries="' + esc(JSON.stringify(entries.map(function (e) { return { a: e.a, i: e.i }; }))) + '"' +
+    ' data-cycentries="' + esc(JSON.stringify(entries.map(function (e) { return { a: e.a, i: e.i, w: e.wid }; }))) + '"' +
+    ' data-cycwheels="' + esc(JSON.stringify(wheelsMap)) + '"' +
+    ' data-cycwcur="' + esc(entries[0].wid || '') + '"' +
     ' data-cyclabels="' + esc(JSON.stringify(labels)) + '"' +
     ' data-cychub="' + esc(hub) + '"' +
     ' aria-label="Step ' + (first.i + 1) + ' of ' + n + ' — ' + esc(labels[first.i]) + '. Open the ' + esc(hub || 'lifecycle') + ' diagram.">' +
@@ -3296,10 +3327,28 @@ function cycleDockHTML(ch) {
     '<span class="pb-cyc-name">' + esc(labels[first.i]) + (hub ? ' · ' + esc(hub) : '') + '</span></span></button>';
 }
 
-function cycleDockSetState(dock, idx) {
-  var labels = [];
-  try { labels = JSON.parse(dock.getAttribute('data-cyclabels') || '[]'); } catch (e) {}
-  var hub = dock.getAttribute('data-cychub') || '';
+function cycleDockSetState(dock, idx, wid) {
+  var labels = [], hub = '';
+  var wheels = {};
+  try { wheels = JSON.parse(dock.getAttribute('data-cycwheels') || '{}'); } catch (e) {}
+  if (wid && wheels[wid] && wheels[wid].labels.length) {
+    var w = wheels[wid];
+    if (dock.getAttribute('data-cycwcur') !== wid) {
+      dock.setAttribute('data-cycwcur', wid);
+      // Rebuild the ring for this wheel's stage count and retarget the
+      // click-through to this wheel's home section.
+      var svg = dock.querySelector('svg');
+      if (svg) svg.innerHTML = cycRingInnerHTML(w.labels.length, idx);
+      if (w.ch) {
+        dock.setAttribute('data-goto', w.ch);
+        if (w.sub) dock.setAttribute('data-sub', w.sub); else dock.removeAttribute('data-sub');
+      }
+    }
+    labels = w.labels; hub = w.hub;
+  } else {
+    try { labels = JSON.parse(dock.getAttribute('data-cyclabels') || '[]'); } catch (e) {}
+    hub = dock.getAttribute('data-cychub') || '';
+  }
   var n = labels.length || dock.querySelectorAll('.pb-cyc-seg').length;
   dock.querySelectorAll('.pb-cyc-seg').forEach(function (seg) {
     var on = Number(seg.getAttribute('data-i')) === idx;
@@ -3364,7 +3413,7 @@ function cycleDockScan() {
         var r = ratios[e.a] || 0;
         if (r > bestR) { bestR = r; best = e; }
       });
-      if (best) cycleDockSetState(dock, best.i);
+      if (best) cycleDockSetState(dock, best.i, best.w);
       cycleDockVisibility(dock, entries, ratios);
     });
   }, { threshold: [0, 0.15, 0.35, 0.55, 0.75] });
