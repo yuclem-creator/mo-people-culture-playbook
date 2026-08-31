@@ -1072,3 +1072,14 @@
 .ixec-end{top:60px;}
 .ixec-d-list .ixec-d-plain{list-style:none;margin-left:-16px;}
 @media (max-width:900px){.ixec-at{width:96px;font-size:9px;}}
+
+/* ---- Event calendar timeline: label row staggering ------------------------
+   Pin labels below the track also collided on dense timelines; they now
+   stagger into two rows (mirroring the eyebrow rows above), with slightly
+   narrower text columns so neighbours never touch. */
+.ixec-trackwrap{height:214px;}
+.ixec-at{width:118px;font-size:9.5px;}
+.ixec-lbl{width:120px;font-size:11px;}
+.ixec-pin:nth-of-type(odd) .ixec-lbl{top:calc(100% + 36px);}
+.ixec-end{top:6px;max-width:150px;}
+.ixec-end-lbl{max-width:150px;text-align:right;line-height:1.35;}
