@@ -4675,7 +4675,16 @@ var PB_IX_RENDER = {
       (legend.length ? '<div class="ixfc-legend">' + legend.map(function (l, i) {
         return '<span class="ixfc-leg"><span class="ixlg-sw" style="background:' + esc(l.color || _IX_COLORS[i % _IX_COLORS.length]) + ';"></span>' + esc(l.label || '') + '</span>';
       }).join('') + '</div>' : '') +
-      '<div class="ixfc-grid' + ([2,3,4].indexOf(parseInt(it.cols, 10)) >= 0 ? ' cols-' + parseInt(it.cols, 10) : '') + '">' + cards.map(function (c, i) {
+      '<div class="ixfc-grid' + (function () {
+        // Explicit cols wins; otherwise default to the card count (2–4) so the
+        // row is always even — 3 cards render as 3 equal columns, never as
+        // two boxes plus a stretched rectangle. 1 card or 5+ fall back to the
+        // auto-fit base grid, which shares space evenly per row.
+        var explicit = parseInt(it.cols, 10);
+        if ([2, 3, 4].indexOf(explicit) >= 0) return ' cols-' + explicit;
+        if (cards.length >= 2 && cards.length <= 4) return ' cols-' + cards.length;
+        return '';
+      })() + '">' + cards.map(function (c, i) {
         var chips = _ixArr(c.chips);
         return '<button type="button" class="ixfc-card" data-fc>' +
           '<span class="ixfc-face ixfc-front" style="' + (dark && c.themeColor ? 'border-top-color:' + esc(c.themeColor) + ';' : '') + '">' +

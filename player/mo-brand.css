@@ -377,10 +377,13 @@
 
 /* ---- 4 / 10. Flip cards + dark card wall --------------------------------- */
 .ixfc-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px}
-.ixfc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-/* Adaptive last row: a lone odd card stretches full-width as a rectangle,
-   so no dead gap ever shows (even counts never stretch). */
-.ixfc-grid:not(.cols-2):not(.cols-3):not(.cols-4) > .ixfc-card:last-child:nth-child(odd){grid-column:1 / -1;min-height:150px}
+.ixfc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+/* Even by default: auto-fit collapses empty tracks so cards in a row share
+   the space equally, and the flipcards renderer pins 2–4 card sets to an
+   exact column count — light flip cards never stretch into a lone
+   rectangle. Only the dark card wall keeps the old adaptive rhythm, where a
+   lone odd card spans full width on purpose. */
+.pb-ixfc.dark .ixfc-grid:not(.cols-2):not(.cols-3):not(.cols-4) > .ixfc-card:last-child:nth-child(odd){grid-column:1 / -1;min-height:150px}
 .ixfc-card{
   position:relative;display:block;border:0;background:none;padding:0;cursor:pointer;
   min-height:190px;perspective:900px;text-align:left;
@@ -805,16 +808,6 @@
   .pb-ixrf .ixrf-num{grid-column:1;grid-row:1;}
   .pb-ixrf .ixrf-label{grid-column:1;grid-row:2;margin:4px 0 0;}
   .pb-ixrf .ixrf-text{grid-column:2;grid-row:1 / span 2;font-size:13px;}
-}
-/* very wide screens — horizontal relay */
-@media (min-width:1600px){
-  .pb-ixrf .ixrf-track{flex-direction:row;align-items:stretch;}
-  .pb-ixrf .ixrf-step{display:block;flex:1 1 0;min-width:0;}
-  .pb-ixrf .ixrf-label{margin:5px 0 7px;}
-  .pb-ixrf .ixrf-text{font-size:12.5px;}
-  .pb-ixrf .ixrf-link{flex:0 0 128px;height:auto;padding:0 4px;}
-  .pb-ixrf .ixrf-line{left:0;right:0;top:50%;bottom:auto;border-left:none;border-top:2px dotted #d8c9ae;}
-  .pb-ixrf .ixrf-chip{max-width:128px;padding:6px 9px;}
 }
 
 /* I1 decision tree */
