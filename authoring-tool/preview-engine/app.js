@@ -1499,6 +1499,11 @@ function inlineRichHTML(text) {
   out = out.replace(/\[\[dot:(green|gold|red)\]\]/g, function (_m, c) {
     return '<span class="pb-dot pb-dot--' + c + '" aria-hidden="true"></span>';
   }).replace(/\[\[tick\]\]/g, '<span class="pb-tick" aria-hidden="true">\u2713</span>');
+  // Author-typed line breaks: people write literal <br> tags (and hit Enter)
+  // in lane/beat text expecting real line breaks — escaping was leaving the
+  // "<br>" visible as text and cramming the bullets onto one line. Convert
+  // both forms to real breaks after everything else has been escaped.
+  out = out.replace(/&lt;br\s*\/?\s*&gt;/gi, '<br>').replace(/\r?\n/g, '<br>');
   return out;
 }
 
