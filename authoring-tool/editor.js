@@ -96,7 +96,8 @@
     { v: 'matching',    l: '28 · Matching pairs exercise' },
     { v: 'stagebar',  l: '30 · Stage bar timeline (gradient fill, greyed Track)' },
     { v: 'seq',         l: '29 · Sequencing exercise (tap in order)' },
-    { v: 'relayflow', l: '31 · Process relay (steps + handoff points)' }
+    { v: 'relayflow', l: '31 · Process relay (steps + handoff points)' },
+    { v: 'linkgrid',  l: '32 · Linked image cards (clickable resources)' }
   ];
   var IX_TEMPLATES = {
     processflow: { steps: [
@@ -202,7 +203,11 @@
       { t: 'Final step', d: 'How it ends.', img: '', color: '#C07A3E' } ] },
     matching: { title: 'Match each pair', pairs: [
       ['Term one', 'Its meaning'], ['Term two', 'Its meaning'], ['Term three', 'Its meaning'] ] },
-    seq: { title: 'Put these in order', items: ['First thing', 'Second thing', 'Third thing', 'Last thing'] }
+    seq: { title: 'Put these in order', items: ['First thing', 'Second thing', 'Third thing', 'Last thing'] },
+    linkgrid: { title: 'Resources', cols: '', cards: [
+      { img: '', title: 'Resource one', text: 'What this resource helps with.', url: 'https://', linkLabel: 'Open' },
+      { img: '', title: 'Resource two', text: '', url: 'https://', linkLabel: 'Open' },
+      { img: '', title: 'Resource three', text: '', url: 'https://', linkLabel: 'Open' } ] }
   };
   // ---- Structured form specs for the 29 interaction kinds ------------------
   // Each entry: { k: 'fieldKey', l: 'Label', t: 'text'|'area'|'num'|'check'|
@@ -596,6 +601,19 @@
       { k: 'title', l: 'Title (optional)' },
       { t: 'lines', k: 'items', l: 'Steps in the CORRECT order (one per line)', tip: 'The player shuffles them automatically.' }
     ],
+    linkgrid: [
+      { k: 'title', l: 'Heading above the grid (optional)' },
+      { k: 'cols', l: 'Cards per row', t: 'select', opts: [{ v: '', l: 'Auto (fills the row)' }, { v: '2', l: '2 per row' }, { v: '3', l: '3 per row' }, { v: '4', l: '4 per row' }] },
+      { t: 'list', k: 'cards', l: 'Linked image cards', addLabel: 'Add card',
+        make: function () { return { img: '', title: 'New resource', text: '', url: '', linkLabel: 'Open' }; },
+        fields: [
+          { k: 'img', l: 'Image', t: 'img' },
+          { k: 'title', l: 'Card title' },
+          { k: 'text', l: 'Short description (optional)', t: 'area' },
+          { k: 'url', l: 'Link URL', tip: 'https://… — the whole card opens this in a new tab' },
+          { k: 'linkLabel', l: 'Link label', tip: 'Default: Open resource' }
+        ] }
+    ],
     stagebar: [
       { k: 'sub', l: 'Small line under the heading (optional)', tip: 'e.g. Overall timeline' },
       { t: 'list', k: 'stages', l: 'Stages', addLabel: 'Add stage',
@@ -674,6 +692,28 @@
       return;
     }
     if (f.t === 'select') { box.appendChild(selectField(f.l, obj[f.k] || '', f.opts || [], function (v) { obj[f.k] = v; touch(); })); return; }
+    if (f.t === 'img') {
+      // Image path + one-click upload (same asset pipeline as media items:
+      // compress → register under img/upload_<ts>_<name> → stored in PB.assets
+      // and pushed to cloud storage on save/publish).
+      var iw = el('div', { class: 'field' });
+      iw.appendChild(textField(f.l, obj[f.k] == null ? '' : String(obj[f.k]), function (v) { obj[f.k] = v; touch(); },
+        f.tip || 'Path like img/my-image.jpg — or use Upload below.'));
+      iw.appendChild(el('button', { class: 'btn ghost', style: 'margin-top:4px;', type: 'button', onclick: function () {
+        chooseFile('image/*', function (dataUrl, name) {
+          withCompressedImage(dataUrl, name, function (dataUrl2) {
+            if (!dataUrl2) return;
+            var virtual = 'img/upload_' + Date.now() + '_' + safeName(name);
+            PB.assets[virtual] = dataUrl2;
+            obj[f.k] = virtual;
+            touch(); renderInspector();
+            toast('Image uploaded and linked.', 'ok');
+          });
+        });
+      } }, ['Upload image…']));
+      box.appendChild(iw);
+      return;
+    }
     if (f.t === 'color') {
       var wrap = el('div', { class: 'field' }, [el('label', {}, [f.l])]);
       var row = el('div', { style: 'display:flex;gap:8px;align-items:center;' });
@@ -2324,7 +2364,8 @@
     hotspot: 'Hotspot image',
     stepper: 'Step walkthrough',
     matching: 'Matching pairs',
-    seq: 'Sequencing exercise'
+    seq: 'Sequencing exercise',
+    linkgrid: 'Linked image cards'
   };
 
   // Shared element catalog: used by the inspector's add row (append) and by
@@ -2348,7 +2389,8 @@
         mk('image', null), // media upload flow
         mk('video', null), // media upload flow
         mk('note box', function () { return { s: 'callout', name: 'Quick recap', label: 'Quick recap', text: '', tone: 'recap' }; }),
-        mk('knowledge tip', function () { return { s: 'callout', name: 'Knowledge tip', label: 'Knowledge tip', text: '', tone: 'tip' }; })
+        mk('knowledge tip', function () { return { s: 'callout', name: 'Knowledge tip', label: 'Knowledge tip', text: '', tone: 'tip' }; }),
+        mkIx('linkgrid')
       ] },
       { label: 'Lists & checks', items: [
         mk('checklist', function () { return { s: 'checklist', name: 'Checklist', items: [{ label: 'New item', url: '' }] }; }),
@@ -2596,7 +2638,7 @@
         });
       } }, ['Replace ' + it.s + '…']));
       if (it.s === 'image') {
-        box.appendChild(selectField('Width', it.full === false ? 'auto' : 'full', [
+        box.appendChild(selectField('Width', it.full ? 'full' : 'auto', [
           { v: 'auto', l: 'Natural size (up to column width)' },
           { v: 'full', l: 'Stretch to full column width' }
         ], function (v) { it.full = (v === 'full'); touch(); }));

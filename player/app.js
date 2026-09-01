@@ -814,7 +814,7 @@ function policyItemBodyHTML(it) {
   // interactive hotspots (numbered pins revealing popup text on click).
   if (it && it.s === 'image') {
     const hs = Array.isArray(it.hotspots) ? it.hotspots : [];
-    const imgHtml = `<img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;display:block;${it.full === false ? '' : 'width:100%;'}" />`;
+    const imgHtml = `<img src="${it.url}" alt="${esc(it.name || 'Document figure')}" style="max-width:100%;display:block;${it.full ? 'width:100%;' : ''}" />`;
     if (!hs.length) {
       return `<figure class="policy-image" style="margin:16px 0;">${imgHtml}
         ${it.name ? `<figcaption style="font-size:12px;color:var(--ink-mute);margin-top:8px;">${esc(it.name)}</figcaption>` : ''}
@@ -822,7 +822,7 @@ function policyItemBodyHTML(it) {
     }
     const showAll = it.hotspotsMode === 'show';
     return `<figure class="policy-image hotspot-figure" data-hotspots-mode="${showAll ? 'show' : 'reveal'}" style="margin:16px 0;">
-      <div class="hotspot-wrap" style="position:relative;${it.full === false ? 'display:inline-block;' : 'display:block;'}max-width:100%;">
+      <div class="hotspot-wrap" style="position:relative;${it.full ? 'display:block;' : 'display:inline-block;'}max-width:100%;">
         ${imgHtml}
         ${hs.map(function (h, i) {
           return `
@@ -1480,8 +1480,8 @@ function hotspotFigureHTML(imgSrc, rec, caption, extraCls) {
   var hs = rec.hotspots;
   var showAll = rec.hotspotsMode === 'show';
   return '<figure class="policy-image hotspot-figure' + (extraCls ? ' ' + extraCls : '') + '" data-hotspots-mode="' + (showAll ? 'show' : 'reveal') + '" style="margin:16px 0;">'
-    + '<div class="hotspot-wrap" style="position:relative;display:block;max-width:100%;">'
-    + '<img src="' + imgSrc + '" alt="' + esc(caption || '') + '" style="max-width:100%;width:100%;display:block;" />'
+    + '<div class="hotspot-wrap" style="position:relative;display:inline-block;max-width:100%;">'
+    + '<img src="' + imgSrc + '" alt="' + esc(caption || '') + '" style="max-width:100%;display:block;" />'
     + hs.map(function (h, i) {
         return '<button type="button" class="hotspot-dot' + (showAll ? ' on' : '') + '" data-hotspot="' + i + '" style="position:absolute;left:' + h.x + '%;top:' + h.y + '%;">' + (i + 1) + '</button>'
           + '<div class="hotspot-pop' + (showAll ? ' show' : '') + '" data-hotspot-pop="' + i + '" style="left:' + h.x + '%;top:' + h.y + '%;">'
@@ -3548,11 +3548,6 @@ function resolveAssets(root) {
 let currentChapter = 'cover';
 
 function goTo(chapterId, subId, opts) {
-  // Pause any media still playing on the page you're leaving — chapters are
-  // hidden, not unmounted, so a playing <video> would keep its audio running
-  // over the next chapter otherwise. Position is kept, so returning resumes
-  // where the learner left off.
-  document.querySelectorAll('video, audio').forEach(m => { if (!m.paused) m.pause(); });
   document.querySelectorAll('.chapter').forEach(c => c.classList.remove('on'));
   const el = document.getElementById(chapterId);
   if (el) el.classList.add('on');
@@ -5435,22 +5430,23 @@ Object.assign(PB_IX_RENDER, {
   relayflow: function (it) {
     var steps = _ixArr(it.steps);
     if (!steps.length) return '<div class="pb-ix pb-chart-empty">Add steps to build this relay.</div>';
-    // Ledger strip: one ruled row per process — who owns what, and what they
-    // hand over next. The handoff lives in its own aligned column instead of
-    // floating between cards; rows stack on narrow screens. Still pure
-    // markup + CSS (no JS state), edited via the same Studio form.
-    var anyHandoff = steps.some(function (s) { return !!(s.handoff || '').trim(); });
     var html = '<div class="pb-ix pb-ixrf">' +
       (it.title ? '<div class="ix2-title">' + esc(it.title) + '</div>' : '') +
-      '<div class="ixrf-ledger' + (anyHandoff ? '' : ' ixrf-nohand') + '">' +
-      '<div class="ixrf-head" aria-hidden="true"><span>Step · Role</span><span>Owns</span><span>Hands over</span></div>';
+      '<div class="ixrf-track">';
     steps.forEach(function (s, i) {
-      var h = (s.handoff || '').trim();
-      html += '<div class="ixrf-row" style="--rfi:' + i + '">' +
-        '<div class="ixrf-who"><span class="ixrf-num">' + ('0' + (i + 1)).slice(-2) + '</span>' +
-        '<span class="ixrf-label">' + esc(s.label || ('Process ' + (i + 1))) + '</span></div>' +
-        '<div class="ixrf-owns">' + (s.text ? inlineRichHTML(s.text) : '') + '</div>' +
-        '<div class="ixrf-gives">' + (h ? '<span class="ixrf-pill">' + inlineRichHTML(h) + '</span>' : '') + '</div>' +
+      if (i) {
+        var h = steps[i - 1].handoff || '';
+        html += '<div class="ixrf-link" style="--rfi:' + i + '">' +
+          '<span class="ixrf-line" aria-hidden="true"></span>' +
+          (h
+            ? '<span class="ixrf-chip"><span class="ixrf-chip-eyebrow">Handoff</span><span class="ixrf-chip-text">' + inlineRichHTML(h) + '</span></span>'
+            : '<span class="ixrf-arrow" aria-hidden="true">&rarr;</span>') +
+          '</div>';
+      }
+      html += '<div class="ixrf-step" style="--rfi:' + i + '">' +
+        '<div class="ixrf-num">' + ('0' + (i + 1)).slice(-2) + '</div>' +
+        '<div class="ixrf-label">' + esc(s.label || ('Process ' + (i + 1))) + '</div>' +
+        (s.text ? '<div class="ixrf-text">' + inlineRichHTML(s.text) + '</div>' : '') +
         '</div>';
     });
     html += '</div></div>';
@@ -5480,6 +5476,41 @@ Object.assign(PB_IX_RENDER, {
       (it.title ? '<div class="ix2-title">' + esc(it.title) + '</div>' : '') +
       '<div class="ix2sc-dots"></div>' +
       '<div class="ix2sc-beat"></div>' +
+      '</div>';
+  },
+
+  // 32 — Linked image cards: clickable image tiles that open external
+  // resources in a new tab. Images resolve through resolveAssets (img/ paths).
+  linkgrid: function (it) {
+    var cards = _ixArr(it.cards);
+    if (!cards.length) return '<div class="pb-ix pb-chart-empty">Add cards to build this resource grid.</div>';
+    var cols = parseInt(it.cols, 10) || 0;
+    function safeUrl(u) {
+      u = String(u || '').trim();
+      // Only web / mail / in-playbook links — never javascript: or data: URLs.
+      return /^(https?:\/\/|mailto:|\/|#)/i.test(u) ? u : '';
+    }
+    return '<div class="pb-ix pb-ix2lg">' +
+      (it.title ? '<div class="ix2-title">' + esc(it.title) + '</div>' : '') +
+      '<div class="ix2lg-grid"' + (cols ? ' style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr));"' : '') + '>' +
+        cards.map(function (c) {
+          var url = safeUrl(c.url);
+          var inner =
+            '<div class="ix2lg-media">' +
+              (c.img
+                ? '<img src="' + esc(c.img) + '" alt="' + esc(c.title || 'Resource') + '" loading="lazy">'
+                : '<div class="ix2lg-nophoto" aria-hidden="true">↗</div>') +
+            '</div>' +
+            '<div class="ix2lg-body">' +
+              '<div class="ix2lg-t">' + esc(c.title || 'Resource') + '</div>' +
+              (c.text ? '<div class="ix2lg-d">' + inlineRichHTML(c.text) + '</div>' : '') +
+              '<div class="ix2lg-cta">' + esc(c.linkLabel || 'Open resource') + ' <span aria-hidden="true">↗</span></div>' +
+            '</div>';
+          return url
+            ? '<a class="ix2lg-card" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + inner + '</a>'
+            : '<div class="ix2lg-card ix2lg-nolink">' + inner + '</div>';
+        }).join('') +
+      '</div>' +
       '</div>';
   },
 
