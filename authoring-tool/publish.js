@@ -218,7 +218,43 @@
     var uploadBundled = bundledPaths.reduce(function (chain, path) {
       return chain.then(function () {
         return fetch('preview-engine/' + path).then(function (res) {
-          if (!res.ok) { console.warn('[publish] bundled media not found locally, skipped:', path); return; }
+          if (!res.ok) {
+            // Not a repo-bundled file. If this is a cloud-uploaded asset
+            // (img/upload_*) and we are publishing, fall back to copying the
+            // binary from the DRAFT lane — otherwise it is silently skipped
+            // and the published page shows "image unavailable".
+            var bareName = path.replace(/^(img|video)\//, '');
+            if (stage === 'published' && /^upload_/i.test(bareName)) {
+              return fetch(draftAssetBase + bareName).then(function (res2) {
+                if (!res2.ok) {
+                  failedAssets.push({ path: path, reason: 'not found locally or in the draft lane (HTTP ' + res2.status + '). Re-upload this media in Studio, save, then publish again.' });
+                  tick();
+                  return;
+                }
+                return res2.blob().then(function (blob) {
+                  if (blob.size > ASSET_HARD_LIMIT) {
+                    failedAssets.push({ path: path, reason: Math.round(blob.size / 1048576) + 'MB — over the 50MB cloud limit. Run Settings → Optimise media, then save again.' });
+                    tick();
+                    return;
+                  }
+                  return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + bareName, blob, {
+                    upsert: true, contentType: guessMime(bareName)
+                  }).then(function (r) {
+                    if (r.error) failedAssets.push({ path: path, reason: r.error.message });
+                    tick();
+                  }, function (e) {
+                    failedAssets.push({ path: path, reason: (e && e.message) || String(e) });
+                    tick();
+                  });
+                });
+              }, function (e) {
+                failedAssets.push({ path: path, reason: 'draft-lane copy failed: ' + ((e && e.message) || String(e)) });
+                tick();
+              });
+            }
+            console.warn('[publish] bundled media not found locally, skipped:', path);
+            return;
+          }
           return res.blob().then(function (blob) {
             if (blob.size > ASSET_HARD_LIMIT) {
               failedAssets.push({ path: path, reason: Math.round(blob.size / 1048576) + 'MB — over the 50MB cloud limit. Run Settings → Optimise media, then save again.' });
