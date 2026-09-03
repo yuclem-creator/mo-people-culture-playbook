@@ -98,7 +98,7 @@
     out = out.replace(/<script src="playbook-content\.js(\?v=\d+)?"><\/script>/,
       '<script src="playbook-data.js"><\/script>\n<script src="playbook-content.js"><\/script>');
     out = out.replace(/<script src="app\.js(\?v=\d+)?"><\/script>/,
-      '<script src="app.js"><\/script>\n<script src="ask.js"><\/script>\n<script src="scorm_hook.js"><\/script>');
+      '<script>window.MO_ASK_ENTRY_OFF = 1;<\/script>\n<script src="app.js"><\/script>\n<script src="ask.js"><\/script>\n<script src="scorm_hook.js"><\/script>');
     return out;
   }
 

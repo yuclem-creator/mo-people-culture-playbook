@@ -405,7 +405,9 @@
 
     var seen = false;
     try { seen = global.sessionStorage.getItem('mo_ask_seen') === '1'; } catch (e) {}
-    if (!seen) showEntry();
+    // MO_ASK_ENTRY_OFF is set by SCORM packages (offline export + remote SCORM):
+    // LMS learners must land straight on the content, no entry overlay.
+    if (!seen && !global.MO_ASK_ENTRY_OFF) showEntry();
   }
 
   function showEntry() {

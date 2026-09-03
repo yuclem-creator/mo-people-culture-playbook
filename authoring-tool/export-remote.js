@@ -188,7 +188,8 @@
     // Swap the offline chain (playbook-data.js + direct app.js) for the
     // remote-loader chain (remote-config.js + remote-loader.js loads the
     // rest AFTER content resolves — see remote-loader.js loadScriptsSequentially).
-    var head = '<script src="remote-config.js"><\/script>\n' +
+    var head = '<script>window.MO_ASK_ENTRY_OFF = 1;<\/script>\n' +
+               '<script src="remote-config.js"><\/script>\n' +
                '<script src="fallback-playbook-data.js"><\/script>\n';
     var out = indexSrc.replace('</head>', head + '</head>');
     // Remove the two script tags remote-loader.js will inject itself in the
