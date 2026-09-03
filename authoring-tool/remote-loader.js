@@ -191,6 +191,7 @@
   function boot(pb, sourceLabel) {
     global.PLAYBOOK = rewriteAssetBase(pb);
     global.SCORM_REQUIRED_PAGES = computeRequiredPages(global.PLAYBOOK);
+    global.MO_ASK_ENTRY_OFF = 1; // SCORM learners land straight on content — no entry overlay
     log(sourceLabel);
     if (sourceLabel !== 'network') showFallbackNote();
     // Load the rest of the app chain in the same order the offline export
