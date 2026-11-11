@@ -187,6 +187,8 @@ const SECTION_ICONS = {
   audit:       icon('<rect x="5" y="3.5" width="14" height="17.5" rx="1.2"/><path d="M8.5 9l1.7 1.7 3.3-3.3"/><path d="M8.5 14.5h7"/><path d="M8.5 17.5h4.5"/>'),
   governance:  icon('<path d="M12 20V4.5"/><path d="M12 20L5.3 8"/><path d="M12 20L18.7 8"/><path d="M5.3 8a13.2 13.2 0 0 1 13.4 0"/>'),
   hotel:       icon('<path d="M4 21V8.4l8-3.9 8 3.9V21"/><path d="M2.5 21h19"/><path d="M9 21v-3.6a3 3 0 0 1 6 0V21"/><path d="M7.5 11h1.4M11.3 11h1.4M15.1 11h1.4M7.5 14h1.4M15.1 14h1.4"/>'),
+  clock:       icon('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2v4.8l3.4 2.1"/>'),
+  'mo-fan':    '<svg class="line-icon" viewBox="0 0 240 130" fill="currentColor" stroke="none" aria-hidden="true"><g><path d="M153.26,114.93 L229.55,98.71 L221.73,75.15 L150.88,107.78 Z"/><path d="M150.47,106.92 L220.38,72.33 L206.97,51.43 L146.40,100.58 Z"/><path d="M145.79,99.85 L204.97,49.03 L186.81,32.11 L140.28,94.71 Z"/><path d="M139.51,94.16 L184.27,30.28 L162.48,18.37 L132.90,90.54 Z"/><path d="M132.01,90.19 L159.57,17.22 L135.52,11.08 L124.71,88.33 Z"/><path d="M123.77,88.21 L132.41,10.69 L107.59,10.69 L116.23,88.21 Z"/><path d="M115.29,88.33 L104.48,11.08 L80.43,17.22 L107.99,90.19 Z"/><path d="M107.10,90.54 L77.52,18.37 L55.73,30.28 L100.49,94.16 Z"/><path d="M99.72,94.71 L53.19,32.11 L35.03,49.03 L94.21,99.85 Z"/><path d="M93.60,100.58 L33.03,51.43 L19.62,72.33 L89.53,106.92 Z"/><path d="M89.12,107.78 L18.27,75.15 L10.45,98.71 L86.74,114.93 Z"/></g><g stroke="currentColor" stroke-width="1.4" fill="none"><line x1="127.73" y1="119.93" x2="148.98" y2="114.24"/><line x1="127.10" y1="118.31" x2="146.61" y2="108.15"/><line x1="126.13" y1="116.86" x2="142.98" y2="102.72"/><line x1="124.87" y1="115.65" x2="138.26" y2="98.20"/><line x1="123.38" y1="114.75" x2="132.68" y2="94.81"/><line x1="121.73" y1="114.19" x2="126.49" y2="92.71"/><line x1="120.00" y1="114.00" x2="120.00" y2="92.00"/><line x1="118.27" y1="114.19" x2="113.51" y2="92.71"/><line x1="116.62" y1="114.75" x2="107.32" y2="94.81"/><line x1="115.13" y1="115.65" x2="101.74" y2="98.20"/><line x1="113.87" y1="116.86" x2="97.02" y2="102.72"/><line x1="112.90" y1="118.31" x2="93.39" y2="108.15"/><line x1="112.27" y1="119.93" x2="91.02" y2="114.24"/></g></svg>',
   default:     icon('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M7.5 12h9"/>')
 };
 
@@ -423,7 +425,7 @@ function policyItemBodyHTML(it) {
       <div class="policy-tabs-bar" style="display:flex;flex-wrap:wrap;background:#F4F1EA;border-bottom:1px solid var(--rule);">
         ${tabs.map((t, i) => `<button type="button" class="policy-tab${i === 0 ? ' on' : ''}" data-tab-i="${i}" style="border:0;border-right:1px solid var(--rule);background:${i === 0 ? '#fff' : 'none'};padding:12px 18px;font:600 12px system-ui;letter-spacing:.08em;text-transform:uppercase;color:${i === 0 ? '#8f6d3f' : '#6b625a'};cursor:pointer;">${esc(t.label || ('Tab ' + (i + 1)))}</button>`).join('')}
       </div>
-      ${tabs.map((t, i) => `<div class="policy-tab-panel" data-tab-p="${i}" style="display:${i === 0 ? 'block' : 'none'};padding:18px 22px;background:#fff;"><p style="margin:0;font-size:14px;color:#4a443f;line-height:1.7;">${esc(t.text || '')}</p></div>`).join('')}
+      ${tabs.map((t, i) => `<div class="policy-tab-panel" data-tab-p="${i}" style="display:${i === 0 ? 'block' : 'none'};padding:18px 22px;background:#fff;"><p style="margin:0;font-size:14px;color:#4a443f;line-height:1.7;">${inlineRichHTML(t.text || '')}</p></div>`).join('')}
     </div>`;
   }
   // Table: branded data table lifted from an imported document or authored
@@ -1539,6 +1541,7 @@ function inlineRichHTML(text) {
   // in lane/beat text expecting real line breaks — escaping was leaving the
   // "<br>" visible as text and cramming the bullets onto one line. Convert
   // both forms to real breaks after everything else has been escaped.
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/&lt;br\s*\/?\s*&gt;/gi, '<br>').replace(/\r?\n/g, '<br>');
   return out;
 }
@@ -1802,7 +1805,7 @@ function milestoneTimelineHTML(cfg) {
           </div>
           <div class="mstone-body">
             <div class="mstone-step-eyebrow">${esc(s.label)}</div>
-            <p class="mstone-step-text">${esc(s.text)}</p>
+            <p class="mstone-step-text">${inlineRichHTML(s.text)}</p>
           </div>
         </li>`).join('');
   return `
