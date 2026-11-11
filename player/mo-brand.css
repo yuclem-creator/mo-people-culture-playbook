@@ -1131,3 +1131,6 @@
 .pb-ix2lg .ix2lg-cta{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8f6d3f;font-weight:600;}
 .pb-ix2lg .ix2lg-nolink{opacity:.75;}
 @media (max-width:640px){.pb-ix2lg .ix2lg-grid{grid-template-columns:1fr !important;}}
+
+/* tab panel bullet air (matches .ixtx-text rhythm) */
+.policy-tab-panel p br{display:block;content:"";margin-top:6px}
