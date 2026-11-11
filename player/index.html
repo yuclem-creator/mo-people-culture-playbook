@@ -3602,7 +3602,8 @@ body.on-menu .layout { grid-template-columns: 1fr; }
 .hl-grid {
   display: grid;
   gap: 0;
-  border: 1px solid var(--gold-hair);
+  border-top: 1px solid var(--gold-hair);
+  border-left: 1px solid var(--gold-hair);
 }
 .hl-grid--4 { grid-template-columns: repeat(4, 1fr); }
 .hl-grid--3 { grid-template-columns: repeat(3, 1fr); }
@@ -3614,10 +3615,10 @@ body.on-menu .layout { grid-template-columns: 1fr; }
   text-align: center;
   padding: 30px 22px 32px;
   border-right: 1px solid var(--gold-hair);
+  border-bottom: 1px solid var(--gold-hair);
 }
-.hl-grid--4 .hl-card:nth-child(4n),
-.hl-grid--3 .hl-card:nth-child(3n),
-.hl-grid--2 .hl-card:nth-child(2n) { border-right: none; }
+/* every card draws its own right+bottom edges; the grid supplies top+left,
+   so any card count (4, 5, 8, ...) stays fully outlined on every side */
 .hl-card-icon {
   display: inline-flex;
   align-items: center;
