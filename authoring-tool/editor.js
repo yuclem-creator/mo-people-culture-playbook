@@ -59,6 +59,9 @@
     { v: 'statband', l: 'Stat / KPI band' },
     { v: 'gauge', l: 'Gauge / maturity meter' }, { v: 'pyramid', l: 'Hierarchy / pyramid' },
     { v: 'wheel', l: 'Radial lifecycle wheel' },
+    { v: 'split', l: 'Split (two columns)' },
+    { v: 'contacts', l: 'Contact directory' },
+    { v: 'numlist', l: 'Numbered list' },
     { v: 'ix', l: 'Interactive element (18 kinds)' }
   ];
 
@@ -2386,6 +2389,7 @@
       { label: 'Text & media', items: [
         mk('heading', function () { return { s: 'heading', name: 'Heading', text: 'New heading', sub: '' }; }),
         mk('text', function () { return { s: 'text', name: 'Body text', text: 'New paragraph.', lead: false }; }),
+        mk('split layout', function () { return { s: 'split', name: 'Split', ratio: 60, left: { s: 'text', name: 'Body text', text: 'Left column.' }, right: { s: 'text', name: 'Body text', text: 'Right column.' } }; }),
         mk('image', null), // media upload flow
         mk('video', null), // media upload flow
         mk('note box', function () { return { s: 'callout', name: 'Quick recap', label: 'Quick recap', text: '', tone: 'recap' }; }),
@@ -2397,6 +2401,8 @@
         mk('task list', function () { return { s: 'tasklist', name: 'Task list', cid: uid('tl'), showProgress: true, gateText: '', items: [{ text: 'New task', note: '', pills: [] }] }; }),
         mk('tabs', function () { return { s: 'tabs', name: 'Tabbed group', tabs: [{ label: 'Tab 1', text: '' }] }; }),
         mk('table', function () { return { s: 'table', name: 'Table', headFirst: true, head: ['Column 1', 'Column 2'], rows: [['', '']] }; }),
+        mk('contact directory', function () { return { s: 'contacts', name: 'Contacts', cols: [[{ name: 'Full name', title: 'Role / title' }], [{ name: 'Full name', title: 'Role / title' }]] }; }),
+        mk('numbered list', function () { return { s: 'numlist', name: '', cols: [[{ num: '01', title: 'First entry', text: 'Supporting line' }], [{ num: '02', title: 'Second entry', text: 'Supporting line' }]] }; }),
         mkIx('compare'),
         mkIx('dlcheck')
       ] },
@@ -3024,6 +3030,69 @@
           touch(); renderInspector();
         } }, ['− Last column'])
       ]));
+      return;
+    }
+    if (it.s === 'contacts') {
+      it.cols = Array.isArray(it.cols) ? it.cols : [[], []];
+      while (it.cols.length < 2) it.cols.push([]);
+      box.appendChild(el('div', { class: 'note', text: 'Contacts render in two side-by-side columns (stacked on mobile). The circled initials are derived from each name automatically. Click a name or role on the page preview to edit it in place; add, remove and reorder people here.' }));
+      it.cols.forEach(function (col, ci) {
+        if (!Array.isArray(col)) { it.cols[ci] = []; col = it.cols[ci]; }
+        box.appendChild(sectionLabel('Column ' + (ci + 1) + ' (' + col.length + ')'));
+        renderRepeatable(box, col, {
+          nameOf: function (p) { return p.name || '(person)'; },
+          subOf: function (p) { return (p.title || '').slice(0, 60); },
+          open: null,
+          inlineEdit: function (p, wrap) {
+            wrap.appendChild(textField('Name', p.name || '', function (v) { p.name = v; touch(); }));
+            wrap.appendChild(textField('Role / title', p.title || '', function (v) { p.title = v; touch(); }, '', true));
+          },
+          addLabel: 'Add person',
+          make: function () { return { name: 'Full name', title: 'Role / title' }; }
+        });
+      });
+      return;
+    }
+    if (it.s === 'numlist') {
+      it.cols = Array.isArray(it.cols) ? it.cols : [[], []];
+      while (it.cols.length < 2) it.cols.push([]);
+      box.appendChild(el('div', { class: 'note', text: 'A numbered list in two side-by-side columns (stacked on mobile). Click a number, title or line on the page preview to edit it in place; add, remove and reorder entries here.' }));
+      it.cols.forEach(function (col, ci) {
+        if (!Array.isArray(col)) { it.cols[ci] = []; col = it.cols[ci]; }
+        box.appendChild(sectionLabel('Column ' + (ci + 1) + ' (' + col.length + ')'));
+        renderRepeatable(box, col, {
+          nameOf: function (n2) { return (n2.num ? n2.num + ' · ' : '') + (n2.title || '(entry)'); },
+          subOf: function (n2) { return (n2.text || '').slice(0, 60); },
+          open: null,
+          inlineEdit: function (n2, wrap) {
+            wrap.appendChild(textField('Number', n2.num || '', function (v) { n2.num = v; touch(); }, 'e.g. 01'));
+            wrap.appendChild(textField('Title', n2.title || '', function (v) { n2.title = v; touch(); }));
+            wrap.appendChild(textField('Text', n2.text || '', function (v) { n2.text = v; touch(); }, '', true));
+          },
+          addLabel: 'Add entry',
+          make: function () { return { num: String(col.length + 1).padStart(2, '0'), title: 'New entry', text: '' }; }
+        });
+      });
+      return;
+    }
+    if (it.s === 'split') {
+      box.appendChild(el('div', { class: 'note', text: 'Two columns side by side. Text inside each column edits in place on the page preview; the buttons below open each column\u2019s own element form (replace an image, change a callout tone, and so on).' }));
+      box.appendChild(textField('Left column width (%)', String(typeof it.ratio === 'number' ? it.ratio : 60), function (v) {
+        var n = parseInt(v, 10);
+        if (isNaN(n)) return;
+        it.ratio = Math.max(15, Math.min(85, n));
+        touch();
+      }, 'The right column takes the remaining width. 50 = equal halves.'));
+      ['left', 'right'].forEach(function (side) {
+        var child = it[side];
+        var cLabel = child && typeof child === 'object' ? symbolLabel(child.s || 'text') : (typeof child === 'string' ? 'Text bullet' : 'Empty');
+        box.appendChild(sectionLabel((side === 'left' ? 'Left' : 'Right') + ' column — ' + cLabel));
+        box.appendChild(el('button', { class: 'btn ghost', onclick: function () {
+          if (typeof it[side] === 'string') { it[side] = { s: 'text', name: 'Body text', text: it[side] }; touch(); }
+          if (!it[side] || typeof it[side] !== 'object') { it[side] = { s: 'text', name: 'Body text', text: '' }; touch(); }
+          select({ kind: 'item', ref: { arr: [it[side]], index: 0 }, backSel: SEL }, { noNav: true });
+        } }, ['Edit ' + side + ' column ›']));
+      });
       return;
     }
     if (it.s === 'callout') {
