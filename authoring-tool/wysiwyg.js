@@ -495,18 +495,20 @@ window.MO_WYSIWYG = (function () {
     }
   }
 
-  function attachItem(rootEl, it, chId, arr, index, keyBase) {
+  function attachItem(rootEl, it, chId, arr, index, keyBase, nested) {
     if (!it || typeof it !== 'string' && !it.s) return;
     var it2 = typeof it === 'string' ? { s: 'policy', text: it } : it;
     rootEl.classList.add('mo-wys-item');
-    addDeleteHandle(rootEl, arr, index);
-    addGapHandle(rootEl, it, arr, index);
-    addMoveHandle(rootEl, arr, index);
+    if (!nested) {
+      addDeleteHandle(rootEl, arr, index);
+      addGapHandle(rootEl, it, arr, index);
+      addMoveHandle(rootEl, arr, index);
+    }
     // Panel 2.1: register for panel→canvas flash; clicking the element's
     // chrome (non-editable area) opens its form in the panel. Editable text
     // and the +/×/↕ handles stopPropagation, so they never reach this.
     if (it && typeof it === 'object' && itemEls) itemEls.set(it, rootEl);
-    rootEl.addEventListener('click', function (ev) {
+    if (!nested) rootEl.addEventListener('click', function (ev) {
       if (ev.defaultPrevented) return;
       // Editable text starts editing instead (its click stops propagation;
       // this guard also covers the case where rootEl itself is the surface).
@@ -747,10 +749,203 @@ window.MO_WYSIWYG = (function () {
       return;
     }
 
+    // Plain-text bullet (a bare string in the items array): the sentence
+    // itself edits in place; clearing it removes the bullet from the list.
+    if (typeof it === 'string') {
+      var strHost = body.matches && body.matches('.policy-text-item') ? body : body.querySelector('.policy-text-item');
+      // Take the last direct SPAN child — the text. (The hover handles
+      // appended above are BUTTON/DIV, never SPAN, so they cannot shadow it.)
+      var strSpans = strHost ? [].slice.call(strHost.children).filter(function (n) { return n.tagName === 'SPAN'; }) : [];
+      var strSpan = strSpans.length ? strSpans[strSpans.length - 1] : null;
+      if (strSpan && !hasRichSyntax(it)) {
+        markEditable(strSpan, {
+          key: keyBase + ':str', rich: false, multiline: false,
+          get: function () { return String(arr[index] == null ? '' : arr[index]); },
+          set: function (v) { arr[index] = v; },
+          onEmpty: function () { arr.splice(index, 1); }
+        });
+      }
+      return;
+    }
+
+    // Stat / KPI band: value, unit, label and sub-line all edit in place.
+    // (Delta pills stay in the form — they carry a directional ▲▼ marker.)
+    if (it2.s === 'statband') {
+      var stWrap = body.matches && body.matches('.pb-stats') ? body : body.querySelector('.pb-stats');
+      var stEls = stWrap ? [].slice.call(stWrap.querySelectorAll('.pb-stat')) : [];
+      var stats2 = (Array.isArray(it2.stats) ? it2.stats : []).filter(function (s) { return s && (s.value || s.label); });
+      if (stEls.length && stEls.length === stats2.length) {
+        stEls.forEach(function (stEl, sti) {
+          var st = stats2[sti];
+          if (!st || typeof st !== 'object') return;
+          var f = function (selCls, suffix, prop) {
+            var node = stEl.querySelector(selCls);
+            if (!node) return;
+            markEditable(node, { key: keyBase + ':stb' + sti + suffix, rich: false, multiline: false,
+              get: function () { return String(st[prop] || ''); }, set: function (v) { st[prop] = v; } });
+          };
+          f('.pb-stat-val', 'v', 'value');
+          f('.pb-stat-unit', 'u', 'unit');
+          f('.pb-stat-label', 'l', 'label');
+          f('.pb-stat-sub', 's', 'sub');
+        });
+      }
+      return;
+    }
+
+    // Tabbed group: panel text edits in place (switch tabs to reach each
+    // panel). Tab LABELS stay in the Studio form — wiring the label buttons
+    // for editing would kill the click-to-switch navigation.
+    if (it2.s === 'tabs') {
+      var tabs2 = Array.isArray(it2.tabs) ? it2.tabs : [];
+      var panels = [].slice.call(body.querySelectorAll('.policy-tab-panel'));
+      if (panels.length === tabs2.length) {
+        panels.forEach(function (panelEl, pi2) {
+          var tb = tabs2[pi2];
+          if (!tb || typeof tb !== 'object') return;
+          var tp = panelEl.querySelector('p');
+          if (tp && !hasRichSyntax(String(tb.text || ''))) markEditable(tp, {
+            key: keyBase + ':tab' + pi2, rich: true, multiline: true, fromDOM: paraFromDOM,
+            get: function () { return String(tb.text || ''); }, set: function (v) { tb.text = v; }
+          });
+        });
+      }
+      return;
+    }
+
+    // Timeline, both styles: step/year labels and body text edit in place.
+    // Steps carrying links or images keep those fields in the Studio form.
+    if (it2.s === 'timeline') {
+      var tlSteps = Array.isArray(it2.steps) ? it2.steps : [];
+      if (it2.variant === 'history') {
+        var evEls = [].slice.call(body.querySelectorAll('.pb-h-event'));
+        if (evEls.length === tlSteps.length) {
+          evEls.forEach(function (evEl, ei2) {
+            var hs = tlSteps[ei2];
+            if (!hs || typeof hs !== 'object') return;
+            var yr = evEl.querySelector('.pb-h-year-num');
+            if (yr) markEditable(yr, { key: keyBase + ':tly' + ei2, rich: false, multiline: false,
+              get: function () { return String(hs.label || ''); }, set: function (v) { hs.label = v; } });
+            var heb = evEl.querySelector('.pb-h-eyebrow');
+            if (heb) markEditable(heb, { key: keyBase + ':tle' + ei2, rich: false, multiline: false,
+              get: function () { return String(hs.sub || ''); }, set: function (v) { hs.sub = v; } });
+            var htx = evEl.querySelector('.pb-h-text');
+            if (htx && !hs.url && !hasRichSyntax(String(hs.text || ''))) markEditable(htx, {
+              key: keyBase + ':tlt' + ei2, rich: true, multiline: true, fromDOM: paraFromDOM,
+              get: function () { return String(hs.text || ''); }, set: function (v) { hs.text = v; } });
+          });
+        }
+        return;
+      }
+      var tlEls = [].slice.call(body.querySelectorAll('.pb-step'));
+      if (tlEls.length === tlSteps.length) {
+        tlEls.forEach(function (stepEl, si3) {
+          var stp = tlSteps[si3];
+          if (!stp || typeof stp !== 'object') return;
+          var slb = stepEl.querySelector('.pb-step-label');
+          if (slb) markEditable(slb, { key: keyBase + ':tl' + si3 + 'l', rich: false, multiline: false,
+            get: function () { return String(stp.label || ('Step ' + (si3 + 1))); }, set: function (v) { stp.label = v; } });
+          var sbd = stepEl.querySelector('.pb-step-body');
+          if (sbd && !stp.url && !hasRichSyntax(String(stp.text || ''))) markEditable(sbd, {
+            key: keyBase + ':tl' + si3 + 't', rich: true, multiline: true, fromDOM: paraFromDOM,
+            get: function () { return String(stp.text || ''); }, set: function (v) { stp.text = v; } });
+        });
+      }
+      return;
+    }
+
+    // Contact directory: every name and role line edits in place; initials
+    // re-derive from the name automatically. Add/remove stays in the form.
+    if (it2.s === 'contacts') {
+      var ctWrap = body.matches && body.matches('.pb-contacts') ? body : body.querySelector('.pb-contacts');
+      if (ctWrap) {
+        var ctTitle = ctWrap.querySelector('.pb-contacts-title');
+        if (ctTitle) markEditable(ctTitle, { key: keyBase + ':ctname', rich: false, multiline: false,
+          get: function () { return String(it2.name || ''); }, set: function (v) { it2.name = v; } });
+        var ccols = Array.isArray(it2.cols) ? it2.cols : [];
+        var ccolEls = [].slice.call(ctWrap.querySelectorAll('.ct-col'));
+        if (ccolEls.length === ccols.length) {
+          ccolEls.forEach(function (colEl, ci2) {
+            var clist = Array.isArray(ccols[ci2]) ? ccols[ci2] : [];
+            var crowEls = [].slice.call(colEl.querySelectorAll('.ct-row'));
+            if (crowEls.length !== clist.length) return;
+            crowEls.forEach(function (rowEl, ri2) {
+              var person = clist[ri2];
+              if (!person || typeof person !== 'object') return;
+              var cnm = rowEl.querySelector('.ct-name');
+              if (cnm) markEditable(cnm, { key: keyBase + ':ct' + ci2 + 'r' + ri2 + 'n', rich: false, multiline: false,
+                get: function () { return String(person.name || ''); }, set: function (v) { person.name = v; } });
+              var ctt = rowEl.querySelector('.ct-title');
+              if (ctt) markEditable(ctt, { key: keyBase + ':ct' + ci2 + 'r' + ri2 + 't', rich: false, multiline: false,
+                get: function () { return String(person.title || ''); }, set: function (v) { person.title = v; } });
+            });
+          });
+        }
+      }
+      if (!nested) markFormFallback(body, chId, arr, index, 'contact list');
+      return;
+    }
+
+    // Numbered list (e.g. Service Pillars): numeral, title and text all edit
+    // in place. Add/remove/reorder stays in the Studio form.
+    if (it2.s === 'numlist') {
+      var nlWrap = body.matches && body.matches('.pb-numlist') ? body : body.querySelector('.pb-numlist');
+      if (nlWrap) {
+        var nlTitle = nlWrap.querySelector('.pb-numlist-title');
+        if (nlTitle) markEditable(nlTitle, { key: keyBase + ':nlname', rich: false, multiline: false,
+          get: function () { return String(it2.name || ''); }, set: function (v) { it2.name = v; } });
+        var ncols2 = Array.isArray(it2.cols) ? it2.cols : [];
+        var ncolEls = [].slice.call(nlWrap.querySelectorAll('.nl-col'));
+        if (ncolEls.length === ncols2.length) {
+          ncolEls.forEach(function (colEl2, ci3) {
+            var nlist = Array.isArray(ncols2[ci3]) ? ncols2[ci3] : [];
+            var nrowEls = [].slice.call(colEl2.querySelectorAll('.nl-row'));
+            if (nrowEls.length !== nlist.length) return;
+            nrowEls.forEach(function (rowEl2, ri3) {
+              var ent = nlist[ri3];
+              if (!ent || typeof ent !== 'object') return;
+              var nnm = rowEl2.querySelector('.nl-num');
+              if (nnm) markEditable(nnm, { key: keyBase + ':nl' + ci3 + 'r' + ri3 + 'n', rich: false, multiline: false,
+                get: function () { return String(ent.num || ''); }, set: function (v) { ent.num = v; } });
+              var ntt = rowEl2.querySelector('.nl-title');
+              if (ntt && !hasRichSyntax(String(ent.title || ''))) markEditable(ntt, {
+                key: keyBase + ':nl' + ci3 + 'r' + ri3 + 't', rich: true, multiline: false, fromDOM: paraFromDOM,
+                get: function () { return String(ent.title || ''); }, set: function (v) { ent.title = v; } });
+              var ntx = rowEl2.querySelector('.nl-text');
+              if (ntx && !hasRichSyntax(String(ent.text || ''))) markEditable(ntx, {
+                key: keyBase + ':nl' + ci3 + 'r' + ri3 + 'x', rich: true, multiline: true, fromDOM: paraFromDOM,
+                get: function () { return String(ent.text || ''); }, set: function (v) { ent.text = v; } });
+            });
+          });
+        }
+      }
+      if (!nested) markFormFallback(body, chId, arr, index, 'numbered list');
+      return;
+    }
+
+    // Split layout: each column's child element attaches in nested mode —
+    // text inside columns edits in place, structural handles and the form
+    // shortcut stay on the split itself (the columns are not list items).
+    if (it2.s === 'split') {
+      var splitEl = body.matches && body.matches('.pb-split') ? body : body.querySelector('.pb-split');
+      if (splitEl) {
+        var scols = [].slice.call(splitEl.children).filter(function (n) { return n.classList && n.classList.contains('pb-split-col'); });
+        ['left', 'right'].forEach(function (side, si4) {
+          var child = it2[side];
+          var colEl3 = scols[si4];
+          if (!child || typeof child !== 'object' || !colEl3) return;
+          var childRoot = colEl3.firstElementChild;
+          if (childRoot) attachItem(childRoot, child, chId, [child], 0, keyBase + ':' + side, true);
+        });
+      }
+      if (!nested) markFormFallback(body, chId, arr, index, 'split');
+      return;
+    }
+
     // Interactive elements: wire click-to-edit text on the canvas first…
     if (it2.s === 'ix') attachIxInline(body, it2, chId, arr, index, keyBase);
     // …and keep the hover shortcut to the full Studio form for everything.
-    markFormFallback(body, chId, arr, index, labelFor(it2));
+    if (!nested) markFormFallback(body, chId, arr, index, labelFor(it2));
   };
 
   function labelFor(it) {
@@ -801,6 +996,46 @@ window.MO_WYSIWYG = (function () {
         })(bps[bi], bi);
       }
     }
+
+    // Highlight cards grid (renders between blurb chunks, NOT inside
+    // .policy-list, so the item-count guard below is unaffected): the eyebrow
+    // line and every card's label + text edit in place. Structure (add /
+    // remove / reorder cards, icon choice) stays in the section form.
+    var hlBlock = secEl.querySelector('.hl-block');
+    if (hlBlock && Array.isArray(sec.highlights) && sec.highlights.length) {
+      var hlCards = [].slice.call(hlBlock.querySelectorAll('.hl-card'));
+      if (hlCards.length === sec.highlights.length) {
+        var hlEb = hlBlock.querySelector('.hl-block-eyebrow');
+        if (hlEb) markEditable(hlEb, {
+          key: keyBase + ':hleb', rich: false, multiline: false,
+          get: function () { return String(sec.highlights_eyebrow || ''); },
+          set: function (v) { sec.highlights_eyebrow = v; }
+        });
+        hlCards.forEach(function (cardEl, hi) {
+          var hl = sec.highlights[hi];
+          if (!hl || typeof hl !== 'object') return;
+          var hlLb = cardEl.querySelector('.hl-card-label');
+          if (hlLb) markEditable(hlLb, { key: keyBase + ':hl' + hi + 'l', rich: false, multiline: false,
+            get: function () { return String(hl.label || ''); }, set: function (v) { hl.label = v; } });
+          var hlTx = cardEl.querySelector('.hl-card-text');
+          if (hlTx) markEditable(hlTx, { key: keyBase + ':hl' + hi + 't', rich: false, multiline: true,
+            get: function () { return String(hl.text || ''); }, set: function (v) { hl.text = v; } });
+        });
+      }
+    }
+
+    // Pull-quotes: the feature quote (between blurb chunks) and the closing
+    // transition quote both edit in place as plain verbatim sentences.
+    var fqTx = secEl.querySelector('.section-quote--feature .section-quote-text');
+    if (fqTx && typeof sec.feature_quote === 'string') markEditable(fqTx, {
+      key: keyBase + ':fquote', rich: false, multiline: true,
+      get: function () { return sec.feature_quote; }, set: function (v) { sec.feature_quote = v; }
+    });
+    var trTx = secEl.querySelector('.section-quote:not(.section-quote--feature) .section-quote-text');
+    if (trTx && typeof sec.transition === 'string') markEditable(trTx, {
+      key: keyBase + ':transq', rich: false, multiline: true,
+      get: function () { return sec.transition; }, set: function (v) { sec.transition = v; }
+    });
 
     // Items: .policy-list children map 1:1 to sec.items. A section with NO
     // items yet (intro-only) still gets an insert handle on the section block
