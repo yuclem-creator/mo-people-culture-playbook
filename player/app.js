@@ -656,7 +656,7 @@ function policyItemBodyHTML(it) {
     return `<div class="pb-stats" style="--cols:${stats.length}">` + stats.map(function (s) {
       const mark = s.deltaDir === 'down' ? '▼ ' : s.deltaDir === 'up' ? '▲ ' : '';
       return `<div class="pb-stat">
-        <div class="pb-stat-num">${esc(String(s.value || ''))}${s.unit ? `<span class="pb-stat-unit">${esc(s.unit)}</span>` : ''}</div>
+        <div class="pb-stat-num"><span class="pb-stat-val">${esc(String(s.value || ''))}</span>${s.unit ? `<span class="pb-stat-unit">${esc(s.unit)}</span>` : ''}</div>
         <div class="pb-stat-label">${esc(s.label || '')}</div>
         ${s.sub ? `<div class="pb-stat-sub">${esc(s.sub)}</div>` : ''}
         ${s.delta ? `<div class="pb-stat-delta${s.deltaDir === 'down' ? ' down' : ''}">${mark}${esc(s.delta)}</div>` : ''}
@@ -811,6 +811,54 @@ function policyItemBodyHTML(it) {
       </div>
       <div class="pb-wheel-side">${cards}<div class="pb-wheel-hint">Tap a segment to read its stage</div></div>
     </div>`;
+  }
+  // Contact directory: one or two columns of people — monogram circle with
+  // auto-derived initials, name and role, hairline-separated rows. Structured
+  // replacement for baked contact-sheet images so every entry stays editable
+  // in the Studio.
+  if (it && it.s === 'contacts') {
+    var ccols = Array.isArray(it.cols) ? it.cols : [];
+    var ccolHtml = ccols.map(function (col) {
+      var list = Array.isArray(col) ? col : [];
+      return '<div class="ct-col">' + list.map(function (p) {
+        if (!p) return '';
+        var ini = String(p.name || '').trim().split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join('');
+        return '<div class="ct-row">' +
+          '<span class="ct-mono" aria-hidden="true">' + esc(ini) + '</span>' +
+          '<span class="ct-id">' +
+            '<span class="ct-name">' + esc(p.name || '') + '</span>' +
+            (p.title ? '<span class="ct-title">' + esc(p.title) + '</span>' : '') +
+          '</span>' +
+        '</div>';
+      }).join('') + '</div>';
+    }).join('');
+    return '<div class="pb-contacts">' +
+      (it.name ? '<div class="pb-contacts-title">' + esc(it.name) + '</div>' : '') +
+      '<div class="ct-grid">' + ccolHtml + '</div>' +
+    '</div>';
+  }
+  // Numbered list: gold numeral + quoted small-caps title + muted text in
+  // one or two hairline-ruled columns (e.g. the Service Pillars). Structured
+  // replacement for baked pillar images so every line stays editable.
+  if (it && it.s === 'numlist') {
+    var ncols = Array.isArray(it.cols) ? it.cols : [];
+    var ncolHtml = ncols.map(function (col) {
+      var list = Array.isArray(col) ? col : [];
+      return '<div class="nl-col">' + list.map(function (n) {
+        if (!n) return '';
+        return '<div class="nl-row">' +
+          '<span class="nl-num">' + esc(n.num || '') + '</span>' +
+          '<span class="nl-body">' +
+            '<span class="nl-title">' + inlineRichHTML(n.title || '') + '</span>' +
+            (n.text ? '<span class="nl-text">' + inlineRichHTML(n.text || '') + '</span>' : '') +
+          '</span>' +
+        '</div>';
+      }).join('') + '</div>';
+    }).join('');
+    return '<div class="pb-numlist">' +
+      (it.name ? '<div class="pb-numlist-title">' + esc(it.name) + '</div>' : '') +
+      '<div class="nl-grid">' + ncolHtml + '</div>' +
+    '</div>';
   }
   // Embedded figure carried over from an imported document — optionally with
   // interactive hotspots (numbered pins revealing popup text on click).
