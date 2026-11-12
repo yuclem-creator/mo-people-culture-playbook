@@ -57,6 +57,7 @@
     // lightweight safety net, not a second copy of the whole library.
     var FALLBACK_VIDEO_CAP = 20 * 1024 * 1024;
     var skippedVideos = [];
+    var cloudBundled = [], missingAssets = [];
     var ext = null, pbJson = '';
     helpers.compressImagesForExport(pb).then(function (pbSlim) {
       ext = helpers.externalizeAssets(pbSlim);
@@ -152,6 +153,27 @@
         }));
       })
       .then(function () {
+        // Cloud-lane assets (covers, chapter openers, figures uploaded via
+        // Studio and stored by Publish) exist ONLY in the bucket — not in
+        // PB.assets and not in the repo seed library — so neither the
+        // extraFiles pass nor the manifest pass above can bundle them. The
+        // renderer hardcodes `url('img/…')` for those refs, so without this
+        // step they render as blank/grey in the exported package. Scan the
+        // union of the current project JSON and the LIVE published JSON (the
+        // content the remote shell actually fetches at runtime) and stage
+        // anything still missing from the zip under img//video/.
+        return fetch(contentUrl)
+          .then(function (r) { return r.ok ? r.text() : ''; })
+          .catch(function () { return ''; })
+          .then(function (publishedJson) {
+            return helpers.stageReferencedAssets(zip, pbJson + '\n' + publishedJson, { slug: slug });
+          })
+          .then(function (res) {
+            cloudBundled = res.bundled;
+            missingAssets = res.missing;
+          });
+      })
+      .then(function () {
         return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
       })
       .then(function (blob) {
@@ -163,8 +185,13 @@
         a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
         var note = 'Exported ' + name + ' (' + sizeMb + ' MB — fetches content from the cloud at launch)';
+        if (cloudBundled.length) note += '. Bundled ' + cloudBundled.length + ' cloud asset(s) (covers/figures) so they render in the package';
         if (skippedVideos.length) note += '. ' + skippedVideos.length + ' large video(s) (' + skippedVideos.slice(0, 3).join(', ').slice(0, 80) + (skippedVideos.length > 3 || skippedVideos.join('').length > 80 ? '…' : '') + ') stream from the cloud instead of being bundled';
         (cb.toast || function () {})(note, 'ok');
+        if (missingAssets.length) {
+          (cb.toast || function () {})(missingAssets.length + ' referenced asset(s) not found in the repo or the cloud — they will show as blank: ' +
+            missingAssets.slice(0, 4).join(', ') + (missingAssets.length > 4 ? '…' : ''), 'err');
+        }
         (cb.done || function () {})(blob);
       })
       .catch(function (e) { (cb.fail || function () {})(e); });

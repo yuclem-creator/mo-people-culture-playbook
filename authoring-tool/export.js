@@ -187,6 +187,67 @@
     return keep;
   }
 
+  // ---------------------------------------------------------------------------
+  // Referenced-asset staging (shared by the offline and remote exporters)
+  // ---------------------------------------------------------------------------
+  // The renderer (preview-engine/app.js) hardcodes literal `img/`/`video/`
+  // prefixes into its templates (cover bg, chapter openers, figures…), so every
+  // asset the playbook JSON references — whether as a bare filename
+  // ("cover.jpg") or a prefixed path ("img/x.png") — must physically exist in
+  // the package under img//video/. extraFiles only covers freshly uploaded
+  // data-URL assets and the manifest pass only covers the repo seed library;
+  // media that lives ONLY in the Supabase lane (e.g. covers uploaded through
+  // Studio and stored via Publish) would otherwise be missing from every
+  // export. stageReferencedAssets() closes that gap: repo first, then the
+  // published lane's public assets URL.
+  function collectAssetRefs(json) {
+    var seen = {}, out = [], m;
+    var rePrefixed = /(img|video)\/([A-Za-z0-9_\-.]+\.(?:jpg|jpeg|png|webp|gif|svg|mp4|webm|mov))\b/gi;
+    var reBare = /"([A-Za-z0-9_][A-Za-z0-9_\-.]*\.(?:jpg|jpeg|png|webp|gif|svg|mp4|webm|mov))"/gi;
+    while ((m = rePrefixed.exec(json))) {
+      var p = m[1].toLowerCase() + '/' + m[2];
+      if (!seen[p]) { seen[p] = true; out.push(p); }
+    }
+    while ((m = reBare.exec(json))) {
+      // Quoted bare filenames only — prefixed refs contain a "/" before the
+      // name so they can never match this pattern.
+      var p2 = (/\.(mp4|webm|mov)$/i.test(m[1]) ? 'video/' : 'img/') + m[1];
+      if (!seen[p2]) { seen[p2] = true; out.push(p2); }
+    }
+    return out;
+  }
+
+  // zip:  JSZip instance already holding any decoded/manifest files.
+  // json: stringified playbook JSON to scan (callers may concatenate several
+  //       JSON documents — the union of refs is staged).
+  // opts.slug: publish slug used to reach the lane's public assets folder.
+  // Returns Promise<{ bundled: string[], missing: string[] }>.
+  function stageReferencedAssets(zip, json, opts) {
+    opts = opts || {};
+    var refs = collectAssetRefs(json);
+    var cfg = window.SUPABASE_CONFIG || {};
+    var laneBase = (cfg.url && opts.slug)
+      ? cfg.url + '/storage/v1/object/public/' + (cfg.bucket || 'playbook-content') +
+        '/published/' + opts.slug + '/assets/'
+      : null;
+    var bundled = [], missing = [];
+    return refs.reduce(function (chain, path) {
+      return chain.then(function () {
+        if (zip.file(path)) return null;                 // already staged
+        return binFile(path)                             // 1) repo seed library
+          .catch(function () {                           // 2) Supabase lane
+            if (!laneBase) throw new Error('no lane');
+            return fetch(laneBase + path.replace(/^(img|video)\//, '')).then(function (r) {
+              if (!r.ok) throw new Error('http ' + r.status);
+              return r.blob();
+            });
+          })
+          .then(function (blob) { zip.file(path, blob); bundled.push(path); })
+          .catch(function () { missing.push(path.replace(/^(img|video)\//, '')); });
+      });
+    }, Promise.resolve()).then(function () { return { bundled: bundled, missing: missing }; });
+  }
+
   // Expose shared helpers so publish.js and export-remote.js can reuse the
   // exact same data-URL decode logic instead of duplicating/rewriting it.
   window.__scormExportHelpers = {
@@ -201,6 +262,8 @@
     compressImageDataUrl: compressImageDataUrl,
     compressImagesForExport: compressImagesForExport,
     filterUnreferenced: filterUnreferenced,
+    collectAssetRefs: collectAssetRefs,
+    stageReferencedAssets: stageReferencedAssets,
     BASE: BASE
   };
 
@@ -208,6 +271,7 @@
     cb = cb || {};
     if (!window.JSZip) { (cb.fail || function(){})(new Error('JSZip not loaded')); return; }
     var zip = new JSZip();
+    var missingAssets = [];   // filled by the stageReferencedAssets pass below
 
     var TEXT = ['index.html', 'app.js', 'ask.js', 'playbook-content.js', 'mo-brand.css',
       'scorm_api.js', 'scorm_hook.js', 'imsmanifest.xml',
@@ -259,7 +323,17 @@
 
       return Promise.all(needed.map(function (p) {
         return binFile(p).then(function (blob) { zip.file(p, blob); }).catch(function () {/* skip missing */});
-      })).then(function () { return zip; });
+      })).then(function () {
+        // 6. Referenced assets that exist ONLY in the Supabase lane (covers /
+        //    figures uploaded via Publish) — neither the extraFiles pass nor
+        //    the manifest pass can see those. Fetch and bundle them so the
+        //    offline package is truly self-contained.
+        var slug = window.PlaybookPublish ? window.PlaybookPublish.slugFor(pb) : (pb.meta && pb.meta.slug);
+        return stageReferencedAssets(zip, pbJson, { slug: slug }).then(function (r) {
+          missingAssets = r.missing;
+          return zip;
+        });
+      });
       });
     }).then(function (zip) {
       return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
@@ -272,6 +346,10 @@
       a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
       (cb.toast || function(){})('Exported ' + name + ' (' + sizeMb + ' MB)', 'ok');
+      if (missingAssets.length) {
+        (cb.toast || function(){})(missingAssets.length + ' referenced asset(s) not found in the repo or the cloud — they will show as blank: ' +
+          missingAssets.slice(0, 4).join(', ') + (missingAssets.length > 4 ? '…' : ''), 'err');
+      }
       (cb.done || function(){})();
     }).catch(function (e) { (cb.fail || function(){})(e); });
   };
