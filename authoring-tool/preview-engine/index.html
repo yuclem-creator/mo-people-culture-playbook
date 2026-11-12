@@ -3608,6 +3608,70 @@ body.on-menu .layout { grid-template-columns: 1fr; }
 .hl-grid--4 { grid-template-columns: repeat(4, 1fr); }
 .hl-grid--3 { grid-template-columns: repeat(3, 1fr); }
 .hl-grid--2 { grid-template-columns: repeat(2, 1fr); }
+
+/* Contacts directory + numbered list — structured, Studio-editable
+   replacements for baked contact-sheet / service-pillar images. */
+.pb-contacts, .pb-numlist { margin: 18px 0; }
+.pb-contacts-title, .pb-numlist-title {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--gold-deep);
+  margin: 0 0 6px;
+}
+.ct-grid, .nl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 56px; }
+.ct-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.ct-col .ct-row:first-child, .nl-col .nl-row:first-child { border-top: 1px solid var(--rule); }
+.ct-mono {
+  flex: none; width: 34px; height: 34px;
+  border: 1px solid var(--gold-hair); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.72rem; font-weight: 400; letter-spacing: 0.05em;
+  color: var(--gold-deep);
+}
+.ct-id { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ct-name {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.95rem; font-weight: 400;
+  color: var(--ink); line-height: 1.35;
+}
+.ct-title {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.78rem; font-weight: 400;
+  color: var(--ink-mute); line-height: 1.4;
+}
+.nl-row {
+  display: flex; gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.nl-num {
+  flex: none; min-width: 26px;
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.9rem; font-weight: 400;
+  color: var(--gold-deep); line-height: 1.5;
+}
+.nl-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nl-title {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.86rem; font-weight: 400;
+  letter-spacing: 0.03em;
+  color: var(--ink); line-height: 1.45;
+}
+.nl-text {
+  font-family: 'Avenir Next LT Pro', sans-serif;
+  font-size: 0.8rem; font-weight: 400;
+  color: var(--ink-mute); line-height: 1.5;
+}
+@media (max-width: 720px) {
+  .ct-grid, .nl-grid { grid-template-columns: 1fr; gap: 0; }
+}
+
 .hl-card {
   display: flex;
   flex-direction: column;
