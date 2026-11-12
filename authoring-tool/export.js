@@ -204,6 +204,11 @@
     var seen = {}, out = [], m;
     var rePrefixed = /(img|video)\/([A-Za-z0-9_\-.]+\.(?:jpg|jpeg|png|webp|gif|svg|mp4|webm|mov))\b/gi;
     var reBare = /"([A-Za-z0-9_][A-Za-z0-9_\-.]*\.(?:jpg|jpeg|png|webp|gif|svg|mp4|webm|mov))"/gi;
+    // Absolute lane URLs left in content by earlier publish rounds, e.g.
+    // "https://…/object/public/playbook-content/published/<slug>/assets/<batch-uuid>/figure.png"
+    // — the subpath after /assets/ (which may contain folders) becomes the
+    // bundled path under img//video/.
+    var reAbsolute = /https?:\/\/[^"'\s]*?\/assets\/([A-Za-z0-9_\-\.\/]+?\.(?:jpg|jpeg|png|webp|gif|svg|mp4|webm|mov))(?=["'\s])/gi;
     while ((m = rePrefixed.exec(json))) {
       var p = m[1].toLowerCase() + '/' + m[2];
       if (!seen[p]) { seen[p] = true; out.push(p); }
@@ -214,13 +219,77 @@
       var p2 = (/\.(mp4|webm|mov)$/i.test(m[1]) ? 'video/' : 'img/') + m[1];
       if (!seen[p2]) { seen[p2] = true; out.push(p2); }
     }
+    while ((m = reAbsolute.exec(json))) {
+      var p3 = (/\.(mp4|webm|mov)$/i.test(m[1]) ? 'video/' : 'img/') + m[1];
+      if (!seen[p3]) { seen[p3] = true; out.push(p3); }
+    }
     return out;
+  }
+
+  // Map of every absolute lane asset URL in the JSON to the package-relative
+  // path it should be bundled as (img/<subpath>). Used to repoint content at
+  // the bundled copies in self-contained payloads (offline package, remote
+  // fallback snapshot).
+  function absoluteAssetUrlMap(json) {
+    var map = {}, m;
+    var re = /https?:\/\/[^"'\s]*?\/assets\/([A-Za-z0-9_\-\.\/]+?\.(?:jpg|jpeg|png|webp|gif|svg|mp4|webm|mov))(?=["'\s])/gi;
+    while ((m = re.exec(json))) {
+      var sub = m[1];
+      if (!map[m[0]]) map[m[0]] = (/\.(mp4|webm|mov)$/i.test(sub) ? 'video/' : 'img/') + sub;
+    }
+    return map;
+  }
+
+  // fetch with a hard timeout — a hung connection must degrade to the next
+  // source (or the missing report), never stall the whole export.
+  function fetchAsset(url, ms) {
+    var ctrl = ('AbortController' in window) ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || 45000);
+    return fetch(url, ctrl ? { signal: ctrl.signal } : {}).then(function (r) {
+      clearTimeout(timer);
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.blob();
+    }, function (e) { clearTimeout(timer); throw e; });
+  }
+
+  // Blob variant of compressImageDataUrl (same convention: white background,
+  // JPEG q0.82, 1600px max dimension, only when it actually shrinks the file).
+  // Lane-fetched photos regularly arrive as 10-20MB JPEGs — bundling them raw
+  // would turn a "lightweight" remote package into a 170MB download.
+  function compressImageBlob(blob) {
+    return new Promise(function (resolve) {
+      if (!blob || !/^image\/(jpeg|jpg|png|webp)$/.test(blob.type || '')) return resolve(blob);
+      if (blob.size <= IMG_COMPRESS_ABOVE) return resolve(blob);
+      var url = URL.createObjectURL(blob);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var scale = Math.min(1, IMG_MAX_DIM / Math.max(w, h));
+          var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+          var c = document.createElement('canvas');
+          c.width = cw; c.height = ch;
+          var g = c.getContext('2d');
+          g.fillStyle = '#ffffff'; g.fillRect(0, 0, cw, ch);
+          g.drawImage(img, 0, 0, cw, ch);
+          URL.revokeObjectURL(url);
+          c.toBlob(function (out) {
+            resolve(out && out.size < blob.size ? out : blob);
+          }, 'image/jpeg', 0.82);
+        } catch (e) { URL.revokeObjectURL(url); resolve(blob); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(blob); };
+      img.src = url;
+    });
   }
 
   // zip:  JSZip instance already holding any decoded/manifest files.
   // json: stringified playbook JSON to scan (callers may concatenate several
   //       JSON documents — the union of refs is staged).
-  // opts.slug: publish slug used to reach the lane's public assets folder.
+  // opts.slug:   publish slug used to reach the lane's public assets folder.
+  // opts.urlMap: optional { packagePath: absoluteUrl } — for refs that came
+  //              from absolute lane URLs (possibly a different slug's lane),
+  //              the URL itself is the final fetch fallback.
   // Returns Promise<{ bundled: string[], missing: string[] }>.
   function stageReferencedAssets(zip, json, opts) {
     opts = opts || {};
@@ -230,22 +299,44 @@
       ? cfg.url + '/storage/v1/object/public/' + (cfg.bucket || 'playbook-content') +
         '/published/' + opts.slug + '/assets/'
       : null;
-    var bundled = [], missing = [];
-    return refs.reduce(function (chain, path) {
-      return chain.then(function () {
-        if (zip.file(path)) return null;                 // already staged
-        return binFile(path)                             // 1) repo seed library
-          .catch(function () {                           // 2) Supabase lane
-            if (!laneBase) throw new Error('no lane');
-            return fetch(laneBase + path.replace(/^(img|video)\//, '')).then(function (r) {
-              if (!r.ok) throw new Error('http ' + r.status);
-              return r.blob();
-            });
-          })
-          .then(function (blob) { zip.file(path, blob); bundled.push(path); })
-          .catch(function () { missing.push(path.replace(/^(img|video)\//, '')); });
-      });
-    }, Promise.resolve()).then(function () { return { bundled: bundled, missing: missing }; });
+    var bundled = [], missing = [], skippedLarge = [];
+    var i = 0, CONCURRENCY = 6;   // parallel workers — 100+ legacy lane refs
+    function stageOne(path) {
+      if (zip.file(path)) return Promise.resolve();      // already staged
+      var sub = path.replace(/^(img|video)\//, '');
+      return binFile(path)                               // 1) repo seed library
+        .catch(function () {                             // 2) Supabase lane
+          if (!laneBase) throw new Error('no lane');
+          return fetchAsset(laneBase + sub);
+        })
+        .catch(function () {                             // 3) original absolute URL
+          var direct = opts.urlMap && opts.urlMap[path];
+          if (!direct) throw new Error('no direct url');
+          return fetchAsset(direct);
+        })
+        .then(function (blob) {
+          // Oversized videos stay cloud-only in remote packages (same policy
+          // as the fallback-video cap); oversized photos are re-encoded.
+          if (/\.(mp4|webm|mov)$/i.test(sub) && opts.skipLargeVideos && blob.size > opts.skipLargeVideos) {
+            skippedLarge.push(sub);
+            var skip = new Error('skipped-large');
+            skip.skipped = true;
+            throw skip;
+          }
+          return compressImageBlob(blob);
+        })
+        .then(function (blob) { zip.file(path, blob); bundled.push(path); })
+        .catch(function (e) { if (!(e && e.skipped)) missing.push(sub); });
+    }
+    function worker() {
+      if (i >= refs.length) return Promise.resolve();
+      return stageOne(refs[i++]).then(worker);
+    }
+    var workers = [];
+    for (var w = 0; w < Math.min(CONCURRENCY, refs.length); w++) workers.push(worker());
+    return Promise.all(workers).then(function () {
+      return { bundled: bundled, missing: missing, skippedLarge: skippedLarge };
+    });
   }
 
   // Expose shared helpers so publish.js and export-remote.js can reuse the
@@ -263,6 +354,7 @@
     compressImagesForExport: compressImagesForExport,
     filterUnreferenced: filterUnreferenced,
     collectAssetRefs: collectAssetRefs,
+    absoluteAssetUrlMap: absoluteAssetUrlMap,
     stageReferencedAssets: stageReferencedAssets,
     BASE: BASE
   };
@@ -301,12 +393,7 @@
         'adlcp_rootv1p2.xsd', 'ims_xml.xsd', 'imscp_rootv1p1p2.xsd', 'imsmd_rootv1p2p1.xsd']
         .forEach(function (f) { zip.file(f, texts[f]); });
 
-      // 3. playbook-data.js
-      zip.file('playbook-data.js',
-        '/* Generated by MO Playbook Studio. Sets the data-driven PLAYBOOK. */\n' +
-        'window.PLAYBOOK = ' + JSON.stringify(ext.playbook) + ';\n');
-
-      // 4. Uploaded/decoded assets
+      // 3. Uploaded/decoded assets
       Object.keys(ext.extraFiles).forEach(function (path) {
         zip.file(path, ext.extraFiles[path].base64, { base64: true });
       });
@@ -325,12 +412,26 @@
         return binFile(p).then(function (blob) { zip.file(p, blob); }).catch(function () {/* skip missing */});
       })).then(function () {
         // 6. Referenced assets that exist ONLY in the Supabase lane (covers /
-        //    figures uploaded via Publish) — neither the extraFiles pass nor
+        //    figures uploaded via Publish) or as absolute lane URLs left in the
+        //    content by earlier publish rounds — neither the extraFiles pass nor
         //    the manifest pass can see those. Fetch and bundle them so the
-        //    offline package is truly self-contained.
+        //    offline package is truly self-contained, then write
+        //    playbook-data.js with the successfully bundled absolute URLs
+        //    repointed at their package-relative copies.
         var slug = window.PlaybookPublish ? window.PlaybookPublish.slugFor(pb) : (pb.meta && pb.meta.slug);
-        return stageReferencedAssets(zip, pbJson, { slug: slug }).then(function (r) {
+        var absMap = absoluteAssetUrlMap(pbJson);            // url -> package path
+        var byPath = {};
+        Object.keys(absMap).forEach(function (u) { byPath[absMap[u]] = u; });
+        return stageReferencedAssets(zip, pbJson, { slug: slug, urlMap: byPath }).then(function (r) {
           missingAssets = r.missing;
+          var dataJson = JSON.stringify(ext.playbook);
+          r.bundled.forEach(function (p) {
+            var u = byPath[p];
+            if (u) dataJson = dataJson.split(u).join(p);
+          });
+          zip.file('playbook-data.js',
+            '/* Generated by MO Playbook Studio. Sets the data-driven PLAYBOOK. */\n' +
+            'window.PLAYBOOK = ' + dataJson + ';\n');
           return zip;
         });
       });

@@ -172,6 +172,31 @@
     var playbookForUpload = JSON.parse(JSON.stringify(ext.playbook));
     playbookForUpload.__remoteAssetBase = publicBase;
 
+    // Absolute-URL carry-over: content can reference media by FULL public URL
+    // with a nested subpath (e.g. …/drafts/<slug>/assets/<batch-uuid>/figure.png
+    // from Studio save batches, or an already-rebased …/published/<slug>/
+    // assets/… URL inherited from a copy). Neither the data-URL upload nor the
+    // lane-sync passes see those — historically they were rebased to the
+    // published lane without the objects being copied, leaving the published
+    // package full of "Image unavailable" placeholders (GM Move-In, Nov 2026:
+    // 175 dead links). Guarantee: after publish, every referenced /assets/ URL
+    // resolves in THIS lane — copy from this slug's draft lane, or fetch the
+    // referenced URL itself, when the destination object is missing.
+    var carryOverSubs = [];
+    var carryOverUrl = {};
+    if (stage === 'published') {
+      var reAbs = /https?:\/\/[^"'\s]*?\/assets\/([A-Za-z0-9_\-\.\/]+?\.(?:jpg|jpeg|png|webp|gif|svg|mp4|webm|mov))(?=["'\s])/gi;
+      var mAbs;
+      var jsonForScan = JSON.stringify(playbookForUpload);
+      while ((mAbs = reAbs.exec(jsonForScan))) {
+        if (!carryOverUrl[mAbs[1]]) {
+          carryOverUrl[mAbs[1]] = mAbs[0];
+          carryOverSubs.push(mAbs[1]);
+        }
+      }
+      total += carryOverSubs.length;
+    }
+
     // Multilingual (Phase 1): each declared language with a loaded translation
     // (playbook.i18n[code]) ships as a separate playbook-data.<code>.json next
     // to the main content — the reader fetches it only when that language is
@@ -307,9 +332,50 @@
       });
     }, Promise.resolve());
 
+    var uploadCarryOver = carryOverSubs.reduce(function (chain, sub) {
+      return chain.then(function () {
+        // Already in the target lane? (single-range probe — Supabase answers 206)
+        return fetch(publicBase + sub, { headers: { Range: 'bytes=0-0' } }).then(function (probe) {
+          if (probe.ok || probe.status === 206) { tick(); return; }
+          // Source 1: this slug's draft lane (same subpath)
+          return fetch(draftAssetBase + sub).then(function (res) {
+            if (!res.ok) throw new Error('not in draft lane');
+            return res.blob();
+          }).catch(function () {
+            // Source 2: the referenced absolute URL itself (other lane/slug)
+            var srcUrl = carryOverUrl[sub];
+            if (!srcUrl) throw new Error('no source');
+            return fetch(srcUrl).then(function (res2) {
+              if (!res2.ok) throw new Error('source http ' + res2.status);
+              return res2.blob();
+            });
+          }).then(function (blob) {
+            if (blob.size > ASSET_HARD_LIMIT) {
+              failedAssets.push({ path: sub, reason: Math.round(blob.size / 1048576) + 'MB — over the 50MB cloud limit. Run Settings → Optimise media, then save again.' });
+              tick();
+              return;
+            }
+            return sbUpload.storage.from(bucket).upload(basePath + 'assets/' + sub, blob, {
+              upsert: true, contentType: guessMime(sub)
+            }).then(function (r) {
+              if (r.error) failedAssets.push({ path: sub, reason: r.error.message });
+              tick();
+            }, function (e) {
+              failedAssets.push({ path: sub, reason: (e && e.message) || String(e) });
+              tick();
+            });
+          }, function () {
+            failedAssets.push({ path: sub, reason: 'referenced by URL but missing from both lanes. Re-upload this media in Studio, save, then publish again.' });
+            tick();
+          });
+        }, function () { tick(); /* probe network error — leave as-is rather than block publish */ });
+      });
+    }, Promise.resolve());
+
     return uploadAssets
       .then(function () { return uploadBundled; })
       .then(function () { return uploadLaneSync; })
+      .then(function () { return uploadCarryOver; })
       .then(function () {
         var blob = new Blob([JSON.stringify(playbookForUpload)], { type: 'application/json' });
         return sbUpload.storage.from(bucket).upload(basePath + 'playbook-data.json', blob, {
